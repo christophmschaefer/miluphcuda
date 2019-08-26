@@ -1,0 +1,30 @@
+This directory contains example material files for one material each.
+
+To assemble the 'material.cfg' file containing the 'n' materials you need
+simply plug them together to end up with a material.cfg file like:
+
+
+materials = (
+    {
+        ID = 0
+        name = ...
+        ...
+    },
+    {
+        ID = 1
+        name = ...
+        ...
+    },
+    .
+    .
+    .
+    {
+        ID = n-1
+        name = ...
+        ...
+    }
+);
+
+
+Finally take care that correct smoothing lengths ('sml') are set!
+
