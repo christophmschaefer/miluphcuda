@@ -316,6 +316,15 @@ void rightHandSide()
 #endif
     totalTime += time[timerCounter++];
 
+    time[timerCounter] = 0;
+    cudaEventRecord(start, 0);
+    cudaVerifyKernel((calculateSoundSpeed<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
+    cudaVerify(cudaDeviceSynchronize());
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time[timerCounter], start, stop);
+    if (param.verbose) printf("duration soundspeed: %.7f ms\n", time[timerCounter]);
+    totalTime += time[timerCounter++];
 
 #if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH)
     time[timerCounter] = 0;
@@ -365,21 +374,12 @@ void rightHandSide()
     cudaEventElapsedTime(&time[timerCounter], start, stop);
     if (param.verbose) printf("duration pressure: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-    time[timerCounter] = 0;
 /*  function is not in porosity.cu anymore but in timeintecration.cu internal forces
 #if PALPHA_POROSITY
     cudaVerifyKernel((calculateDistensionChange<<<numberOfMultiprocessors * 4, NUM_THREADS_PALPHA_POROSITY>>>()));
     cudaVerify(cudaDeviceSynchronize());
 #endif
 */
-    cudaEventRecord(start, 0);
-    cudaVerifyKernel((calculateSoundSpeed<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
-    cudaVerify(cudaDeviceSynchronize());
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&time[timerCounter], start, stop);
-    if (param.verbose) printf("duration soundspeed: %.7f ms\n", time[timerCounter]);
-    totalTime += time[timerCounter++];
 
     time[timerCounter] = 0;
     if (param.selfgravity) {
