@@ -50,9 +50,9 @@
 #define INTEGRATE_DENSITY 1
 
 // physical models: solid is continuum mechanics, if not set, only the Euler equation is solved
-#define SOLID 0
+#define SOLID 1
 // adds viscosity to the Euler equation
-#define NAVIER_STOKES 1
+#define NAVIER_STOKES 0
 // damage model following Benz & Asphaug 1995
 // this needs some preprocessing of the initial particle distribution since activation thresholds
 // have to be distributed among the particles
@@ -70,7 +70,7 @@
 #define SPHEQUATIONS SPH_VERSION1
 // for the tensile instability fix
 // you do not need this
-#define ARTIFICIAL_STRESS 0
+#define ARTIFICIAL_STRESS 1
 
 // standard SPH alpha/beta viscosity
 // you need this
@@ -83,7 +83,7 @@
 
 // for linear consistency
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
-#define TENSORIAL_CORRECTION 1
+#define TENSORIAL_CORRECTION 0
 
 // plastic flow conditions
 // you can choose between
