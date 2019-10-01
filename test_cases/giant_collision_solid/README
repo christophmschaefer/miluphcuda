@@ -1,0 +1,27 @@
+Giant Collision of two solids
+
+
+This is a low resolution test case for miluphCUDA, involving a giant collision of a dry Moon-sized (7.34e+22 kg,
+30 mass% iron-core, 70 mass% basalt-mantle) onto a water-rich Mars-sized (6.417e23 kg, 20 mass% iron-core,
+55 mass% basalt-mantle, 25 mass% water-ice-shell) body.
+
+
+The collision velocity is 2 times the mutual escape velocity at the moment of first contact, the
+impact angle is 45 deg. This scenario includes solid-body physics, the Tillotson equation of state
+and uses ~25k SPH particles (to speed up the simulation)
+
+
+To run this test case:
+  1. compile miluphCUDA with the parameter.h in this directory
+  2. unpack 'impact.0000.gz'
+  3. adapt the start script 'run.sh' to your system (path to CUDA libs and to miluphCUDA executable) and execute it
+  4. once the simulation run is finished (100 output files) check results, e.g., by comparing them
+     to the animations 'outcome_mat_types.mp4' and 'outcome_density.mp4', which show the interior structure of the
+     colliding bodies (cut into halves) during this collision scenario, or compare to the data given in impact.0100_compare.gz and impact.0100.h5_compare.gz.
+
+The test case should be finished (with the smoothing length given in material.cfg) after 11 minutes
+on a GeForce GTX 1080 (with CUDA-10).
+
+
+Christoph Burger and Christoph Schaefer
+1/Oct/2019

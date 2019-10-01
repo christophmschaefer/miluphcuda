@@ -1,7 +1,7 @@
 # miluphcuda makefile 0.01
 #
 
-CC       = /usr/bin/g++-5
+CC       = /usr/bin/g++
 CFLAGS   = -c -std=c99 -O3 -DVERSION=\"$(GIT_VERSION)\" -fPIC
 #CFLAGS   = -c -std=c99 -g
 LDFLAGS  = -lm 
@@ -11,8 +11,8 @@ LDFLAGS  = -lm
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
 
 #CUDA_DIR    = /usr/local/cuda-9.0
-CUDA_DIR    = /usr/local/cuda-8.0
-#CUDA_DIR    = /usr/local/cuda
+#CUDA_DIR    = /usr/local/cuda-8.0
+CUDA_DIR    = /usr/local/cuda
 
 NVCC   = ${CUDA_DIR}/bin/nvcc
 

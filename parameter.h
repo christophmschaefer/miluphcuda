@@ -43,7 +43,7 @@
 // integrate the continuity equation
 // if set to 0, the density will be calculated using the standard SPH sum \sum_i m_j W_ij
 // when setting up a SOLID simulation with Tillotson or ANEOS - it must be set to 1.
-#define INTEGRATE_ENERGY 0
+#define INTEGRATE_ENERGY 1
 
 // model solid bodies with stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
 // if set to 0, there is only pressure
@@ -76,7 +76,7 @@
 // you need this
 #define ARTIFICIAL_VISCOSITY 1
 // Balsara switch: lowers the artificial viscosity in regions without shocks
-#define BALSARA_SWITCH 0
+#define BALSARA_SWITCH 1
 
 // INVISCID SPH (see Cullen & Dehnen paper)
 #define INVISCID_SPH 0
@@ -151,7 +151,7 @@
 // FRAGMENTATION. if not used, set to 1
 #define MAX_NUM_FLAWS 30
 // maximum number of interactions per particle -> fixed array size
-#define MAX_NUM_INTERACTIONS 180
+#define MAX_NUM_INTERACTIONS 200
 
 
 
@@ -166,7 +166,7 @@
 // if set to 1 and INTEGRATE_DENSITY is 1, the density will not be lower than 1% rho_0 from
 // material.cfg
 // note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions
-#define DENSITY_FLOOR 0 // DENSITY FLOOR sets a minimum density for all particles. the floor density is 1% of the lowest density in material.cfg
+#define DENSITY_FLOOR 1 // DENSITY FLOOR sets a minimum density for all particles. the floor density is 1% of the lowest density in material.cfg
 
 // set p to 0 if p < 0
 #define REAL_HYDRO 0
