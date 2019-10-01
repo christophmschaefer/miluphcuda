@@ -15,12 +15,12 @@ Main features are
 
 Developers:
 
-Christoph M. Schaefer
-Sven Riecker
-Oliver Wandel
-Thomas I. Maindl
-Samuel Scherrer
-Janka Werner
-Christoph Burger
+Christoph M. Schaefer,
+Sven Riecker,
+Oliver Wandel,
+Thomas I. Maindl,
+Samuel Scherrer,
+Janka Werner,
+Christoph Burger,
 Marius Morlock
 
