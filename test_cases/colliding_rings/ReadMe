@@ -1,0 +1,14 @@
+# Colliding ring test case
+
+Two 2D colliding rings, example taken from Monaghan SPH without a tensile instability, JCP 2000
+
+To run the example:
+  i execute generate_initial_rings.py
+  ii compile miluphcuda with the parameter.h file from the test_cases/colliding_rings directory
+  iii run run.sh
+
+The code generates output files rings.0001 to rings.0500 (and .h5 if you have turned on hdf5 support).
+
+The runtime of the simulation is 2 min on a Nvidia Geforce GTX 1080 Ti.
+
+# Christoph Schaefer, 2 October 2019
