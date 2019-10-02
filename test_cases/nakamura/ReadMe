@@ -1,0 +1,19 @@
+# Impact simulation to compare with Nakamura & Fujiwara (1991) impact experiment
+# see sect. 4.4 in https://www.aanda.org/articles/aa/abs/2016/06/aa28060-15/aa28060-15.html for details
+
+this example makes use of the Grady & Kipp tensile damage model.
+
+# how to run it
+
+i execute create_input.sh in directory test_cases/nakamura/input
+ii compile miluphcuda with the parameter.h file from the test_cases/nakamura directory
+iii copy input/impact.0000 to test_cases/nakamura and run run.sh
+iv wait
+v create a disk.xdmf file with create_xdmf.py (./create_xdmf.py --input_files *.h5)
+vi visualise the data with paraview (load state nakamura.pvsm)
+
+The simulation produces 500 output files (500 MB each).
+
+
+
+# Christoph Schaefer, 2019-10-02
