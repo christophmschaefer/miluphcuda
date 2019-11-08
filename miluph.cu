@@ -29,6 +29,10 @@
 #include "little_helpers.h"
 #include <cuda_runtime.h>
 
+#if HDF5IO
+#include <hdf5.h>
+#endif
+
 #if USE_SIGNAL_HANDLER
 #include <unistd.h>
 #include <stdlib.h>
@@ -534,45 +538,45 @@ void usage(char *name) {
     fprintf(stderr,
             "Usage %s [options]\n"
             "	sph program, version %s.\n"
+            "Best options:\n"
+            "\t-h, --help\t\t\t This message.\n"
+            "\t-v, --verbose\t\t\t Be talkative (stdout).\n\n"
             "Available options:\n"
-            "\t-h, --help\t\t This message.\n"
-            "\t-G, --information\t Print information about detected nvidia GPUs on this host.\n"
-            "\t-d, --device_id <int> \t Try to use device with id <int> for computation (default: 0).\n"
-            "\t-Y, --format\t\t Print information about input and output format of the data files,\n"
-            "\t\t\t\t and about the compile time options of the binary.\n"
-            "\t-v, --verbose\t\t Be talkative (stdout).\n"
-            "\t-N, --numberofparticles\t Number of particles in input file.\n"
-#if GRAVITATING_POINT_MASSES
-            "\t-P, --nofpointmasses\t Number of pointmasses in mass input file.\n"
-#endif
-            "\t-I, --integrator\t Available Integrators are euler (1st order), euler_pc and monaghan_pc (2nd order),\n"
-            "\t\t\t\t rk2_adaptive (2nd order with adaptive time step).\n"
-            "\t-Q, --precision\t\t Precision of the rk2_adaptive integrator (default: 1e-6).\n"
-            "\t-n, --num\t\t Number of simulation steps.\n"
+            "\t-a, --theta\t\t\t Theta Criterion for Barnes-Hut Tree (default: 0.5)\n"
+            "\t-A, --no_ascii_output \t\t Disable ASCII output files (default is FALSE).\n"
+            "\t-b, --boundary_ratio\t\t Ratio of additional ghost boundary particles (default: 0).\n"
+            "\t-d, --device_id <int> \t\t Try to use device with id <int> for computation (default: 0).\n"
+            "\t-D, --directselfgravity\t\t Calculate selfgravity using direct particle-particle force and not the tree (slower).\n"
+            "\t-f, --filename\t\t\t Name of input data file (default: disk.0000).\n"
+            "\t\t\t\t\t Input data file name format is something like 'string'.XXXX, where\n"
+            "\t\t\t\t\t XXXX means runlevel and zeros.\n"
+            "\t-g, --decouplegravity\t\t Decouple hydro time scale from gravitational time scale.\n"
+            "\t-G, --information\t\t Print information about detected nvidia GPUs on this host.\n"
 #if HDF5IO
-            "\t-H, --hdf5_output \t Use hdf5 for output (default is FALSE).\n"
-            "\t-X, --hdf5_input \t Use hdf5 for input (default is FALSE), file 'string'.XXXX.h5 will be opened.\n"
+            "\t-H, --hdf5_output \t\t Use hdf5 for output (default is FALSE).\n"
 #endif
-            "\t-A, --no_ascii_output \t Disable ASCII output files (default is FALSE).\n"
-            "\t-a, --theta\t\t Theta Criterion for Barnes-Hut Tree (default: 0.5)\n"
-            "\t-t, --timeperstep\t Time for one simulation step.\n"
-            "\t-M, --maxtimestep\t Upper limit for the timestep (rk2_integrator), timestep size for euler, respectively.\n"
-            "\t-T, --starttime\t\t Start time of simulation.\n"
-            "\t-f, --filename\t\t Name of input data file (default: disk.0000).\n"
-            "\t\t\t\t Input data file name format is something like 'string'.XXXX, where\n"
-            "\t\t\t\t XXXX means runlevel and zeros.\n"
-            "\t-r, --restart\t\t Assume that ascii input file is old output file.\n"
-            "\t-m, --materialconfig\t Name of config file including material config\n"
-            "\t-k, --kernel\t\t use kernel function (default: cubic_spline)\n"
-            "\t      \t\t\t possible values: wendlandc2, wendlandc4, wendlandc6, cubic_spline, quartic_spline, spiky.\n"
-            "\t-s, --selfgravity\t Use selfgravity.\n"
-            "\t-D, --directselfgravity\t Calculate selfgravity using direct particle-particle force and not the tree (slower).\n"
-            "\t-g, --decouplegravity\t Decouple hydro time scale from gravitational time scale.\n"
+            "\t-I, --integrator\t\t Available Integrators are euler (1st order), euler_pc and monaghan_pc (2nd order),\n"
+            "\t\t\t\t\t rk2_adaptive (2nd order with adaptive time step).\n"
+            "\t-k, --kernel\t\t\t use kernel function (default: cubic_spline)\n"
+            "\t      \t\t\t\t possible values: wendlandc2, wendlandc4, wendlandc6, cubic_spline, quartic_spline, spiky.\n"
             "\t-L, --angular_momentum <value> \t Check for conservation of angular momentum. (default: off)\n"
-            "\t\t\t\t Simulations stops once the relative difference between current angular momentum and initial angular momentum is larger than <value>.\n"
-            "\t-b, --boundary_ratio\t Ratio of additional ghost boundary particles (default: 0).\n"
-            "Take a deep look at parameter.h. There you do necessary physical settings.\n"
-            "Authors: Christoph Schaefer, Sven Riecker, Oliver Wandel, Samuel Scherrer.\n",
+            "\t\t\t\t\t Simulations stops once the relative difference between current angular momentum and initial angular momentum is larger than <value>.\n"
+            "\t-m, --materialconfig\t\t Name of config file including material config\n"
+            "\t-M, --maxtimestep\t\t Upper limit for the timestep (rk2_integrator), timestep size for euler, respectively.\n"
+            "\t-n, --num\t\t\t Number of simulation steps.\n"
+            "\t-Y, --format\t\t\t Print information about input and output format of the data files,\n"
+            "\t\t\t\t\t and about the compile time options of the binary.\n"
+            "\t-Q, --precision\t\t\t Precision of the rk2_adaptive integrator (default: 1e-6).\n"
+            "\t-r, --restart\t\t\t Assume that ascii input file is old output file.\n"
+            "\t-s, --selfgravity\t\t Use selfgravity.\n"
+            "\t-t, --timeperstep\t\t Time for one simulation step.\n"
+            "\t-T, --starttime\t\t\t Start time of simulation.\n"
+#if HDF5IO
+            "\t-X, --hdf5_input \t\t Use hdf5 for input (default is FALSE), file 'string'.XXXX.h5 will be opened.\n"
+#endif
+            "\nTake a deep look at parameter.h. There you do necessary physical settings.\n"
+            "Authors: Christoph Schaefer, Sven Riecker, Oliver Wandel, Samuel Scherrer, Christoph Burger, Thomas Maindl.\n"
+            "More information on github: https://github.com/christophmschaefer/miluphcuda\n",
         name, VERSION);
     exit(0);
 }
@@ -595,8 +599,6 @@ int main(int argc, char *argv[]) {
         { "restart", 0, NULL, 'r' },
         { "numberoftimesteps", 1, NULL, 'n' },
         { "device_id", 1, NULL, 'd' },
-        { "numberofparticles", 1, NULL, 'N' },
-        { "nofpointmasses", 1, NULL, 'P' },
         { "timeperstep", 1, NULL, 't' },
         { "maxtimestep", 1, NULL, 'M' },
         { "starttime", 1, NULL, 'T' },
@@ -624,6 +626,8 @@ int main(int argc, char *argv[]) {
         usage(argv[0]);
     }
 
+
+
     param.hdf5input = FALSE;
     param.hdf5output = FALSE;
     param.restart = FALSE;
@@ -644,7 +648,7 @@ int main(int argc, char *argv[]) {
 #endif
 
     int i, c;
-    while ((c = getopt_long(argc, argv, "P:Q:d:M:b:m:N:L:k:T:DI:t:a:n:f:b:rXYvhHshVgGA", opts, &i)) != -1) {
+    while ((c = getopt_long(argc, argv, "Q:d:M:b:m:L:k:T:DI:t:a:n:f:b:rXYvhHshVgGA", opts, &i)) != -1) {
         switch (c) {
             case 'M':
                 param.maxtimestep = atof(optarg);
@@ -675,22 +679,6 @@ int main(int argc, char *argv[]) {
                 break;
             case 'A':
                 param.ascii_output = FALSE;
-                break;
-            case 'P':
-                numberOfPointmasses = atoi(optarg);
-                if (numberOfPointmasses < 0) {
-                    fprintf(stderr,
-                            "Grmpf. Something's wrong with the number of point masses.\n ");
-                    exit(1);
-                }
-                break;
-            case 'N':
-                numberOfParticles = atoi(optarg);
-                if (numberOfParticles < 0) {
-                    fprintf(stderr,
-                            "Grmpf. Something's wrong with the number of particles.\n ");
-                    exit(1);
-                }
                 break;
             case 'L':
                 param.angular_momentum_check = atof(optarg);
@@ -787,6 +775,113 @@ int main(int argc, char *argv[]) {
                 exit(0);
         }
     }
+
+    // get the information about the number of particles in the file
+    if ((inputFile.data = fopen(inputFile.name, "r")) == NULL) {
+        fprintf(stderr, "Wtf? File %s not found.\n", inputFile.name);
+        if (param.hdf5input) {
+#if HDF5IO
+            fprintf(stderr, "Hope you know what you're up to and search for a h5 file\n");
+            char h5filename[256];
+            strcpy(h5filename, inputFile.name);
+            strcat(h5filename, ".h5");
+
+            hid_t file_id = H5Fopen (h5filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+            if (file_id < 0) {
+                fprintf(stderr, "********************** Error opening file %s\n", h5filename);
+                exit(1);
+            } else {
+                fprintf(stdout, "Using hdf5 input file %s\n", h5filename);
+            }
+
+            /* open the dataset for the positions */
+            hid_t x_id = H5Dopen(file_id, "/x", H5P_DEFAULT);
+            if (x_id < 0) {
+                fprintf(stderr, "Could not find locations in hdf5 file.  Exiting.\n");
+            }
+            /* determine number of particles stored in hdf5 file */
+            hid_t dspace = H5Dget_space(x_id);
+            const int ndims = H5Sget_simple_extent_ndims(dspace);
+            hsize_t dims[ndims];
+            H5Sget_simple_extent_dims(dspace, dims, NULL);
+            int my_anop = dims[0];
+            fprintf(stdout, "Found %d particles in %s.\n", my_anop, h5filename);
+            numberOfParticles = my_anop;
+            H5Fclose(file_id);
+#endif
+        } else {
+            exit(1);
+        }
+    } else {
+        // reading number of lines in file
+        int count = 0;
+        char c;
+        for (c = getc(inputFile.data); c != EOF; c = getc(inputFile.data)) {
+            if (c == '\n') {
+                count++;
+            }
+        }
+        fprintf(stdout, "Found %d particles in %s.\n", count, inputFile.name);
+        fclose(inputFile.data);
+        numberOfParticles = count;
+    }
+
+#if GRAVITATING_POINT_MASSES
+    // get the information about the number of particles in mass file
+    char massfilename[256];
+    FILE *inputf;
+    strcpy(massfilename, inputFile.name);
+    strcat(massfilename, ".mass");
+
+    if ((inputf = fopen(massfilename, "r")) == NULL) {
+        fprintf(stderr, "File for the point masses %s not found.\n", massfilename);
+        if (param.hdf5input) {
+# if HDF5IO
+            fprintf(stderr, "Hope you know what you're up to and search for a h5 file\n");
+            char h5filename[256];
+            strcpy(h5filename, inputFile.name);
+            strcat(h5filename, ".mass.h5");
+
+            hid_t file_id = H5Fopen (h5filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+            if (file_id < 0) {
+                fprintf(stderr, "********************** Error opening file %s\n", h5filename);
+                exit(1);
+            } else {
+                fprintf(stdout, "Using hdf5 input file %s\n", h5filename);
+            }
+
+            /* open the dataset for the positions */
+            hid_t x_id = H5Dopen(file_id, "/x", H5P_DEFAULT);
+            if (x_id < 0) {
+                fprintf(stderr, "Could not find locations in hdf5 file.  Exiting.\n");
+            }
+            /* determine number of particles stored in hdf5 file */
+            hid_t dspace = H5Dget_space(x_id);
+            const int ndims = H5Sget_simple_extent_ndims(dspace);
+            hsize_t dims[ndims];
+            H5Sget_simple_extent_dims(dspace, dims, NULL);
+            int my_anop = dims[0];
+            fprintf(stdout, "Found %d point masses in %s.\n", my_anop, h5filename);
+            numberOfPointmasses = my_anop;
+            H5Fclose(file_id);
+# endif
+        } else {
+            exit(1);
+        }
+    } else {
+        // reading number of lines in file
+        int count = 0;
+        char c;
+        for (c = getc(inputf); c != EOF; c = getc(inputf)) {
+            if (c == '\n') {
+                count++;
+            }
+        }
+        fprintf(stdout, "Found %d particles in %s.\n", count, massfilename);
+        fclose(inputf);
+        numberOfPointmasses = count;
+    }
+#endif
 
     maxNumberOfParticles = (int) ( (1+param.boundary_ratio) * numberOfParticles);
     numberOfRealParticles = numberOfParticles;
