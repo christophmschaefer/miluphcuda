@@ -280,7 +280,6 @@ Option	&	Purpose		\\
 \verb|-d, --device_id <int>|	&	try to use GPU device with id \verb|<int>| for computation (default: 0)	\\
 \verb|-Y, --format|	&	print information about input and output format of the data files	\\
 \verb|-v, --verbose|	&	be talkative (stdout)	\\
-\verb|-N, --numberofparticles|		&	number of particles in the input file, and hence in the simulation	\\
 \verb|-I, --integrator|	&	available Integrators are \verb|euler| (1st order), \verb|euler_pc| and \verb|monaghan_pc| (2nd order), \verb|rk2_adaptive| (2nd order with adaptive time step)	\\
 \verb|-Q, --precision|		&	precision of the \verb|rk2_adaptive| integrator (default: 1e-6)	\\
 \verb|-n, --num|	&	number of simulation steps	\\
@@ -343,8 +342,7 @@ rings.0003
 (...)
 rings.0500
 # the used miluphCUDA command line is
-./miluphcuda -v -I rk2_adaptive -n 500 -H -t 1.0 -f rings.0000
--m material.cfg -N `wc -l rings.0000`
+./miluphcuda -v -I rk2_adaptive -n 500 -H -t 1.0 -f rings.0000 -m material.cfg 
 \end{verbatim}
 
 
