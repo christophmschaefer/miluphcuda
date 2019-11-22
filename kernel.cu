@@ -237,7 +237,7 @@ __device__ void wendlandc4(double *W, double dWdx[DIM], double *dWdr, double dx[
         *dWdr = -1485./(16.*M_PI*sml*sml*sml*sml) * (1-q)*(1-q)*(1-q)*(1-q)*(1-q) * (1.-35.*q*q+105.*q*q*q) * (q< 1);
 #elif (DIM == 1)
         *W = 3./(2.*sml) * (1-q)*(1-q)*(1-q)*(1-q)*(1-q) * (1+5*q+8*q*q) * (q < 1);
-        *dWdr = -21./(sml*sml) * q * (1-q)*(1-q)*(1-q)*(1-q) * (1+4q) * (q < 1);
+        *dWdr = -21./(sml*sml) * q * (1-q)*(1-q)*(1-q)*(1-q) * (1+4*q) * (q < 1);
 #endif
         for (d = 0; d < DIM; d++) {
             dWdx[d] = *dWdr/r * dx[d];
@@ -389,7 +389,7 @@ __global__ void CalcDivvandCurlv(int *interactions)
                 divv += p.m[j]/p.rho[i] * (vj[d] - vi[d]) * dWdx[d];
             }
             /* curlv */
-#if DIM == 1
+#if (DIM == 1 && BALSARA_SWITCH)
 #error unset BALSARA SWITCH in 1D
 #elif DIM == 2
             // only one component in 2D
