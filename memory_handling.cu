@@ -187,7 +187,8 @@ int allocate_particles_memory(struct Particle *a, int allocate_immutables)
 	cudaVerify(cudaMalloc((void**)&a->cs, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&a->noi, memorySizeForInteractions));
 	cudaVerify(cudaMalloc((void**)&a->depth, memorySizeForInteractions));
-	cudaVerify(cudaMalloc((void**)&a->materialId, memorySizeForInteractions));
+// moved to p_device only, so we don't need mem here anymore
+//	cudaVerify(cudaMalloc((void**)&a->materialId, memorySizeForInteractions));
 
 #if JC_PLASTICITY
 	cudaVerify(cudaMalloc((void**)&a->ep, memorySizeForParticles));
@@ -370,7 +371,8 @@ int copy_particles_variables_device_to_device(struct Particle *dst, struct Parti
 
     cudaVerify(cudaMemcpy(dst->x, src->x, memorySizeForTree, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy(dst->x0, src->x0, memorySizeForTree, cudaMemcpyDeviceToDevice));
-    cudaVerify(cudaMemcpy((*dst).materialId, (*src).materialId, memorySizeForInteractions, cudaMemcpyDeviceToDevice));
+    // materialId moved to p_device aka p_rhs only
+    //cudaVerify(cudaMemcpy((*dst).materialId, (*src).materialId, memorySizeForInteractions, cudaMemcpyDeviceToDevice));
 #if DIM > 1
     cudaVerify(cudaMemcpy(dst->y, src->y, memorySizeForTree, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy(dst->y0, src->y0, memorySizeForTree, cudaMemcpyDeviceToDevice));
@@ -514,7 +516,8 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 	cudaVerify(cudaFree(a->cs));
 	cudaVerify(cudaFree(a->noi));
 	cudaVerify(cudaFree(a->depth));
-	cudaVerify(cudaFree(a->materialId));
+    // materialId only on p_device
+	//cudaVerify(cudaFree(a->materialId));
 #if DIM > 2
 	cudaVerify(cudaFree(a->z));
 	cudaVerify(cudaFree(a->z0));

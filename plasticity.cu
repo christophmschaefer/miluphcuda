@@ -40,7 +40,7 @@ __global__ void plasticity()
     register double S_i[DIM][DIM];
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        matId = p.materialId[i];
+        matId = p_rhs.materialId[i];
         if (EOS_TYPE_REGOLITH == matEOS[matId]) {
 
             alpha_phi = matAlphaPhi[matId];
@@ -130,7 +130,7 @@ __global__ void vonMisesPlasticity(void) {
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         // VISCOUS_REGOLITH is treated in timeintegration.cu when \sigma is calculated
-        if (matEOS[p.materialId[i]] == EOS_TYPE_VISCOUS_REGOLITH) {
+        if (matEOS[p_rhs.materialId[i]] == EOS_TYPE_VISCOUS_REGOLITH) {
             continue;
         }
 
@@ -155,7 +155,7 @@ __global__ void vonMisesPlasticity(void) {
 #if MOHR_COULOMB_PLASTICITY
         // mohr coulomb yield criterion
         // matInternalFriction = \mu = tan(matFrictionAngle)
-        y = matInternalFriction[p.materialId[i]] * p.p[i] + matCohesion[p.materialId[i]];
+        y = matInternalFriction[p_rhs.materialId[i]] * p.p[i] + matCohesion[p_rhs.materialId[i]];
         // drucker prager like -> compare to sqrt(J2)
         if (J2 > 0) {
             mises_f = y/sqrt_J2;
@@ -166,9 +166,9 @@ __global__ void vonMisesPlasticity(void) {
 #elif DRUCKER_PRAGER_PLASTICITY
         A = B = 0;
         // drucker prager constants from mohr-coulomb constants -> 3D!
-        A = 6. * matCohesion[p.materialId[i]] * cos(matFrictionAngle[p.materialId[i]])
-                / (sqrt(3.) * (3. - sin(matFrictionAngle[p.materialId[i]])));
-        B = 2. * sin(matFrictionAngle[p.materialId[i]]) / (sqrt(3.) * (3. - sin(matFrictionAngle[p.materialId[i]])));
+        A = 6. * matCohesion[p_rhs.materialId[i]] * cos(matFrictionAngle[p_rhs.materialId[i]])
+                / (sqrt(3.) * (3. - sin(matFrictionAngle[p_rhs.materialId[i]])));
+        B = 2. * sin(matFrictionAngle[p_rhs.materialId[i]]) / (sqrt(3.) * (3. - sin(matFrictionAngle[p_rhs.materialId[i]])));
 
         // yield strength determined by drucker prager condition
         y = A + 1./3*p.p[i] * B;
@@ -180,11 +180,11 @@ __global__ void vonMisesPlasticity(void) {
         if (mises_f > 1)
             mises_f = 1;
 #elif COLLINS_PRESSURE_DEPENDENT_YIELD_STRENGTH
-        y_0 = matCohesion[p.materialId[i]];
-        y_M = matYieldStress[p.materialId[i]];
-        mu_i = matInternalFriction[p.materialId[i]];
+        y_0 = matCohesion[p_rhs.materialId[i]];
+        y_M = matYieldStress[p_rhs.materialId[i]];
+        mu_i = matInternalFriction[p_rhs.materialId[i]];
 #if FRAGMENTATION
-        mu_d = matInternalFrictionDamaged[p.materialId[i]];
+        mu_d = matInternalFrictionDamaged[p_rhs.materialId[i]];
 #endif
         // shear strength of the intact material
         ytmp = y_0;
@@ -219,10 +219,10 @@ __global__ void vonMisesPlasticity(void) {
             mises_f = 1;
 #endif
 #else // simple von Mises yield criterion without *any* dependency
-        y = matYieldStress[p.materialId[i]];
+        y = matYieldStress[p_rhs.materialId[i]];
 #if SIRONO_POROSITY
         // Shear Strength using Sironos Model
-        if (matEOS[p.materialId[i]] == EOS_TYPE_SIRONO) {
+        if (matEOS[p_rhs.materialId[i]] == EOS_TYPE_SIRONO) {
             y = sqrt((-1.0) * p.tensile_strength[i] * p.compressive_strength[i]);
             p.shear_strength[i] = y;
         } else {
@@ -278,16 +278,16 @@ __global__ void JohnsonCookPlasticity(void) {
         }
 
 
-        y_0 = matjc_y0[p.materialId[i]];
-        B = matjc_B[p.materialId[i]];
-        n = matjc_n[p.materialId[i]];
-        m = matjc_m[p.materialId[i]];
-        edot0 = matjc_edot0[p.materialId[i]];
-        C = matjc_C[p.materialId[i]];
-        Tref = matjc_Tref[p.materialId[i]];
-        Tmelt = matjc_Tmelt[p.materialId[i]];
-        /*Cp = matCp[p.materialId[i]];*/
-        /*CV = matCV[p.materialId[i]];*/
+        y_0 = matjc_y0[p_rhs.materialId[i]];
+        B = matjc_B[p_rhs.materialId[i]];
+        n = matjc_n[p_rhs.materialId[i]];
+        m = matjc_m[p_rhs.materialId[i]];
+        edot0 = matjc_edot0[p_rhs.materialId[i]];
+        C = matjc_C[p_rhs.materialId[i]];
+        Tref = matjc_Tref[p_rhs.materialId[i]];
+        Tmelt = matjc_Tmelt[p_rhs.materialId[i]];
+        /*Cp = matCp[p_rhs.materialId[i]];*/
+        /*CV = matCV[p_rhs.materialId[i]];*/
 
         register double edotp = p.edotp[i];
         register double ep = p.ep[i];

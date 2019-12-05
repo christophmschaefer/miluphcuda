@@ -1207,7 +1207,7 @@ __global__ void checkError
 #if INTEGRATE_ENERGY
         hasEnergy = 0;
 
-        switch  (matEOS[p.materialId[i]]) {
+        switch  (matEOS[p_rhs.materialId[i]]) {
             case (EOS_TYPE_TILLOTSON):
                 hasEnergy = 1;
                 break;

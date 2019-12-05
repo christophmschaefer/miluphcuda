@@ -37,7 +37,7 @@ __global__ void calculateDistensionChange()
     register int i, inc, matId;
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        matId = p.materialId[i];
+        matId = p_rhs.materialId[i];
         if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN) {
             if (p.alpha_jutzi[i] <= 1.0) {
                 p.dalphadt[i] = 0.0;
@@ -65,7 +65,7 @@ __global__ void calculateCompressiveStrength()
     register int i, inc, matId;
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        matId = p.materialId[i];
+        matId = p_rhs.materialId[i];
         if (matEOS[matId] == EOS_TYPE_SIRONO) {
             double alpha = matporsirono_alpha[matId];
             double pm = matporsirono_pm[matId];
@@ -92,7 +92,7 @@ __global__ void calculateTensileStrength()
     register int i, inc, matId;
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        matId = p.materialId[i];
+        matId = p_rhs.materialId[i];
         if (matEOS[matId] == EOS_TYPE_SIRONO) {
             double rho_s = matporsirono_rho_s[matId];
             double phi = p.rho[i] / rho_s;

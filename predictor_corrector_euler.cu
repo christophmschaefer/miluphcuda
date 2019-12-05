@@ -299,7 +299,7 @@ __global__ void pressureChangeCheck_euler(double *maxpressureDiffPerBlock)
     int i, j, k, m;
     maxpressureDiff = 0.0;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
-        if (matEOS[predictor.materialId[i]] == EOS_TYPE_JUTZI || matEOS[predictor.materialId[i]] == EOS_TYPE_JUTZI_MURNAGHAN) {
+        if (matEOS[p_rhs.materialId[i]] == EOS_TYPE_JUTZI || matEOS[p_rhs.materialId[i]] == EOS_TYPE_JUTZI_MURNAGHAN) {
         /* when this function is called, p points to predictor_device */
             // only consider pressure if the particle is compressed
             if (p.drhodt[i] > 0) {
@@ -390,7 +390,7 @@ __global__ void setTimestep_euler(double *forcesPerBlock, double *courantPerBloc
     double dtartvisc = DBL_MAX;
 
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
-        matId = p.materialId[i];
+        matId = p_rhs.materialId[i];
 #if INTEGRATE_ENERGY
         hasEnergy = 0;
 

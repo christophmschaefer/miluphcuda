@@ -62,7 +62,7 @@ __global__ void set_stress_tensor(void)
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        matId = p.materialId[i];
+        matId = p_rhs.materialId[i];
         niters = 0;
 
         // here we set the stress tensor sigma from pressure and deviatoric stress S

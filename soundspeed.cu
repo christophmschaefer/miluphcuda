@@ -35,7 +35,7 @@ __global__ void calculateSoundSpeed()
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        matId = p.materialId[i];
+        matId = p_rhs.materialId[i];
         if (EOS_TYPE_POLYTROPIC_GAS == matEOS[matId]) {
             p.cs[i] = sqrt(matPolytropicK[matId] * pow(p.rho[i], matPolytropicGamma[matId]-1.0));
         } else if (EOS_TYPE_LOCALLY_ISOTHERMAL_GAS == matEOS[matId]) {
@@ -110,7 +110,7 @@ __global__ void initializeSoundspeed()
     register int i, inc, matId;
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        matId = p.materialId[i];
+        matId = p_rhs.materialId[i];
         if (EOS_TYPE_POLYTROPIC_GAS == matEOS[matId]) {
             p.cs[i] = 0.0; // for gas this will be calculated each step by kernel calculateSoundSpeed
         } else if (EOS_TYPE_ISOTHERMAL_GAS == matEOS[matId]) {

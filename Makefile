@@ -1,9 +1,9 @@
 # miluphcuda makefile 0.01
 #
 
-CC       = /usr/bin/g++
-CFLAGS   = -c -std=c99 -O3 -DVERSION=\"$(GIT_VERSION)\" -fPIC
-#CFLAGS   = -c -std=c99 -g
+CC       = /usr/bin/g++-7
+#CFLAGS   = -c -std=c99 -O3 -DVERSION=\"$(GIT_VERSION)\" -fPIC
+CFLAGS   = -c -std=c99 -g
 LDFLAGS  = -lm 
 
 
@@ -11,15 +11,15 @@ LDFLAGS  = -lm
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
 
 #CUDA_DIR    = /usr/local/cuda-9.0
-CUDA_DIR    = /usr/local/cuda-8.0
-#CUDA_DIR    = /usr/local/cuda
+#CUDA_DIR    = /usr/local/cuda-8.0
+CUDA_DIR    = /usr/local/cuda
 
 NVCC   = ${CUDA_DIR}/bin/nvcc
 
 #The first NVFLAGS option is for when one wishes to use a debugger. Otherwise use the third option,
-#NVFLAGS  = -x cu -c -dc  -G -lineinfo  -Xcompiler "-rdynamic -g -pthread"  -DVERSION=\"$(GIT_VERSION)\" 
+NVFLAGS  = -x cu -c -dc -ccbin ${CC}  -G -lineinfo  -Xcompiler "-rdynamic -g -pthread"  -DVERSION=\"$(GIT_VERSION)\" 
 #NVFLAGS  = -x cu -c -dc -O3  -Xcompiler "-O3 -pthread" --ptxas-options=-v  
-NVFLAGS  = -ccbin ${CC} -x cu -c -dc -O3  -Xcompiler "-O3 -pthread" -Wno-deprecated-gpu-targets -DVERSION=\"$(GIT_VERSION)\"  --ptxas-options=-v  
+#NVFLAGS  = -ccbin ${CC} -x cu -c -dc -O3  -Xcompiler "-O3 -pthread" -Wno-deprecated-gpu-targets -DVERSION=\"$(GIT_VERSION)\"  --ptxas-options=-v  
 
 CUDA_LINK_FLAGS = -dlink
 CUDA_LINK_OBJ = cuLink.o
@@ -38,9 +38,9 @@ CUDA_LINK_OBJ = cuLink.o
 # gtx 750 Ti
 #GPU_ARCH = -arch=sm_50
 # gtx 680 and gtx 770
-GPU_ARCH = -arch=sm_30
+#GPU_ARCH = -arch=sm_30
 # gtx 1080
-#GPU_ARCH = -arch=sm_61
+GPU_ARCH = -arch=sm_61
 
 CUDA_LIB      = ${CUDA_DIR}
 INCLUDE_DIRS += -I$(CUDA_LIB)/include -I/usr/include/hdf5/serial -I/usr/lib/openmpi/include/

@@ -47,7 +47,7 @@ __global__ void calculateDensity(int *interactions) {
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        if (EOS_TYPE_IGNORE == matEOS[p.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
                 continue;
         }
         sml = p.h[i];
@@ -78,7 +78,7 @@ __global__ void calculateDensity(int *interactions) {
         // sph sum for particle i
         for (j = 0; j < p.noi[i]; j++) {
             ip = interactions[i * MAX_NUM_INTERACTIONS + j];
-            if (EOS_TYPE_IGNORE == matEOS[p.materialId[ip]] || p_rhs.materialId[ip] == EOS_TYPE_IGNORE) {
+            if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[ip]] || p_rhs.materialId[ip] == EOS_TYPE_IGNORE) {
                 continue;
             }
 #if (VARIABLE_SML || INTEGRATE_SML || DEAL_WITH_TOO_MANY_INTERACTIONS)

@@ -88,7 +88,7 @@ __global__ void gravitation_from_point_masses()
 
     // loop over all particles
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numRealParticles; i += inc) {
-        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE || matEOS[p.materialId[i]] == EOS_TYPE_IGNORE) {
+        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE || matEOS[p_rhs.materialId[i]] == EOS_TYPE_IGNORE) {
             continue;
         }
 
@@ -140,7 +140,7 @@ __global__ void direct_selfgravity()
             a_grav[d] = 0.0;
         }
         sml = p.h[i];
-        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE || matEOS[p.materialId[i]] == EOS_TYPE_IGNORE) {
+        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE || matEOS[p_rhs.materialId[i]] == EOS_TYPE_IGNORE) {
             continue;
         }
 

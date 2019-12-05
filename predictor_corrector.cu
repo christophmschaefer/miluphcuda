@@ -350,7 +350,7 @@ __global__ void pressureChangeCheck(double *maxpressureDiffPerBlock)
     int i, j, k, m;
     maxpressureDiff = 0.0;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
-        if (matEOS[predictor.materialId[i]] == EOS_TYPE_JUTZI || matEOS[predictor.materialId[i]] == EOS_TYPE_JUTZI_MURNAGHAN) {
+        if (matEOS[p_rhs.materialId[i]] == EOS_TYPE_JUTZI || matEOS[p_rhs.materialId[i]] == EOS_TYPE_JUTZI_MURNAGHAN) {
             // cms - 20190626
             // first rhs is called at beginning of timestep with predictor
             // and at the end with p_device
@@ -438,7 +438,7 @@ __global__ void setTimestep(double *forcesPerBlock, double *courantPerBlock, dou
     double dtartvisc = DBL_MAX;
 
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
-        matId = p.materialId[i];
+        matId = p_rhs.materialId[i];
 #if INTEGRATE_ENERGY
         hasEnergy = 0;
 

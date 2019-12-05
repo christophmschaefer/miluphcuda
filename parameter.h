@@ -27,7 +27,7 @@
 #define SPH_VERSION1 1
 #define SPH_VERSION2 2
 // Dimension of the problem
-#define DIM 3
+#define DIM 2
 #define DEBUG 0
 
 // physics
@@ -43,7 +43,7 @@
 // integrate the continuity equation
 // if set to 0, the density will be calculated using the standard SPH sum \sum_i m_j W_ij
 // when setting up a SOLID simulation with Tillotson or ANEOS - it must be set to 1.
-#define INTEGRATE_ENERGY 1
+#define INTEGRATE_ENERGY 0
 
 // model solid bodies with stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
 // if set to 0, there is only pressure
@@ -56,7 +56,7 @@
 // damage model following Benz & Asphaug 1995
 // this needs some preprocessing of the initial particle distribution since activation thresholds
 // have to be distributed among the particles
-#define FRAGMENTATION 1
+#define FRAGMENTATION 0
 
 // SPH stuff
 // here, you have to define which kind of SPH representation you want to solve the
@@ -70,7 +70,7 @@
 #define SPHEQUATIONS SPH_VERSION1
 // for the tensile instability fix
 // you do not need this
-#define ARTIFICIAL_STRESS 0
+#define ARTIFICIAL_STRESS 1
 
 // standard SPH alpha/beta viscosity
 // you need this
@@ -83,7 +83,7 @@
 
 // for linear consistency
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
-#define TENSORIAL_CORRECTION 1
+#define TENSORIAL_CORRECTION 0
 
 // plastic flow conditions
 // you can choose between
@@ -120,7 +120,7 @@
 //                   cohesion = Pascal
 //  if you do not know what this is, choose 1 or nothing
 
-#define VON_MISES_PLASTICITY 1
+#define VON_MISES_PLASTICITY 0
 //  WARNING: choose only one of the following three options
 //  this will be fixed in a later version of the code
 #define MOHR_COULOMB_PLASTICITY 0
@@ -149,9 +149,9 @@
 // constants
 // maximum number of activation threshold per particle -> fixed array size, only needed for
 // FRAGMENTATION. if not used, set to 1
-#define MAX_NUM_FLAWS 40 
+#define MAX_NUM_FLAWS 1
 // maximum number of interactions per particle -> fixed array size
-#define MAX_NUM_INTERACTIONS 200
+#define MAX_NUM_INTERACTIONS 180
 
 
 
@@ -204,7 +204,7 @@
 // additional smoothing of the velocity field
 // hinders particle penetration
 // see Morris and Monaghan 1984
-#define XSPH 0
+#define XSPH 1
 
 // boundaries EXPERIMENTAL, please do not use this....
 #define BOUNDARY_PARTICLE_ID -1

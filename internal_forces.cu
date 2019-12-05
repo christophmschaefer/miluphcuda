@@ -137,7 +137,7 @@ __global__ void internalForces(int *interactions) {
         matId = p_rhs.materialId[i];
         //do nothing for boundary particles
         if (matId == BOUNDARY_PARTICLE_ID) continue;
-        if (EOS_TYPE_IGNORE == matEOS[p.materialId[i]] || matId == EOS_TYPE_IGNORE) {
+        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || matId == EOS_TYPE_IGNORE) {
                 continue;
         }
 
@@ -261,7 +261,7 @@ __global__ void internalForces(int *interactions) {
             j = interactions[i * MAX_NUM_INTERACTIONS + k];
 
             matIdj = p_rhs.materialId[j];
-            if (EOS_TYPE_IGNORE == matEOS[p.materialId[j]] || matIdj == EOS_TYPE_IGNORE) {
+            if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || matIdj == EOS_TYPE_IGNORE) {
                 continue;
             }
 
@@ -270,7 +270,7 @@ __global__ void internalForces(int *interactions) {
             }
 
             boundia = 0;
-            boundia = p.materialId[j] == BOUNDARY_PARTICLE_ID;
+            boundia = p_rhs.materialId[j] == BOUNDARY_PARTICLE_ID;
             /*
              * now, if the interaction partner is a BOUNDARY_PARTICLE
              * we need to determine the correct velocity, pressure and stress
@@ -360,7 +360,7 @@ __global__ void internalForces(int *interactions) {
             } //material if
 
             //get sigma_j
-            if (matEOS[p.materialId[j]] != EOS_TYPE_REGOLITH) {
+            if (matEOS[p_rhs.materialId[j]] != EOS_TYPE_REGOLITH) {
                 for (d = 0; d < DIM; d++) {
                     for (e = 0; e < DIM; e++) {
                         sigma_j[d][e] = p_rhs.sigma[stressIndex(j, d, e)];
@@ -862,9 +862,9 @@ __global__ void internalForces(int *interactions) {
             work = 0;
         }
         /* daniel Thun daniel thun */
-        p.dTdt[i] = work / (matCp[p.materialId[i]] * p.rho[i]);
+        p.dTdt[i] = work / (matCp[p_rhs.materialId[i]] * p.rho[i]);
         if (p.dTdt[i] < 0) {
-            //fprintf(stderr, "%d work: %g, Cp: %g, rho: %g\n", i, work, matCp[p.materialId[i]], p.rho[i]);
+            //fprintf(stderr, "%d work: %g, Cp: %g, rho: %g\n", i, work, matCp[p_rhs.materialId[i]], p.rho[i]);
         }
         if (p.noi[i] < 1)
             p.dTdt[i] = 0.0;
@@ -1058,7 +1058,7 @@ __global__ void calculatedeviatoricStress(int *interactions)
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        mt = p.materialId[i];
+        mt = p_rhs.materialId[i];
         sml = p.h[i];
         matId = mt;
         if (matEOS[mt] != EOS_TYPE_VISCOUS_REGOLITH) {
@@ -1081,7 +1081,7 @@ __global__ void calculatedeviatoricStress(int *interactions)
         for (k = 0; k < noi; k++) {
             // interacting particle id
             j = interactions[i * MAX_NUM_INTERACTIONS + k];
-            if (EOS_TYPE_IGNORE == matEOS[p.materialId[j]] || EOS_TYPE_IGNORE == p_rhs.materialId[j]) {
+            if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || EOS_TYPE_IGNORE == p_rhs.materialId[j]) {
                 continue;
             }
             densityj = p.rho[j];
@@ -1147,7 +1147,7 @@ __global__ void calculatedeviatoricStress(int *interactions)
 #if 0
             if (isnan(dvx) || isnan(dvy) || isnan(dvz)) {
 //                printf("ACCELS %e %e %e\n", ax, ay, az);
-                printf("MATERIAL IDs %d %d\n", matId, p.materialId[j]);
+                printf("MATERIAL IDs %d %d\n", matId, p_rhs.materialId[j]);
                 printf("ilocations --- jlocations %e %e %e  --- %e %e %e\n", p.x[i], p.y[i], p.z[i], p.x[j], p.y[j], p.z[j]);
                 printf("dWdx  --- %e %e %e\n", dWdx, dWdy, dWdz);
                 printf("DX %e %e %e\n", dx, dy, dz);

@@ -49,7 +49,7 @@ __global__ void compute_artificial_stress(int *interactions)
     inc = blockDim.x * gridDim.x;
 
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        matId = p.materialId[i];
+        matId = p_rhs.materialId[i];
         // build stress tensor from deviatoric stress and pressure
         for (d = 0; d < DIM; d++) { 
             for (e = 0; e < DIM; e++) {

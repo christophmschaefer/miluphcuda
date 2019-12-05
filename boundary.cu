@@ -162,7 +162,7 @@ __global__ void BoundaryConditionsAfterIntegratorStep(int *interactions)
     double ddistance;
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        matId = p.materialId[i];
+        matId = p_rhs.materialId[i];
     }
 }
 
@@ -323,7 +323,7 @@ __global__ void setQuantitiesGhostParticles()
                 for (b = 0; b < DIM; b++) {
                     p.S[i*DIM*DIM+a*DIM+b] = -p.S[pidx*DIM*DIM+a*DIM+b];
                 }
-                if (matEOS[p.materialId[i]] == EOS_TYPE_REGOLITH) {
+                if (matEOS[p_rhs.materialId[i]] == EOS_TYPE_REGOLITH) {
                     p.S[i*DIM*DIM+a*DIM+a] *= -1;
                 }
             }
@@ -394,7 +394,7 @@ __global__ void insertGhostParticles()
                 p.depth[idx] = p.depth[i];
                 p.p[idx] = p.p[i];
               //  p.e[idx] = p.e[i];
-                p.materialId[idx] = p.materialId[i];
+                p_rhs.materialId[idx] = p_rhs.materialId[i];
 
                 p.m[idx] = p.m[i];
                 p.rho[idx] = p.rho[i];
@@ -422,7 +422,7 @@ __global__ void insertGhostParticles()
 #endif
                 /* set mass and material type and sml */
                 p.h[idx] = sml;
-                p.materialId[idx] = p.materialId[i];
+                p_rhs.materialId[idx] = p_rhs.materialId[i];
 
                 /* all other quantities are set in function setQuantitiesGhostParticles() */
                 if (boundaryType[k] == NO_SLIP_BOUNDARY_TYPE) {
@@ -518,7 +518,7 @@ __global__ void BoundaryConditionsBrushesBefore(int *interactions)
         zoff = zmax;
 
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-            matId = p.materialId[i];
+            matId = p_rhs.materialId[i];
             if (matId > 1) {
             // new rotating angle
                 phi = omega*substep_currentTimeD;
@@ -574,7 +574,7 @@ __global__ void BoundaryConditionsBrushesAfter(int *interactions)
     int matId, d, e;
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-            matId = p.materialId[i];
+            matId = p_rhs.materialId[i];
             if (matId > 0) {
                 p.ax[i] = 0;
                 p.ay[i] = 0;
@@ -610,7 +610,7 @@ __global__ void BoundaryForce(int *interactions)
     double dx, dy, dz;
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-            matId = p.materialId[i];
+            matId = p_rhs.materialId[i];
             // only for regolith with matId == 0
             if (matId > 0)
                 continue;
@@ -620,7 +620,7 @@ __global__ void BoundaryForce(int *interactions)
                 j = interactions[i * MAX_NUM_INTERACTIONS + k];
 
                 // check if interaction partner is boundary_particle and if not, continue
-                matIdj = p.materialId[j];
+                matIdj = p_rhs.materialId[j];
                 if (matIdj == BOUNDARY_PARTICLE_ID) {
                 // calculate lennard jones force
                     dx = p.x[i] - p.x[j];
@@ -644,7 +644,7 @@ __global__ void BoundaryForce(int *interactions)
 
 #if 0            
                 // check if interaction partner is brush and if not, continue
-                matIdj = p.materialId[j];
+                matIdj = p_rhs.materialId[j];
                 if (matIdj == 1 || matIdj == 2) {
                 // calculate lennard jones force
                     dx = p.x[i] - p.x[j];

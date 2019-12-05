@@ -318,7 +318,7 @@ __device__ double fixTensileInstability(int a, int b)
     // calculate kernel for r and particle_distance
     //kernel(distance, hbar);
     kernel(&W, dWdx, &dWdr, dx, hbar);
-    dx[0] = matmean_particle_distance[p.materialId[a]];
+    dx[0] = matmean_particle_distance[p_rhs.materialId[a]];
     for (d = 1; d < DIM; d++) {
         dx[d] = 0;
     }
@@ -343,7 +343,7 @@ __global__ void CalcDivvandCurlv(int *interactions)
     double vi[DIM], vj[DIM];
     double r;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        if (EOS_TYPE_IGNORE == matEOS[p.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
                continue;
         }
         k = p.noi[i];
@@ -433,7 +433,7 @@ __global__ void tensorialCorrection(int *interactions)
             corrmatrix[d] = 0;
             matrix[d] = 0;
         }
-        if (EOS_TYPE_IGNORE == matEOS[p.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
                continue;
         }
 
@@ -442,7 +442,7 @@ __global__ void tensorialCorrection(int *interactions)
 #if SHEPARD_CORRECTION
         for (m = 0; m < k; m++) {
             j = interactions[i*MAX_NUM_INTERACTIONS+m];
-            if (EOS_TYPE_IGNORE == matEOS[p.materialId[j]] || p_rhs.materialId[j] == EOS_TYPE_IGNORE) {
+            if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || p_rhs.materialId[j] == EOS_TYPE_IGNORE) {
                 continue;
             }
             dr[0] = p.x[i] - p.x[j];
@@ -466,7 +466,7 @@ __global__ void tensorialCorrection(int *interactions)
         // loop over all interaction partner
         for (m = 0; m < k; m++) {
             j = interactions[i*MAX_NUM_INTERACTIONS+m];
-            if (EOS_TYPE_IGNORE == matEOS[p.materialId[j]] || p_rhs.materialId[j] == EOS_TYPE_IGNORE) {
+            if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || p_rhs.materialId[j] == EOS_TYPE_IGNORE) {
                 continue;
             }
             dr[0] = p.x[i] - p.x[j];

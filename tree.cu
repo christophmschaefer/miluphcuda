@@ -611,15 +611,15 @@ __global__ void knnNeighbourSearch(int *interactions)
             htmpold = htmp;
 //            printf("%d %d %e\n", i, numberOfInteractions, htmp);
             /* stop if we have the desired number of interaction partners \pm 10 */
-            //if ((nit > MAX_VARIABLE_SML_ITERATIONS || numberOfInteractions == matnoi[p.materialId[i]] ) && numberOfInteractions < MAX_NUM_INTERACTIONS) {
-            if ((nit > MAX_VARIABLE_SML_ITERATIONS || abs(numberOfInteractions - matnoi[p.materialId[i]]) < 10 ) && numberOfInteractions < MAX_NUM_INTERACTIONS) {
+            //if ((nit > MAX_VARIABLE_SML_ITERATIONS || numberOfInteractions == matnoi[p_rhs.materialId[i]] ) && numberOfInteractions < MAX_NUM_INTERACTIONS) {
+            if ((nit > MAX_VARIABLE_SML_ITERATIONS || abs(numberOfInteractions - matnoi[p_rhs.materialId[i]]) < 10 ) && numberOfInteractions < MAX_NUM_INTERACTIONS) {
                 found = TRUE;
                 p.h[i] = htmp;
             } else if (numberOfInteractions >= MAX_NUM_INTERACTIONS) {
                 htmpold = htmp;
                 if (numberOfInteractions < 1)
                     numberOfInteractions = 1;
-                htmp *= 0.5 *  ( 1.0 + pow( (double) matnoi[p.materialId[i]]/ (double) numberOfInteractions, 1./DIM));
+                htmp *= 0.5 *  ( 1.0 + pow( (double) matnoi[p_rhs.materialId[i]]/ (double) numberOfInteractions, 1./DIM));
             } else {
                 /* lower or raise htmp accordingly */
                 //numberOfInteractions = numberOfInteractions > 0 ? numberOfInteractions : 1;
@@ -627,12 +627,12 @@ __global__ void knnNeighbourSearch(int *interactions)
                     numberOfInteractions = 1;
 
                 htmpold = htmp;
-                htmp *= 0.5 *  ( 1.0 + pow( (double) matnoi[p.materialId[i]]/ (double) numberOfInteractions, 1./DIM));
+                htmp *= 0.5 *  ( 1.0 + pow( (double) matnoi[p_rhs.materialId[i]]/ (double) numberOfInteractions, 1./DIM));
             }
 #if DEBUG
             if (htmp < 1e-20) {
                 printf("+++ particle: %d it: %d htmp: %e htmpold: %e wanted: %d current: %d mId: %d \n", i, nit,
-                        htmp, htmpold, matnoi[p.materialId[i]], numberOfInteractions, p.materialId[i]);
+                        htmp, htmpold, matnoi[p_rhs.materialId[i]], numberOfInteractions, p_rhs.materialId[i]);
             }
 #endif
 
@@ -905,7 +905,7 @@ __global__ void check_sml_boundary(void)
     double smlmin, smlmax;
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        matId = p.materialId[i];
+        matId = p_rhs.materialId[i];
         smlmin = matSml[matId] * mat_f_sml_min[matId];
         smlmax = matSml[matId] * mat_f_sml_max[matId];
         if (p.h[i] < smlmin) {
