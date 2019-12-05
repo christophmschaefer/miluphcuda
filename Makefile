@@ -1,7 +1,7 @@
 # miluphcuda makefile 0.01
 #
 
-CC       = /usr/bin/g++-7
+CC       = /usr/bin/g++
 #CFLAGS   = -c -std=c99 -O3 -DVERSION=\"$(GIT_VERSION)\" -fPIC
 CFLAGS   = -c -std=c99 -g
 LDFLAGS  = -lm 
@@ -17,9 +17,9 @@ CUDA_DIR    = /usr/local/cuda
 NVCC   = ${CUDA_DIR}/bin/nvcc
 
 #The first NVFLAGS option is for when one wishes to use a debugger. Otherwise use the third option,
-NVFLAGS  = -x cu -c -dc -ccbin ${CC}  -G -lineinfo  -Xcompiler "-rdynamic -g -pthread"  -DVERSION=\"$(GIT_VERSION)\" 
+#NVFLAGS  = -x cu -c -dc -ccbin ${CC}  -G -lineinfo  -Xcompiler "-rdynamic -g -pthread"  -DVERSION=\"$(GIT_VERSION)\" 
 #NVFLAGS  = -x cu -c -dc -O3  -Xcompiler "-O3 -pthread" --ptxas-options=-v  
-#NVFLAGS  = -ccbin ${CC} -x cu -c -dc -O3  -Xcompiler "-O3 -pthread" -Wno-deprecated-gpu-targets -DVERSION=\"$(GIT_VERSION)\"  --ptxas-options=-v  
+NVFLAGS  = -ccbin ${CC} -x cu -c -dc -O3  -Xcompiler "-O3 -pthread" -Wno-deprecated-gpu-targets -DVERSION=\"$(GIT_VERSION)\"  --ptxas-options=-v  
 
 CUDA_LINK_FLAGS = -dlink
 CUDA_LINK_OBJ = cuLink.o
