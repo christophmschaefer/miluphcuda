@@ -30,6 +30,7 @@
 \usepackage{journals}
 \usepackage{wrapfig}
 \usepackage{listings}
+\usepackage{booktabs}
 % bibliography for own papers
 %\usepackage{sfmath}
 
@@ -111,6 +112,8 @@
 \usepackage{array}
 \newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}}
 
+\renewcommand{\arraystretch}{1.3}
+
 \title{ {\Large \textbf{Documentation miluphCUDA}
     }\\[0.2cm] \crule[unirot]{0.5em}{0.5em}~~~\crule[blue]{0.5em}{0.5em}~~~\crule[unigold]{0.5em}{0.5em}\\[0.2cm]
 \centering\includegraphics[width=0.5\textwidth]{pic/IMG_1058.jpg}\\
@@ -134,21 +137,21 @@ Astrophysik \\ Eberhard-Karls-Universität Tübingen}
 \begin{document}
 
 \sisetup{
-    range-units = single
+ range-units = single
 }
 
 % hyperlink colors:
 \hypersetup{
-    pdftitle={Documentation miluphCUDA},    % title
-    pdfauthor={Christoph Schäfer},     % author
-    pdfcreator={Christoph Schäfer},   % creator of the document
-    colorlinks = {true},
-    citecolor = {unirot},
-    linkcolor = {unirot},
-    %citebordercolor = {red},
-    urlcolor = {unirot},
-    %linkbordercolor = {red},
-    %urlbordercolor = {white}
+ pdftitle={Documentation miluphCUDA},    % title
+ pdfauthor={Christoph Schäfer},     % author
+ pdfcreator={Christoph Schäfer},   % creator of the document
+ colorlinks = {true},
+ citecolor = {unirot},
+ linkcolor = {unirot},
+ %citebordercolor = {red},
+ urlcolor = {unirot},
+ %linkbordercolor = {red},
+ %urlbordercolor = {white}
 }
 %%%% TITLE PAGE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \maketitle
@@ -180,18 +183,18 @@ Christoph Schäfer and Sven Riecker wrote the basic version of \emph{miluphCUDA}
 
 Later additions (chronologically):
 \begin{itemize}
-\item Soil material model: Samuel Scherrer
-\item Johnson-Cook material model: Janka Werner
-\item Porosity model: Oliver Wandel
-\item ANEOS support: Christoph Burger
-\item Drucker-Prager and Mohr-Coulomb material model: Christoph Schäfer
-\item Navier-Stokes equation: Christoph Schäfer
+ \item Soil material model: Samuel Scherrer
+ \item Johnson-Cook material model: Janka Werner
+ \item Porosity model: Oliver Wandel
+ \item ANEOS support: Christoph Burger
+ \item Drucker-Prager and Mohr-Coulomb material model: Christoph Schäfer
+ \item Navier-Stokes equation: Christoph Schäfer
 \end{itemize}
 
 Authors of some additional tools in \verb|test_cases/| or \verb|utils/|:
 \begin{itemize}
-\item Christoph Burger
-\item Thomas I. Maindl
+ \item Christoph Burger
+ \item Thomas I. Maindl
 \end{itemize}
 
 
@@ -203,48 +206,46 @@ Authors of some additional tools in \verb|test_cases/| or \verb|utils/|:
 \section{Quick Start Guide}
 \subsection{Installation steps}
 \begin{enumerate}
-\item Install CUDA, e.g., from \url{https://developer.nvidia.com/cuda-downloads}
-\item Check out \emph{miluphCUDA} from the git repo, e.g.,\\ \verb|git clone git@cpt-milkyway.am10.uni-tuebingen.de:/stoffel/miluphcuda.git|\\
-If you do not have an account, email to \emph{ch.schaefer@uni-tuebingen.de} and request one.
-\item Install \emph{libconfig}: Download\\
-\verb|http://www.hyperrealm.com/libconfig/libconfig-1.4.9.tar.gz|\\
-(or a newer version) and
-\begin{itemize}
-\item \verb|sudo ./configure|
-\item \verb|sudo make|
-\item \verb|sudo make install|
-\end{itemize}
-or\\
-\verb|apt-get install libconfig9-dev|\\
-on Ubuntu/Debian
-\item If you want to use HDF5, you need to install \emph{libhdf5} and \emph{libhdf5-dev}
-\item Make relevant changes to \emph{parameter.h} to specify all compile-time options
-\item Make relevant changes to the \emph{Makefile}: Change the \verb|CUDA_DIR| variable according to your CUDA version. Make sure to use the correct \verb|GPU_ARCH| corresponding to your Nvidia-GPU model. Otherwise the code will \emph{not} work and crash or give wrong results!
-Tested CUDA versions with Nvidia-driver versions are given in Tab.~\ref{tab:cuda_driver}.
+ \item Install CUDA, e.g., from \url{https://developer.nvidia.com/cuda-downloads}
+ \item Check out \emph{miluphCUDA} from the git repo, e.g.,\\ \verb|git clone  https://github.com/christophmschaefer/miluphcuda.git  |\\
+ \item Install \emph{libconfig}: Download\\
+       \verb|http://www.hyperrealm.com/libconfig/libconfig-1.4.9.tar.gz|\\
+       (or a newer version) and
+       \begin{itemize}
+        \item \verb|sudo ./configure|
+        \item \verb|sudo make|
+        \item \verb|sudo make install|
+       \end{itemize}
+       or\\
+       \verb|apt-get install libconfig9-dev|\\
+       on Ubuntu/Debian
+ \item If you want to use HDF5, you need to install \emph{libhdf5} and \emph{libhdf5-dev}
+ \item Make relevant changes to \emph{parameter.h} to specify all compile-time options
+ \item Make relevant changes to the \emph{Makefile}: Change the \verb|CUDA_DIR| variable according to your CUDA version. Make sure to use the correct \verb|GPU_ARCH| corresponding to your Nvidia-GPU model. Otherwise the code will \emph{not} work and crash or give wrong results!
+       Tested CUDA versions with Nvidia-driver versions are given in Tab.~\ref{tab:cuda_driver}.
 
-\begin{table}
-\centering
-\caption{Tested CUDA versions with Nvidia-driver versions}
-\begin{tabular}[h]{p{3cm} p{3cm}}
-\hline
-CUDA version	&	Nvidia driver	\\
-\hline
-6.0		&	331.113\\
-6.5		&	\\
-7.0		&	346.46	\\
-7.5		&	352.39, 367.27	\\
-8.0		&	375.26, 375.66, 384.111, 390.67	\\
-9.0		&	390.67	\\
-10.0	&	430.14 \\  \hline
-\end{tabular}
-\label{tab:cuda_driver}
-\end{table}
 
-Unsupported cuda versions so far: $<= 5.0$
-
-Also change the compiler and linker flags in the Makefile according to your system (e.g., \verb|-L| and \verb|-I| for \emph{libhdf5} and \emph{libconfig}).
+       Also change the compiler and linker flags in the Makefile according to your system (e.g., \verb|-L| and \verb|-I| for \emph{libhdf5} and \emph{libconfig}).
 \end{enumerate}
 
+\begin{table}
+ \begin{center}
+  \begin{tabular}[h]{p{5cm} l} \toprule
+   CUDA version & Nvidia driver                   \\ \midrule
+   6.0          & 331.113                         \\
+   6.5          &                                 \\
+   7.0          & 346.46                          \\
+   7.5          & 352.39, 367.27                  \\
+   8.0          & 375.26, 375.66, 384.111, 390.67 \\
+   9.0          & 390.67                          \\
+   10.0         & 430.14                          \\  \bottomrule
+  \end{tabular}
+  \caption{Tested CUDA versions with Nvidia-driver versions}
+ \end{center}
+ Unsupported cuda versions so far: $<= 5.0$. \newline
+ We have one case of an user reporting that the combination of gcc- 4.4.7 and CUDA devkit 7.5 on K20 cards fails to run the SOLID version of the code. If you happen to provide access to one of these cards for us, please contact us.
+ \label{tab:cuda_driver}
+\end{table}
 
 
 \subsection{Usage of the code}
@@ -269,41 +270,41 @@ A lot of important settings have to be provided at the command line (see Tab.~\r
 \verb|./miluphcuda --help|)
 
 \begin{table}
-\centering
-\caption{Available command line options.}
-\begin{tabular}[b]{p{5cm} p{9cm}}
-\hline
-Option	&	Purpose		\\
-\hline
-\verb|-h, --help|			&	print help message	\\
-\verb|-G, --information|	&	print information about detected Nvidia GPUs on this host	\\
-\verb|-d, --device_id <int>|	&	try to use GPU device with id \verb|<int>| for computation (default: 0)	\\
-\verb|-Y, --format|	&	print information about input and output format of the data files	\\
-\verb|-v, --verbose|	&	be talkative (stdout)	\\
-\verb|-I, --integrator|	&	available Integrators are \verb|euler| (1st order), \verb|euler_pc| and \verb|monaghan_pc| (2nd order), \verb|rk2_adaptive| (2nd order with adaptive time step)	\\
-\verb|-Q, --precision|		&	precision of the \verb|rk2_adaptive| integrator (default: 1e-6)	\\
-\verb|-n, --num|	&	number of simulation steps	\\
-\verb|-H, --hdf5_output|	&	write HDF5 output files (default is no)	\\
-\verb|-X, --hdf5_input|   	&	use HDF5 file for input (default is no), file \emph{<string>.XXXX.h5} will be opened (i.e. to open e.g., \emph{impact.0123.h5} pass \verb|impact.0123| to option \verb|-f|)	\\
-\verb|-A, --no_ascii_output|	&	disable ASCII output files (not set by default)	\\
-\verb|-a, --theta|		&	Theta Criterion for Barnes-Hut Tree (default: 0.5)	\\
-\verb|-t, --timeperstep|	&	time for one simulation step (for writing to output files for adaptive integrators)		\\
-\verb|-M, --maxtimestep|  &		upper limit for the timestep (\verb|rk2_adaptive|), or timestep size for \verb|euler|, respectively	\\
-\verb|-T, --starttime|		&	start time of the simulation	\\
-\verb|-f, --filename|		&	name of input data file (default: \emph{disk.0000}); input file name format is something like \emph{<string>.XXXX}, where \emph{XXXX} means runlevel and zeros	\\
-\verb|-r, --restart|		&	assume that ASCII input file is old output file	\\
-\verb|-m, --materialconfig|		&	name of file containing material parameters for all materials in the simulation		\\
-\verb|-k, --kernel|		&	specify the kernel function, available are \verb|wendlandc2|, \verb|wendlandc4|, \verb|wendlandc6|, \verb|cubic_spline|, \verb|quartic_spline|, default: \verb|cubic_spline|		\\
-\verb|-s, --selfgravity|	&	include self-gravity		\\
-\verb|-D, --directselfgravity| & 	Calculate selfgravity using direct particle-particle force and not the tree (slower) \\
-\verb|-L VALUE| &  Check for conservation of angular momentum. (default: off)
-    Simulations stops once the relative difference between current angular momentum and initial
-    angular momentum is larger than VALUE. \\
-\verb|-g, --decouplegravity|	&	decouple hydro time scale from gravitational time scale	\\
-\verb|-b, --boundary_ratio|	&	ratio of additional ghost boundary particles (default: 0)	\\
-\hline
-\end{tabular}
-\label{tab:cmd-line-options}
+ \centering
+ \caption{Available command line options.}
+ \begin{tabular}[b]{p{5cm} p{9cm}}
+  \hline
+  Option                  & Purpose                                                                                                                                                                                                  \\
+  \hline
+  \verb|-h, --help| & print help message                                                                                                                                                                                       \\
+  \verb|-G, --information| & print information about detected Nvidia GPUs on this host                                                                                                                                                \\
+  \verb|-d, --device_id <int>| & try to use GPU device with id \verb|<int>| for computation (default: 0)                                                                                                                       \\
+  \verb|-Y, --format| & print information about input and output format of the data files                                                                                                                                        \\
+  \verb|-v, --verbose| & be talkative (stdout)                                                                                                                                                                                    \\
+  \verb|-I, --integrator| & available Integrators are \verb|euler| (1st order), \verb|euler_pc| and \verb|monaghan_pc| (2nd order), \verb|rk2_adaptive| (2nd order with adaptive time step)              \\
+  \verb|-Q, --precision| & precision of the \verb|rk2_adaptive| integrator (default: 1e-6)                                                                                                                                      \\
+  \verb|-n, --num| & number of simulation steps                                                                                                                                                                               \\
+  \verb|-H, --hdf5_output| & write HDF5 output files (default is no)                                                                                                                                                                  \\
+  \verb|-X, --hdf5_input| & use HDF5 file for input (default is no), file \emph{<string>.XXXX.h5} will be opened (i.e. to open e.g., \emph{impact.0123.h5} pass \verb|impact.0123| to option \verb|-f|)           \\
+  \verb|-A, --no_ascii_output| & disable ASCII output files (not set by default)                                                                                                                                                          \\
+  \verb|-a, --theta| & Theta Criterion for Barnes-Hut Tree (default: 0.5)                                                                                                                                                       \\
+  \verb|-t, --timeperstep| & time for one simulation step (for writing to output files for adaptive integrators)                                                                                                                      \\
+  \verb|-M, --maxtimestep| & upper limit for the timestep (\verb|rk2_adaptive|), or timestep size for \verb|euler|, respectively                                                                                       \\
+  \verb|-T, --starttime| & start time of the simulation                                                                                                                                                                             \\
+  \verb|-f, --filename| & name of input data file (default: \emph{disk.0000}); input file name format is something like \emph{<string>.XXXX}, where \emph{XXXX} means runlevel and zeros                                           \\
+  \verb|-r, --restart| & assume that ASCII input file is old output file                                                                                                                                                          \\
+  \verb|-m, --materialconfig| & name of file containing material parameters for all materials in the simulation                                                                                                                          \\
+  \verb|-k, --kernel| & specify the kernel function, available are \verb|wendlandc2|, \verb|wendlandc4|, \verb|wendlandc6|, \verb|cubic_spline|, \verb|quartic_spline|, default: \verb|cubic_spline| \\
+  \verb|-s, --selfgravity| & include self-gravity                                                                                                                                                                                     \\
+  \verb|-D, --directselfgravity| & Calculate selfgravity using direct particle-particle force and not the tree (slower)                                                                                                                     \\
+  \verb|-L VALUE| & Check for conservation of angular momentum. (default: off)
+  Simulations stops once the relative difference between current angular momentum and initial
+  angular momentum is larger than VALUE.                                                                                                                                                                                             \\
+  \verb|-g, --decouplegravity| & decouple hydro time scale from gravitational time scale                                                                                                                                                  \\
+  \verb|-b, --boundary_ratio| & ratio of additional ghost boundary particles (default: 0)                                                                                                                                                \\
+  \hline
+ \end{tabular}
+ \label{tab:cmd-line-options}
 \end{table}
 
 One of the most important switches is \verb|--verbose|, which provides much more helpful output.
@@ -342,7 +343,7 @@ rings.0003
 (...)
 rings.0500
 # the used miluphCUDA command line is
-./miluphcuda -v -I rk2_adaptive -n 500 -H -t 1.0 -f rings.0000 -m material.cfg 
+./miluphcuda -v -I rk2_adaptive -n 500 -H -t 1.0 -f rings.0000 -m material.cfg
 \end{verbatim}
 
 
@@ -352,14 +353,14 @@ If you want to model one or more materials which are porous, you have to change 
 
 In \emph{parameter.h}:
 \begin{itemize}
-\item (*) you have to switch on \verb|PALPHA_POROSITY|
+ \item (*) you have to switch on \verb|PALPHA_POROSITY|
 \end{itemize}
 
 In \emph{material.cfg}:
 \begin{itemize}
-\item (**) porosity uses \verb|EOS_TYPE_JUTZI| which is \emph{type = 5} for the use of the Tillotson eos (recommended), or \verb|EOS_TYPE_JUTZI_MURNAGHAN| which is \emph{type = 6} for the use of the Murnaghan eos
-\item (**) this needs to be added to the eos (it defines the crush-curve and was fitted for porous pumice):
-\begin{verbatim}
+ \item (**) porosity uses \verb|EOS_TYPE_JUTZI| which is \emph{type = 5} for the use of the Tillotson eos (recommended), or \verb|EOS_TYPE_JUTZI_MURNAGHAN| which is \emph{type = 6} for the use of the Murnaghan eos
+ \item (**) this needs to be added to the eos (it defines the crush-curve and was fitted for porous pumice):
+       \begin{verbatim}
             porjutzi_p_elastic = 1.0e6;
             porjutzi_p_transition = 6.80e7;
             porjutzi_p_compacted = 2.13e8;
@@ -369,20 +370,21 @@ In \emph{material.cfg}:
             porjutzi_n1 = 12.0;
             porjutzi_n2 = 3.0;
 \end{verbatim}
-The value \verb|porjutzi_alpha_0| needs to be set to the initial distention at the start of the simulation. In this case it is 3.0 which translates to a porosity of Phi = 1 - 1/alpha\_0 = 1 - 1/3.0 = 66.6\%.
-\item (**) the value of \verb|till_rho_0| needs to be set to the matrix density of the regarded material
+       The value \verb|porjutzi_alpha_0| needs to be set to the initial distention at the start of the simulation. In this case it is 3.0 which translates to a porosity of Phi = 1 - 1/alpha\_0 = 1 - 1/3.0 = 66.6\%.
+ \item (**) the value of \verb|till_rho_0| needs to be set to the matrix density of the regarded material
 \end{itemize}
 
 In your input file:
 \begin{itemize}
-\item (*) At the very end of your input file and before you weibull the file the last two variables are \verb|alpha_jutzi| and \verb|p| (the data format can also be checked using the cmd-line option \verb|-Y|, see Tab.~\ref{tab:cmd-line-options}). \verb|alpha_jutzi| is the initial distention at the start of the simulation (the same as in the \emph{material.cfg} file) and \verb|p| needs to be set to 0 so that there isn't any pressure at the start. \verb|p| is needed since dP = P\_new - P\_old is being calculated in the code.
-\item (**) The initial density rho (porous density) needs to be set so that rho * alpha\_jutzi = rho\_s (rho\_s is the matrix density which is set in \emph{material.cfg} as till\_rho\_0). This has to match exactly!
-\item (**) The mass of the particles also needs to be adjusted to being porous. Normally if you calculate the mass using the density then the mass is already the mass for the porous particle.
+ \item (*) At the very end of your input file and before you weibull the file the last two variables are \verb|alpha_jutzi| and \verb|p| (the data format can also be checked using the cmd-line option \verb|-Y|, see Tab.~\ref{tab:cmd-line-options}). \verb|alpha_jutzi| is the initial distention at the start of the simulation (the same as in the \emph{material.cfg} file) and \verb|p| needs to be set to 0 so that there isn't any pressure at the start. \verb|p| is needed since dP = P\_new - P\_old is being calculated in the code.
+ \item (**) The initial density rho (porous density) needs to be set so that rho * alpha\_jutzi = rho\_s (rho\_s is the matrix density which is set in \emph{material.cfg} as till\_rho\_0). This has to match exactly!
+ \item (**) The mass of the particles also needs to be adjusted to being porous. Normally if you calculate the mass using the density then the mass is already the mass for the porous particle.
 \end{itemize}
 Please note: for the time beeing, you will also have to set the flag \texttt{flag\_alpha\_quad} in \texttt{pressure.cu} directly
-\begin{lstlisting}
-int flag_alpha_quad;        /* if this flag is set -> alpha gets calculated by a quadradic equation and not via the crush curve */
-\end{lstlisting}
+\begin{verbatim}
+int flag_alpha_quad;   /* if this flag is set -> alpha gets
+            calculated by a quadradic equation and not via the crush curve */
+\end{verbatim}
 
 
 \subsection{A last note}
@@ -409,53 +411,53 @@ There are additional subdirectories\\
 that include pre and postprocessing utilities, test-cases, material parameters for \emph{material.cfg}, and this documentation.
 
 \begin{table}
-\centering
-\caption{List of files in \emph{miluphCUDA}.}
-\small
-\begin{tabular}[b]{p{6cm} p{9cm}}
-\hline
-Filename	&	Purpose		\\
-\hline
-aneos.cu, aneos.h	&	functions for initializing and running ANEOS	\\
-artificial\_stress.cu, artificial\_stress.h	&	functions for artificial stress (see Gray, Monaghan, Swift 2001)\\
-boundary.cu, boundary.h		&	special treatment of boundaries	\\
-checks.h	&	consistency checks of compile time options	\\
-cuda\_utils.h	&	CUDA specific functions	\\
-damage.cu, damage.h		&	functions for the fragmentation and damage models	\\
-density.cu, density.h	&	calculate density or time derivative of density	\\
-device\_tools.cu, device\_tools.h		&	\\
-euler.cu, euler.h	&	Euler integrator; stress tensor (regolith) and/or deviatoric stress tensor (all other solid materials)	\\
-gravity.cu, gravity.h	& functions for the calculation of self gravity \\
-internal\_forces.cu, internal\_forces.h	&	compute the change of stress tensor (regolith) and/or deviatoric stress tensor (all other solid materials)	\\
-io.cu, io.h		&	functions for input/output, ASCII and HDF5	\\
-kernel.cu, kernel.h		&	calculate SPH kernel values	\\
-linalg.cu, linalg.h		&	helping functions for matrix operations etcpp.	\\
-little\_helpers.cu, little\_helpers.h	&	\\
-Makefile	&	Makefile for GNU Make. You'll need to make changes according to your CUDA version and your GPU architecture in this file	\\
-material.cfg	&	In this file, you define the material parameters for each materialID that your simulation includes.	\\
-memory\_handling.cu, memory\_handling.h	&	functions for memory allocation and copying between host and device	\\
-miluph.cu	&	main	\\
-miluph.h	&	header file with \verb|Particle| structure definition	\\
-parameter.h	&	this file includes all relevant compile time options. You will need to make changes here in order to define your physical model (HYDRO, SOLID, w/o FRAGMENTATION, DIMENSION, ...)	\\
-pc\_values.dat	&	mininum absolute values, which are needed for the predictor-corrector integration schemes	\\
-plasticity.cu, plasticity.h		&	material models (rheology): Drucker-Prager, Johnson-Cook, von Mises	\\
-porosity.cu, porosity.h		&	porosity model following Jutzi et al. (200x)	\\
-predictor\_corrector.cu, predictor\_corrector.h	&	Predictor-Corrector integrator with predictor step dt/2, following Monaghan (1983)	\\
-predictor\_corrector\_euler.cu, predictor\_corrector\_euler.h		&	Predictor-Corrector integrator with predictor step dt	\\
-pressure.cu, pressure.h		&	calculation of the pressure according to the chosen eos; currently there is, for solids: Tillotson eos, Murnaghan eos, Regolith eos (Drucker-Prager model), ANEOS; for porous solids: Jutzi eos (this is Tillotson eos with alpha), Jutzi-Murnaghan eos (this is Murnaghan eos with alpha); for gas: Ideal gas eos, Polytropic gas eos, Isothermal gas eos		\\
-rhs.cu, rhs.h	&	right-hand sides	\\
-rk2adaptive.cu, rk2adaptive.h	&	RK2 integrator with adaptive time step	\\
-soundspeed.cu, soundspeed.h		&	calculation of the soundspeed	\\
-stress.cu, stress.h		&	calculation of the stress tensor \\
-timeintegration.cu, timeintegration.h	&	calculation of all internal forces of the solid or fluid; calculation of artificial viscosity and artificial stress if defined in \emph{parameter.h}		\\
-tree.cu, tree.h		&	calculation of self gravity using a Barnes-Hut Tree (no quadrupoles!)	\\
-velocity.cu, velocity.h		&	calculate velocities	\\
-viscosity.cu, viscosity.h		&	functions for INVISCID==1. the viscosity ansatz by Cullen \& Dehnen (2010)\\
- & and Navier-Stokes equation \\
-xsph.cu, xsph.h		&	functions for the XSPH algorithm	\\
-\hline
-\end{tabular}
-\label{tab:file-list}
+ \centering
+ \caption{List of files in \emph{miluphCUDA}.}
+ \small
+ \begin{tabular}[b]{p{6cm} p{9cm}}
+  \hline
+  Filename                                                      & Purpose                                                                                                                                                                                                                                                                                                                                                    \\
+  \hline
+  aneos.cu, aneos.h                                             & functions for initializing and running ANEOS                                                                                                                                                                                                                                                                                                               \\
+  artificial\_stress.cu, artificial\_stress.h                   & functions for artificial stress (see Gray, Monaghan, Swift 2001)                                                                                                                                                                                                                                                                                           \\
+  boundary.cu, boundary.h                                       & special treatment of boundaries                                                                                                                                                                                                                                                                                                                            \\
+  checks.h                                                      & consistency checks of compile time options                                                                                                                                                                                                                                                                                                                 \\
+  cuda\_utils.h                                                 & CUDA specific functions                                                                                                                                                                                                                                                                                                                                    \\
+  damage.cu, damage.h                                           & functions for the fragmentation and damage models                                                                                                                                                                                                                                                                                                          \\
+  density.cu, density.h                                         & calculate density or time derivative of density                                                                                                                                                                                                                                                                                                            \\
+  device\_tools.cu, device\_tools.h                             &                                                                                                                                                                                                                                                                                                                                                            \\
+  euler.cu, euler.h                                             & Euler integrator; stress tensor (regolith) and/or deviatoric stress tensor (all other solid materials)                                                                                                                                                                                                                                                     \\
+  gravity.cu, gravity.h                                         & functions for the calculation of self gravity                                                                                                                                                                                                                                                                                                              \\
+  internal\_forces.cu, internal\_forces.h                       & compute the change of stress tensor (regolith) and/or deviatoric stress tensor (all other solid materials)                                                                                                                                                                                                                                                 \\
+  io.cu, io.h                                                   & functions for input/output, ASCII and HDF5                                                                                                                                                                                                                                                                                                                 \\
+  kernel.cu, kernel.h                                           & calculate SPH kernel values                                                                                                                                                                                                                                                                                                                                \\
+  linalg.cu, linalg.h                                           & helping functions for matrix operations etcpp.                                                                                                                                                                                                                                                                                                             \\
+  little\_helpers.cu, little\_helpers.h                         &                                                                                                                                                                                                                                                                                                                                                            \\
+  Makefile                                                      & Makefile for GNU Make. You'll need to make changes according to your CUDA version and your GPU architecture in this file                                                                                                                                                                                                                                   \\
+  material.cfg                                                  & In this file, you define the material parameters for each materialID that your simulation includes.                                                                                                                                                                                                                                                        \\
+  memory\_handling.cu, memory\_handling.h                       & functions for memory allocation and copying between host and device                                                                                                                                                                                                                                                                                        \\
+  miluph.cu                                                     & main                                                                                                                                                                                                                                                                                                                                                       \\
+  miluph.h                                                      & header file with \verb|Particle| structure definition                                                                                                                                                                                                                                                                                              \\
+  parameter.h                                                   & this file includes all relevant compile time options. You will need to make changes here in order to define your physical model (HYDRO, SOLID, w/o FRAGMENTATION, DIMENSION, ...)                                                                                                                                                                          \\
+  pc\_values.dat                                                & mininum absolute values, which are needed for the predictor-corrector integration schemes                                                                                                                                                                                                                                                                  \\
+  plasticity.cu, plasticity.h                                   & material models (rheology): Drucker-Prager, Johnson-Cook, von Mises                                                                                                                                                                                                                                                                                        \\
+  porosity.cu, porosity.h                                       & porosity model following Jutzi et al. (200x)                                                                                                                                                                                                                                                                                                               \\
+  predictor\_corrector.cu, predictor\_corrector.h               & Predictor-Corrector integrator with predictor step dt/2, following Monaghan (1983)                                                                                                                                                                                                                                                                         \\
+  predictor\_corrector\_euler.cu, predictor\_corrector\_euler.h & Predictor-Corrector integrator with predictor step dt                                                                                                                                                                                                                                                                                                      \\
+  pressure.cu, pressure.h                                       & calculation of the pressure according to the chosen eos; currently there is, for solids: Tillotson eos, Murnaghan eos, Regolith eos (Drucker-Prager model), ANEOS; for porous solids: Jutzi eos (this is Tillotson eos with alpha), Jutzi-Murnaghan eos (this is Murnaghan eos with alpha); for gas: Ideal gas eos, Polytropic gas eos, Isothermal gas eos \\
+  rhs.cu, rhs.h                                                 & right-hand sides                                                                                                                                                                                                                                                                                                                                           \\
+  rk2adaptive.cu, rk2adaptive.h                                 & RK2 integrator with adaptive time step                                                                                                                                                                                                                                                                                                                     \\
+  soundspeed.cu, soundspeed.h                                   & calculation of the soundspeed                                                                                                                                                                                                                                                                                                                              \\
+  stress.cu, stress.h                                           & calculation of the stress tensor                                                                                                                                                                                                                                                                                                                           \\
+  timeintegration.cu, timeintegration.h                         & calculation of all internal forces of the solid or fluid; calculation of artificial viscosity and artificial stress if defined in \emph{parameter.h}                                                                                                                                                                                                       \\
+  tree.cu, tree.h                                               & calculation of self gravity using a Barnes-Hut Tree (no quadrupoles!)                                                                                                                                                                                                                                                                                      \\
+  velocity.cu, velocity.h                                       & calculate velocities                                                                                                                                                                                                                                                                                                                                       \\
+  viscosity.cu, viscosity.h                                     & functions for INVISCID==1. the viscosity ansatz by Cullen \& Dehnen (2010)                                                                                                                                                                                                                                                                                 \\
+                                                                & and Navier-Stokes equation                                                                                                                                                                                                                                                                                                                                 \\
+  xsph.cu, xsph.h                                               & functions for the XSPH algorithm                                                                                                                                                                                                                                                                                                                           \\
+  \hline
+ \end{tabular}
+ \label{tab:file-list}
 \end{table}
 
 
@@ -468,34 +470,34 @@ Throughout this documentation, the Einstein summation rule is used, Greek indice
 \subsection{Mass conservation}
 The equation of continuity is the equation of the conservation of mass. It is given in Lagrangian form by
 \begin{equation}
-\label{eq:conservation_of_mass}
-\frac{\mathrm{d} \varrho}{\mathrm{d}t} + \varrho \frac{\partial v^\alpha}{\partial x^\alpha} = 0,
+ \label{eq:conservation_of_mass}
+ \frac{\mathrm{d} \varrho}{\mathrm{d}t} + \varrho \frac{\partial v^\alpha}{\partial x^\alpha} = 0,
 \end{equation}
 where $\varrho$ denotes the density and $\vect{v}$ the velocity of the solid body or fluid.
 \subsection{Conservation of momentum}
 The equation of the conservation of momentum in continuum mechanics for a solid body reads in Lagrangian formulation
 \begin{equation}
-\label{eq:conservation_of_momentum}
-\frac{\mathrm{d} {v^\alpha}}{\mathrm{d}t} =  \frac{1}{\varrho}  \frac{\partial \sigma^{\alpha
-\beta} }{\partial x_\beta},
+ \label{eq:conservation_of_momentum}
+ \frac{\mathrm{d} {v^\alpha}}{\mathrm{d}t} =  \frac{1}{\varrho}  \frac{\partial \sigma^{\alpha
+   \beta} }{\partial x_\beta},
 \end{equation}
 where $\sigma^{\alpha\beta}$ is the stress tensor given by the pressure $p$ and the deviatoric stress tensor
 ${S}^{\alpha \beta}$
 \begin{equation}
-\sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta},
+ \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta},
 \end{equation}
 with the Kronecker delta $\delta^{\alpha \beta}$.
 For a liquid or gas, the deviatoric stress tensor vanishes and the conservation of momentum is given by the Euler
 equation
 \begin{equation}
-\frac{\mathrm{d} {v^\alpha}}{\mathrm{d}t} =  - \frac{1}{\varrho}  \frac{\partial}{\partial x_\beta} p \delta^{\alpha \beta}.
+ \frac{\mathrm{d} {v^\alpha}}{\mathrm{d}t} =  - \frac{1}{\varrho}  \frac{\partial}{\partial x_\beta} p \delta^{\alpha \beta}.
 \end{equation}
 \subsection{Conservation of internal energy}
 The equation of the conservation of the specific internal energy $u$ for an elastic body is given in Lagrangian formulation by
 \begin{equation}
-\label{eq:conservation_internal_energy}
-\frac{\mathrm{d} u }{\mathrm{d} t} = - \frac{p}{\varrho} \frac{\partial v ^\alpha}{\partial x^\alpha} + \frac{1}{\varrho}
-S^{\alpha \beta} \dot{\varepsilon}^{\alpha \beta},
+ \label{eq:conservation_internal_energy}
+ \frac{\mathrm{d} u }{\mathrm{d} t} = - \frac{p}{\varrho} \frac{\partial v ^\alpha}{\partial x^\alpha} + \frac{1}{\varrho}
+ S^{\alpha \beta} \dot{\varepsilon}^{\alpha \beta},
 \end{equation}
 with the strain rate tensor $\dot{\varepsilon}^{\alpha \beta}$ given by eq.~(\ref{eq:strain_rate_tensor}).
 \subsection{Constitutive equations}
@@ -506,8 +508,8 @@ the deviatoric stress tensor $S^{\alpha \beta}$ is not yet specified. For the el
 constitutive equation is based on Hooke's law. Extended to three dimensional deformations, it reads
 %
 \begin{equation}
-S^{\alpha \beta} \sim 2 \mu \left( \varepsilon^{\alpha \beta} - \frac{1}{3} \delta^{\alpha \beta} \varepsilon^{\gamma
-\gamma} \right).
+ S^{\alpha \beta} \sim 2 \mu \left( \varepsilon^{\alpha \beta} - \frac{1}{3} \delta^{\alpha \beta} \varepsilon^{\gamma
+  \gamma} \right).
 \end{equation}
 %
 Here, $\mu$ denotes the material dependent shear modulus and $\epsilon^{\alpha \beta}$ is the strain tensor.
@@ -515,17 +517,17 @@ Here, $\mu$ denotes the material dependent shear modulus and $\epsilon^{\alpha \
 For the time evolution, it follows (for small deformations)
 %
 \begin{align}
-\label{eq:stresstensor_evolution}
-\frac{\mathrm{d}}{\mathrm{d}t}S^{\alpha \beta} =  2\mu \left( \dot{\varepsilon}^{\alpha \beta} - \frac{1}{3}
-\delta^{\alpha \beta} \dot{\varepsilon}^{\gamma \gamma} \right)   &  \\  & +  \mathrm{rotation~terms,} \nonumber
+ \label{eq:stresstensor_evolution}
+ \frac{\mathrm{d}}{\mathrm{d}t}S^{\alpha \beta} =  2\mu \left( \dot{\varepsilon}^{\alpha \beta} - \frac{1}{3}
+ \delta^{\alpha \beta} \dot{\varepsilon}^{\gamma \gamma} \right) & \\  & +  \mathrm{rotation~terms,} \nonumber
 \end{align}
 %
 %
 where $\dot{\varepsilon}^{\alpha \beta}$ denotes the strain rate tensor, given by
 \begin{equation}
-\label{eq:strain_rate_tensor}
-\dot{\varepsilon}^{\alpha \beta} = \frac{1}{2} \left( \frac{\partial v^\alpha}{\partial x^\beta} + \frac{\partial
-v^\beta}{\partial x^\alpha} \right).
+ \label{eq:strain_rate_tensor}
+ \dot{\varepsilon}^{\alpha \beta} = \frac{1}{2} \left( \frac{\partial v^\alpha}{\partial x^\beta} + \frac{\partial
+  v^\beta}{\partial x^\alpha} \right).
 \end{equation}
 %
 The rotation terms in eq.~(\ref{eq:stresstensor_evolution}) are needed since the constitutive equations have to be
@@ -534,15 +536,15 @@ for particle codes is the Jaumann rate form. The rotation terms
 of the Jaumann rate form are
 %
 \begin{equation}
-\label{eq:rotation_terms}
-S^{\alpha \gamma} R^{\gamma \beta} - R^{\alpha \gamma} S^{\gamma \beta},
+ \label{eq:rotation_terms}
+ S^{\alpha \gamma} R^{\gamma \beta} - R^{\alpha \gamma} S^{\gamma \beta},
 \end{equation}
 %
 with the rotation rate tensor
 %
 \begin{equation}
-R^{\alpha \beta} = \frac{1}{2} \left( \frac{\partial v^\alpha}{\partial x^\beta} - \frac{\partial v^\beta}{\partial x^\alpha}
-\right).
+ R^{\alpha \beta} = \frac{1}{2} \left( \frac{\partial v^\alpha}{\partial x^\beta} - \frac{\partial v^\beta}{\partial x^\alpha}
+ \right).
 \end{equation}
 %
 Together, eqs.~(\ref{eq:stresstensor_evolution}) and (\ref{eq:rotation_terms}) determine the change of deviatoric
@@ -558,14 +560,14 @@ For small compressions and expansions of a liquid, the pressure depends linearly
 Assume $\varrho_0$ is the initial density of the uncompressed liquid. Then, the liquid equation of state reads
 %
 \begin{equation}
-p = c_\mathrm{s}^2 ( \varrho - \varrho_0 ).
+ p = c_\mathrm{s}^2 ( \varrho - \varrho_0 ).
 \end{equation}
 %
 Here, $c_\mathrm{s}$ denotes the bulk sound speed of the liquid, which is related to the bulk modulus $K_0$ and the initial
 density by
 %
 \begin{equation}
-c_\mathrm{s}^2 = \frac{K_0}{\varrho_0}.
+ c_\mathrm{s}^2 = \frac{K_0}{\varrho_0}.
 \end{equation}
 %
 If the density $\varrho$ falls strongly beyond the value of the initial density $\varrho_0$, the liquid equation of
@@ -578,7 +580,7 @@ The Murnaghan equation of state is an extension of the liquid equation of state 
 state, the pressure now depends nonlinearly on the density
 %
 \begin{equation}
-p = \frac{K_0}{n_M} \left[ \left( \frac{\varrho}{\varrho_0}\right)^{n_M} -1  \right],
+ p = \frac{K_0}{n_M} \left[ \left( \frac{\varrho}{\varrho_0}\right)^{n_M} -1  \right],
 \end{equation}
 %
 with the zero pressure bulk modulus $K_0$ and the constant $n_M$. The Murnaghan equation of state is limited to
@@ -589,10 +591,10 @@ isothermal compression. Parameters for various materials can be found in the lit
 \label{section:tillotson}
 The Tillotson equation of state was originally derived for high-velocity impact simulations \citep{til62}.
 There are two domains depending upon the material specific energy density $u$. In the case of compressed regions ($\varrho \geq
-\varrho_0$) and $u$ lower than the energy of incipient vaporization $E_\mathrm{iv}$ the equation of state reads
+ \varrho_0$) and $u$ lower than the energy of incipient vaporization $E_\mathrm{iv}$ the equation of state reads
 %
 \begin{align}\label{eq:tillo1}
-p = \left[ a_T + \frac{b_T}{1+u/(E_0 \eta^2)} \right]\varrho u + A_T\chi + B_T\chi^2,
+ p = \left[ a_T + \frac{b_T}{1+u/(E_0 \eta^2)} \right]\varrho u + A_T\chi + B_T\chi^2,
 \end{align}
 %
 with $\eta = \varrho / \varrho_0$ and $\chi = \eta-1$.
@@ -600,8 +602,8 @@ In case of expanded material ($u$ greater than the energy of complete vaporizati
 equation of state takes the form
 %
 \begin{align}\label{eq:tillo2}
-p = & a_T\varrho u +  \left[ \frac{b_T\varrho u}{1+u/(E_0 \eta^2)} \right. \nonumber \\
- & \; + \left. A_T\chi \exp \left\{-\beta_T \left(\frac{\varrho_0}{\varrho}-1\right)\right\} \right] \nonumber \\ & \qquad \qquad
+ p = & a_T\varrho u +  \left[ \frac{b_T\varrho u}{1+u/(E_0 \eta^2)} \right. \nonumber                              \\
+     & \; + \left. A_T\chi \exp \left\{-\beta_T \left(\frac{\varrho_0}{\varrho}-1\right)\right\} \right] \nonumber \\ & \qquad \qquad
  \times  \exp
  \left\{-\alpha_T\left(\frac{\varrho_0}{\varrho}-1\right)^2\right\}.
 \end{align}
@@ -619,24 +621,24 @@ application over a wide regime of physical conditions, such as high-velocity col
 \subsubsection{ANEOS}
 If you want to use the tabulated ANEOS eos for some material you need three things:
 \begin{enumerate}
-\item A file containing the ANEOS lookup-table data. These files can be generated externally with the aid of the external project \emph{miluphANEOS}, a Fortran code that calls ANEOS subroutines directly. See there for further instructions.
-\item Suitable entries in \emph{material.cfg} for that material. See the available materials in \verb|material_data/|.
-\item Consistent initial conditions. For setting up homogeneous bodies you can use \verb|aneos_rho_0| and \verb|aneos_e_norm| initially (see \emph{material.cfg}). This, and also the direct generation of equilibrated (large) bodies, can be done by the initial conditions code in the external project \emph{Relaxation}.
+ \item A file containing the ANEOS lookup-table data. These files can be generated externally with the aid of the external project \emph{miluphANEOS}, a Fortran code that calls ANEOS subroutines directly. See there for further instructions.
+ \item Suitable entries in \emph{material.cfg} for that material. See the available materials in \verb|material_data/|.
+ \item Consistent initial conditions. For setting up homogeneous bodies you can use \verb|aneos_rho_0| and \verb|aneos_e_norm| initially (see \emph{material.cfg}). This, and also the direct generation of equilibrated (large) bodies, can be done by the initial conditions code in the external project \emph{Relaxation}.
 \end{enumerate}
 \subsubsection{Locally-isothermal gas}
 \texttt{EOS\_TYPE\_LOCALLY\_ISOTHERMAL\_GAS}
 \begin{align}
-    p & = c_s^2 \varrho
+ p & = c_s^2 \varrho
 \end{align}
 \subsubsection{Perfect gas equation}
 \texttt{EOS\_TYPE\_IDEAL\_GAS}
 \begin{align}
-    p & = (\gamma-1) \varrho e
+ p & = (\gamma-1) \varrho e
 \end{align}
 \subsubsection{Polytropic Gas}
 \texttt{EOS\_TYPE\_POLYTROPIC\_GAS}
 \begin{align}
-    p & = K \varrho^\gamma
+ p & = K \varrho^\gamma
 \end{align}
 \subsection{Plastic material equations}
 Together with the equation of state, the set of equations
@@ -646,16 +648,16 @@ criterion \citep{vonmises1913} to model plasticity. The deviatoric stress is
 limited by
 %
 \begin{equation}
-S^{\alpha \beta} \rightarrow f_Y S^{\alpha \beta},
+ S^{\alpha \beta} \rightarrow f_Y S^{\alpha \beta},
 \end{equation}
 where the factor $f_Y$ is computed from
 \begin{equation}
-f_Y = \mathrm{min} \left[ Y_0^2/3J_2, 1 \right],
+ f_Y = \mathrm{min} \left[ Y_0^2/3J_2, 1 \right],
 \end{equation}
 with the second invariant of the deviatoric stress tensor $J_2$ given by
 %
 \begin{equation}
-J_2 = \frac{1}{2} S^{\alpha \beta} S_{\alpha \beta},
+ J_2 = \frac{1}{2} S^{\alpha \beta} S_{\alpha \beta},
 \end{equation}
 and the material dependent yield stress is $Y_0$.
 %
@@ -674,7 +676,7 @@ consequently more damage.
 
 The scalar parameter damage $d$ parametrizes the influence of cracks on a given volume
 \begin{equation}
-0 \leq d \leq 1,
+ 0 \leq d \leq 1,
 \end{equation}
 and is defined in a way that $d=0$ represents an undamaged, intact material and $d=1$ a fully damaged material that
 cannot undergo any tension or deviatoric stress. In this manner, a material with $d=0.5$ experiences half the stress and
@@ -685,36 +687,36 @@ Damage reduces the strength under tensile loading and the elastic stress $\sigma
 by the factor $(1-d)$, or in more detail
 %
 \begin{equation}
-\sigma^{\alpha \beta}_d = -\hat{p} \delta^{\alpha \beta} + (1-d) S^{\alpha \beta},
+ \sigma^{\alpha \beta}_d = -\hat{p} \delta^{\alpha \beta} + (1-d) S^{\alpha \beta},
 \end{equation}
 with
 \begin{equation}
-\hat{p} = \left\{ \begin{array}{ll} p &  \mathrm{for} \ p \geq 0 \\
-  (1-d) p &   \mathrm{for} \ p < 0 \end{array} \right. .
+ \hat{p} = \left\{ \begin{array}{ll} p  & \mathrm{for} \ p \geq 0 \\
+  (1-d) p & \mathrm{for} \ p < 0\end{array} \right. .
 \end{equation}
 %
 The number of flaws per unit volume in a brittle body with failure strains that are lower than $\varepsilon$, is given by
 the Weibull distribution \citep{weibull:1939}
 %
 \begin{equation}
-n(\varepsilon) = k \varepsilon^m,
+ n(\varepsilon) = k \varepsilon^m,
 \end{equation}
 with the two Weibull parameters $k$ and $m$. Typical values for basalt are $m=16$, $k=\SI{1e61}{\per
-\cubic\metre}$ \citep{2007JGRE..112.2001N}.
+  \cubic\metre}$ \citep{2007JGRE..112.2001N}.
 
 As soon as a spherical volume $V= \nicefrac{4}{3} \, \pi R_s^3$ undergoes a strain greater than its lowest activation threshold
 strain, damage starts to grow according to
 %
 \begin{equation}
-\label{eq:damage_growth}
-\frac{\mathrm{d}}{\mathrm{d}t} d^{\nicefrac{1}{3}} = \frac{c_\mathrm{g}}{R_s},
+ \label{eq:damage_growth}
+ \frac{\mathrm{d}}{\mathrm{d}t} d^{\nicefrac{1}{3}} = \frac{c_\mathrm{g}}{R_s},
 \end{equation}
 %
 with the constant crack growth velocity $c_\mathrm{g}$. The crack growth velocity is chosen to be 40\% of the velocity of
 a longitudinal elastic wave in the damaged material
 %
 \begin{equation}
-c_\mathrm{g} = \num{0.4} \frac{1}{\varrho} \sqrt{ K_0 + \nicefrac{4}{3} (1-d) \mu}.
+ c_\mathrm{g} = \num{0.4} \frac{1}{\varrho} \sqrt{ K_0 + \nicefrac{4}{3} (1-d) \mu}.
 \end{equation}
 %
 The fracture model requires the distribution of activation threshold strains (flaws) among the brittle body's SPH particles as a preprocessing step to the simulations.
@@ -723,11 +725,11 @@ The fracture model requires the distribution of activation threshold strains (fl
 We apply the algorithm introduced by \cite{benz:1995} with the following approach: Flaws
 are distributed randomly among the brittle particles until each particle has been assigned with at least one activation
 threshold. We let $N_\mathrm{flaw}$ be the number of totally distributed activation flaws. For each flaw $j$, $1\leq j \leq
-N_\mathrm{flaw}$, a particle $a$ is chosen randomly and assigned with the activation threshold strain derived from the
+ N_\mathrm{flaw}$, a particle $a$ is chosen randomly and assigned with the activation threshold strain derived from the
 Weibull distribution $\varepsilon_{a,j}$,
 %
 \begin{equation}
-\varepsilon_{a,j} = \left[ \frac{j}{kV} \right]^{\nicefrac{1}{m}},
+ \varepsilon_{a,j} = \left[ \frac{j}{kV} \right]^{\nicefrac{1}{m}},
 \end{equation}
 %
 where $V$ is the volume of the brittle material and $k$ and $m$ are the material dependent Weibull parameters. Using
@@ -740,7 +742,7 @@ During the simulation, once a particle undergoes a strain greater than its lowes
 grows according to a modified version of eq.~(\ref{eq:damage_growth})
 %
 \begin{equation}
-\frac{\mathrm{d}}{\mathrm{d} t} d^{\nicefrac{1}{3}} = n_\mathrm{act} \frac{c_\mathrm{g}}{R_s},
+ \frac{\mathrm{d}}{\mathrm{d} t} d^{\nicefrac{1}{3}} = n_\mathrm{act} \frac{c_\mathrm{g}}{R_s},
 \end{equation}
 %
 where $n_\mathrm{act}$ is the number of activated flaws of the particle. This modification accounts for the accumulation
@@ -752,7 +754,7 @@ prevent this, the damage of the particle is limited by the ratio between the num
 and the number of total flaws $n_\mathrm{tot}$ of this particle
 %
 \begin{equation}
-d_\mathrm{max} = \frac{n_\mathrm{act}}{n_\mathrm{tot}}.
+ d_\mathrm{max} = \frac{n_\mathrm{act}}{n_\mathrm{tot}}.
 \end{equation}
 %
 In other words, a particle can only be totally damaged if all of its flaws are activated.
@@ -764,11 +766,11 @@ $\sigma_\gamma$ are the principal stresses determined by a principal axis transf
 $\sigma^{\alpha \beta}$, which is already reduced by damage and yield strength
 %
 \begin{equation}
-\varepsilon = \frac{\sigma_\mathrm{max}}{(1-d) E}.
+ \varepsilon = \frac{\sigma_\mathrm{max}}{(1-d) E}.
 \end{equation}
 The Young's modulus $E$ of the intact material given by the bulk and shear moduli is written as
 \begin{equation}
-E = \frac{9 K \mu}{3K+\mu}.
+ E = \frac{9 K \mu}{3K+\mu}.
 \end{equation}
 %
 %
@@ -799,7 +801,7 @@ $\vartheta$ criterion, we identify whether a pseudo-particle sitting in the node
 gravitational force acting on our particle or whether we have to descend further down in the tree. The $\vartheta$ criterion is given by
 %
 \begin{equation}
-\frac{s_{d_t}}{r_{pp}} < \vartheta,
+ \frac{s_{d_t}}{r_{pp}} < \vartheta,
 \end{equation}
 %
 where $s_{d_t}$ denotes the edge length of the tree node containing the pseudo-particle and $r_{pp}$ is the distance
@@ -807,8 +809,8 @@ between the SPH particle and the pseudo-particle.
 The gravitational force from the pseudo-particle acting on the particle $a$ is then given by
 %
 \begin{equation}
-\label{eq:gravitational_force}
-\vect{F_a} = \frac{Gm_a m_p}{r_{pp}^3} \left( \vect{x_a} - \vect{x_p} \right),
+ \label{eq:gravitational_force}
+ \vect{F_a} = \frac{Gm_a m_p}{r_{pp}^3} \left( \vect{x_a} - \vect{x_p} \right),
 \end{equation}
 where $\vect{x_p}$ and $m_p$ denote the location and the mass of the pseudo-particle, respectively.
 To avoid numerical instabilities, the distance between the pseudo-particle and the particle is smoothed.
@@ -829,18 +831,18 @@ number of tree nodes is given by $\mathrm{ceil}[2.5 \times N_p]$, where $N_p$ is
 simulation. For each tree node there are $N_\mathrm{children}$ entries in {\tt childList}, where $N_\mathrm{children}$
 is simply given by the dimension
 \begin{equation}
-N_\mathrm{children} = 2^D.
+ N_\mathrm{children} = 2^D.
 \end{equation}
 The tree is constructed in a way that the $N_p$ particles reside in $N_p$ leaves in the end.
 At first, the root of the tree is constructed from the geometry of the particle distribution. The computational domain
 (in three dimensions) is given by the cube, which encloses all SPH particles. This cube has the edge length
 \begin{equation}
-s_0 = \max_{\alpha \in D}  \left[ \max_{a,b \in N_p} \left[ x_a^\alpha - x_b^\alpha \right] \right]
+ s_0 = \max_{\alpha \in D}  \left[ \max_{a,b \in N_p} \left[ x_a^\alpha - x_b^\alpha \right] \right]
 \end{equation}
 and defines the edge length of the root node.
 The edge length of a tree node of depth $d_t$ is given by
 \begin{equation}
-s_{d_t} = \left[ \frac{1}{2}\right]^{d_t} s_0.
+ s_{d_t} = \left[ \frac{1}{2}\right]^{d_t} s_0.
 \end{equation}
 Starting from the root node, the particles are inserted into the tree in the following way. In the beginning, all but
 one (the root node) entry in {\tt childList} are $-1$, corresponding to the status "no kid".  All particles are
@@ -877,16 +879,16 @@ and internal energy equation. In the following for \texttt{SOLID==1}.
 \subsubsection{\texttt{SPHEQUATIONS == SPH\_VERSION1}}
 The acceleration for particle $a$ is given by
 \begin{align}
-    \frac{\mathrm{d} v^\alpha_a}{\mathrm{d} t} = \sum_b m_b \left( \frac{\sigma^{\alpha
-    \beta}_a}{\varrho_a^2} + \frac{\sigma^{\alpha \beta}_b}{\varrho_b^2} \right ) \frac{\partial
-    W_{ab}}{\partial x_a^\beta}.
+ \frac{\mathrm{d} v^\alpha_a}{\mathrm{d} t} = \sum_b m_b \left( \frac{\sigma^{\alpha
+   \beta}_a}{\varrho_a^2} + \frac{\sigma^{\alpha \beta}_b}{\varrho_b^2} \right ) \frac{\partial
+  W_{ab}}{\partial x_a^\beta}.
 \end{align}
 \subsubsection{\texttt{SPHEQUATIONS == SPH\_VERSION2}}
 The acceleration for particle $a$ is given by
 \begin{align}
-    \frac{\mathrm{d} v^\alpha_a}{\mathrm{d} t} = \sum_b m_b \left( \frac{\sigma^{\alpha
-    \beta}_a + \sigma^{\alpha \beta}_b}{\varrho_a  \varrho_b} \right ) \frac{\partial
-    W_{ab}}{\partial x_a^\beta}.
+ \frac{\mathrm{d} v^\alpha_a}{\mathrm{d} t} = \sum_b m_b \left( \frac{\sigma^{\alpha
+   \beta}_a + \sigma^{\alpha \beta}_b}{\varrho_a  \varrho_b} \right ) \frac{\partial
+  W_{ab}}{\partial x_a^\beta}.
 \end{align}
 
 \section{Kernel Function}
@@ -894,7 +896,7 @@ Several kernel functions are available via command line parameter \texttt{-k/-{}
 which kernel is implemented is provided by the standard \texttt{miluphCUDA} help option \texttt{-h/-{}-help}.
 In the following sections, $h$ denotes the smoothing length, $q$ is the ratio between distance and
 smoothing length, $q=\frac{x_{ab}}{h}$, where $x_{ab}=\left|{\mathbf{x}_a -
-\mathbf{x}_b}\right|$ is the distance between particle $a$ and $b$. Please note, that in contrast to
+ \mathbf{x}_b}\right|$ is the distance between particle $a$ and $b$. Please note, that in contrast to
 the original definition of the smoothing length, the interaction radius in \texttt{miluphCUDA} is
 given by $h$, not $2h$.
 
@@ -903,7 +905,7 @@ The code supports variable and fixed smoothing lengths. Please set \texttt{VARIA
 if you want a variable smoothing length. You can additionally choose between a fixed number of interaction partners by setting
 \texttt{FIXED\_NOI} to $1$ or the code integrates the time evolution of the smoothing length via
 \begin{equation}
-    \frac{\mathrm{d} h}{\mathrm{d}t} = \frac{h}{d} \nabla \cdot \vec{v},
+ \frac{\mathrm{d} h}{\mathrm{d}t} = \frac{h}{d} \nabla \cdot \vec{v},
 \end{equation}
 where $d$ denotes the dimension if you set \texttt{INTEGRATE\_SML}. Additionally, please set two factors for the minium and maximum allowed smoothing length
 in \texttt{material.cfg}, namely \texttt{factor\_sml\_min} and \texttt{factor\_sml\_max}. The minimum  (maximum) allowed
@@ -911,24 +913,24 @@ smoothing length is then given by \texttt{factor\_sml\_min * sml} (\texttt{facto
 \subsection{spline kernels}
 \subsubsection{cubic spline}
 Standard cubic spline kernel by \cite{1985A&A...149..135M}, chosen by command line option \texttt{-k
-cubic\_spline}.
+ cubic\_spline}.
 \begin{align}
-    W(q) = \frac{\sigma}{h^d} \left\{
-    \begin{array}{ll}
-        ( 6 q^3 - 6q^2  + 1 ) & \quad \mbox{for} \quad 0 \leq q < \frac{1}{2} \\
-        2(1 - q)^3 & \quad \mbox{for} \quad \frac{1}{2} \leq q \leq 1 \\
-        0 & \quad \mbox{for} \quad q > 1.
-    \end{array}
-    \right.
+ W(q) = \frac{\sigma}{h^d} \left\{
+ \begin{array}{ll}
+  ( 6 q^3 - 6q^2  + 1 ) & \quad \mbox{for} \quad 0 \leq q < \frac{1}{2}    \\
+  2(1 - q)^3            & \quad \mbox{for} \quad \frac{1}{2} \leq q \leq 1 \\
+  0                     & \quad \mbox{for} \quad q > 1.
+ \end{array}
+ \right.
 \end{align}
 where $d$ denotes the dimension, and $\sigma$ is the normalization constant $\frac{4}{3}$,
 $\frac{40}{7\pi}$ and $\frac{8}{\pi}$ for 1D, 2D, and 3D, respectively.
 \subsubsection{quartic spline}
 Quartic spline kernel \citep{2012MNRAS.425.1068D}, chosen by command line option \texttt{-k
-quartic\_spline}.
+ quartic\_spline}.
 \begin{align}
-    W(q) = \frac{\sigma}{h^d} \left( \left(1-q\right)_+^4 -5\left(\frac{3}{5}-q\right)_+^4 +
-    10\left(\frac{1}{5}-q\right)_+^4\right) \qquad \mbox{for} \quad 0 \leq q < 1
+ W(q) = \frac{\sigma}{h^d} \left( \left(1-q\right)_+^4 -5\left(\frac{3}{5}-q\right)_+^4 +
+ 10\left(\frac{1}{5}-q\right)_+^4\right) \qquad \mbox{for} \quad 0 \leq q < 1
 \end{align}
 where $d$ denotes the dimension, and $\sigma$ is the normalization constant $\frac{5^5}{768}$,
 $\frac{3\cdot5^6}{2398\pi}$ and $\frac{5^6}{512\pi}$ for 1D, 2D, and 3D, respectively.
@@ -937,44 +939,44 @@ $\frac{3\cdot5^6}{2398\pi}$ and $\frac{5^6}{512\pi}$ for 1D, 2D, and 3D, respect
 \subsection{Wendland kernels}
 \subsubsection{Wendland C2}
 Wendland C2 kernel \citep{2012MNRAS.425.1068D}, chosen by command line option \texttt{-k
-wendlandc2}.
+ wendlandc2}.
 \begin{align}
-    W(q) = \frac{\sigma}{h^d} \left\{
-    \begin{array}{ll}
-        (1-q)_+^4 (1+4q) & \quad \mbox{for 2D and 3D and} \quad 0 \leq  q < 1 \\
-        (1-q)_+^3 (1+3q) & \quad \mbox{for 1D and} \quad 0 \leq  q < 1 \\
-        0 & \quad \mbox{for} \quad q >= 1.
-    \end{array}
-    \right.
+ W(q) = \frac{\sigma}{h^d} \left\{
+ \begin{array}{ll}
+  (1-q)_+^4 (1+4q) & \quad \mbox{for 2D and 3D and} \quad 0 \leq  q < 1 \\
+  (1-q)_+^3 (1+3q) & \quad \mbox{for 1D and} \quad 0 \leq  q < 1        \\
+  0                & \quad \mbox{for} \quad q >= 1.
+ \end{array}
+ \right.
 \end{align}
 where $d$ denotes the dimension, and $\sigma$ is the normalization constant $\frac{5}{4}$,
 $\frac{7}{\pi}$ and $\frac{21}{2\pi}$ for 1D, 2D, and 3D, respectively\footnote{$(\cdot)_+ \equiv
-\max\{0,\cdot\}$}.
+  \max\{0,\cdot\}$}.
 \subsubsection{Wendland C4}
 Wendland C4 kernel \citep{2012MNRAS.425.1068D}, chosen by command line option \texttt{-k
-wendlandc4}.
+ wendlandc4}.
 \begin{align}
-    W(q) = \frac{\sigma}{h^d} \left\{
-    \begin{array}{ll}
-        (1-q)_+^6 (1+6q+\frac{35}{3}q^2) & \quad \mbox{for 2D and 3D and} \quad 0 \leq  q < 1 \\
-        (1-q)_+^5 (1+5q+8q^2) & \quad \mbox{for 1D and} \quad 0 \leq  q < 1 \\
-        0 & \quad \mbox{for} \quad q >= 1.
-    \end{array}
-    \right.
+ W(q) = \frac{\sigma}{h^d} \left\{
+ \begin{array}{ll}
+  (1-q)_+^6 (1+6q+\frac{35}{3}q^2) & \quad \mbox{for 2D and 3D and} \quad 0 \leq  q < 1 \\
+  (1-q)_+^5 (1+5q+8q^2)            & \quad \mbox{for 1D and} \quad 0 \leq  q < 1        \\
+  0                                & \quad \mbox{for} \quad q >= 1.
+ \end{array}
+ \right.
 \end{align}
 where $d$ denotes the dimension, and $\sigma$ is the normalization constant $\frac{3}{2}$,
 $\frac{9}{\pi}$ and $\frac{495}{32\pi}$ for 1D, 2D, and 3D, respectively.
 \subsubsection{Wendland C6}
 Wendland C6 kernel \citep{2012MNRAS.425.1068D}, chosen by command line option \texttt{-k
-wendlandc6}.
+ wendlandc6}.
 \begin{align}
-    W(q) = \frac{\sigma}{h^d} \left\{
-    \begin{array}{ll}
-        (1-q)_+^8 (1+8q+25q^2+32q^3) & \quad \mbox{for 2D and 3D and} \quad 0 \leq  q < 1 \\
-        (1-q)_+^7 (1+7q+19q^2+21q^3) & \quad \mbox{for 1D and} \quad 0 \leq  q < 1 \\
-        0 & \quad \mbox{for} \quad q >= 1.
-    \end{array}
-    \right.
+ W(q) = \frac{\sigma}{h^d} \left\{
+ \begin{array}{ll}
+  (1-q)_+^8 (1+8q+25q^2+32q^3) & \quad \mbox{for 2D and 3D and} \quad 0 \leq  q < 1 \\
+  (1-q)_+^7 (1+7q+19q^2+21q^3) & \quad \mbox{for 1D and} \quad 0 \leq  q < 1        \\
+  0                            & \quad \mbox{for} \quad q >= 1.
+ \end{array}
+ \right.
 \end{align}
 where $d$ denotes the dimension, and $\sigma$ is the normalization constant $\frac{55}{32}$,
 $\frac{78}{7\pi}$ and $\frac{1365}{64\pi}$ for 1D, 2D, and 3D, respectively.
@@ -982,12 +984,12 @@ $\frac{78}{7\pi}$ and $\frac{1365}{64\pi}$ for 1D, 2D, and 3D, respectively.
 \subsection{spiky kernels}
 \subsubsection{Desbrun \& Cani spiky kernel}
 \begin{align}
-    W(q) = \frac{\sigma}{h^d} \left\{
-    \begin{array}{ll}
-        (1-q)^3  & \quad \mbox{for} \quad 0 \leq  q < 1 \\
-        0 & \quad \mbox{for} \quad q >= 1.
-    \end{array}
-    \right.
+ W(q) = \frac{\sigma}{h^d} \left\{
+ \begin{array}{ll}
+  (1-q)^3 & \quad \mbox{for} \quad 0 \leq  q < 1 \\
+  0       & \quad \mbox{for} \quad q >= 1.
+ \end{array}
+ \right.
 \end{align}
 where $d$ denotes the dimension, and $\sigma$ is the normalization constant
 $\frac{10}{\pi}$ and $\frac{15}{\pi}$ for 2D and 3D, respectively.
