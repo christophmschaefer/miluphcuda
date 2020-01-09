@@ -440,10 +440,10 @@ void read_particles_from_file(File inputFile) {
             fprintf(stderr, "Could not find damage_porjutzi information in hdf5 file.  Exiting\n");
             exit(1);
         }
+        x = (double * ) malloc(sizeof(double) * my_anop);
         status = H5Dread(damage_porjutzi_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(damage_porjutzi_id);
 
-        x = (double * ) malloc(sizeof(double) * my_anop);
         for (i = 0; i < my_anop; i++) {
             p_host.damage_porjutzi[i] = x[i];
         }
@@ -458,9 +458,9 @@ void read_particles_from_file(File inputFile) {
             fprintf(stderr, "Could not find rho_c_plus information in hdf5 file.  Exiting\n");
             exit(1);
         }
+        x = (double * ) malloc(sizeof(double) * my_anop);
         status = H5Dread(rho_c_plus_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(rho_c_plus_id);
-        x = (double * ) malloc(sizeof(double) * my_anop);
         for (i = 0; i < my_anop; i++) {
             p_host.rho_c_plus[i] = x[i];
         }
