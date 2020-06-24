@@ -22,5 +22,8 @@ Thomas I. Maindl,
 Samuel Scherrer,
 Janka Werner,
 Christoph Burger,
-Marius Morlock
+Marius Morlock,
+Evita Vavilina,
+Michael Staneker,
+Maximilian Rutz.
 
