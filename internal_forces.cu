@@ -247,7 +247,7 @@ __global__ void internalForces(int *interactions) {
 #if BALSARA_SWITCH
         curli = 0;
         for (d = 0; d < DIM; d++) {
-            curli += p_rhs.curlv[i+d]*p_rhs.curlv[i+d];
+            curli += p_rhs.curlv[i*DIM+d]*p_rhs.curlv[i*DIM+d];
         }
         curli = sqrt(curli);
         fi = fabs(p_rhs.divv[i]) / (fabs(p_rhs.divv[i]) + curli + eps_balsara*p.cs[i]/p.h[i]);
@@ -468,7 +468,7 @@ __global__ void internalForces(int *interactions) {
 # if BALSARA_SWITCH
                 curlj = 0;
                 for (d = 0; d < DIM; d++) {
-                    curlj += p_rhs.curlv[j+d]*p_rhs.curlv[j+d];
+                    curlj += p_rhs.curlv[j*DIM+d]*p_rhs.curlv[j*DIM+d];
                 }
                 curlj = sqrt(curlj);
                 fj = fabs(p_rhs.divv[j]) / (fabs(p_rhs.divv[j]) + curlj + eps_balsara*p.cs[j]/p.h[j]);

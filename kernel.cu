@@ -406,7 +406,7 @@ __global__ void CalcDivvandCurlv(int *interactions)
 #endif
         }
         for (d = 0; d < DIM; d++) {
-            p_rhs.curlv[i+d] = curlv[d];
+            p_rhs.curlv[i*DIM+d] = curlv[d];
         }
             p_rhs.divv[i] = divv;
     }
