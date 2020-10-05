@@ -149,7 +149,7 @@ __global__ void vonMisesPlasticity(void) {
         sqrt_J2 = sqrt(J2);
 
         /* first invariant of the stress tensor */
-        I1 = -1./3 * p.p[i];
+        I1 = -3.0 * p.p[i];
 
 
 #if MOHR_COULOMB_PLASTICITY
@@ -171,7 +171,7 @@ __global__ void vonMisesPlasticity(void) {
         B = 2. * sin(matFrictionAngle[p_rhs.materialId[i]]) / (sqrt(3.) * (3. - sin(matFrictionAngle[p_rhs.materialId[i]])));
 
         // yield strength determined by drucker prager condition
-        y = A + 1./3*p.p[i] * B;
+        y = A + 3.0*p.p[i] * B;
         // drucker prager like -> compare to sqrt(J2)
         if (J2 > 0) {
             mises_f = y/sqrt_J2;
@@ -210,6 +210,7 @@ __global__ void vonMisesPlasticity(void) {
         }
 #else
         y = ytmp;
+#endif
         // drucker prager like -> compare to sqrt(J2)
         if (J2 > 0) {
             mises_f = y/sqrt_J2;
@@ -217,7 +218,6 @@ __global__ void vonMisesPlasticity(void) {
 
         if (mises_f > 1)
             mises_f = 1;
-#endif
 #else // simple von Mises yield criterion without *any* dependency
         y = matYieldStress[p_rhs.materialId[i]];
 #if SIRONO_POROSITY
