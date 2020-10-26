@@ -136,7 +136,7 @@ __global__ void vonMisesPlasticity(void) {
 
         /* second invariant of the stress tensor */
         J2 = 0;
-        mises_f = 0;
+        mises_f = 1;
 
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
@@ -159,7 +159,7 @@ __global__ void vonMisesPlasticity(void) {
         // drucker prager like -> compare to sqrt(J2)
         if (J2 > 0) {
             mises_f = y/sqrt_J2;
-        } 
+        }
 
         if (mises_f > 1)
             mises_f = 1;
@@ -175,7 +175,7 @@ __global__ void vonMisesPlasticity(void) {
         // drucker prager like -> compare to sqrt(J2)
         if (J2 > 0) {
             mises_f = y/sqrt_J2;
-        } 
+        }
 
         if (mises_f > 1)
             mises_f = 1;
@@ -214,7 +214,7 @@ __global__ void vonMisesPlasticity(void) {
         // drucker prager like -> compare to sqrt(J2)
         if (J2 > 0) {
             mises_f = y/sqrt_J2;
-        } 
+        }
 
         if (mises_f > 1)
             mises_f = 1;
@@ -233,7 +233,7 @@ __global__ void vonMisesPlasticity(void) {
         // von mises limit like
         if (J2 > 0) {
             mises_f = y*y/(3*J2);
-        } 
+        }
 
         if (mises_f > 1)
             mises_f = 1;
@@ -269,7 +269,7 @@ __global__ void JohnsonCookPlasticity(void) {
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
 
         J2 = 0;
-        jc_f = 0;
+        jc_f = 1;
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
                 tmp = p.S[stressIndex(i, d, e)];
