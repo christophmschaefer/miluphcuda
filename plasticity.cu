@@ -155,7 +155,10 @@ __global__ void vonMisesPlasticity(void) {
 #if MOHR_COULOMB_PLASTICITY
         // mohr coulomb yield criterion
         // matInternalFriction = \mu = tan(matFrictionAngle)
-        y = matInternalFriction[p_rhs.materialId[i]] * p.p[i] + matCohesion[p_rhs.materialId[i]];
+        y = matCohesion[p_rhs.materialId[i]];
+        if (p.p[i] > 0) {
+            y += matInternalFriction[p_rhs.materialId[i]] * p.p[i];
+        }
         // drucker prager like -> compare to sqrt(J2)
         if (J2 > 0) {
             mises_f = y/sqrt_J2;
@@ -171,7 +174,10 @@ __global__ void vonMisesPlasticity(void) {
         B = 2. * sin(matFrictionAngle[p_rhs.materialId[i]]) / (sqrt(3.) * (3. - sin(matFrictionAngle[p_rhs.materialId[i]])));
 
         // yield strength determined by drucker prager condition
-        y = A + 3.0*p.p[i] * B;
+        y = A;
+        if (p.p[i] > 0) {
+            y += 3.0*p.p[i]*B;
+        }
         // drucker prager like -> compare to sqrt(J2)
         if (J2 > 0) {
             mises_f = y/sqrt_J2;
@@ -195,7 +201,7 @@ __global__ void vonMisesPlasticity(void) {
             ytmp = y_0;
         }
 #if FRAGMENTATION
-        damage = pow(p.damage_total[i], DIM);
+        damage = p.damage_total[i];
         if (damage > 1) damage = 1.0;
         // yield strength of damaged material
         if (p.p[i] > 0) {
