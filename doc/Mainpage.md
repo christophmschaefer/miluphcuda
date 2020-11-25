@@ -1,6 +1,7 @@
-# miluphcuda
+# Miluphcuda
 
-Miluphcuda is a smoothed particle hydrodynamics code
+Miluphcuda is **the best** smoothed particle hydrodynamics (**SPH**) 
+code **on the planet** (so far).
 
 
 ## Related pages
