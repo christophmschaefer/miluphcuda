@@ -5,7 +5,7 @@ Miluphcuda is a smoothed particle hydrodynamics code
 Check out the [documentation](https://christophmschaefer.github.io/miluphcuda/index.html)!
 
 * miluphcuda is the cuda port of the original miluph code.
-* miluphcuda can be used to model fluids and solids. 
+* miluphcuda can be used to model fluids and solids.
 * miluphcuda runs on single Nvidia GPUs with compute capability 5.0 and higher.
 
 
@@ -29,4 +29,3 @@ Marius Morlock,
 Evita Vavilina,
 Michael Staneker,
 Maximilian Rutz.
-
