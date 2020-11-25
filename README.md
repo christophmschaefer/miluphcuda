@@ -1,7 +1,7 @@
 # miluphcuda
 smoothed particle hydrodynamics code
 
-Check out the [documentation](https://michaelst98.github.io/miluphcuda/index.html)!
+Check out the [documentation](https://christophmschaefer.github.io/miluphcuda/)!
 
 miluphcuda is the cuda port of the original miluph code.
 miluphcuda can be used to model fluids and solids. 
