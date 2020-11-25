@@ -1,22 +1,22 @@
-# miluphcuda
-smoothed particle hydrodynamics code
+# Miluphcuda
 
-Check out the [documentation](https://michaelst98.github.io/miluphcuda/index.html)!
+Miluphcuda is a smoothed particle hydrodynamics code
 
-miluphcuda is the cuda port of the original miluph code.
-miluphcuda can be used to model fluids and solids. 
-miluphcuda runs on single Nvidia GPUs with compute capability 5.0 and higher.
+Check out the [documentation](https://christophmschaefer.github.io/miluphcuda/index.html)!
+
+* miluphcuda is the cuda port of the original miluph code.
+* miluphcuda can be used to model fluids and solids. 
+* miluphcuda runs on single Nvidia GPUs with compute capability 5.0 and higher.
 
 
-Main features are
+## Main features
 
 * SPH hydro and solid
 * self-gravity (via Barnes-Hut tree)
 * porosity models (P-alpha, epsilon-alpha, Sirono)
 
 
-
-Developers:
+## Developers
 
 Christoph M. Schaefer,
 Sven Riecker,

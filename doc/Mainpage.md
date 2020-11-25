@@ -1,9 +1,7 @@
 # Miluphcuda
 
-Miluphcuda is **the best** smoothed particle hydrodynamics (**SPH**) 
-code **on the planet** (so far).
-
-<img src="https://www.tat.physik.uni-tuebingen.de/~schaefer/images/avatar.jpg" width="307" height="460" style="float:right">
+Miluphcuda is a smoothed particle hydrodynamics (**SPH**) 
+code.
 
 ## Related pages
 
