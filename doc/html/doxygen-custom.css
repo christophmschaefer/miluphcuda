@@ -214,7 +214,8 @@ h4 a:hover, a:active, h5 a:hover, a:active, h6 a:hover, a:active {
 }
 
 #banner div.logo {
-	background: url('https://upload.wikimedia.org/wikipedia/de/9/9c/UniversitaetTuebingen_WortBildMarke.png') no-repeat scroll 0 0 transparent;
+	/*background: url('https://upload.wikimedia.org/wikipedia/de/9/9c/UniversitaetTuebingen_WortBildMarke.png') no-repeat scroll 0 0 transparent;*/
+	background: url('https://astrotourismwa.com.au/wp-content/uploads/2018/12/Milky-Way-Galaxy-1080x675.jpg');
 	/*background-repeat: no-repeat;*/
 	background-size: auto 80%;
 	/*min-width: 19em;
@@ -231,7 +232,8 @@ h4 a:hover, a:active, h5 a:hover, a:active, h6 a:hover, a:active {
 	position: relative;
 	top: 48px;
 	left: 352px;
-	color: #333333; /* mine shaft */
+	#color: #333333;
+	color: #f2f2f2;
 	text-transform: uppercase;
 	letter-spacing: 3px;
 	font-family: Myriad Pro,Myriad Web Pro Regular,Lucida Grande,Geneva,Trebuchet MS,sans-serif;

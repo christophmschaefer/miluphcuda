@@ -7,8 +7,9 @@ Check out the [documentation](https://michaelst98.github.io/miluphcuda/index.htm
 
 ## Related pages
 
-* [Miluphcuda PDF Documentation](doc/miluphcuda_documentation.pdf)
-* <a href="miluphcuda_documentation.pdf" target="_blank"><b>Notes</b></a>
+* [Extra Markdown file](ExtraMarkdown.md)
+* [Miluphcuda documentation (as md link)](miluphcuda_documentation.pdf)
+* <a href="miluphcuda_documentation.pdf" target="_blank"><b>Miluphcuda documentation (as html link)</b></a>
 
 ## Project structure
 
