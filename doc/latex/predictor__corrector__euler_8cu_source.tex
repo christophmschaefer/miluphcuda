@@ -1,0 +1,860 @@
+\hypertarget{predictor__corrector__euler_8cu_source}{}\doxysection{predictor\+\_\+corrector\+\_\+euler.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 }
+\DoxyCodeLine{00025 }
+\DoxyCodeLine{00026 /* predictor corrector scheme with an initial euler step and the corrector step at half dt */}
+\DoxyCodeLine{00027 }
+\DoxyCodeLine{00028 \#include "{}predictor\_corrector\_euler.h"{}}
+\DoxyCodeLine{00029 \#include "{}timeintegration.h"{}}
+\DoxyCodeLine{00030 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00031 \#include "{}memory\_handling.h"{}}
+\DoxyCodeLine{00032 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00033 \#include "{}pressure.h"{}}
+\DoxyCodeLine{00034 \#include "{}rhs.h"{}}
+\DoxyCodeLine{00035 \#include <float.h>}
+\DoxyCodeLine{00036 }
+\DoxyCodeLine{00037 }
+\DoxyCodeLine{00038 }
+\DoxyCodeLine{00039 extern \_\_device\_\_ double endTimeD, currentTimeD;}
+\DoxyCodeLine{00040 extern \_\_device\_\_ double substep\_currentTimeD;}
+\DoxyCodeLine{00041 extern \_\_device\_\_ double dt;}
+\DoxyCodeLine{00042 extern \_\_device\_\_ int blockCount;}
+\DoxyCodeLine{00043 extern \_\_device\_\_ double emin\_d;}
+\DoxyCodeLine{00044 extern \_\_device\_\_ double Smin\_d;}
+\DoxyCodeLine{00045 extern \_\_device\_\_ double rhomin\_d;}
+\DoxyCodeLine{00046 extern \_\_device\_\_ double damagemin\_d;}
+\DoxyCodeLine{00047 extern \_\_device\_\_ double alphamin\_d;}
+\DoxyCodeLine{00048 extern \_\_device\_\_ double betamin\_d;}
+\DoxyCodeLine{00049 extern \_\_device\_\_ double alpha\_epspormin\_d;}
+\DoxyCodeLine{00050 extern \_\_device\_\_ double epsilon\_vmin\_d;}
+\DoxyCodeLine{00051 extern \_\_device\_\_ int pressureChangeSmallEnough;}
+\DoxyCodeLine{00052 extern \_\_device\_\_ double maxpressureDiff;}
+\DoxyCodeLine{00053 }
+\DoxyCodeLine{00054 }
+\DoxyCodeLine{00055 extern double L\_ini;}
+\DoxyCodeLine{00056 }
+\DoxyCodeLine{00057 }
+\DoxyCodeLine{00058 \_\_global\_\_ void CorrectorStep\_euler()}
+\DoxyCodeLine{00059 \{}
+\DoxyCodeLine{00060     register int i;}
+\DoxyCodeLine{00061 \#if SOLID}
+\DoxyCodeLine{00062     register int j;}
+\DoxyCodeLine{00063     register int k;}
+\DoxyCodeLine{00064 \#endif}
+\DoxyCodeLine{00065 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00066     // pointmass loop}
+\DoxyCodeLine{00067     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00068         pointmass.x[i] = pointmass.x[i] + dt/2 * (predictor\_pointmass.vx[i] + pointmass.vx[i]);}
+\DoxyCodeLine{00069 \#if DIM > 1}
+\DoxyCodeLine{00070         pointmass.y[i] = pointmass.y[i] + dt/2 * (predictor\_pointmass.vy[i] + pointmass.vy[i]);}
+\DoxyCodeLine{00071         pointmass.vy[i] = pointmass.vy[i] + dt/2 * (predictor\_pointmass.ay[i] + pointmass.ay[i]);}
+\DoxyCodeLine{00072         pointmass.ay[i] = 0.5*(predictor\_pointmass.ay[i] + pointmass.ay[i]);}
+\DoxyCodeLine{00073 \#endif}
+\DoxyCodeLine{00074         pointmass.vx[i] = pointmass.vx[i] + dt/2 * (predictor\_pointmass.ax[i] + pointmass.ax[i]);}
+\DoxyCodeLine{00075         pointmass.ax[i] = 0.5*(predictor\_pointmass.ax[i] + pointmass.ax[i]);}
+\DoxyCodeLine{00076 \#if DIM == 3}
+\DoxyCodeLine{00077         pointmass.z[i] = pointmass.z[i] + dt/2 * (predictor\_pointmass.vz[i] + pointmass.vz[i]);}
+\DoxyCodeLine{00078         pointmass.vz[i] = pointmass.vz[i] + dt/2 * (predictor\_pointmass.az[i] + pointmass.az[i]);}
+\DoxyCodeLine{00079         pointmass.az[i] = 0.5*(predictor\_pointmass.az[i] + pointmass.az[i]);}
+\DoxyCodeLine{00080 \#endif}
+\DoxyCodeLine{00081     \}}
+\DoxyCodeLine{00082 \#endif // GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00083 }
+\DoxyCodeLine{00084     // particle loop}
+\DoxyCodeLine{00085     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00086         p.x[i] = p.x[i] + dt/2 * (predictor.dxdt[i] + p.dxdt[i]);}
+\DoxyCodeLine{00087 \#if DIM > 1}
+\DoxyCodeLine{00088         p.y[i] = p.y[i] + dt/2 * (predictor.dydt[i] + p.dydt[i]);}
+\DoxyCodeLine{00089         p.vy[i] = p.vy[i] + dt/2 * (predictor.ay[i] + p.ay[i]);}
+\DoxyCodeLine{00090         p.ay[i] = 0.5*(predictor.ay[i] + p.ay[i]);}
+\DoxyCodeLine{00091 \#endif}
+\DoxyCodeLine{00092         p.vx[i] = p.vx[i] + dt/2 * (predictor.ax[i] + p.ax[i]);}
+\DoxyCodeLine{00093         p.ax[i] = 0.5*(predictor.ax[i] + p.ax[i]);}
+\DoxyCodeLine{00094 \#if DIM == 3}
+\DoxyCodeLine{00095         p.z[i] = p.z[i] + dt/2 * (predictor.dzdt[i] + p.dzdt[i]);}
+\DoxyCodeLine{00096         p.vz[i] = p.vz[i] + dt/2 * (predictor.az[i] + p.az[i]);}
+\DoxyCodeLine{00097         p.az[i] = 0.5*(predictor.az[i] + p.az[i]);}
+\DoxyCodeLine{00098 \#endif}
+\DoxyCodeLine{00099 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00100         p.e[i] = p.e[i] + dt/2 * (predictor.dedt[i] + p.dedt[i]);}
+\DoxyCodeLine{00101         p.dedt[i] = 0.5*(predictor.dedt[i] + p.dedt[i]);}
+\DoxyCodeLine{00102 \#endif}
+\DoxyCodeLine{00103 \#if FRAGMENTATION}
+\DoxyCodeLine{00104         p.d[i] = p.d[i] + dt/2 * (predictor.dddt[i] + p.dddt[i]);}
+\DoxyCodeLine{00105         p.dddt[i] = 0.5*(predictor.dddt[i] + p.dddt[i]);}
+\DoxyCodeLine{00106 \#endif}
+\DoxyCodeLine{00107 \#if INTEGRATE\_SML}
+\DoxyCodeLine{00108         p.h[i] = p.h[i] + dt/2 * (predictor.dhdt[i] + p.dhdt[i]);}
+\DoxyCodeLine{00109         p.dhdt[i] = 0.5 * (predictor.dhdt[i] + p.dhdt[i]);}
+\DoxyCodeLine{00110 \#else}
+\DoxyCodeLine{00111         p.h[i] = predictor.h[i];}
+\DoxyCodeLine{00112 \#endif}
+\DoxyCodeLine{00113 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00114         p.ep[i] = p.ep[i] + dt/2 * (predictor.edotp[i] + p.edotp[i]);}
+\DoxyCodeLine{00115         p.edotp[i] = 0.5*(predictor.edotp[i] + p.edotp[i]);}
+\DoxyCodeLine{00116         p.T[i] = p.T[i] + dt/2 * (predictor.dTdt[i] + p.dTdt[i]);}
+\DoxyCodeLine{00117         p.dTdt[i] = 0.5*(predictor.dTdt[i] + p.dTdt[i]);}
+\DoxyCodeLine{00118 \#endif}
+\DoxyCodeLine{00119 \#if FRAGMENTATION}
+\DoxyCodeLine{00120 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00121 //        if (p.drhodt[i] > 0 \&\& predictor.p[i] > predictor.pold[i]) \{}
+\DoxyCodeLine{00122                 if (predictor.p[i] > predictor.pold[i]) \{}
+\DoxyCodeLine{00123             p.damage\_porjutzi[i] = p.damage\_porjutzi[i] + dt/2 *(predictor.ddamage\_porjutzidt[i] + p.ddamage\_porjutzidt[i]);}
+\DoxyCodeLine{00124         \} else \{}
+\DoxyCodeLine{00125             p.d[i] = p.d[i];}
+\DoxyCodeLine{00126             p.damage\_porjutzi[i] = p.damage\_porjutzi[i];}
+\DoxyCodeLine{00127         \}}
+\DoxyCodeLine{00128 \#endif}
+\DoxyCodeLine{00129         p.numActiveFlaws[i] = predictor.numActiveFlaws[i];}
+\DoxyCodeLine{00130 \#endif}
+\DoxyCodeLine{00131         // change drhodt after PALPHA\_POROSITY}
+\DoxyCodeLine{00132 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00133         p.rho[i] = p.rho[i] + dt/2 * (predictor.drhodt[i] + p.drhodt[i]);}
+\DoxyCodeLine{00134         p.drhodt[i] = 0.5*(predictor.drhodt[i]+ p.drhodt[i]);}
+\DoxyCodeLine{00135 \#else}
+\DoxyCodeLine{00136         p.rho[i] = p.rho[i];}
+\DoxyCodeLine{00137 \#endif}
+\DoxyCodeLine{00138 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00139         p.rho\_0prime[i] = p.rho\_0prime[i];}
+\DoxyCodeLine{00140         p.rho\_c\_plus[i] = p.rho\_c\_plus[i];}
+\DoxyCodeLine{00141         p.rho\_c\_minus[i] = p.rho\_c\_minus[i];}
+\DoxyCodeLine{00142         p.compressive\_strength[i] = p.compressive\_strength[i];}
+\DoxyCodeLine{00143         p.tensile\_strength[i] = p.tensile\_strength[i];}
+\DoxyCodeLine{00144         p.shear\_strength[i] = p.shear\_strength[i];}
+\DoxyCodeLine{00145         p.K[i] = p.K[i];}
+\DoxyCodeLine{00146         p.flag\_rho\_0prime[i] = p.flag\_rho\_0prime[i];}
+\DoxyCodeLine{00147         p.flag\_plastic[i] = p.flag\_plastic[i];}
+\DoxyCodeLine{00148 \#endif}
+\DoxyCodeLine{00149 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00150         p.alpha\_epspor[i] = p.alpha\_epspor[i] + dt/2 * (predictor.dalpha\_epspordt[i] + p.dalpha\_epspordt[i]);}
+\DoxyCodeLine{00151         p.dalpha\_epspordt[i] = 0.5*(predictor.dalpha\_epspordt[i] + p.dalpha\_epspordt[i]);}
+\DoxyCodeLine{00152         p.epsilon\_v[i] = p.epsilon\_v[i] + dt/2 * (predictor.depsilon\_vdt[i] + p.depsilon\_vdt[i]);}
+\DoxyCodeLine{00153         p.depsilon\_vdt[i] = 0.5*(predictor.depsilon\_vdt[i] + p.depsilon\_vdt[i]);}
+\DoxyCodeLine{00154 \#endif}
+\DoxyCodeLine{00155 \#if INVISCID\_SPH}
+\DoxyCodeLine{00156         p.beta[i] = p.beta[i] + dt/2 * (predictor.dbetadt[i] + p.dbetadt[i]);}
+\DoxyCodeLine{00157         p.dbetadt[i] = 0.5 * (predictor.dbetadt[i] + p.dbetadt[i]);}
+\DoxyCodeLine{00158 \#endif}
+\DoxyCodeLine{00159 \#if SOLID}
+\DoxyCodeLine{00160         for (j = 0; j < DIM; j++) \{}
+\DoxyCodeLine{00161             for (k = 0; k < DIM; k++) \{}
+\DoxyCodeLine{00162                 p.S[stressIndex(i,j,k)] = p.S[stressIndex(i,j,k)] + dt/2  *}
+\DoxyCodeLine{00163                     (predictor.dSdt[stressIndex(i,j,k)] + p.dSdt[stressIndex(i,j,k)]);}
+\DoxyCodeLine{00164                 p.dSdt[stressIndex(i,j,k)] = 0.5*(predictor.dSdt[stressIndex(i,j,k)] +}
+\DoxyCodeLine{00165                         p.dSdt[stressIndex(i,j,k)]);}
+\DoxyCodeLine{00166             \}}
+\DoxyCodeLine{00167         \}}
+\DoxyCodeLine{00168 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00169         /* check if we have compaction and change alpha accordingly */}
+\DoxyCodeLine{00170 //        if (p.drhodt[i] > 0 \&\& predictor.p[i] > predictor.pold[i]) \{}
+\DoxyCodeLine{00171                 if (predictor.p[i] > predictor.pold[i]) \{}
+\DoxyCodeLine{00172             p.alpha\_jutzi[i] = p.alpha\_jutzi[i] + dt/2 * ( p.dalphadt[i] + predictor.dalphadt[i]);}
+\DoxyCodeLine{00173         \} else \{}
+\DoxyCodeLine{00174             p.alpha\_jutzi[i] = p.alpha\_jutzi[i];}
+\DoxyCodeLine{00175         \}}
+\DoxyCodeLine{00176         // next line, Oli \& Christoph personal communication 2019-\/06-\/24}
+\DoxyCodeLine{00177         p.p[i] = predictor.p[i];}
+\DoxyCodeLine{00178         p.pold[i] = predictor.pold[i];}
+\DoxyCodeLine{00179         p.alpha\_jutzi\_old[i] = p.alpha\_jutzi\_old[i];}
+\DoxyCodeLine{00180 \#endif}
+\DoxyCodeLine{00181 \#endif}
+\DoxyCodeLine{00182     \}}
+\DoxyCodeLine{00183 \}}
+\DoxyCodeLine{00184 }
+\DoxyCodeLine{00185 \_\_global\_\_ void PredictorStep\_euler()}
+\DoxyCodeLine{00186 \{}
+\DoxyCodeLine{00187     register int i;}
+\DoxyCodeLine{00188 \#if SOLID}
+\DoxyCodeLine{00189     register int j;}
+\DoxyCodeLine{00190     register int k;}
+\DoxyCodeLine{00191 \#endif}
+\DoxyCodeLine{00192 }
+\DoxyCodeLine{00193 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00194     // pointmass loop}
+\DoxyCodeLine{00195     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00196         predictor\_pointmass.x[i] = pointmass.x[i] + dt * pointmass.vx[i];}
+\DoxyCodeLine{00197         predictor\_pointmass.vx[i] = pointmass.vx[i] + dt * pointmass.ax[i];}
+\DoxyCodeLine{00198 }
+\DoxyCodeLine{00199 \#if DIM > 1}
+\DoxyCodeLine{00200         predictor\_pointmass.y[i] = pointmass.y[i] + dt * pointmass.vy[i];}
+\DoxyCodeLine{00201         predictor\_pointmass.vy[i] = pointmass.vy[i] + dt * pointmass.ay[i];}
+\DoxyCodeLine{00202 \#endif}
+\DoxyCodeLine{00203 \#if DIM > 2}
+\DoxyCodeLine{00204         predictor\_pointmass.z[i] = pointmass.z[i] + dt * pointmass.vz[i];}
+\DoxyCodeLine{00205         predictor\_pointmass.vz[i] = pointmass.vz[i] + dt * pointmass.az[i];}
+\DoxyCodeLine{00206 \#endif}
+\DoxyCodeLine{00207     \}}
+\DoxyCodeLine{00208 \#endif // GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00209 }
+\DoxyCodeLine{00210 }
+\DoxyCodeLine{00211     // particle loop}
+\DoxyCodeLine{00212     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00213         predictor.x[i] = p.x[i] + dt * p.dxdt[i];}
+\DoxyCodeLine{00214         predictor.vx[i] = p.vx[i] + dt * p.ax[i];}
+\DoxyCodeLine{00215 }
+\DoxyCodeLine{00216 \#if DIM > 1}
+\DoxyCodeLine{00217         predictor.y[i] = p.y[i] + dt * p.dydt[i];}
+\DoxyCodeLine{00218         predictor.vy[i] = p.vy[i] + dt * p.ay[i];}
+\DoxyCodeLine{00219 \#endif}
+\DoxyCodeLine{00220 \#if DIM > 2}
+\DoxyCodeLine{00221         predictor.z[i] = p.z[i] + dt * p.dzdt[i];}
+\DoxyCodeLine{00222         predictor.vz[i] = p.vz[i] + dt * p.az[i];}
+\DoxyCodeLine{00223 \#endif}
+\DoxyCodeLine{00224 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00225         predictor.rho[i] = p.rho[i] + dt * p.drhodt[i];}
+\DoxyCodeLine{00226 \#else}
+\DoxyCodeLine{00227         predictor.rho[i] = p.rho[i];}
+\DoxyCodeLine{00228 \#endif}
+\DoxyCodeLine{00229         predictor.drhodt[i] = p.drhodt[i];}
+\DoxyCodeLine{00230 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00231         predictor.e[i] = p.e[i] + dt * p.dedt[i];}
+\DoxyCodeLine{00232 \#endif}
+\DoxyCodeLine{00233 }
+\DoxyCodeLine{00234 \#if INTEGRATE\_SML}
+\DoxyCodeLine{00235         predictor.h[i] = p.h[i] + dt * p.dhdt[i];}
+\DoxyCodeLine{00236 \#else}
+\DoxyCodeLine{00237         predictor.h[i] = p.h[i];}
+\DoxyCodeLine{00238 \#endif}
+\DoxyCodeLine{00239 }
+\DoxyCodeLine{00240 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00241         predictor.alpha\_jutzi[i] = p.alpha\_jutzi[i] + dt * p.dalphadt[i];}
+\DoxyCodeLine{00242         predictor.alpha\_jutzi\_old[i] = p.alpha\_jutzi\_old[i];}
+\DoxyCodeLine{00243 \#endif}
+\DoxyCodeLine{00244 }
+\DoxyCodeLine{00245 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00246         predictor.alpha\_epspor[i] = p.alpha\_epspor[i] + dt * p.dalpha\_epspordt[i];}
+\DoxyCodeLine{00247         predictor.epsilon\_v[i] = p.epsilon\_v[i] + dt * p.depsilon\_vdt[i];}
+\DoxyCodeLine{00248 \#endif}
+\DoxyCodeLine{00249 }
+\DoxyCodeLine{00250 \#if FRAGMENTATION}
+\DoxyCodeLine{00251         predictor.d[i] = p.d[i] + dt * p.dddt[i];}
+\DoxyCodeLine{00252         predictor.numActiveFlaws[i] = p.numActiveFlaws[i];}
+\DoxyCodeLine{00253 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00254         predictor.damage\_porjutzi[i] = p.damage\_porjutzi[i] + dt * p.ddamage\_porjutzidt[i];}
+\DoxyCodeLine{00255         // cms 2019-\/06-\/25}
+\DoxyCodeLine{00256         // pressuremaxchange function will compare predictor.p -\/ predictor.pold and}
+\DoxyCodeLine{00257         // calc\_pressure in integrator will overwrite predictor.p to the value *after* the test time}
+\DoxyCodeLine{00258         // step}
+\DoxyCodeLine{00259         //predictor.p[i] = p.p[i];}
+\DoxyCodeLine{00260         predictor.pold[i] = p.p[i];}
+\DoxyCodeLine{00261 \#endif}
+\DoxyCodeLine{00262 \#endif}
+\DoxyCodeLine{00263 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00264         predictor.rho\_0prime[i] = p.rho\_0prime[i];}
+\DoxyCodeLine{00265         predictor.rho\_c\_plus[i] = p.rho\_c\_plus[i];}
+\DoxyCodeLine{00266         predictor.rho\_c\_minus[i] = p.rho\_c\_minus[i];}
+\DoxyCodeLine{00267         predictor.compressive\_strength[i] = p.compressive\_strength[i];}
+\DoxyCodeLine{00268         predictor.tensile\_strength[i] = p.tensile\_strength[i];}
+\DoxyCodeLine{00269         predictor.shear\_strength[i] = p.shear\_strength[i];}
+\DoxyCodeLine{00270         predictor.K[i] = p.K[i];}
+\DoxyCodeLine{00271         predictor.flag\_rho\_0prime[i] = p.flag\_rho\_0prime[i];}
+\DoxyCodeLine{00272         predictor.flag\_plastic[i] = p.flag\_plastic[i];}
+\DoxyCodeLine{00273 \#endif}
+\DoxyCodeLine{00274 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00275         predictor.ep[i] = p.ep[i] + dt * p.edotp[i];}
+\DoxyCodeLine{00276         predictor.T[i] = p.T[i] + dt * p.dTdt[i];}
+\DoxyCodeLine{00277 \#endif}
+\DoxyCodeLine{00278 \#if INVISCID\_SPH}
+\DoxyCodeLine{00279         predictor.beta[i] = p.beta[i] + dt * p.dbetadt[i];}
+\DoxyCodeLine{00280 \#endif}
+\DoxyCodeLine{00281 \#if SOLID}
+\DoxyCodeLine{00282         for (j = 0; j < DIM; j++) \{}
+\DoxyCodeLine{00283             for (k = 0; k < DIM; k++) \{}
+\DoxyCodeLine{00284                 predictor.S[stressIndex(i,j,k)] = p.S[stressIndex(i,j,k)] + dt * p.dSdt[stressIndex(i,j,k)];}
+\DoxyCodeLine{00285             \}}
+\DoxyCodeLine{00286         \}}
+\DoxyCodeLine{00287 \#endif}
+\DoxyCodeLine{00288     \}}
+\DoxyCodeLine{00289 }
+\DoxyCodeLine{00290 \}}
+\DoxyCodeLine{00291 }
+\DoxyCodeLine{00292 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00293 /* check the pressure change to avoid large deviation from the crush-\/curve */}
+\DoxyCodeLine{00294 \_\_global\_\_ void pressureChangeCheck\_euler(double *maxpressureDiffPerBlock)}
+\DoxyCodeLine{00295 \{}
+\DoxyCodeLine{00296     \_\_shared\_\_ double sharedMaxpressureDiff[NUM\_THREADS\_PC\_INTEGRATOR];}
+\DoxyCodeLine{00297     double localMaxpressureDiff = 0.0;}
+\DoxyCodeLine{00298     double tmp = 0;}
+\DoxyCodeLine{00299     int i, j, k, m;}
+\DoxyCodeLine{00300     maxpressureDiff = 0.0;}
+\DoxyCodeLine{00301     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00302         if (matEOS[p\_rhs.materialId[i]] == EOS\_TYPE\_JUTZI || matEOS[p\_rhs.materialId[i]] == EOS\_TYPE\_JUTZI\_MURNAGHAN) \{}
+\DoxyCodeLine{00303         /* when this function is called, p points to predictor\_device */}
+\DoxyCodeLine{00304             // only consider pressure if the particle is compressed}
+\DoxyCodeLine{00305             if (p.drhodt[i] > 0) \{}
+\DoxyCodeLine{00306                 tmp = (p.p[i] -\/ p.pold[i]);}
+\DoxyCodeLine{00307             \} else \{}
+\DoxyCodeLine{00308                 tmp = 0;}
+\DoxyCodeLine{00309             \}}
+\DoxyCodeLine{00310             localMaxpressureDiff = max(tmp, localMaxpressureDiff);}
+\DoxyCodeLine{00311         \}}
+\DoxyCodeLine{00312     \}}
+\DoxyCodeLine{00313     i = threadIdx.x;}
+\DoxyCodeLine{00314     sharedMaxpressureDiff[i] = localMaxpressureDiff;}
+\DoxyCodeLine{00315     for (j = NUM\_THREADS\_PC\_INTEGRATOR / 2; j > 0; j /= 2) \{}
+\DoxyCodeLine{00316         \_\_syncthreads();}
+\DoxyCodeLine{00317         if (i < j) \{}
+\DoxyCodeLine{00318             k = i + j;}
+\DoxyCodeLine{00319             sharedMaxpressureDiff[i] = localMaxpressureDiff = max(localMaxpressureDiff, sharedMaxpressureDiff[k]);}
+\DoxyCodeLine{00320         \}}
+\DoxyCodeLine{00321     \}}
+\DoxyCodeLine{00322     // write block result to global memory}
+\DoxyCodeLine{00323     if (i == 0) \{}
+\DoxyCodeLine{00324         k = blockIdx.x;}
+\DoxyCodeLine{00325         maxpressureDiffPerBlock[k] = localMaxpressureDiff;}
+\DoxyCodeLine{00326         m = gridDim.x -\/ 1;}
+\DoxyCodeLine{00327         if (m == atomicInc((unsigned int *)\&blockCount, m)) \{}
+\DoxyCodeLine{00328             // last block, so combine all block results}
+\DoxyCodeLine{00329             for (j = 0; j <= m; j++) \{}
+\DoxyCodeLine{00330                 localMaxpressureDiff = max(localMaxpressureDiff, maxpressureDiffPerBlock[j]);}
+\DoxyCodeLine{00331             \}}
+\DoxyCodeLine{00332             maxpressureDiff = localMaxpressureDiff;}
+\DoxyCodeLine{00333             // reset block count}
+\DoxyCodeLine{00334             blockCount = 0;}
+\DoxyCodeLine{00335         \}}
+\DoxyCodeLine{00336         if (maxpressureDiff > max\_abs\_pressure\_change) \{}
+\DoxyCodeLine{00337             printf("{}\%e\(\backslash\)n"{}, maxpressureDiff);}
+\DoxyCodeLine{00338             pressureChangeSmallEnough = FALSE;}
+\DoxyCodeLine{00339             dt = 0.25 * dt;}
+\DoxyCodeLine{00340             dt = min(dt, endTimeD -\/ currentTimeD);}
+\DoxyCodeLine{00341         \} else \{}
+\DoxyCodeLine{00342             pressureChangeSmallEnough = TRUE;}
+\DoxyCodeLine{00343         \}}
+\DoxyCodeLine{00344     \}}
+\DoxyCodeLine{00345 }
+\DoxyCodeLine{00346 \}}
+\DoxyCodeLine{00347 \#endif}
+\DoxyCodeLine{00348 }
+\DoxyCodeLine{00349 \_\_global\_\_ void setTimestep\_euler(double *forcesPerBlock, double *courantPerBlock, double *dtSPerBlock, double *dtePerBlock, double *dtrhoPerBlock, double *dtdamagePerBlock, double *dtalphaPerBlock, double *dtartviscPerBlock, double *dtbetaPerBlock, double *dtalpha\_epsporPerBlock, double *dtepsilon\_vPerBlock)}
+\DoxyCodeLine{00350 \{}
+\DoxyCodeLine{00351 }
+\DoxyCodeLine{00352 \#define SAFETY\_FIRST 0.1}
+\DoxyCodeLine{00353 }
+\DoxyCodeLine{00354     \_\_shared\_\_ double sharedForces[NUM\_THREADS\_LIMITTIMESTEP];}
+\DoxyCodeLine{00355     \_\_shared\_\_ double sharedCourant[NUM\_THREADS\_LIMITTIMESTEP];}
+\DoxyCodeLine{00356     \_\_shared\_\_ double sharedArtVisc[NUM\_THREADS\_LIMITTIMESTEP];}
+\DoxyCodeLine{00357     \_\_shared\_\_ double sharedS[NUM\_THREADS\_LIMITTIMESTEP];}
+\DoxyCodeLine{00358     \_\_shared\_\_ double sharede[NUM\_THREADS\_LIMITTIMESTEP];}
+\DoxyCodeLine{00359     \_\_shared\_\_ double sharedrho[NUM\_THREADS\_LIMITTIMESTEP];}
+\DoxyCodeLine{00360     \_\_shared\_\_ double shareddamage[NUM\_THREADS\_LIMITTIMESTEP];}
+\DoxyCodeLine{00361     \_\_shared\_\_ double sharedalpha[NUM\_THREADS\_LIMITTIMESTEP];}
+\DoxyCodeLine{00362     \_\_shared\_\_ double sharedbeta[NUM\_THREADS\_LIMITTIMESTEP];}
+\DoxyCodeLine{00363     \_\_shared\_\_ double sharedalpha\_epspor[NUM\_THREADS\_LIMITTIMESTEP];}
+\DoxyCodeLine{00364     \_\_shared\_\_ double sharedepsilon\_v[NUM\_THREADS\_LIMITTIMESTEP];}
+\DoxyCodeLine{00365 }
+\DoxyCodeLine{00366     int i, j, k, m;}
+\DoxyCodeLine{00367     int d, dd;}
+\DoxyCodeLine{00368     int index;}
+\DoxyCodeLine{00369     int hasEnergy;}
+\DoxyCodeLine{00370     double forces = DBL\_MAX, courant = DBL\_MAX;}
+\DoxyCodeLine{00371     double dtx = DBL\_MAX;}
+\DoxyCodeLine{00372     double dtS = DBL\_MAX;}
+\DoxyCodeLine{00373     double dtrho = DBL\_MAX;}
+\DoxyCodeLine{00374     double dte = DBL\_MAX;}
+\DoxyCodeLine{00375     double dtdamage = DBL\_MAX;}
+\DoxyCodeLine{00376     double dtalpha = DBL\_MAX;}
+\DoxyCodeLine{00377     double dtbeta = DBL\_MAX;}
+\DoxyCodeLine{00378     double dtalpha\_epspor = DBL\_MAX;}
+\DoxyCodeLine{00379     double dtepsilon\_v = DBL\_MAX;}
+\DoxyCodeLine{00380     double temp;}
+\DoxyCodeLine{00381     double sml;}
+\DoxyCodeLine{00382     int matId;}
+\DoxyCodeLine{00383 \#if SOLID}
+\DoxyCodeLine{00384     double myS, dS;}
+\DoxyCodeLine{00385 \#endif}
+\DoxyCodeLine{00386     double ax, ay;}
+\DoxyCodeLine{00387 \#if DIM == 3}
+\DoxyCodeLine{00388     double az;}
+\DoxyCodeLine{00389 \#endif}
+\DoxyCodeLine{00390     double dtartvisc = DBL\_MAX;}
+\DoxyCodeLine{00391 }
+\DoxyCodeLine{00392     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00393         matId = p\_rhs.materialId[i];}
+\DoxyCodeLine{00394 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00395         hasEnergy = 0;}
+\DoxyCodeLine{00396 }
+\DoxyCodeLine{00397         switch  (matEOS[matId]) \{}
+\DoxyCodeLine{00398             case (EOS\_TYPE\_TILLOTSON):}
+\DoxyCodeLine{00399                 hasEnergy = 1;}
+\DoxyCodeLine{00400                 break;}
+\DoxyCodeLine{00401             case (EOS\_TYPE\_JUTZI):}
+\DoxyCodeLine{00402                 hasEnergy = 1;}
+\DoxyCodeLine{00403                 break;}
+\DoxyCodeLine{00404             case (EOS\_TYPE\_SIRONO):}
+\DoxyCodeLine{00405                 hasEnergy = 1;}
+\DoxyCodeLine{00406                 break;}
+\DoxyCodeLine{00407             case (EOS\_TYPE\_EPSILON):}
+\DoxyCodeLine{00408                 hasEnergy = 1;}
+\DoxyCodeLine{00409                 break;}
+\DoxyCodeLine{00410             case (EOS\_TYPE\_ANEOS):}
+\DoxyCodeLine{00411                 hasEnergy = 1;}
+\DoxyCodeLine{00412                 break;}
+\DoxyCodeLine{00413             default:}
+\DoxyCodeLine{00414                 hasEnergy = 0;}
+\DoxyCodeLine{00415                 break;}
+\DoxyCodeLine{00416         \}}
+\DoxyCodeLine{00417 \#endif}
+\DoxyCodeLine{00418         ax = p.ax[i];}
+\DoxyCodeLine{00419 \#if DIM > 1}
+\DoxyCodeLine{00420         ay = p.ay[i];}
+\DoxyCodeLine{00421 \#endif}
+\DoxyCodeLine{00422 \#if DIM == 3}
+\DoxyCodeLine{00423         az = p.az[i];}
+\DoxyCodeLine{00424 \#endif}
+\DoxyCodeLine{00425         temp = ax*ax;}
+\DoxyCodeLine{00426 \#if DIM > 1}
+\DoxyCodeLine{00427         temp += + ay*ay;}
+\DoxyCodeLine{00428 \#endif}
+\DoxyCodeLine{00429 \#if DIM == 3}
+\DoxyCodeLine{00430         temp += az*az;}
+\DoxyCodeLine{00431 \#endif}
+\DoxyCodeLine{00432             ;}
+\DoxyCodeLine{00433         sml = p.h[i];}
+\DoxyCodeLine{00434         temp = sqrt(sml / sqrt(temp));}
+\DoxyCodeLine{00435         forces = min(forces, temp);}
+\DoxyCodeLine{00436         temp = sml / p.cs[i];}
+\DoxyCodeLine{00437         courant = min(courant, temp);}
+\DoxyCodeLine{00438 }
+\DoxyCodeLine{00439 }
+\DoxyCodeLine{00440 }
+\DoxyCodeLine{00441 \#define CFL 0.7}
+\DoxyCodeLine{00442 }
+\DoxyCodeLine{00443 \#if ARTIFICIAL\_VISCOSITY}
+\DoxyCodeLine{00444         temp = CFL  * sml / (p.cs[i] + 1.2 * (matAlpha[matId]) * p.cs[i] + matBeta[matId] *}
+\DoxyCodeLine{00445                 p.muijmax[i]);}
+\DoxyCodeLine{00446         dtartvisc = min(dtartvisc, temp);}
+\DoxyCodeLine{00447 \#endif}
+\DoxyCodeLine{00448 \#if INVISCID\_SPH}
+\DoxyCodeLine{00449         if (p.dbetadt[i] != 0) \{}
+\DoxyCodeLine{00450             temp = SAFETY\_FIRST * (fabs(p.beta[i])+betamin\_d)/fabs(p.dbetadt[i]);}
+\DoxyCodeLine{00451             dtbeta = min(temp, dtbeta);}
+\DoxyCodeLine{00452         \}}
+\DoxyCodeLine{00453 }
+\DoxyCodeLine{00454 \#endif}
+\DoxyCodeLine{00455 \#if SOLID}
+\DoxyCodeLine{00456         myS = 0;}
+\DoxyCodeLine{00457         dS = 0;}
+\DoxyCodeLine{00458 }
+\DoxyCodeLine{00459         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00460             for (dd = 0; dd < DIM; dd++) \{}
+\DoxyCodeLine{00461                 index = i*DIM*DIM+d*DIM+dd;}
+\DoxyCodeLine{00462                 myS = fabs(p.S[index]);}
+\DoxyCodeLine{00463                 dS = fabs(p.dSdt[index]);}
+\DoxyCodeLine{00464                 if (dS > 0) \{}
+\DoxyCodeLine{00465                     temp = SAFETY\_FIRST * (myS+Smin\_d)/dS;}
+\DoxyCodeLine{00466                     dtS = min(temp, dtS);}
+\DoxyCodeLine{00467                 \}}
+\DoxyCodeLine{00468             \}}
+\DoxyCodeLine{00469         \}}
+\DoxyCodeLine{00470 \#endif}
+\DoxyCodeLine{00471 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00472         if (p.drhodt[i] != 0) \{}
+\DoxyCodeLine{00473             temp = SAFETY\_FIRST * (fabs(p.rho[i])+rhomin\_d)/fabs(p.drhodt[i]);}
+\DoxyCodeLine{00474             dtrho = min(temp, dtrho);}
+\DoxyCodeLine{00475         \}}
+\DoxyCodeLine{00476 \#endif}
+\DoxyCodeLine{00477 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00478         if (p.dedt[i] != 0 \&\& hasEnergy) \{}
+\DoxyCodeLine{00479             temp = SAFETY\_FIRST * (fabs(p.e[i])+emin\_d)/fabs(p.dedt[i]);}
+\DoxyCodeLine{00480             dte = min(temp, dte);}
+\DoxyCodeLine{00481         \}}
+\DoxyCodeLine{00482 \#endif}
+\DoxyCodeLine{00483 }
+\DoxyCodeLine{00484 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00485         if (p.dalphadt[i] != 0) \{}
+\DoxyCodeLine{00486             temp = 1.0e-\/2 / fabs(p.dalphadt[i]);}
+\DoxyCodeLine{00487             dtalpha = min(temp, dtalpha);}
+\DoxyCodeLine{00488         \}}
+\DoxyCodeLine{00489 \#endif}
+\DoxyCodeLine{00490 }
+\DoxyCodeLine{00491 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00492         if (p.dalpha\_epspordt[i] != 0) \{}
+\DoxyCodeLine{00493             temp = 1.0e-\/1 / fabs(p.dalpha\_epspordt[i]);}
+\DoxyCodeLine{00494             dtalpha\_epspor = min(temp, dtalpha\_epspor);}
+\DoxyCodeLine{00495         \}}
+\DoxyCodeLine{00496 }
+\DoxyCodeLine{00497         if (p.depsilon\_vdt[i] != 0) \{}
+\DoxyCodeLine{00498             temp = SAFETY\_FIRST * (fabs(p.epsilon\_v[i])+epsilon\_vmin\_d)/fabs(p.depsilon\_vdt[i]);}
+\DoxyCodeLine{00499             dtepsilon\_v = min(temp, dtepsilon\_v);}
+\DoxyCodeLine{00500         \}}
+\DoxyCodeLine{00501 \#endif}
+\DoxyCodeLine{00502 }
+\DoxyCodeLine{00503 \#if FRAGMENTATION}
+\DoxyCodeLine{00504         if (p.dddt[i] != 0) \{}
+\DoxyCodeLine{00505             temp = SAFETY\_FIRST * (fabs(p.d[i])+damagemin\_d)/fabs(p.dddt[i]);}
+\DoxyCodeLine{00506             dtdamage = min(temp, dtdamage);}
+\DoxyCodeLine{00507         \}}
+\DoxyCodeLine{00508 \#endif}
+\DoxyCodeLine{00509 }
+\DoxyCodeLine{00510 }
+\DoxyCodeLine{00511     \}}
+\DoxyCodeLine{00512     i = threadIdx.x;}
+\DoxyCodeLine{00513     sharedForces[i] = forces;}
+\DoxyCodeLine{00514     sharedCourant[i] = courant;}
+\DoxyCodeLine{00515     sharedS[i] = dtS;}
+\DoxyCodeLine{00516     sharede[i] = dte;}
+\DoxyCodeLine{00517     sharedrho[i] = dtrho;}
+\DoxyCodeLine{00518     shareddamage[i] = dtdamage;}
+\DoxyCodeLine{00519     sharedalpha[i] = dtalpha;}
+\DoxyCodeLine{00520     sharedalpha\_epspor[i] = dtalpha\_epspor;}
+\DoxyCodeLine{00521     sharedepsilon\_v[i] = dtepsilon\_v;}
+\DoxyCodeLine{00522 \#if ARTIFICIAL\_VISCOSITY}
+\DoxyCodeLine{00523     sharedArtVisc[i] = dtartvisc;}
+\DoxyCodeLine{00524 \#endif}
+\DoxyCodeLine{00525 \#if INVISCID\_SPH}
+\DoxyCodeLine{00526     sharedbeta[i] = dtbeta;}
+\DoxyCodeLine{00527 \#endif}
+\DoxyCodeLine{00528     for (j = NUM\_THREADS\_LIMITTIMESTEP / 2; j > 0; j /= 2) \{}
+\DoxyCodeLine{00529         \_\_syncthreads();}
+\DoxyCodeLine{00530         if (i < j) \{}
+\DoxyCodeLine{00531             k = i + j;}
+\DoxyCodeLine{00532             sharedForces[i] = forces = min(forces, sharedForces[k]);}
+\DoxyCodeLine{00533             sharedCourant[i] = courant = min(courant, sharedCourant[k]);}
+\DoxyCodeLine{00534             sharedS[i] = dtS = min(dtS, sharedS[k]);}
+\DoxyCodeLine{00535             sharede[i] = dte = min(dte, sharede[k]);}
+\DoxyCodeLine{00536             sharedrho[i] = dtrho = min(dtrho, sharedrho[k]);}
+\DoxyCodeLine{00537             shareddamage[i] = dtdamage = min(dtdamage, shareddamage[k]);}
+\DoxyCodeLine{00538             sharedalpha[i] = dtalpha = min(dtalpha, sharedalpha[k]);}
+\DoxyCodeLine{00539             sharedalpha\_epspor[i] = dtalpha\_epspor = min(dtalpha\_epspor, sharedalpha\_epspor[k]);}
+\DoxyCodeLine{00540             sharedepsilon\_v[i] = dtepsilon\_v = min(dtepsilon\_v, sharedepsilon\_v[k]);}
+\DoxyCodeLine{00541 \#if ARTIFICIAL\_VISCOSITY}
+\DoxyCodeLine{00542             sharedArtVisc[i] = dtartvisc = min(dtartvisc, sharedArtVisc[k]);}
+\DoxyCodeLine{00543 \#endif}
+\DoxyCodeLine{00544 \#if INVISCID\_SPH}
+\DoxyCodeLine{00545             sharedbeta[i] = dtbeta = min(dtbeta, sharedbeta[k]);}
+\DoxyCodeLine{00546 \#endif}
+\DoxyCodeLine{00547         \}}
+\DoxyCodeLine{00548     \}}
+\DoxyCodeLine{00549     // write block result to global memory}
+\DoxyCodeLine{00550     if (i == 0) \{}
+\DoxyCodeLine{00551         k = blockIdx.x;}
+\DoxyCodeLine{00552         forcesPerBlock[k] = forces;}
+\DoxyCodeLine{00553         courantPerBlock[k] = courant;}
+\DoxyCodeLine{00554         dtSPerBlock[k] = dtS;}
+\DoxyCodeLine{00555         dtePerBlock[k] = dte;}
+\DoxyCodeLine{00556         dtrhoPerBlock[k] = dtrho;}
+\DoxyCodeLine{00557         dtdamagePerBlock[k] = dtdamage;}
+\DoxyCodeLine{00558         dtalphaPerBlock[k] = dtalpha;}
+\DoxyCodeLine{00559         dtalpha\_epsporPerBlock[k] = dtalpha\_epspor;}
+\DoxyCodeLine{00560         dtepsilon\_vPerBlock[k] = dtepsilon\_v;}
+\DoxyCodeLine{00561 \#if ARTIFICIAL\_VISCOSITY}
+\DoxyCodeLine{00562         dtartviscPerBlock[k] = dtartvisc;}
+\DoxyCodeLine{00563 \#endif}
+\DoxyCodeLine{00564 \#if INVISCID\_SPH}
+\DoxyCodeLine{00565         dtbetaPerBlock[k] = dtbeta;}
+\DoxyCodeLine{00566 \#endif}
+\DoxyCodeLine{00567         m = gridDim.x -\/ 1;}
+\DoxyCodeLine{00568         if (m == atomicInc((unsigned int *)\&blockCount, m)) \{}
+\DoxyCodeLine{00569             // last block, so combine all block results}
+\DoxyCodeLine{00570             for (j = 0; j <= m; j++) \{}
+\DoxyCodeLine{00571                 forces = min(forces, forcesPerBlock[j]);}
+\DoxyCodeLine{00572                 courant = min(courant, courantPerBlock[j]);}
+\DoxyCodeLine{00573                 dtS = min(dtS, dtSPerBlock[j]);}
+\DoxyCodeLine{00574                 dte = min(dte, dtePerBlock[j]);}
+\DoxyCodeLine{00575                 dtrho = min(dtrho, dtrhoPerBlock[j]);}
+\DoxyCodeLine{00576                 dtdamage = min(dtdamage, dtdamagePerBlock[j]);}
+\DoxyCodeLine{00577                 dtalpha = min(dtalpha, dtalphaPerBlock[j]);}
+\DoxyCodeLine{00578                 dtalpha\_epspor = min(dtalpha\_epspor, dtalpha\_epsporPerBlock[j]);}
+\DoxyCodeLine{00579                 dtepsilon\_v = min(dtepsilon\_v, dtepsilon\_vPerBlock[j]);}
+\DoxyCodeLine{00580 \#if ARTIFICIAL\_VISCOSITY}
+\DoxyCodeLine{00581                 dtartvisc = min(dtartvisc, dtartviscPerBlock[j]);}
+\DoxyCodeLine{00582 \#endif}
+\DoxyCodeLine{00583 \#if INVISCID\_SPH}
+\DoxyCodeLine{00584                 dtbeta = min(dtbeta, dtbetaPerBlock[j]);}
+\DoxyCodeLine{00585 \#endif}
+\DoxyCodeLine{00586             \}}
+\DoxyCodeLine{00587             // set new timestep}
+\DoxyCodeLine{00588             dt = dtx = min(COURANT*courant, forces*0.2);}
+\DoxyCodeLine{00589 \#if SOLID}
+\DoxyCodeLine{00590             dt = min(dt, dtS);}
+\DoxyCodeLine{00591 \#endif}
+\DoxyCodeLine{00592 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00593             dt = min(dt, dte);}
+\DoxyCodeLine{00594 \#endif}
+\DoxyCodeLine{00595 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00596             dt = min(dt, dtrho);}
+\DoxyCodeLine{00597 \#endif}
+\DoxyCodeLine{00598 \#if FRAGMENTATION}
+\DoxyCodeLine{00599             dt = min(dt, dtdamage);}
+\DoxyCodeLine{00600 \#endif}
+\DoxyCodeLine{00601 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00602          //   dt = min(dt, dtalpha);}
+\DoxyCodeLine{00603 \#endif}
+\DoxyCodeLine{00604 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00605             dt = min(dt, dtalpha\_epspor);}
+\DoxyCodeLine{00606             dt = min(dt, dtepsilon\_v);}
+\DoxyCodeLine{00607 \#endif}
+\DoxyCodeLine{00608 \#if ARTIFICIAL\_VISCOSITY}
+\DoxyCodeLine{00609             dt = min(dt, dtartvisc);}
+\DoxyCodeLine{00610 \#endif}
+\DoxyCodeLine{00611 \#if INVISCID\_SPH}
+\DoxyCodeLine{00612             dt = min(dt, dtbeta);}
+\DoxyCodeLine{00613 \#endif}
+\DoxyCodeLine{00614             dt = min(dt, endTimeD -\/ currentTimeD);}
+\DoxyCodeLine{00615             printf("{}Time Step Information: dt(v and x): \%.17e dtS: \%.17e dte: \%.17e dtrho: \%.17e dtdamage: \%.17e dtalpha: \%.17e dtalpha\_epspor: \%.17e dtepsilon\_v: \%.17e\(\backslash\)n"{}, dtx, dtS, dte, dtrho, dtdamage, dtalpha, dtalpha\_epspor, dtepsilon\_v);}
+\DoxyCodeLine{00616             printf("{}time: \%.17e timestep set to \%.17e, integrating until \%.17e \(\backslash\)n"{}, currentTimeD, dt, endTimeD);}
+\DoxyCodeLine{00617 \#if !PALPHA\_POROSITY}
+\DoxyCodeLine{00618             currentTimeD += dt;}
+\DoxyCodeLine{00619 \#endif}
+\DoxyCodeLine{00620                         // reset block count}
+\DoxyCodeLine{00621                         blockCount = 0;}
+\DoxyCodeLine{00622                 \}}
+\DoxyCodeLine{00623         \}}
+\DoxyCodeLine{00624 \}}
+\DoxyCodeLine{00625 }
+\DoxyCodeLine{00626 }
+\DoxyCodeLine{00627 }
+\DoxyCodeLine{00628 }
+\DoxyCodeLine{00629 void predictor\_corrector\_euler()}
+\DoxyCodeLine{00630 \{}
+\DoxyCodeLine{00631 }
+\DoxyCodeLine{00632     double *courantPerBlock, *forcesPerBlock;}
+\DoxyCodeLine{00633     double *dtSPerBlock, *dtePerBlock, *dtrhoPerBlock;}
+\DoxyCodeLine{00634     double *dtdamagePerBlock;}
+\DoxyCodeLine{00635     double *dtalphaPerBlock;}
+\DoxyCodeLine{00636     double *dtbetaPerBlock;}
+\DoxyCodeLine{00637     double *dtartviscPerBlock;}
+\DoxyCodeLine{00638     double *dtalpha\_epsporPerBlock;}
+\DoxyCodeLine{00639     double *dtepsilon\_vPerBlock;}
+\DoxyCodeLine{00640     double *maxpressureDiffPerBlock;}
+\DoxyCodeLine{00641     int pressureChangeSmallEnough\_host;}
+\DoxyCodeLine{00642 }
+\DoxyCodeLine{00643 }
+\DoxyCodeLine{00644     cudaVerify(cudaMalloc((void**)\&courantPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00645     cudaVerify(cudaMalloc((void**)\&forcesPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00646     cudaVerify(cudaMalloc((void**)\&dtSPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00647     cudaVerify(cudaMalloc((void**)\&dtePerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00648     cudaVerify(cudaMalloc((void**)\&dtrhoPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00649     cudaVerify(cudaMalloc((void**)\&dtdamagePerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00650     cudaVerify(cudaMalloc((void**)\&dtalphaPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00651     cudaVerify(cudaMalloc((void**)\&dtbetaPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00652     cudaVerify(cudaMalloc((void**)\&maxpressureDiffPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00653     cudaVerify(cudaMalloc((void**)\&dtartviscPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00654     cudaVerify(cudaMalloc((void**)\&dtalpha\_epsporPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00655     cudaVerify(cudaMalloc((void**)\&dtepsilon\_vPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00656 }
+\DoxyCodeLine{00657     int lastTimestep = startTimestep + numberOfTimesteps;}
+\DoxyCodeLine{00658     int timestep;}
+\DoxyCodeLine{00659     double maxpressureDiff\_host;}
+\DoxyCodeLine{00660     double maxpressureDiff\_previous;}
+\DoxyCodeLine{00661     int maxpressureDiff\_cnt;}
+\DoxyCodeLine{00662     double substep\_currentTime;}
+\DoxyCodeLine{00663     currentTime = startTime;}
+\DoxyCodeLine{00664     double endTime = startTime;}
+\DoxyCodeLine{00665 }
+\DoxyCodeLine{00666     int allocate\_immutables = 1;}
+\DoxyCodeLine{00667     // alloc mem for one rhs}
+\DoxyCodeLine{00668     allocate\_particles\_memory(\&predictor\_device, allocate\_immutables);}
+\DoxyCodeLine{00669     copy\_particles\_immutables\_device\_to\_device(\&predictor\_device, \&p\_device);}
+\DoxyCodeLine{00670     /* tell the gpu the current time */}
+\DoxyCodeLine{00671     cudaVerify(cudaMemcpyToSymbol(currentTimeD, \&currentTime, sizeof(double)));}
+\DoxyCodeLine{00672     cudaVerify(cudaMemcpyToSymbol(predictor, \&predictor\_device, sizeof(struct Particle)));}
+\DoxyCodeLine{00673 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00674     allocate\_pointmass\_memory(\&predictor\_pointmass\_device, allocate\_immutables);}
+\DoxyCodeLine{00675     copy\_pointmass\_immutables\_device\_to\_device(\&predictor\_pointmass\_device, \&pointmass\_device);}
+\DoxyCodeLine{00676     cudaVerify(cudaMemcpyToSymbol(predictor\_pointmass, \&predictor\_pointmass\_device, sizeof(struct Pointmass)));}
+\DoxyCodeLine{00677 \#endif}
+\DoxyCodeLine{00678 }
+\DoxyCodeLine{00679 }
+\DoxyCodeLine{00680     for (timestep = startTimestep; timestep < lastTimestep; timestep++) \{}
+\DoxyCodeLine{00681         fprintf(stdout, "{}calculating step \%d\(\backslash\)n"{}, timestep);}
+\DoxyCodeLine{00682         printf("{}\(\backslash\)nstep \%d / \%d\(\backslash\)n"{}, timestep, lastTimestep);}
+\DoxyCodeLine{00683         endTime += timePerStep;}
+\DoxyCodeLine{00684         fprintf(stdout, "{} currenttime: \%e \(\backslash\)t endtime: \%e\(\backslash\)n"{}, currentTime, endTime);}
+\DoxyCodeLine{00685         /* tell the gpu the time step */}
+\DoxyCodeLine{00686         if (timePerStep > param.maxtimestep) \{}
+\DoxyCodeLine{00687             fprintf(stdout, "{}timestep was larger than maxtimestep given by -\/M, reducing to \%e\(\backslash\)n"{}, param.maxtimestep);}
+\DoxyCodeLine{00688             cudaVerify(cudaMemcpyToSymbol(dt, \&param.maxtimestep, sizeof(double)));}
+\DoxyCodeLine{00689         \} else \{}
+\DoxyCodeLine{00690             cudaVerify(cudaMemcpyToSymbol(dt, \&timePerStep, sizeof(double)));}
+\DoxyCodeLine{00691         \}}
+\DoxyCodeLine{00692 }
+\DoxyCodeLine{00693 }
+\DoxyCodeLine{00694         // checking for changes in angular momentum}
+\DoxyCodeLine{00695         if (param.angular\_momentum\_check > 0) \{}
+\DoxyCodeLine{00696             double L\_current = calculate\_angular\_momentum();}
+\DoxyCodeLine{00697             double L\_change\_relative;}
+\DoxyCodeLine{00698             if (L\_ini > 0) \{}
+\DoxyCodeLine{00699                 L\_change\_relative = fabs((L\_ini -\/ L\_current)/L\_ini);}
+\DoxyCodeLine{00700             \}}
+\DoxyCodeLine{00701             if (param.verbose) \{}
+\DoxyCodeLine{00702                 fprintf(stdout, "{}Checking angular momentum conservation.\(\backslash\)n"{});}
+\DoxyCodeLine{00703                 fprintf(stdout, "{}Initial angular momentum: \%.17e\(\backslash\)n"{}, L\_ini);}
+\DoxyCodeLine{00704                 fprintf(stdout, "{}Current angular momentum: \%.17e\(\backslash\)n"{}, L\_current);}
+\DoxyCodeLine{00705                 fprintf(stdout, "{}Relative change: \%.17e\(\backslash\)n"{}, L\_change\_relative);}
+\DoxyCodeLine{00706             \}}
+\DoxyCodeLine{00707             if (L\_change\_relative > param.angular\_momentum\_check) \{}
+\DoxyCodeLine{00708                 fprintf(stderr, "{}Conservation of angular momentum violated. Exiting.\(\backslash\)n"{});}
+\DoxyCodeLine{00709                 exit(111);}
+\DoxyCodeLine{00710             \}}
+\DoxyCodeLine{00711         \}}
+\DoxyCodeLine{00712 }
+\DoxyCodeLine{00713 }
+\DoxyCodeLine{00714         /* tell the gpu the end time */}
+\DoxyCodeLine{00715         cudaVerify(cudaMemcpyToSymbol(endTimeD, \&endTime, sizeof(double)));}
+\DoxyCodeLine{00716 }
+\DoxyCodeLine{00717                 while (currentTime < endTime) \{}
+\DoxyCodeLine{00718                         cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00719                         // calculate first right hand side with p\_device}
+\DoxyCodeLine{00720                 cudaVerify(cudaMemcpyToSymbol(p, \&p\_device, sizeof(struct Particle)));}
+\DoxyCodeLine{00721 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00722                 cudaVerify(cudaMemcpyToSymbol(pointmass, \&pointmass\_device, sizeof(struct Pointmass)));}
+\DoxyCodeLine{00723 \#endif}
+\DoxyCodeLine{00724             cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00725             cudaVerify(cudaMemcpyFromSymbol(\&currentTime, currentTimeD, sizeof(double)));}
+\DoxyCodeLine{00726             substep\_currentTime = currentTime;}
+\DoxyCodeLine{00727             cudaVerify(cudaMemcpyToSymbol(substep\_currentTimeD, \&substep\_currentTime, sizeof(double)));}
+\DoxyCodeLine{00728             rightHandSide();}
+\DoxyCodeLine{00729             cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00730             cudaVerifyKernel((setTimestep\_euler<<<numberOfMultiprocessors, NUM\_THREADS\_LIMITTIMESTEP>>>(}
+\DoxyCodeLine{00731                               forcesPerBlock, courantPerBlock,}
+\DoxyCodeLine{00732                               dtSPerBlock, dtePerBlock, dtrhoPerBlock, dtdamagePerBlock,}
+\DoxyCodeLine{00733                               dtalphaPerBlock, dtartviscPerBlock, dtbetaPerBlock, dtalpha\_epsporPerBlock, dtepsilon\_vPerBlock)));}
+\DoxyCodeLine{00734             cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00735             /* get the time and the time step from the gpu */}
+\DoxyCodeLine{00736             cudaVerify(cudaMemcpyFromSymbol(\&dt\_host, dt, sizeof(double)));}
+\DoxyCodeLine{00737             if (dt\_host > param.maxtimestep) \{}
+\DoxyCodeLine{00738                 fprintf(stdout, "{}Recuding timestep from \%e to -\/M maxtimestep \%e\(\backslash\)n"{}, dt\_host, param.maxtimestep);}
+\DoxyCodeLine{00739                 dt\_host = param.maxtimestep;}
+\DoxyCodeLine{00740                 cudaVerify(cudaMemcpyToSymbol(dt, \&dt\_host, sizeof(double)));}
+\DoxyCodeLine{00741             \}}
+\DoxyCodeLine{00742             substep\_currentTime = currentTime + dt\_host;}
+\DoxyCodeLine{00743 }
+\DoxyCodeLine{00744                         cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00745             pressureChangeSmallEnough\_host = FALSE;}
+\DoxyCodeLine{00746             maxpressureDiff\_cnt = 0;}
+\DoxyCodeLine{00747             maxpressureDiff\_host = 0;}
+\DoxyCodeLine{00748             maxpressureDiff\_previous = 0;}
+\DoxyCodeLine{00749             while (pressureChangeSmallEnough\_host == FALSE) \{}
+\DoxyCodeLine{00750                     // do the predictor step (writes to predictor)}
+\DoxyCodeLine{00751                 printf("{}Predictor step with time step: \%e at time: \%e.\(\backslash\)n"{}, dt\_host, currentTime);}
+\DoxyCodeLine{00752                     cudaVerify(cudaMemcpyToSymbol(p, \&p\_device, sizeof(struct Particle)));}
+\DoxyCodeLine{00753 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00754                     cudaVerify(cudaMemcpyToSymbol(pointmass, \&pointmass\_device, sizeof(struct Pointmass)));}
+\DoxyCodeLine{00755 \#endif}
+\DoxyCodeLine{00756                 cudaVerifyKernel((PredictorStep\_euler<<<numberOfMultiprocessors, NUM\_THREADS\_PC\_INTEGRATOR>>>()));}
+\DoxyCodeLine{00757                             cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00758 }
+\DoxyCodeLine{00759 }
+\DoxyCodeLine{00760 \#define DISABLE\_PRESSURE\_CHECK\_POROSITY\_FOR\_THE\_TIME\_BEING 0}
+\DoxyCodeLine{00761 }
+\DoxyCodeLine{00762 }
+\DoxyCodeLine{00763 \#if !DISABLE\_PRESSURE\_CHECK\_POROSITY\_FOR\_THE\_TIME\_BEING}
+\DoxyCodeLine{00764 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00765                 /* check if the step was too large */}
+\DoxyCodeLine{00766                 /* check the pressure at predictor step */}
+\DoxyCodeLine{00767                         cudaVerify(cudaMemcpyToSymbol(p, \&predictor\_device, sizeof(struct Particle)));}
+\DoxyCodeLine{00768 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00769                     cudaVerify(cudaMemcpyToSymbol(pointmass, \&predictor\_pointmass\_device, sizeof(struct Pointmass)));}
+\DoxyCodeLine{00770 \#endif}
+\DoxyCodeLine{00771                                 cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM\_THREADS\_PRESSURE>>>()));}
+\DoxyCodeLine{00772                         cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00773                             cudaVerify(cudaMemcpyFromSymbol(\&dt\_host, dt, sizeof(double)));}
+\DoxyCodeLine{00774                                 printf("{}before pressure change check: dt\_host: \%e\(\backslash\)n"{}, dt\_host);}
+\DoxyCodeLine{00775                                 cudaVerifyKernel((pressureChangeCheck\_euler<<<numberOfMultiprocessors, NUM\_THREADS\_PC\_INTEGRATOR>>>(maxpressureDiffPerBlock)));}
+\DoxyCodeLine{00776                         cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00777                 cudaVerify(cudaMemcpyFromSymbol(\&pressureChangeSmallEnough\_host, pressureChangeSmallEnough, sizeof(int)));}
+\DoxyCodeLine{00778                 cudaVerify(cudaMemcpyFromSymbol(\&maxpressureDiff\_host, maxpressureDiff, sizeof(double)));}
+\DoxyCodeLine{00779 \#else}
+\DoxyCodeLine{00780                 pressureChangeSmallEnough\_host = TRUE;}
+\DoxyCodeLine{00781 \#endif // PALPHA\_POROSITY}
+\DoxyCodeLine{00782 \#else}
+\DoxyCodeLine{00783                 pressureChangeSmallEnough\_host = TRUE;}
+\DoxyCodeLine{00784 \#endif // !DISABLE\_PRESSURE\_CHECK\_POROSITY\_FOR\_THE\_TIME\_BEING}
+\DoxyCodeLine{00785 }
+\DoxyCodeLine{00786 }
+\DoxyCodeLine{00787                             cudaVerify(cudaMemcpyFromSymbol(\&dt\_host, dt, sizeof(double)));}
+\DoxyCodeLine{00788                                 printf("{}after pressure change check: dt\_host: \%e\(\backslash\)n"{}, dt\_host);}
+\DoxyCodeLine{00789                                 printf("{}pressureChangeSmallEnough\_host: \%d\(\backslash\)n"{}, pressureChangeSmallEnough\_host);}
+\DoxyCodeLine{00790                                 if (pressureChangeSmallEnough\_host == FALSE) \{}
+\DoxyCodeLine{00791                     /* redo predictor step with smaller timestep, derivatives are in p\_device */}
+\DoxyCodeLine{00792                                         printf("{}Reducing timestep due to Pressure Check function to: \%.17e\(\backslash\)n"{}, dt\_host);}
+\DoxyCodeLine{00793                     if (fabs(maxpressureDiff\_host -\/maxpressureDiff\_previous) < 1e-\/3) \{}
+\DoxyCodeLine{00794                         maxpressureDiff\_cnt++;}
+\DoxyCodeLine{00795                     \}}
+\DoxyCodeLine{00796                     maxpressureDiff\_previous = maxpressureDiff\_host;}
+\DoxyCodeLine{00797                     if (maxpressureDiff\_cnt > 1) \{}
+\DoxyCodeLine{00798                         printf("{}Cannot reduce timestep anymore, continuing with dt \%.17e and maxpressurediff \%.17e"{}, dt\_host, maxpressureDiff\_host);}
+\DoxyCodeLine{00799                         pressureChangeSmallEnough\_host = TRUE;}
+\DoxyCodeLine{00800                     \}}
+\DoxyCodeLine{00801                                 \}}
+\DoxyCodeLine{00802                 if (pressureChangeSmallEnough\_host == TRUE) \{}
+\DoxyCodeLine{00803                     /* okay, step seems good, let's do the corrector step */}
+\DoxyCodeLine{00804                                         currentTime += dt\_host;}
+\DoxyCodeLine{00805                                         printf("{}Timestep okay, doing corrector step.\(\backslash\)n"{});}
+\DoxyCodeLine{00806                                         cudaVerify(cudaMemcpyToSymbol(currentTimeD, \&currentTime, sizeof(double)));}
+\DoxyCodeLine{00807                     if (param.selfgravity) \{}
+\DoxyCodeLine{00808                             copy\_gravitational\_accels\_device\_to\_device(\&predictor\_device, \&p\_device);}
+\DoxyCodeLine{00809                     \}}
+\DoxyCodeLine{00810 }
+\DoxyCodeLine{00811                     /* now righthandside with predictor variables */}
+\DoxyCodeLine{00812                             cudaVerify(cudaMemcpyToSymbol(p, \&predictor\_device, sizeof(struct Particle)));}
+\DoxyCodeLine{00813 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00814                         cudaVerify(cudaMemcpyToSymbol(pointmass, \&predictor\_pointmass\_device, sizeof(struct Pointmass)));}
+\DoxyCodeLine{00815 \#endif}
+\DoxyCodeLine{00816                                     rightHandSide();}
+\DoxyCodeLine{00817                     /* now the corrector step  with the original values of p\_device and the derivatives of p\_device and predictor\_device */}
+\DoxyCodeLine{00818                             cudaVerify(cudaMemcpyToSymbol(p, \&p\_device, sizeof(struct Particle)));}
+\DoxyCodeLine{00819 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00820                         cudaVerify(cudaMemcpyToSymbol(pointmass, \&pointmass\_device, sizeof(struct Pointmass)));}
+\DoxyCodeLine{00821 \#endif}
+\DoxyCodeLine{00822                     cudaVerifyKernel((CorrectorStep\_euler<<<numberOfMultiprocessors, NUM\_THREADS\_PC\_INTEGRATOR>>>()));}
+\DoxyCodeLine{00823                                 \}}
+\DoxyCodeLine{00824                         \}}
+\DoxyCodeLine{00825                 \} // current time < end time loop}
+\DoxyCodeLine{00826                 // write results}
+\DoxyCodeLine{00827 \#if FRAGMENTATION}
+\DoxyCodeLine{00828         cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00829         cudaVerifyKernel((damageLimit<<<numberOfMultiprocessors*4, NUM\_THREADS\_PC\_INTEGRATOR>>>()));}
+\DoxyCodeLine{00830         cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00831 \#endif}
+\DoxyCodeLine{00832         copyToHostAndWriteToFile(timestep, lastTimestep);}
+\DoxyCodeLine{00833 }
+\DoxyCodeLine{00834         \} // timestep loop}
+\DoxyCodeLine{00835 }
+\DoxyCodeLine{00836         // free memory}
+\DoxyCodeLine{00837 }
+\DoxyCodeLine{00838     int free\_immutables = 1;}
+\DoxyCodeLine{00839     free\_particles\_memory(\&predictor\_device, free\_immutables);}
+\DoxyCodeLine{00840 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00841     free\_pointmass\_memory(\&predictor\_pointmass\_device, free\_immutables);}
+\DoxyCodeLine{00842 \#endif}
+\DoxyCodeLine{00843         cudaVerify(cudaFree(courantPerBlock));}
+\DoxyCodeLine{00844         cudaVerify(cudaFree(forcesPerBlock));}
+\DoxyCodeLine{00845     cudaVerify(cudaFree(dtSPerBlock));}
+\DoxyCodeLine{00846         cudaVerify(cudaFree(dtePerBlock));}
+\DoxyCodeLine{00847         cudaVerify(cudaFree(dtrhoPerBlock));}
+\DoxyCodeLine{00848         cudaVerify(cudaFree(dtdamagePerBlock));}
+\DoxyCodeLine{00849     cudaVerify(cudaFree(dtalphaPerBlock));}
+\DoxyCodeLine{00850     cudaVerify(cudaFree(dtbetaPerBlock));}
+\DoxyCodeLine{00851     cudaVerify(cudaFree(dtalpha\_epsporPerBlock));}
+\DoxyCodeLine{00852     cudaVerify(cudaFree(dtepsilon\_vPerBlock));}
+\DoxyCodeLine{00853     cudaVerify(cudaFree(dtartviscPerBlock));}
+\DoxyCodeLine{00854     cudaVerify(cudaFree(maxpressureDiffPerBlock));}
+\DoxyCodeLine{00855 \}}
+
+\end{DoxyCode}

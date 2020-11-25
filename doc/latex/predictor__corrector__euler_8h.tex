@@ -1,0 +1,53 @@
+\hypertarget{predictor__corrector__euler_8h}{}\doxysection{predictor\+\_\+corrector\+\_\+euler.\+h File Reference}
+\label{predictor__corrector__euler_8h}\index{predictor\_corrector\_euler.h@{predictor\_corrector\_euler.h}}
+{\ttfamily \#include \char`\"{}miluph.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}timeintegration.\+h\char`\"{}}\newline
+Include dependency graph for predictor\+\_\+corrector\+\_\+euler.\+h\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{predictor__corrector__euler_8h__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{predictor__corrector__euler_8h_a55e13bd2d6559d856e36cee04c399915}{predictor\+\_\+corrector\+\_\+euler}} ()
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{predictor__corrector__euler_8h_a3814a4a56df5c90e98a03679cccb64d8}{set\+Timestep\+\_\+euler}} (double $\ast$forces\+Per\+Block, double $\ast$courant\+Per\+Block, double $\ast$dt\+S\+Per\+Block, double $\ast$dte\+Per\+Block, double $\ast$dtrho\+Per\+Block, double $\ast$dtdamage\+Per\+Block, double $\ast$dtalpha\+Per\+Block, double $\ast$dtartvisc\+Per\+Block, double $\ast$dtbeta\+Per\+Block, double $\ast$dtalpha\+\_\+epspor\+Per\+Block, double $\ast$dtepsilon\+\_\+v\+Per\+Block)
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{predictor__corrector__euler_8h_a9ce871f72690382989cf12e8fd62da1b}{pressure\+Change\+Check\+\_\+euler}} (double $\ast$maxpressure\+Diff\+Per\+Block)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{predictor__corrector__euler_8h_a55e13bd2d6559d856e36cee04c399915}\label{predictor__corrector__euler_8h_a55e13bd2d6559d856e36cee04c399915}} 
+\index{predictor\_corrector\_euler.h@{predictor\_corrector\_euler.h}!predictor\_corrector\_euler@{predictor\_corrector\_euler}}
+\index{predictor\_corrector\_euler@{predictor\_corrector\_euler}!predictor\_corrector\_euler.h@{predictor\_corrector\_euler.h}}
+\doxysubsubsection{\texorpdfstring{predictor\_corrector\_euler()}{predictor\_corrector\_euler()}}
+{\footnotesize\ttfamily void predictor\+\_\+corrector\+\_\+euler (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\begin{DoxyAuthor}{Author}
+Christoph Schaefer \href{mailto:cm.schaefer@gmail.com}{\texttt{ cm.\+schaefer@gmail.\+com}}
+\end{DoxyAuthor}
+\hypertarget{xsph_8h_LICENSE}{}\doxysubsection{L\+I\+C\+E\+N\+SE}\label{xsph_8h_LICENSE}
+Copyright (c) 2019 Christoph Schaefer
+
+This file is part of miluphcuda.
+
+miluphcuda is free software\+: you can redistribute it and/or modify it under the terms of the G\+NU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+miluphcuda is distributed in the hope that it will be useful, but W\+I\+T\+H\+O\+UT A\+NY W\+A\+R\+R\+A\+N\+TY; without even the implied warranty of M\+E\+R\+C\+H\+A\+N\+T\+A\+B\+I\+L\+I\+TY or F\+I\+T\+N\+E\+SS F\+OR A P\+A\+R\+T\+I\+C\+U\+L\+AR P\+U\+R\+P\+O\+SE. See the G\+NU General Public License for more details.
+
+You should have received a copy of the G\+NU General Public License along with miluphcuda. If not, see \href{http://www.gnu.org/licenses/}{\texttt{ http\+://www.\+gnu.\+org/licenses/}}. \mbox{\Hypertarget{predictor__corrector__euler_8h_a9ce871f72690382989cf12e8fd62da1b}\label{predictor__corrector__euler_8h_a9ce871f72690382989cf12e8fd62da1b}} 
+\index{predictor\_corrector\_euler.h@{predictor\_corrector\_euler.h}!pressureChangeCheck\_euler@{pressureChangeCheck\_euler}}
+\index{pressureChangeCheck\_euler@{pressureChangeCheck\_euler}!predictor\_corrector\_euler.h@{predictor\_corrector\_euler.h}}
+\doxysubsubsection{\texorpdfstring{pressureChangeCheck\_euler()}{pressureChangeCheck\_euler()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void pressure\+Change\+Check\+\_\+euler (\begin{DoxyParamCaption}\item[{double $\ast$}]{maxpressure\+Diff\+Per\+Block }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{predictor__corrector__euler_8h_a3814a4a56df5c90e98a03679cccb64d8}\label{predictor__corrector__euler_8h_a3814a4a56df5c90e98a03679cccb64d8}} 
+\index{predictor\_corrector\_euler.h@{predictor\_corrector\_euler.h}!setTimestep\_euler@{setTimestep\_euler}}
+\index{setTimestep\_euler@{setTimestep\_euler}!predictor\_corrector\_euler.h@{predictor\_corrector\_euler.h}}
+\doxysubsubsection{\texorpdfstring{setTimestep\_euler()}{setTimestep\_euler()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void set\+Timestep\+\_\+euler (\begin{DoxyParamCaption}\item[{double $\ast$}]{forces\+Per\+Block,  }\item[{double $\ast$}]{courant\+Per\+Block,  }\item[{double $\ast$}]{dt\+S\+Per\+Block,  }\item[{double $\ast$}]{dte\+Per\+Block,  }\item[{double $\ast$}]{dtrho\+Per\+Block,  }\item[{double $\ast$}]{dtdamage\+Per\+Block,  }\item[{double $\ast$}]{dtalpha\+Per\+Block,  }\item[{double $\ast$}]{dtartvisc\+Per\+Block,  }\item[{double $\ast$}]{dtbeta\+Per\+Block,  }\item[{double $\ast$}]{dtalpha\+\_\+epspor\+Per\+Block,  }\item[{double $\ast$}]{dtepsilon\+\_\+v\+Per\+Block }\end{DoxyParamCaption})}
+

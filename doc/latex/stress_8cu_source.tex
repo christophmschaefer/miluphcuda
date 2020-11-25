@@ -1,0 +1,142 @@
+\hypertarget{stress_8cu_source}{}\doxysection{stress.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 }
+\DoxyCodeLine{00025 }
+\DoxyCodeLine{00026 \#include "{}stress.h"{}}
+\DoxyCodeLine{00027 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00028 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00029 \#include "{}timeintegration.h"{}}
+\DoxyCodeLine{00030 \#include "{}linalg.h"{}}
+\DoxyCodeLine{00031 }
+\DoxyCodeLine{00032 }
+\DoxyCodeLine{00033 \#if FRAGMENTATION}
+\DoxyCodeLine{00034 \#warning DAMAGE\_ACTS\_ON\_PRINCIPAL\_STRESSES is defined in stress.cu}
+\DoxyCodeLine{00035 // if 1, then damage reduces the principal stresses}
+\DoxyCodeLine{00036 // if 0, then p<0 -\/> (1-\/d) p and S -\/> (1-\/d) S}
+\DoxyCodeLine{00037 \# define DAMAGE\_ACTS\_ON\_PRINCIPAL\_STRESSES 0}
+\DoxyCodeLine{00038 \#else}
+\DoxyCodeLine{00039 \# define DAMAGE\_ACTS\_ON\_PRINCIPAL\_STRESSES 0}
+\DoxyCodeLine{00040 \#endif}
+\DoxyCodeLine{00041 }
+\DoxyCodeLine{00042 }
+\DoxyCodeLine{00043 // principal axes damage does not work for pressure dependent yield strengths}
+\DoxyCodeLine{00044 \#if DAMAGE\_ACTS\_ON\_PRINCIPAL\_STRESSES \&\& COLLINS\_PRESSURE\_DEPENDENT\_YIELD\_STRENGTH}
+\DoxyCodeLine{00045 \#error Do not combine DAMAGE\_ACTS\_ON\_PRINCIPAL\_STRESSES and COLLINS\_PRESSURE\_DEPENDENT\_YIELD\_STRENGTH}
+\DoxyCodeLine{00046 \#endif}
+\DoxyCodeLine{00047 }
+\DoxyCodeLine{00048 \#if SOLID}
+\DoxyCodeLine{00049 }
+\DoxyCodeLine{00050 \_\_global\_\_ void set\_stress\_tensor(void)}
+\DoxyCodeLine{00051 \{}
+\DoxyCodeLine{00052     register int i, inc, matId;}
+\DoxyCodeLine{00053     int d, e;}
+\DoxyCodeLine{00054     int niters;}
+\DoxyCodeLine{00055     double sigma[DIM][DIM];}
+\DoxyCodeLine{00056     double sigmatmp[DIM][DIM];}
+\DoxyCodeLine{00057     double rotation\_matrix[DIM][DIM];}
+\DoxyCodeLine{00058     double main\_stresses[DIM];}
+\DoxyCodeLine{00059     double max\_ev;}
+\DoxyCodeLine{00060     double damage = 0.0;}
+\DoxyCodeLine{00061     double stress\_damage = 0.0;}
+\DoxyCodeLine{00062 }
+\DoxyCodeLine{00063     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00064     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00065         matId = p\_rhs.materialId[i];}
+\DoxyCodeLine{00066         niters = 0;}
+\DoxyCodeLine{00067 }
+\DoxyCodeLine{00068         // here we set the stress tensor sigma from pressure and deviatoric stress S}
+\DoxyCodeLine{00069         // note, that S was already lowered in plasticity}
+\DoxyCodeLine{00070 \#if FRAGMENTATION}
+\DoxyCodeLine{00071         damage = pow(p.damage\_total[i], DIM);}
+\DoxyCodeLine{00072         if (damage > 1.0) damage = 1.0;}
+\DoxyCodeLine{00073         stress\_damage = damage;}
+\DoxyCodeLine{00074 }
+\DoxyCodeLine{00075         // special handling of granular media with pressure dependent yield strengths}
+\DoxyCodeLine{00076 \# if COLLINS\_PRESSURE\_DEPENDENT\_YIELD\_STRENGTH}
+\DoxyCodeLine{00077         if (!(damage < 1)) \{}
+\DoxyCodeLine{00078             stress\_damage = 0.0;}
+\DoxyCodeLine{00079         \}}
+\DoxyCodeLine{00080 \# endif}
+\DoxyCodeLine{00081 \#else}
+\DoxyCodeLine{00082         damage = 0.0;}
+\DoxyCodeLine{00083         stress\_damage = 0.0;}
+\DoxyCodeLine{00084 \#endif}
+\DoxyCodeLine{00085 }
+\DoxyCodeLine{00086 }
+\DoxyCodeLine{00087 \#if DAMAGE\_ACTS\_ON\_PRINCIPAL\_STRESSES}
+\DoxyCodeLine{00088         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00089             for (e = 0; e < DIM; e++) \{}
+\DoxyCodeLine{00090                 sigmatmp[d][e] = 0.0;}
+\DoxyCodeLine{00091                 sigma[d][e] = p.S[stressIndex(i, d, e)];}
+\DoxyCodeLine{00092                 if (d == e) \{}
+\DoxyCodeLine{00093                     sigma[d][e] += -\/p.p[i];}
+\DoxyCodeLine{00094                 \}}
+\DoxyCodeLine{00095             \}}
+\DoxyCodeLine{00096         \}}
+\DoxyCodeLine{00097         // calculate main stresses}
+\DoxyCodeLine{00098         niters = calculate\_all\_eigenvalues(sigma, main\_stresses, rotation\_matrix);}
+\DoxyCodeLine{00099         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00100             sigmatmp[d][d] = main\_stresses[d];}
+\DoxyCodeLine{00101             if (sigmatmp[d][d] > 0) \{}
+\DoxyCodeLine{00102                 sigmatmp[d][d] *= (1.0 -\/ damage);}
+\DoxyCodeLine{00103             \}}
+\DoxyCodeLine{00104         \}}
+\DoxyCodeLine{00105         // rotate back the lowered principal stresses}
+\DoxyCodeLine{00106         multiply\_matrix(sigmatmp, rotation\_matrix, sigma);}
+\DoxyCodeLine{00107         transpose\_matrix(rotation\_matrix);}
+\DoxyCodeLine{00108         multiply\_matrix(rotation\_matrix, sigma, sigmatmp);}
+\DoxyCodeLine{00109 }
+\DoxyCodeLine{00110         // sigmatmp now holds the stress tensor for particle i with damaged reduced stresses}
+\DoxyCodeLine{00111         copy\_matrix(sigmatmp, sigma);}
+\DoxyCodeLine{00112 \#else}
+\DoxyCodeLine{00113         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00114             for (e = 0; e < DIM; e++) \{}
+\DoxyCodeLine{00115                 sigma[d][e] = (1.0 -\/ stress\_damage) * p.S[stressIndex(i, d, e)];}
+\DoxyCodeLine{00116                 if (d == e) \{ // the trace}
+\DoxyCodeLine{00117                     if (p.p[i] < 0) \{}
+\DoxyCodeLine{00118                         sigma[d][e] += -\/ (1.0 -\/ damage) * p.p[i];}
+\DoxyCodeLine{00119                     \} else \{}
+\DoxyCodeLine{00120                         sigma[d][e] += -\/p.p[i];}
+\DoxyCodeLine{00121                     \}}
+\DoxyCodeLine{00122                 \}}
+\DoxyCodeLine{00123             \}}
+\DoxyCodeLine{00124         \}}
+\DoxyCodeLine{00125 }
+\DoxyCodeLine{00126 \#endif}
+\DoxyCodeLine{00127 }
+\DoxyCodeLine{00128         // remember sigma}
+\DoxyCodeLine{00129         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00130             for (e = 0; e < DIM; e++) \{}
+\DoxyCodeLine{00131                 p\_rhs.sigma[stressIndex(i,d,e)] = sigma[d][e];}
+\DoxyCodeLine{00132             \}}
+\DoxyCodeLine{00133         \}}
+\DoxyCodeLine{00134 }
+\DoxyCodeLine{00135     \}}
+\DoxyCodeLine{00136 \}}
+\DoxyCodeLine{00137 \#endif}
+
+\end{DoxyCode}

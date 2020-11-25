@@ -1,0 +1,1819 @@
+\hypertarget{timeintegration_8h}{}\doxysection{timeintegration.\+h File Reference}
+\label{timeintegration_8h}\index{timeintegration.h@{timeintegration.h}}
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$libconfig.\+h$>$}\newline
+{\ttfamily \#include $<$pthread.\+h$>$}\newline
+{\ttfamily \#include $<$assert.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}parameter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}miluph.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}io.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}cuda\+\_\+utils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}kernel.\+h\char`\"{}}\newline
+Include dependency graph for timeintegration.\+h\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{timeintegration_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{timeintegration_8h__dep__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a211bed65e3e811d077ec07c387a14163}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+512}}~512
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_ae4c82cfcbf6638b9a0615be05d7a874a}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+256}}~256
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_ac404b8dde1e46c20b204b28fda27c926}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+128}}~128
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a89e5a9ff4c5523fe9172d621d1ec8aab}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+64}}~64
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a934cd62de5800b10bc73178a00f2ee8e}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+1}}~1
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a88081ba90154ef1a1d684ec8b8e5d272}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+C\+O\+M\+P\+U\+T\+A\+T\+I\+O\+N\+A\+L\+\_\+\+D\+O\+M\+A\+IN}}~128
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_aee30b9a4c20d94fa3aa65410151c83d0}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+B\+U\+I\+L\+D\+\_\+\+T\+R\+EE}}~32
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a69034e9bacf7c5f0bcf83560bb2a2f5e}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+T\+R\+E\+E\+D\+E\+P\+TH}}~128
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a3e3659508afc18a98862ad70dfc1ed53}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+T\+R\+E\+E\+C\+H\+A\+N\+GE}}~128
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a264da86aad42159f5195f1be566607c9}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+C\+A\+L\+C\+\_\+\+C\+E\+N\+T\+E\+R\+\_\+\+O\+F\+\_\+\+M\+A\+SS}}~256
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_aad8b099ccffb86b59c2cf1635d2284fc}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+S\+E\+L\+F\+G\+R\+A\+V\+I\+TY}}~128
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a19fec3493a858798827ac9578f27d80a}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+B\+O\+U\+N\+D\+A\+R\+Y\+\_\+\+C\+O\+N\+D\+I\+T\+I\+O\+NS}}~128
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_afdd773b8e6c1e91d553a6eeb7aec63ee}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+N\+E\+I\+G\+H\+B\+O\+U\+R\+S\+E\+A\+R\+CH}}~256
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a88957a3aaf5e82e35ecd4fa21bf63054}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+S\+Y\+M\+M\+E\+T\+R\+I\+Z\+E\+\_\+\+I\+N\+T\+E\+R\+A\+C\+T\+I\+O\+NS}}~256
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a70b0b8850594cc38f41a2a771445dd7f}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+D\+E\+N\+S\+I\+TY}}~256
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a53010751f77fb4e28fbe79a916af772a}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+P\+R\+E\+S\+S\+U\+RE}}~256
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_ae3e567681f069cdb8d923ccf3f6eb903}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+P\+A\+L\+P\+H\+A\+\_\+\+P\+O\+R\+O\+S\+I\+TY}}~256
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a776c8c7cb72e3a3db4e2087e620583ac}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+D\+E\+T\+E\+C\+T\+R\+E\+L\+AX}}~256
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_ac9ee1a299f9f3013715aa1dc22191283}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+L\+I\+M\+I\+T\+T\+I\+M\+E\+S\+T\+EP}}~256
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_ac5b726ba3fd2e990249d38517aa98f02}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+R\+K2\+\_\+\+I\+N\+T\+E\+G\+R\+A\+T\+E\+\_\+\+S\+T\+EP}}~256
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_ace3f5a88751df6e5955bee2c60117f19}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+E\+R\+R\+O\+R\+C\+H\+E\+CK}}~256
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a71b8382a43ab94e3f85f53c698391161}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+E\+U\+L\+E\+R\+\_\+\+I\+N\+T\+E\+G\+R\+A\+T\+OR}}~256
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a351734a8fdb8d799cbe815a2f9f8a1b7}{N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+P\+C\+\_\+\+I\+N\+T\+E\+G\+R\+A\+T\+OR}}~256
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a2b7cf2a3641be7b89138615764d60ba3}{E\+M\+P\+TY}}~-\/1
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a00de8f7e0b615f88335573ba3909583d}{L\+O\+C\+K\+ED}}~-\/2
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_a0a852ddde438845110943cb3e2a0beea}{M\+A\+X\+D\+E\+P\+TH}}~128
+\item 
+\#define \mbox{\hyperlink{timeintegration_8h_ad1b157e21bbc35c6d542c1ada7ce3b67}{C\+O\+U\+R\+A\+NT}}~0.\+7
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{timeintegration_8h_aea1cd6884e284ee6947e6a9a814abe70}{time\+Integration}} (void)
+\item 
+void \mbox{\hyperlink{timeintegration_8h_ade36eee29fa2c10ccd913b3c3c3a4f73}{cleanup\+Materials}} (void)
+\item 
+void \mbox{\hyperlink{timeintegration_8h_ae719f9295ddc3569385df8b7f4c7d798}{euler}} (void)
+\item 
+void \mbox{\hyperlink{timeintegration_8h_a5fc41304be06304d2e64139168c4c87a}{predictor\+\_\+corrector}} (void)
+\item 
+void \mbox{\hyperlink{timeintegration_8h_a21a28386432b23e725411429f4e64f39}{predictor\+\_\+corrector\+\_\+euler}} (void)
+\item 
+void \mbox{\hyperlink{timeintegration_8h_ac83bf5e9a92c2318d6ec80dab45cfc6f}{rk2\+Adaptive}} (void)
+\item 
+double \mbox{\hyperlink{timeintegration_8h_aacee04f8bf23d8594794f6952451678c}{calculate\+\_\+angular\+\_\+momentum}} (void)
+\item 
+void \mbox{\hyperlink{timeintegration_8h_aeb07186d62049f2b5568dedb0264bdd2}{copy\+To\+Host\+And\+Write\+To\+File}} (int timestep, int last\+Timestep)
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ int \mbox{\hyperlink{timeintegration_8h_a70cfbe20974882fb4ec99fcbadc51ad8}{child\+List\+Index}} (int node\+Index, int child\+Number)
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{timeintegration_8h_a888b4cc7c1dc59101c0c003d9d9a4b41}{detect\+Velocity\+Relaxation}} (int $\ast$\mbox{\hyperlink{timeintegration_8h_aabf2d912c2289161729037f032f7832e}{relaxed\+Per\+Block}})
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ int \mbox{\hyperlink{timeintegration_8h_a8d397f459c27d904e86e97572c3de07a}{stress\+Index}} (int particle\+Index, int row, int col)
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{timeintegration_8h_a21afcc6e2f3ce13ddaad8f60b8982f75}{damage\+Limit}} (void)
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{timeintegration_8h_ac975fd6d71ce6df7f03d462d5394248f}{symmetrize\+Stress}} (void)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{timeintegration_8h_a5aed643aa124d32fe1c43ae03990aa55}{start\+Timestep}}
+\item 
+int \mbox{\hyperlink{timeintegration_8h_a228b22ece8bc2bc18f9b4442e3ebf552}{number\+Of\+Timesteps}}
+\item 
+double \mbox{\hyperlink{timeintegration_8h_a0a07a521d3525b9b7dc70c0a625adea0}{start\+Time}}
+\item 
+double \mbox{\hyperlink{timeintegration_8h_ab85d10b965ecaf344a12fa36fec94cc5}{time\+Per\+Step}}
+\item 
+double \mbox{\hyperlink{timeintegration_8h_a6c3b611212a1cd8118377686486253d8}{dt\+\_\+host}}
+\item 
+int \mbox{\hyperlink{timeintegration_8h_a717f68f485eb342bb777d9dbea3b30e6}{max\+Node\+Index\+\_\+host}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a8081340d58bc277e6a9164136a23872c}{sml}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a9f3e41ac155a1023fb10cf9a5c03be7f}{bulk\+\_\+modulus}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a4a5f509327fb761831aebad8ad410698}{cs\+\_\+porous}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_aee842e4d450666792e5cd8c6a7f6b9c1}{till\+\_\+rho\+\_\+0}}
+\item 
+int \mbox{\hyperlink{timeintegration_8h_a7f00ec370e9aef040c0b2831da3b71ce}{number\+Of\+Materials}}
+\item 
+double \mbox{\hyperlink{timeintegration_8h_a272038ad264893a568c808f13d818b17}{current\+Time}}
+\item 
+double \mbox{\hyperlink{timeintegration_8h_a58a0751f0f4a75ebd2f7ba31ea096ad2}{h5time}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a26f40e31f416e25c2681680b1f7cae2e}{matporjutzi\+\_\+p\+\_\+elastic\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_ae1d6060f960bf93bbd43a8a65fe59d94}{matporjutzi\+\_\+p\+\_\+transition\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a119c9cc237999fafbe1c731e11362165}{matporjutzi\+\_\+p\+\_\+compacted\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_aa7675566cd922156b102f2cd879b3e63}{matporjutzi\+\_\+alpha\+\_\+0\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_ab6260f10643f55c14f3948c63ff52354}{matporjutzi\+\_\+alpha\+\_\+e\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a1998ea28e278edc1fad4101fd3f5710a}{matporjutzi\+\_\+alpha\+\_\+t\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a0a7ac91cecc598472913167eb6168b5d}{matporjutzi\+\_\+n1\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a505e55238873754b8d6c1781d82cd850}{matporjutzi\+\_\+n2\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a9de56bedb6da6780cecd7fd665a75eed}{matcs\+\_\+porous\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a4fb9a879729f2c39dbdc022b2f876006}{matcs\+\_\+solid\+\_\+d}}
+\item 
+int $\ast$ \mbox{\hyperlink{timeintegration_8h_a6096dd3bc10b588ce51f2e71358c138e}{crushcurve\+\_\+style\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a8ff794e55c190f84e978d99846c24e24}{matzeta\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a7863734cb88df196b5d8603a4ff36ff5}{matnu\+\_\+d}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a23ffa4e4fb85e585927c399d704b8a81}{matzeta}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a892216a282edbaad2008fdaf8de503b9}{matnu}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a5228b62443fe9c3d3dab2e91846de4d5}{matporsirono\+\_\+\+K\+\_\+0\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a4d251131a032485069d562affca71b7c}{matporsirono\+\_\+rho\+\_\+0\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a0a191d103426a3c0557fe3d50d34836c}{matporsirono\+\_\+rho\+\_\+s\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a7f294789bc432899576079a9b7b357f7}{matporsirono\+\_\+gamma\+\_\+\+K\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_abd00167b116cbf844062b5c5603fc8cb}{matporsirono\+\_\+alpha\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a5b98599db1e03884ebc6381041e1aa63}{matporsirono\+\_\+pm\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a4cce38779821d1d692544a3c18528dee}{matporsirono\+\_\+phimax\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_af4e1ade93af462b8d41c7cbb13e5769e}{matporsirono\+\_\+phi0\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_aba72c79ef54428da6ae2db4d9d21403b}{matporsirono\+\_\+delta\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_ad163dcb6c67a0bd47ce6812ac1b34151}{matporepsilon\+\_\+kappa\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a59423d70fd36a20ffbddb25e6b1615df}{matporepsilon\+\_\+alpha\+\_\+0\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a2a8c193bb4356b892a8ede14779d1d6d}{matporepsilon\+\_\+epsilon\+\_\+e\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a6c7fcab89e2a19fa2a2a3884c0226908}{matporepsilon\+\_\+epsilon\+\_\+x\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a44db62ce508491ce1f552a6b84789516}{matporepsilon\+\_\+epsilon\+\_\+c\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_ac24a1681734be438d766cf06d4db0e54}{mat\+\_\+f\+\_\+sml\+\_\+min\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_ab1a954d91b091dd02b96ec6314e65a63}{mat\+\_\+f\+\_\+sml\+\_\+max\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a0dc88b3ec8e33f317244afbbf757ca20}{mat\+Sml\+\_\+d}}
+\item 
+int $\ast$ \mbox{\hyperlink{timeintegration_8h_a4441adfa1948612f2aadcfb2378b5330}{matnoi\+\_\+d}}
+\item 
+int $\ast$ \mbox{\hyperlink{timeintegration_8h_a3684351f83441cd76089b3f5cb10348d}{mat\+E\+O\+S\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a043c81f76797bd484440ea4a564592f9}{mat\+Polytropic\+K\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a67874191c369e641e194cb0e99ec944c}{mat\+Polytropic\+Gamma\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a14ff6436f5d28394fc94a13572662bd8}{mat\+Alpha\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_aef3c9e548fa2f98902e69036c6ae3f96}{mat\+Beta\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_ab7ac7f871c065ac5ff3dd76c7be46fbc}{mat\+Bulkmodulus\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a431898edb1ba906793320f60f54b3037}{mat\+Shearmodulus\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_ac2fb086c1e389ce4b85265397bb4a0ae}{mat\+Yield\+Stress\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_ac705af73b88b5a0d0cfe2fd93a3b5c3e}{mat\+Rho0\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_abffe1c8dc7dd3a319307a5c84c1bf52a}{mat\+Till\+Rho0\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a6ecb5db170130ad3c7046285b1ef4412}{mat\+Till\+Eiv\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a1676b5df20b48ce33528c00ce3184645}{mat\+Till\+Ecv\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_ab625ba7b1f3fee1731fe8705a30bb728}{mat\+Till\+E0\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_ac9079b7b7bb03e3465ee0471960ff985}{mat\+Tilla\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a7c6cae4b0899a0d3ad898c10b1d3024e}{mat\+Tillb\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_aa848de6411e4e068c1850782ca03198d}{mat\+Till\+A\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a22526f3762b6c8749f8b31adf0907439}{mat\+Till\+B\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a55ebcad85bed2d8b9108982e8b41df82}{mat\+Till\+Alpha\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a39d5ebb00e3e9191efdc92ede3875f9f}{mat\+Till\+Beta\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_af6d1e6887d343f8e27b1257f1de552e4}{mat\+Rho\+Limit\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_ae2c28cd691c979bdf4c57130dbccccc5}{mat\+N\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a1edff2114bd32903d489aca83348fd70}{mat\+Cohesion\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_ab55e04e76f5ea8cce103bd364a405dfd}{mat\+Friction\+Angle\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a69ed160ba323e709dc77548adc8ba2fb}{mat\+Friction\+Angle\+Damaged\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a1b3f8c044f3aafbda538a21258cec4a6}{mat\+Alpha\+Phi\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_ae46a98b9f9c0432c48224488c92e270b}{mat\+Cohesion\+Coefficient\+\_\+d}}
+\item 
+int $\ast$ \mbox{\hyperlink{timeintegration_8h_af47ebe09ded3d595cb5b3ca380c3692c}{aneos\+\_\+n\+\_\+rho\+\_\+d}}
+\item 
+int $\ast$ \mbox{\hyperlink{timeintegration_8h_a21d95c4454d75641eecb14283628ba62}{aneos\+\_\+n\+\_\+e\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_aa0c44685ad6c49db71fd06fbbd4697a0}{aneos\+\_\+bulk\+\_\+cs\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a44c50d896c0215ecb070eadb76db174f}{aneos\+\_\+rho\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a101123cb5f5dfa72eaec13f4dc01635b}{aneos\+\_\+e\+\_\+d}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_a2dfbeb65f14f9b620d50a7b64830d5eb}{aneos\+\_\+p\+\_\+d}}
+\item 
+int $\ast$ \mbox{\hyperlink{timeintegration_8h_a6bcdc57faf535a97562d258475ba36fb}{aneos\+\_\+rho\+\_\+id\+\_\+d}}
+\item 
+int $\ast$ \mbox{\hyperlink{timeintegration_8h_a1eb8fa48ac518c44a2bb0688838ac43d}{aneos\+\_\+e\+\_\+id\+\_\+d}}
+\item 
+int $\ast$ \mbox{\hyperlink{timeintegration_8h_abcc8156f20d4f867b40ccde81d7b8d2e}{aneos\+\_\+matrix\+\_\+id\+\_\+d}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ int $\ast$ \mbox{\hyperlink{timeintegration_8h_ace80f7dd21f976bf3277193df6dcb2d5}{aneos\+\_\+n\+\_\+rho\+\_\+c}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ int $\ast$ \mbox{\hyperlink{timeintegration_8h_a27bfa2f35aaec358eab802ebf033af28}{aneos\+\_\+n\+\_\+e\+\_\+c}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ae4f2172b9971ceecb44e6101d17e3c97}{aneos\+\_\+bulk\+\_\+cs\+\_\+c}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a3ab47a568802686599847643b24dff40}{aneos\+\_\+rho\+\_\+c}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ab7e9ae06c8390341808d385560a6d26e}{aneos\+\_\+e\+\_\+c}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a630b31c4394cbe64c7f7dac0f963da01}{aneos\+\_\+p\+\_\+c}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ int $\ast$ \mbox{\hyperlink{timeintegration_8h_ae4aad235ea223f37b1467faab25367db}{aneos\+\_\+rho\+\_\+id\+\_\+c}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ int $\ast$ \mbox{\hyperlink{timeintegration_8h_a7558c25b1028b567f1101e4ad2dadd62}{aneos\+\_\+e\+\_\+id\+\_\+c}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ int $\ast$ \mbox{\hyperlink{timeintegration_8h_a452139aec0ede802389161b56a6594b8}{aneos\+\_\+matrix\+\_\+id\+\_\+c}}
+\item 
+double $\ast$ \mbox{\hyperlink{timeintegration_8h_ac0762c05eb2742959089a76d990ae3cf}{mat\+Young\+Modulus\+\_\+d}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ae4f34a52048368f2c8eab168183b9191}{mat\+Young\+Modulus}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ad2952da9a52b88fdb208c6926b546914}{mat\+Sml}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ac61e25b7a183ba32f5a5e7a034e56189}{mat\+\_\+f\+\_\+sml\+\_\+min}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a6a05323b3dc83c66d30f55afba046fda}{mat\+\_\+f\+\_\+sml\+\_\+max}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ int $\ast$ \mbox{\hyperlink{timeintegration_8h_ad1ed0179c2dbd99ebfc2b70abf0d0ed8}{matnoi}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ int $\ast$ \mbox{\hyperlink{timeintegration_8h_aad22c37247de4a448e2eec3f2d7668ad}{mat\+E\+OS}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a3573e343a61725d23fa2686b01adb8da}{mat\+PolytropicK}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a2c27b31b177ebcba1632ef5ffcf6298d}{mat\+Polytropic\+Gamma}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a3e4093113f231dd9cf5d21ce270d8039}{mat\+Beta}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_aa44b52c070cb18feb3fb288fc85a6e52}{mat\+Alpha}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a5bd3c83e31ac80158e75c665a0feaa56}{mat\+Bulkmodulus}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_af007f82768b7c88e51fdc6177687da7c}{mat\+Shearmodulus}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_aac89127367f6df456815d67526014ee3}{mat\+Yield\+Stress}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a1d4c04e7bb8efd4927abe151320cb9a4}{mat\+Internal\+Friction}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ad681ef650e43efd0f7051617df2c6775}{mat\+Internal\+Friction\+Damaged}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_aebb33d4dbf50f65dcf2ae70d50446433}{mat\+Rho0}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ab8c4d7de8f985a5023f7477bc763ef40}{mat\+Till\+Rho0}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_aa27380a44359651705539e4cfc117d0d}{mat\+Till\+Eiv}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ab75f5cc7fe479dcb95a8e328bd510472}{mat\+Till\+Ecv}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a00c3b716a999139d1639a29d8f3a7045}{mat\+Till\+E0}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a3613df9ff57e113755321bbfb4642394}{mat\+Tilla}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a0b9e61a5ca3b570042b9c456964ad490}{mat\+Tillb}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a4a6627b33a35ff5c483cccf6e7c5d5c2}{mat\+TillA}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a08acea0c8206803e837aea416dbaac21}{mat\+TillB}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ad2409384296edbac96a76be4adfd8648}{mat\+Till\+Alpha}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ae6261d2976a1f4e4f13da547b2b377e8}{mat\+Till\+Beta}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ad0e08a57865ecb920d5ba9f385354e97}{matporjutzi\+\_\+p\+\_\+elastic}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a163a34e9c2b63397106aac21177f61e3}{matporjutzi\+\_\+p\+\_\+transition}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_aa4a14281df36fda7999487f997944635}{matporjutzi\+\_\+p\+\_\+compacted}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ae5ee5e0a4e87b99b3dcd099a847237e6}{matporjutzi\+\_\+alpha\+\_\+0}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a10b6dd1895fc553b839714468bd8f008}{matporjutzi\+\_\+alpha\+\_\+e}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_abea2a542b261837fc4570d7cfce236fd}{matporjutzi\+\_\+alpha\+\_\+t}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ac2219f33eab47f3a3235c846c14cd0ba}{matporjutzi\+\_\+n1}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a4e4809bc501780aad2cb50133615fe29}{matporjutzi\+\_\+n2}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ac6d4c6c7bed2d15e6b4ed6448e8d64cf}{matcs\+\_\+porous}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a2c246befd4f293f1fdfffda081d96a4d}{matcs\+\_\+solid}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ int $\ast$ \mbox{\hyperlink{timeintegration_8h_a70a8474a0bac2dcb9da0e9dfa3277368}{matcrushcurve\+\_\+style}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ae0249e8e90dc7354f7da2bffd00341f1}{matporsirono\+\_\+\+K\+\_\+0}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_aeb9278a1f276f824ebe2ada7bcdc00d2}{matporsirono\+\_\+rho\+\_\+0}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a33441d6b8683551b93aa22fb3a9ac005}{matporsirono\+\_\+rho\+\_\+s}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_abc10381fff10f22ab1a6c28047734860}{matporsirono\+\_\+gamma\+\_\+K}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a7673515442c3231145017a90d877ee0a}{matporsirono\+\_\+alpha}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_aaa713da228b9788b3cee73f7e0515b01}{matporsirono\+\_\+pm}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ac0ec8e5bae0c456d668b56ec07ace192}{matporsirono\+\_\+phimax}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_af98e0aa6750ee9b1e4bcb44471f41258}{matporsirono\+\_\+phi0}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a13c8ee8be6f9d4c7a39201ccc91c1060}{matporsirono\+\_\+delta}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_adc05dc2ecb540597a37d3e195589e34e}{matporepsilon\+\_\+kappa}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a3b1e7dfa414d959f4f25a75805b28842}{matporepsilon\+\_\+alpha\+\_\+0}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a5d3cecce05c2106ebbe6b762ad9dec45}{matporepsilon\+\_\+epsilon\+\_\+e}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ad6622d057484d1869b398f741f3206aa}{matporepsilon\+\_\+epsilon\+\_\+x}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a7e8359692a9b2689894d6156c57428d7}{matporepsilon\+\_\+epsilon\+\_\+c}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_afb2cc8fe27e0903b4c978936ff06b2c4}{matexponent\+\_\+tensor}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_aa5c4bbc3d952509047743dfa18e0d32e}{matepsilon\+\_\+stress}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a0077dfe2e9b9c626043c9c7dbd5b69f9}{matmean\+\_\+particle\+\_\+distance}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ int $\ast$ \mbox{\hyperlink{timeintegration_8h_acd45816cf2b26bfe18698e9b893ff230}{material\+Id}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_afed7260a105483775f439f3c9a7403bd}{mat\+Rho\+Limit}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a16f551b9e2a522feb7ad383a7103af74}{matN}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a0a3a9a0c083edbdcede94cc0f29adb9a}{mat\+Cohesion}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a720a61dd6152c8f4f332630e184829d4}{mat\+Friction\+Angle}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a2cad28253466371976e0bc6c96315b47}{mat\+Friction\+Angle\+Damaged}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_aff4cbccbc231aa6be49245889aac988b}{mat\+Alpha\+Phi}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_ab93b06d007d95ce277a0955bdf1023e2}{mat\+Cohesion\+Coefficient}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_aaa87065c22a4f0eef5d62650f675efdb}{tensorial\+Correction\+Matrix}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double $\ast$ \mbox{\hyperlink{timeintegration_8h_a59822940795faf2f262ff5fdb4f48f3b}{tensorial\+Correctiond\+Wdrr}}
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ int \mbox{\hyperlink{timeintegration_8h_a40d97ea849bd3c92d6762a2c2e55f21f}{num\+Particles}}
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ int \mbox{\hyperlink{timeintegration_8h_a5a76fb3c65d0b67efab767b7feea24c3}{num\+Pointmasses}}
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ double \mbox{\hyperlink{timeintegration_8h_abecd46b516de41fd974cb4b7e1d96fb6}{scale\+\_\+height}}
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ double \mbox{\hyperlink{timeintegration_8h_a8071f72a9d4a16969693ee863dd4dbe1}{max\+\_\+abs\+\_\+pressure\+\_\+change}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ int \mbox{\hyperlink{timeintegration_8h_a4a761937631aa92a42314bbc2a415e6c}{max\+Num\+Particles}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ int \mbox{\hyperlink{timeintegration_8h_ad2934c64153fe0ca8d8ae5797b53ec5e}{num\+Real\+Particles}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ int \mbox{\hyperlink{timeintegration_8h_acf9cac2ae28ec52fe48fe2381912884a}{num\+Children}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ int \mbox{\hyperlink{timeintegration_8h_a404241ccbeab41e353de238c33074e7f}{num\+Nodes}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ int \mbox{\hyperlink{timeintegration_8h_a0a51ab57e18c6bdc7baea94f1359d498}{max\+Num\+Flaws}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ double \mbox{\hyperlink{timeintegration_8h_a55b4b57ff0890976692aae7ebc99a646}{theta}}
+\item 
+int $\ast$ \mbox{\hyperlink{timeintegration_8h_aabf2d912c2289161729037f032f7832e}{relaxed\+Per\+Block}}
+\item 
+void($\ast$ \mbox{\hyperlink{timeintegration_8h_a49a8b920a395bc6031ccab2b6f6953ec}{integrator}} )()
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{timeintegration_8h_ad1b157e21bbc35c6d542c1ada7ce3b67}\label{timeintegration_8h_ad1b157e21bbc35c6d542c1ada7ce3b67}} 
+\index{timeintegration.h@{timeintegration.h}!COURANT@{COURANT}}
+\index{COURANT@{COURANT}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{COURANT}{COURANT}}
+{\footnotesize\ttfamily \#define C\+O\+U\+R\+A\+NT~0.\+7}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00312}{312}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a2b7cf2a3641be7b89138615764d60ba3}\label{timeintegration_8h_a2b7cf2a3641be7b89138615764d60ba3}} 
+\index{timeintegration.h@{timeintegration.h}!EMPTY@{EMPTY}}
+\index{EMPTY@{EMPTY}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{EMPTY}{EMPTY}}
+{\footnotesize\ttfamily \#define E\+M\+P\+TY~-\/1}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00306}{306}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a00de8f7e0b615f88335573ba3909583d}\label{timeintegration_8h_a00de8f7e0b615f88335573ba3909583d}} 
+\index{timeintegration.h@{timeintegration.h}!LOCKED@{LOCKED}}
+\index{LOCKED@{LOCKED}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{LOCKED}{LOCKED}}
+{\footnotesize\ttfamily \#define L\+O\+C\+K\+ED~-\/2}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00307}{307}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a0a852ddde438845110943cb3e2a0beea}\label{timeintegration_8h_a0a852ddde438845110943cb3e2a0beea}} 
+\index{timeintegration.h@{timeintegration.h}!MAXDEPTH@{MAXDEPTH}}
+\index{MAXDEPTH@{MAXDEPTH}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{MAXDEPTH}{MAXDEPTH}}
+{\footnotesize\ttfamily \#define M\+A\+X\+D\+E\+P\+TH~128}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00309}{309}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a934cd62de5800b10bc73178a00f2ee8e}\label{timeintegration_8h_a934cd62de5800b10bc73178a00f2ee8e}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_1@{NUM\_THREADS\_1}}
+\index{NUM\_THREADS\_1@{NUM\_THREADS\_1}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_1}{NUM\_THREADS\_1}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+1~1}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00278}{278}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_ac404b8dde1e46c20b204b28fda27c926}\label{timeintegration_8h_ac404b8dde1e46c20b204b28fda27c926}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_128@{NUM\_THREADS\_128}}
+\index{NUM\_THREADS\_128@{NUM\_THREADS\_128}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_128}{NUM\_THREADS\_128}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+128~128}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00276}{276}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_ae4c82cfcbf6638b9a0615be05d7a874a}\label{timeintegration_8h_ae4c82cfcbf6638b9a0615be05d7a874a}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_256@{NUM\_THREADS\_256}}
+\index{NUM\_THREADS\_256@{NUM\_THREADS\_256}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_256}{NUM\_THREADS\_256}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+256~256}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00275}{275}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a211bed65e3e811d077ec07c387a14163}\label{timeintegration_8h_a211bed65e3e811d077ec07c387a14163}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_512@{NUM\_THREADS\_512}}
+\index{NUM\_THREADS\_512@{NUM\_THREADS\_512}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_512}{NUM\_THREADS\_512}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+512~512}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00274}{274}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a89e5a9ff4c5523fe9172d621d1ec8aab}\label{timeintegration_8h_a89e5a9ff4c5523fe9172d621d1ec8aab}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_64@{NUM\_THREADS\_64}}
+\index{NUM\_THREADS\_64@{NUM\_THREADS\_64}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_64}{NUM\_THREADS\_64}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+64~64}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00277}{277}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a19fec3493a858798827ac9578f27d80a}\label{timeintegration_8h_a19fec3493a858798827ac9578f27d80a}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_BOUNDARY\_CONDITIONS@{NUM\_THREADS\_BOUNDARY\_CONDITIONS}}
+\index{NUM\_THREADS\_BOUNDARY\_CONDITIONS@{NUM\_THREADS\_BOUNDARY\_CONDITIONS}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_BOUNDARY\_CONDITIONS}{NUM\_THREADS\_BOUNDARY\_CONDITIONS}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+B\+O\+U\+N\+D\+A\+R\+Y\+\_\+\+C\+O\+N\+D\+I\+T\+I\+O\+NS~128}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00286}{286}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_aee30b9a4c20d94fa3aa65410151c83d0}\label{timeintegration_8h_aee30b9a4c20d94fa3aa65410151c83d0}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_BUILD\_TREE@{NUM\_THREADS\_BUILD\_TREE}}
+\index{NUM\_THREADS\_BUILD\_TREE@{NUM\_THREADS\_BUILD\_TREE}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_BUILD\_TREE}{NUM\_THREADS\_BUILD\_TREE}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+B\+U\+I\+L\+D\+\_\+\+T\+R\+EE~32}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00281}{281}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a264da86aad42159f5195f1be566607c9}\label{timeintegration_8h_a264da86aad42159f5195f1be566607c9}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_CALC\_CENTER\_OF\_MASS@{NUM\_THREADS\_CALC\_CENTER\_OF\_MASS}}
+\index{NUM\_THREADS\_CALC\_CENTER\_OF\_MASS@{NUM\_THREADS\_CALC\_CENTER\_OF\_MASS}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_CALC\_CENTER\_OF\_MASS}{NUM\_THREADS\_CALC\_CENTER\_OF\_MASS}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+C\+A\+L\+C\+\_\+\+C\+E\+N\+T\+E\+R\+\_\+\+O\+F\+\_\+\+M\+A\+SS~256}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00284}{284}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a88081ba90154ef1a1d684ec8b8e5d272}\label{timeintegration_8h_a88081ba90154ef1a1d684ec8b8e5d272}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_COMPUTATIONAL\_DOMAIN@{NUM\_THREADS\_COMPUTATIONAL\_DOMAIN}}
+\index{NUM\_THREADS\_COMPUTATIONAL\_DOMAIN@{NUM\_THREADS\_COMPUTATIONAL\_DOMAIN}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_COMPUTATIONAL\_DOMAIN}{NUM\_THREADS\_COMPUTATIONAL\_DOMAIN}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+C\+O\+M\+P\+U\+T\+A\+T\+I\+O\+N\+A\+L\+\_\+\+D\+O\+M\+A\+IN~128}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00280}{280}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a70b0b8850594cc38f41a2a771445dd7f}\label{timeintegration_8h_a70b0b8850594cc38f41a2a771445dd7f}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_DENSITY@{NUM\_THREADS\_DENSITY}}
+\index{NUM\_THREADS\_DENSITY@{NUM\_THREADS\_DENSITY}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_DENSITY}{NUM\_THREADS\_DENSITY}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+D\+E\+N\+S\+I\+TY~256}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00289}{289}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a776c8c7cb72e3a3db4e2087e620583ac}\label{timeintegration_8h_a776c8c7cb72e3a3db4e2087e620583ac}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_DETECTRELAX@{NUM\_THREADS\_DETECTRELAX}}
+\index{NUM\_THREADS\_DETECTRELAX@{NUM\_THREADS\_DETECTRELAX}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_DETECTRELAX}{NUM\_THREADS\_DETECTRELAX}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+D\+E\+T\+E\+C\+T\+R\+E\+L\+AX~256}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00293}{293}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_ace3f5a88751df6e5955bee2c60117f19}\label{timeintegration_8h_ace3f5a88751df6e5955bee2c60117f19}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_ERRORCHECK@{NUM\_THREADS\_ERRORCHECK}}
+\index{NUM\_THREADS\_ERRORCHECK@{NUM\_THREADS\_ERRORCHECK}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_ERRORCHECK}{NUM\_THREADS\_ERRORCHECK}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+E\+R\+R\+O\+R\+C\+H\+E\+CK~256}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00298}{298}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a71b8382a43ab94e3f85f53c698391161}\label{timeintegration_8h_a71b8382a43ab94e3f85f53c698391161}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_EULER\_INTEGRATOR@{NUM\_THREADS\_EULER\_INTEGRATOR}}
+\index{NUM\_THREADS\_EULER\_INTEGRATOR@{NUM\_THREADS\_EULER\_INTEGRATOR}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_EULER\_INTEGRATOR}{NUM\_THREADS\_EULER\_INTEGRATOR}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+E\+U\+L\+E\+R\+\_\+\+I\+N\+T\+E\+G\+R\+A\+T\+OR~256}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00301}{301}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_ac9ee1a299f9f3013715aa1dc22191283}\label{timeintegration_8h_ac9ee1a299f9f3013715aa1dc22191283}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_LIMITTIMESTEP@{NUM\_THREADS\_LIMITTIMESTEP}}
+\index{NUM\_THREADS\_LIMITTIMESTEP@{NUM\_THREADS\_LIMITTIMESTEP}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_LIMITTIMESTEP}{NUM\_THREADS\_LIMITTIMESTEP}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+L\+I\+M\+I\+T\+T\+I\+M\+E\+S\+T\+EP~256}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00294}{294}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_afdd773b8e6c1e91d553a6eeb7aec63ee}\label{timeintegration_8h_afdd773b8e6c1e91d553a6eeb7aec63ee}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_NEIGHBOURSEARCH@{NUM\_THREADS\_NEIGHBOURSEARCH}}
+\index{NUM\_THREADS\_NEIGHBOURSEARCH@{NUM\_THREADS\_NEIGHBOURSEARCH}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_NEIGHBOURSEARCH}{NUM\_THREADS\_NEIGHBOURSEARCH}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+N\+E\+I\+G\+H\+B\+O\+U\+R\+S\+E\+A\+R\+CH~256}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00287}{287}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_ae3e567681f069cdb8d923ccf3f6eb903}\label{timeintegration_8h_ae3e567681f069cdb8d923ccf3f6eb903}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_PALPHA\_POROSITY@{NUM\_THREADS\_PALPHA\_POROSITY}}
+\index{NUM\_THREADS\_PALPHA\_POROSITY@{NUM\_THREADS\_PALPHA\_POROSITY}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_PALPHA\_POROSITY}{NUM\_THREADS\_PALPHA\_POROSITY}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+P\+A\+L\+P\+H\+A\+\_\+\+P\+O\+R\+O\+S\+I\+TY~256}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00291}{291}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a351734a8fdb8d799cbe815a2f9f8a1b7}\label{timeintegration_8h_a351734a8fdb8d799cbe815a2f9f8a1b7}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_PC\_INTEGRATOR@{NUM\_THREADS\_PC\_INTEGRATOR}}
+\index{NUM\_THREADS\_PC\_INTEGRATOR@{NUM\_THREADS\_PC\_INTEGRATOR}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_PC\_INTEGRATOR}{NUM\_THREADS\_PC\_INTEGRATOR}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+P\+C\+\_\+\+I\+N\+T\+E\+G\+R\+A\+T\+OR~256}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00304}{304}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a53010751f77fb4e28fbe79a916af772a}\label{timeintegration_8h_a53010751f77fb4e28fbe79a916af772a}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_PRESSURE@{NUM\_THREADS\_PRESSURE}}
+\index{NUM\_THREADS\_PRESSURE@{NUM\_THREADS\_PRESSURE}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_PRESSURE}{NUM\_THREADS\_PRESSURE}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+P\+R\+E\+S\+S\+U\+RE~256}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00290}{290}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_ac5b726ba3fd2e990249d38517aa98f02}\label{timeintegration_8h_ac5b726ba3fd2e990249d38517aa98f02}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_RK2\_INTEGRATE\_STEP@{NUM\_THREADS\_RK2\_INTEGRATE\_STEP}}
+\index{NUM\_THREADS\_RK2\_INTEGRATE\_STEP@{NUM\_THREADS\_RK2\_INTEGRATE\_STEP}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_RK2\_INTEGRATE\_STEP}{NUM\_THREADS\_RK2\_INTEGRATE\_STEP}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+R\+K2\+\_\+\+I\+N\+T\+E\+G\+R\+A\+T\+E\+\_\+\+S\+T\+EP~256}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00297}{297}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_aad8b099ccffb86b59c2cf1635d2284fc}\label{timeintegration_8h_aad8b099ccffb86b59c2cf1635d2284fc}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_SELFGRAVITY@{NUM\_THREADS\_SELFGRAVITY}}
+\index{NUM\_THREADS\_SELFGRAVITY@{NUM\_THREADS\_SELFGRAVITY}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_SELFGRAVITY}{NUM\_THREADS\_SELFGRAVITY}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+S\+E\+L\+F\+G\+R\+A\+V\+I\+TY~128}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00285}{285}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a88957a3aaf5e82e35ecd4fa21bf63054}\label{timeintegration_8h_a88957a3aaf5e82e35ecd4fa21bf63054}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_SYMMETRIZE\_INTERACTIONS@{NUM\_THREADS\_SYMMETRIZE\_INTERACTIONS}}
+\index{NUM\_THREADS\_SYMMETRIZE\_INTERACTIONS@{NUM\_THREADS\_SYMMETRIZE\_INTERACTIONS}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_SYMMETRIZE\_INTERACTIONS}{NUM\_THREADS\_SYMMETRIZE\_INTERACTIONS}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+S\+Y\+M\+M\+E\+T\+R\+I\+Z\+E\+\_\+\+I\+N\+T\+E\+R\+A\+C\+T\+I\+O\+NS~256}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00288}{288}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a3e3659508afc18a98862ad70dfc1ed53}\label{timeintegration_8h_a3e3659508afc18a98862ad70dfc1ed53}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_TREECHANGE@{NUM\_THREADS\_TREECHANGE}}
+\index{NUM\_THREADS\_TREECHANGE@{NUM\_THREADS\_TREECHANGE}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_TREECHANGE}{NUM\_THREADS\_TREECHANGE}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+T\+R\+E\+E\+C\+H\+A\+N\+GE~128}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00283}{283}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+\mbox{\Hypertarget{timeintegration_8h_a69034e9bacf7c5f0bcf83560bb2a2f5e}\label{timeintegration_8h_a69034e9bacf7c5f0bcf83560bb2a2f5e}} 
+\index{timeintegration.h@{timeintegration.h}!NUM\_THREADS\_TREEDEPTH@{NUM\_THREADS\_TREEDEPTH}}
+\index{NUM\_THREADS\_TREEDEPTH@{NUM\_THREADS\_TREEDEPTH}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{NUM\_THREADS\_TREEDEPTH}{NUM\_THREADS\_TREEDEPTH}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+T\+H\+R\+E\+A\+D\+S\+\_\+\+T\+R\+E\+E\+D\+E\+P\+TH~128}
+
+
+
+Definition at line \mbox{\hyperlink{timeintegration_8h_source_l00282}{282}} of file \mbox{\hyperlink{timeintegration_8h_source}{timeintegration.\+h}}.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{timeintegration_8h_aacee04f8bf23d8594794f6952451678c}\label{timeintegration_8h_aacee04f8bf23d8594794f6952451678c}} 
+\index{timeintegration.h@{timeintegration.h}!calculate\_angular\_momentum@{calculate\_angular\_momentum}}
+\index{calculate\_angular\_momentum@{calculate\_angular\_momentum}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{calculate\_angular\_momentum()}{calculate\_angular\_momentum()}}
+{\footnotesize\ttfamily double calculate\+\_\+angular\+\_\+momentum (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{timeintegration_8h_a70cfbe20974882fb4ec99fcbadc51ad8}\label{timeintegration_8h_a70cfbe20974882fb4ec99fcbadc51ad8}} 
+\index{timeintegration.h@{timeintegration.h}!childListIndex@{childListIndex}}
+\index{childListIndex@{childListIndex}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{childListIndex()}{childListIndex()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ int child\+List\+Index (\begin{DoxyParamCaption}\item[{int}]{node\+Index,  }\item[{int}]{child\+Number }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{timeintegration_8h_ade36eee29fa2c10ccd913b3c3c3a4f73}\label{timeintegration_8h_ade36eee29fa2c10ccd913b3c3c3a4f73}} 
+\index{timeintegration.h@{timeintegration.h}!cleanupMaterials@{cleanupMaterials}}
+\index{cleanupMaterials@{cleanupMaterials}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{cleanupMaterials()}{cleanupMaterials()}}
+{\footnotesize\ttfamily void cleanup\+Materials (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{timeintegration_8h_aeb07186d62049f2b5568dedb0264bdd2}\label{timeintegration_8h_aeb07186d62049f2b5568dedb0264bdd2}} 
+\index{timeintegration.h@{timeintegration.h}!copyToHostAndWriteToFile@{copyToHostAndWriteToFile}}
+\index{copyToHostAndWriteToFile@{copyToHostAndWriteToFile}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{copyToHostAndWriteToFile()}{copyToHostAndWriteToFile()}}
+{\footnotesize\ttfamily void copy\+To\+Host\+And\+Write\+To\+File (\begin{DoxyParamCaption}\item[{int}]{timestep,  }\item[{int}]{last\+Timestep }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{timeintegration_8h_a21afcc6e2f3ce13ddaad8f60b8982f75}\label{timeintegration_8h_a21afcc6e2f3ce13ddaad8f60b8982f75}} 
+\index{timeintegration.h@{timeintegration.h}!damageLimit@{damageLimit}}
+\index{damageLimit@{damageLimit}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{damageLimit()}{damageLimit()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void damage\+Limit (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{timeintegration_8h_a888b4cc7c1dc59101c0c003d9d9a4b41}\label{timeintegration_8h_a888b4cc7c1dc59101c0c003d9d9a4b41}} 
+\index{timeintegration.h@{timeintegration.h}!detectVelocityRelaxation@{detectVelocityRelaxation}}
+\index{detectVelocityRelaxation@{detectVelocityRelaxation}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{detectVelocityRelaxation()}{detectVelocityRelaxation()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void detect\+Velocity\+Relaxation (\begin{DoxyParamCaption}\item[{int $\ast$}]{relaxed\+Per\+Block }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{timeintegration_8h_ae719f9295ddc3569385df8b7f4c7d798}\label{timeintegration_8h_ae719f9295ddc3569385df8b7f4c7d798}} 
+\index{timeintegration.h@{timeintegration.h}!euler@{euler}}
+\index{euler@{euler}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{euler()}{euler()}}
+{\footnotesize\ttfamily void euler (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{timeintegration_8h_a5fc41304be06304d2e64139168c4c87a}\label{timeintegration_8h_a5fc41304be06304d2e64139168c4c87a}} 
+\index{timeintegration.h@{timeintegration.h}!predictor\_corrector@{predictor\_corrector}}
+\index{predictor\_corrector@{predictor\_corrector}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{predictor\_corrector()}{predictor\_corrector()}}
+{\footnotesize\ttfamily void predictor\+\_\+corrector (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{timeintegration_8h_a21a28386432b23e725411429f4e64f39}\label{timeintegration_8h_a21a28386432b23e725411429f4e64f39}} 
+\index{timeintegration.h@{timeintegration.h}!predictor\_corrector\_euler@{predictor\_corrector\_euler}}
+\index{predictor\_corrector\_euler@{predictor\_corrector\_euler}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{predictor\_corrector\_euler()}{predictor\_corrector\_euler()}}
+{\footnotesize\ttfamily void predictor\+\_\+corrector\+\_\+euler (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{timeintegration_8h_ac83bf5e9a92c2318d6ec80dab45cfc6f}\label{timeintegration_8h_ac83bf5e9a92c2318d6ec80dab45cfc6f}} 
+\index{timeintegration.h@{timeintegration.h}!rk2Adaptive@{rk2Adaptive}}
+\index{rk2Adaptive@{rk2Adaptive}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{rk2Adaptive()}{rk2Adaptive()}}
+{\footnotesize\ttfamily void rk2\+Adaptive (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{timeintegration_8h_a8d397f459c27d904e86e97572c3de07a}\label{timeintegration_8h_a8d397f459c27d904e86e97572c3de07a}} 
+\index{timeintegration.h@{timeintegration.h}!stressIndex@{stressIndex}}
+\index{stressIndex@{stressIndex}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{stressIndex()}{stressIndex()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ int stress\+Index (\begin{DoxyParamCaption}\item[{int}]{particle\+Index,  }\item[{int}]{row,  }\item[{int}]{col }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{timeintegration_8h_ac975fd6d71ce6df7f03d462d5394248f}\label{timeintegration_8h_ac975fd6d71ce6df7f03d462d5394248f}} 
+\index{timeintegration.h@{timeintegration.h}!symmetrizeStress@{symmetrizeStress}}
+\index{symmetrizeStress@{symmetrizeStress}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{symmetrizeStress()}{symmetrizeStress()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void symmetrize\+Stress (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{timeintegration_8h_aea1cd6884e284ee6947e6a9a814abe70}\label{timeintegration_8h_aea1cd6884e284ee6947e6a9a814abe70}} 
+\index{timeintegration.h@{timeintegration.h}!timeIntegration@{timeIntegration}}
+\index{timeIntegration@{timeIntegration}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{timeIntegration()}{timeIntegration()}}
+{\footnotesize\ttfamily void time\+Integration (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{timeintegration_8h_ae4f2172b9971ceecb44e6101d17e3c97}\label{timeintegration_8h_ae4f2172b9971ceecb44e6101d17e3c97}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_bulk\_cs\_c@{aneos\_bulk\_cs\_c}}
+\index{aneos\_bulk\_cs\_c@{aneos\_bulk\_cs\_c}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_bulk\_cs\_c}{aneos\_bulk\_cs\_c}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ aneos\+\_\+bulk\+\_\+cs\+\_\+c\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aa0c44685ad6c49db71fd06fbbd4697a0}\label{timeintegration_8h_aa0c44685ad6c49db71fd06fbbd4697a0}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_bulk\_cs\_d@{aneos\_bulk\_cs\_d}}
+\index{aneos\_bulk\_cs\_d@{aneos\_bulk\_cs\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_bulk\_cs\_d}{aneos\_bulk\_cs\_d}}
+{\footnotesize\ttfamily double$\ast$ aneos\+\_\+bulk\+\_\+cs\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ab7e9ae06c8390341808d385560a6d26e}\label{timeintegration_8h_ab7e9ae06c8390341808d385560a6d26e}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_e\_c@{aneos\_e\_c}}
+\index{aneos\_e\_c@{aneos\_e\_c}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_e\_c}{aneos\_e\_c}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ aneos\+\_\+e\+\_\+c\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a101123cb5f5dfa72eaec13f4dc01635b}\label{timeintegration_8h_a101123cb5f5dfa72eaec13f4dc01635b}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_e\_d@{aneos\_e\_d}}
+\index{aneos\_e\_d@{aneos\_e\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_e\_d}{aneos\_e\_d}}
+{\footnotesize\ttfamily double$\ast$ aneos\+\_\+e\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a7558c25b1028b567f1101e4ad2dadd62}\label{timeintegration_8h_a7558c25b1028b567f1101e4ad2dadd62}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_e\_id\_c@{aneos\_e\_id\_c}}
+\index{aneos\_e\_id\_c@{aneos\_e\_id\_c}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_e\_id\_c}{aneos\_e\_id\_c}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ int$\ast$ aneos\+\_\+e\+\_\+id\+\_\+c\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a1eb8fa48ac518c44a2bb0688838ac43d}\label{timeintegration_8h_a1eb8fa48ac518c44a2bb0688838ac43d}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_e\_id\_d@{aneos\_e\_id\_d}}
+\index{aneos\_e\_id\_d@{aneos\_e\_id\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_e\_id\_d}{aneos\_e\_id\_d}}
+{\footnotesize\ttfamily int$\ast$ aneos\+\_\+e\+\_\+id\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a452139aec0ede802389161b56a6594b8}\label{timeintegration_8h_a452139aec0ede802389161b56a6594b8}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_matrix\_id\_c@{aneos\_matrix\_id\_c}}
+\index{aneos\_matrix\_id\_c@{aneos\_matrix\_id\_c}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_matrix\_id\_c}{aneos\_matrix\_id\_c}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ int$\ast$ aneos\+\_\+matrix\+\_\+id\+\_\+c\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_abcc8156f20d4f867b40ccde81d7b8d2e}\label{timeintegration_8h_abcc8156f20d4f867b40ccde81d7b8d2e}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_matrix\_id\_d@{aneos\_matrix\_id\_d}}
+\index{aneos\_matrix\_id\_d@{aneos\_matrix\_id\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_matrix\_id\_d}{aneos\_matrix\_id\_d}}
+{\footnotesize\ttfamily int$\ast$ aneos\+\_\+matrix\+\_\+id\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a27bfa2f35aaec358eab802ebf033af28}\label{timeintegration_8h_a27bfa2f35aaec358eab802ebf033af28}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_n\_e\_c@{aneos\_n\_e\_c}}
+\index{aneos\_n\_e\_c@{aneos\_n\_e\_c}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_n\_e\_c}{aneos\_n\_e\_c}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ int$\ast$ aneos\+\_\+n\+\_\+e\+\_\+c\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a21d95c4454d75641eecb14283628ba62}\label{timeintegration_8h_a21d95c4454d75641eecb14283628ba62}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_n\_e\_d@{aneos\_n\_e\_d}}
+\index{aneos\_n\_e\_d@{aneos\_n\_e\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_n\_e\_d}{aneos\_n\_e\_d}}
+{\footnotesize\ttfamily int$\ast$ aneos\+\_\+n\+\_\+e\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ace80f7dd21f976bf3277193df6dcb2d5}\label{timeintegration_8h_ace80f7dd21f976bf3277193df6dcb2d5}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_n\_rho\_c@{aneos\_n\_rho\_c}}
+\index{aneos\_n\_rho\_c@{aneos\_n\_rho\_c}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_n\_rho\_c}{aneos\_n\_rho\_c}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ int$\ast$ aneos\+\_\+n\+\_\+rho\+\_\+c\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_af47ebe09ded3d595cb5b3ca380c3692c}\label{timeintegration_8h_af47ebe09ded3d595cb5b3ca380c3692c}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_n\_rho\_d@{aneos\_n\_rho\_d}}
+\index{aneos\_n\_rho\_d@{aneos\_n\_rho\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_n\_rho\_d}{aneos\_n\_rho\_d}}
+{\footnotesize\ttfamily int$\ast$ aneos\+\_\+n\+\_\+rho\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a630b31c4394cbe64c7f7dac0f963da01}\label{timeintegration_8h_a630b31c4394cbe64c7f7dac0f963da01}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_p\_c@{aneos\_p\_c}}
+\index{aneos\_p\_c@{aneos\_p\_c}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_p\_c}{aneos\_p\_c}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ aneos\+\_\+p\+\_\+c\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a2dfbeb65f14f9b620d50a7b64830d5eb}\label{timeintegration_8h_a2dfbeb65f14f9b620d50a7b64830d5eb}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_p\_d@{aneos\_p\_d}}
+\index{aneos\_p\_d@{aneos\_p\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_p\_d}{aneos\_p\_d}}
+{\footnotesize\ttfamily double$\ast$ aneos\+\_\+p\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a3ab47a568802686599847643b24dff40}\label{timeintegration_8h_a3ab47a568802686599847643b24dff40}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_rho\_c@{aneos\_rho\_c}}
+\index{aneos\_rho\_c@{aneos\_rho\_c}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_rho\_c}{aneos\_rho\_c}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ aneos\+\_\+rho\+\_\+c\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a44c50d896c0215ecb070eadb76db174f}\label{timeintegration_8h_a44c50d896c0215ecb070eadb76db174f}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_rho\_d@{aneos\_rho\_d}}
+\index{aneos\_rho\_d@{aneos\_rho\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_rho\_d}{aneos\_rho\_d}}
+{\footnotesize\ttfamily double$\ast$ aneos\+\_\+rho\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ae4aad235ea223f37b1467faab25367db}\label{timeintegration_8h_ae4aad235ea223f37b1467faab25367db}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_rho\_id\_c@{aneos\_rho\_id\_c}}
+\index{aneos\_rho\_id\_c@{aneos\_rho\_id\_c}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_rho\_id\_c}{aneos\_rho\_id\_c}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ int$\ast$ aneos\+\_\+rho\+\_\+id\+\_\+c\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a6bcdc57faf535a97562d258475ba36fb}\label{timeintegration_8h_a6bcdc57faf535a97562d258475ba36fb}} 
+\index{timeintegration.h@{timeintegration.h}!aneos\_rho\_id\_d@{aneos\_rho\_id\_d}}
+\index{aneos\_rho\_id\_d@{aneos\_rho\_id\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{aneos\_rho\_id\_d}{aneos\_rho\_id\_d}}
+{\footnotesize\ttfamily int$\ast$ aneos\+\_\+rho\+\_\+id\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a9f3e41ac155a1023fb10cf9a5c03be7f}\label{timeintegration_8h_a9f3e41ac155a1023fb10cf9a5c03be7f}} 
+\index{timeintegration.h@{timeintegration.h}!bulk\_modulus@{bulk\_modulus}}
+\index{bulk\_modulus@{bulk\_modulus}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{bulk\_modulus}{bulk\_modulus}}
+{\footnotesize\ttfamily double$\ast$ bulk\+\_\+modulus\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a6096dd3bc10b588ce51f2e71358c138e}\label{timeintegration_8h_a6096dd3bc10b588ce51f2e71358c138e}} 
+\index{timeintegration.h@{timeintegration.h}!crushcurve\_style\_d@{crushcurve\_style\_d}}
+\index{crushcurve\_style\_d@{crushcurve\_style\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{crushcurve\_style\_d}{crushcurve\_style\_d}}
+{\footnotesize\ttfamily int$\ast$ crushcurve\+\_\+style\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a4a5f509327fb761831aebad8ad410698}\label{timeintegration_8h_a4a5f509327fb761831aebad8ad410698}} 
+\index{timeintegration.h@{timeintegration.h}!cs\_porous@{cs\_porous}}
+\index{cs\_porous@{cs\_porous}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{cs\_porous}{cs\_porous}}
+{\footnotesize\ttfamily double$\ast$ cs\+\_\+porous\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a272038ad264893a568c808f13d818b17}\label{timeintegration_8h_a272038ad264893a568c808f13d818b17}} 
+\index{timeintegration.h@{timeintegration.h}!currentTime@{currentTime}}
+\index{currentTime@{currentTime}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{currentTime}{currentTime}}
+{\footnotesize\ttfamily double current\+Time\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a6c3b611212a1cd8118377686486253d8}\label{timeintegration_8h_a6c3b611212a1cd8118377686486253d8}} 
+\index{timeintegration.h@{timeintegration.h}!dt\_host@{dt\_host}}
+\index{dt\_host@{dt\_host}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{dt\_host}{dt\_host}}
+{\footnotesize\ttfamily double dt\+\_\+host\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a58a0751f0f4a75ebd2f7ba31ea096ad2}\label{timeintegration_8h_a58a0751f0f4a75ebd2f7ba31ea096ad2}} 
+\index{timeintegration.h@{timeintegration.h}!h5time@{h5time}}
+\index{h5time@{h5time}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{h5time}{h5time}}
+{\footnotesize\ttfamily double h5time\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a49a8b920a395bc6031ccab2b6f6953ec}\label{timeintegration_8h_a49a8b920a395bc6031ccab2b6f6953ec}} 
+\index{timeintegration.h@{timeintegration.h}!integrator@{integrator}}
+\index{integrator@{integrator}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{integrator}{integrator}}
+{\footnotesize\ttfamily void($\ast$ integrator) ()\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a6a05323b3dc83c66d30f55afba046fda}\label{timeintegration_8h_a6a05323b3dc83c66d30f55afba046fda}} 
+\index{timeintegration.h@{timeintegration.h}!mat\_f\_sml\_max@{mat\_f\_sml\_max}}
+\index{mat\_f\_sml\_max@{mat\_f\_sml\_max}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{mat\_f\_sml\_max}{mat\_f\_sml\_max}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+\_\+f\+\_\+sml\+\_\+max\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ab1a954d91b091dd02b96ec6314e65a63}\label{timeintegration_8h_ab1a954d91b091dd02b96ec6314e65a63}} 
+\index{timeintegration.h@{timeintegration.h}!mat\_f\_sml\_max\_d@{mat\_f\_sml\_max\_d}}
+\index{mat\_f\_sml\_max\_d@{mat\_f\_sml\_max\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{mat\_f\_sml\_max\_d}{mat\_f\_sml\_max\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+\_\+f\+\_\+sml\+\_\+max\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ac61e25b7a183ba32f5a5e7a034e56189}\label{timeintegration_8h_ac61e25b7a183ba32f5a5e7a034e56189}} 
+\index{timeintegration.h@{timeintegration.h}!mat\_f\_sml\_min@{mat\_f\_sml\_min}}
+\index{mat\_f\_sml\_min@{mat\_f\_sml\_min}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{mat\_f\_sml\_min}{mat\_f\_sml\_min}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+\_\+f\+\_\+sml\+\_\+min\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ac24a1681734be438d766cf06d4db0e54}\label{timeintegration_8h_ac24a1681734be438d766cf06d4db0e54}} 
+\index{timeintegration.h@{timeintegration.h}!mat\_f\_sml\_min\_d@{mat\_f\_sml\_min\_d}}
+\index{mat\_f\_sml\_min\_d@{mat\_f\_sml\_min\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{mat\_f\_sml\_min\_d}{mat\_f\_sml\_min\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+\_\+f\+\_\+sml\+\_\+min\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aa44b52c070cb18feb3fb288fc85a6e52}\label{timeintegration_8h_aa44b52c070cb18feb3fb288fc85a6e52}} 
+\index{timeintegration.h@{timeintegration.h}!matAlpha@{matAlpha}}
+\index{matAlpha@{matAlpha}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matAlpha}{matAlpha}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Alpha\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a14ff6436f5d28394fc94a13572662bd8}\label{timeintegration_8h_a14ff6436f5d28394fc94a13572662bd8}} 
+\index{timeintegration.h@{timeintegration.h}!matAlpha\_d@{matAlpha\_d}}
+\index{matAlpha\_d@{matAlpha\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matAlpha\_d}{matAlpha\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Alpha\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aff4cbccbc231aa6be49245889aac988b}\label{timeintegration_8h_aff4cbccbc231aa6be49245889aac988b}} 
+\index{timeintegration.h@{timeintegration.h}!matAlphaPhi@{matAlphaPhi}}
+\index{matAlphaPhi@{matAlphaPhi}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matAlphaPhi}{matAlphaPhi}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Alpha\+Phi\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a1b3f8c044f3aafbda538a21258cec4a6}\label{timeintegration_8h_a1b3f8c044f3aafbda538a21258cec4a6}} 
+\index{timeintegration.h@{timeintegration.h}!matAlphaPhi\_d@{matAlphaPhi\_d}}
+\index{matAlphaPhi\_d@{matAlphaPhi\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matAlphaPhi\_d}{matAlphaPhi\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Alpha\+Phi\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a3e4093113f231dd9cf5d21ce270d8039}\label{timeintegration_8h_a3e4093113f231dd9cf5d21ce270d8039}} 
+\index{timeintegration.h@{timeintegration.h}!matBeta@{matBeta}}
+\index{matBeta@{matBeta}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matBeta}{matBeta}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Beta\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aef3c9e548fa2f98902e69036c6ae3f96}\label{timeintegration_8h_aef3c9e548fa2f98902e69036c6ae3f96}} 
+\index{timeintegration.h@{timeintegration.h}!matBeta\_d@{matBeta\_d}}
+\index{matBeta\_d@{matBeta\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matBeta\_d}{matBeta\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Beta\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a5bd3c83e31ac80158e75c665a0feaa56}\label{timeintegration_8h_a5bd3c83e31ac80158e75c665a0feaa56}} 
+\index{timeintegration.h@{timeintegration.h}!matBulkmodulus@{matBulkmodulus}}
+\index{matBulkmodulus@{matBulkmodulus}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matBulkmodulus}{matBulkmodulus}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Bulkmodulus\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ab7ac7f871c065ac5ff3dd76c7be46fbc}\label{timeintegration_8h_ab7ac7f871c065ac5ff3dd76c7be46fbc}} 
+\index{timeintegration.h@{timeintegration.h}!matBulkmodulus\_d@{matBulkmodulus\_d}}
+\index{matBulkmodulus\_d@{matBulkmodulus\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matBulkmodulus\_d}{matBulkmodulus\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Bulkmodulus\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a0a3a9a0c083edbdcede94cc0f29adb9a}\label{timeintegration_8h_a0a3a9a0c083edbdcede94cc0f29adb9a}} 
+\index{timeintegration.h@{timeintegration.h}!matCohesion@{matCohesion}}
+\index{matCohesion@{matCohesion}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matCohesion}{matCohesion}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Cohesion\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a1edff2114bd32903d489aca83348fd70}\label{timeintegration_8h_a1edff2114bd32903d489aca83348fd70}} 
+\index{timeintegration.h@{timeintegration.h}!matCohesion\_d@{matCohesion\_d}}
+\index{matCohesion\_d@{matCohesion\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matCohesion\_d}{matCohesion\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Cohesion\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ab93b06d007d95ce277a0955bdf1023e2}\label{timeintegration_8h_ab93b06d007d95ce277a0955bdf1023e2}} 
+\index{timeintegration.h@{timeintegration.h}!matCohesionCoefficient@{matCohesionCoefficient}}
+\index{matCohesionCoefficient@{matCohesionCoefficient}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matCohesionCoefficient}{matCohesionCoefficient}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Cohesion\+Coefficient\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ae46a98b9f9c0432c48224488c92e270b}\label{timeintegration_8h_ae46a98b9f9c0432c48224488c92e270b}} 
+\index{timeintegration.h@{timeintegration.h}!matCohesionCoefficient\_d@{matCohesionCoefficient\_d}}
+\index{matCohesionCoefficient\_d@{matCohesionCoefficient\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matCohesionCoefficient\_d}{matCohesionCoefficient\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Cohesion\+Coefficient\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a70a8474a0bac2dcb9da0e9dfa3277368}\label{timeintegration_8h_a70a8474a0bac2dcb9da0e9dfa3277368}} 
+\index{timeintegration.h@{timeintegration.h}!matcrushcurve\_style@{matcrushcurve\_style}}
+\index{matcrushcurve\_style@{matcrushcurve\_style}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matcrushcurve\_style}{matcrushcurve\_style}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ int$\ast$ matcrushcurve\+\_\+style\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ac6d4c6c7bed2d15e6b4ed6448e8d64cf}\label{timeintegration_8h_ac6d4c6c7bed2d15e6b4ed6448e8d64cf}} 
+\index{timeintegration.h@{timeintegration.h}!matcs\_porous@{matcs\_porous}}
+\index{matcs\_porous@{matcs\_porous}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matcs\_porous}{matcs\_porous}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matcs\+\_\+porous\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a9de56bedb6da6780cecd7fd665a75eed}\label{timeintegration_8h_a9de56bedb6da6780cecd7fd665a75eed}} 
+\index{timeintegration.h@{timeintegration.h}!matcs\_porous\_d@{matcs\_porous\_d}}
+\index{matcs\_porous\_d@{matcs\_porous\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matcs\_porous\_d}{matcs\_porous\_d}}
+{\footnotesize\ttfamily double$\ast$ matcs\+\_\+porous\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a2c246befd4f293f1fdfffda081d96a4d}\label{timeintegration_8h_a2c246befd4f293f1fdfffda081d96a4d}} 
+\index{timeintegration.h@{timeintegration.h}!matcs\_solid@{matcs\_solid}}
+\index{matcs\_solid@{matcs\_solid}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matcs\_solid}{matcs\_solid}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matcs\+\_\+solid\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a4fb9a879729f2c39dbdc022b2f876006}\label{timeintegration_8h_a4fb9a879729f2c39dbdc022b2f876006}} 
+\index{timeintegration.h@{timeintegration.h}!matcs\_solid\_d@{matcs\_solid\_d}}
+\index{matcs\_solid\_d@{matcs\_solid\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matcs\_solid\_d}{matcs\_solid\_d}}
+{\footnotesize\ttfamily double$\ast$ matcs\+\_\+solid\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aad22c37247de4a448e2eec3f2d7668ad}\label{timeintegration_8h_aad22c37247de4a448e2eec3f2d7668ad}} 
+\index{timeintegration.h@{timeintegration.h}!matEOS@{matEOS}}
+\index{matEOS@{matEOS}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matEOS}{matEOS}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ int$\ast$ mat\+E\+OS\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a3684351f83441cd76089b3f5cb10348d}\label{timeintegration_8h_a3684351f83441cd76089b3f5cb10348d}} 
+\index{timeintegration.h@{timeintegration.h}!matEOS\_d@{matEOS\_d}}
+\index{matEOS\_d@{matEOS\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matEOS\_d}{matEOS\_d}}
+{\footnotesize\ttfamily int$\ast$ mat\+E\+O\+S\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aa5c4bbc3d952509047743dfa18e0d32e}\label{timeintegration_8h_aa5c4bbc3d952509047743dfa18e0d32e}} 
+\index{timeintegration.h@{timeintegration.h}!matepsilon\_stress@{matepsilon\_stress}}
+\index{matepsilon\_stress@{matepsilon\_stress}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matepsilon\_stress}{matepsilon\_stress}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matepsilon\+\_\+stress\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_acd45816cf2b26bfe18698e9b893ff230}\label{timeintegration_8h_acd45816cf2b26bfe18698e9b893ff230}} 
+\index{timeintegration.h@{timeintegration.h}!materialId@{materialId}}
+\index{materialId@{materialId}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{materialId}{materialId}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ int$\ast$ material\+Id\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_afb2cc8fe27e0903b4c978936ff06b2c4}\label{timeintegration_8h_afb2cc8fe27e0903b4c978936ff06b2c4}} 
+\index{timeintegration.h@{timeintegration.h}!matexponent\_tensor@{matexponent\_tensor}}
+\index{matexponent\_tensor@{matexponent\_tensor}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matexponent\_tensor}{matexponent\_tensor}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matexponent\+\_\+tensor\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a720a61dd6152c8f4f332630e184829d4}\label{timeintegration_8h_a720a61dd6152c8f4f332630e184829d4}} 
+\index{timeintegration.h@{timeintegration.h}!matFrictionAngle@{matFrictionAngle}}
+\index{matFrictionAngle@{matFrictionAngle}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matFrictionAngle}{matFrictionAngle}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Friction\+Angle\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ab55e04e76f5ea8cce103bd364a405dfd}\label{timeintegration_8h_ab55e04e76f5ea8cce103bd364a405dfd}} 
+\index{timeintegration.h@{timeintegration.h}!matFrictionAngle\_d@{matFrictionAngle\_d}}
+\index{matFrictionAngle\_d@{matFrictionAngle\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matFrictionAngle\_d}{matFrictionAngle\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Friction\+Angle\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a2cad28253466371976e0bc6c96315b47}\label{timeintegration_8h_a2cad28253466371976e0bc6c96315b47}} 
+\index{timeintegration.h@{timeintegration.h}!matFrictionAngleDamaged@{matFrictionAngleDamaged}}
+\index{matFrictionAngleDamaged@{matFrictionAngleDamaged}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matFrictionAngleDamaged}{matFrictionAngleDamaged}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Friction\+Angle\+Damaged\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a69ed160ba323e709dc77548adc8ba2fb}\label{timeintegration_8h_a69ed160ba323e709dc77548adc8ba2fb}} 
+\index{timeintegration.h@{timeintegration.h}!matFrictionAngleDamaged\_d@{matFrictionAngleDamaged\_d}}
+\index{matFrictionAngleDamaged\_d@{matFrictionAngleDamaged\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matFrictionAngleDamaged\_d}{matFrictionAngleDamaged\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Friction\+Angle\+Damaged\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a1d4c04e7bb8efd4927abe151320cb9a4}\label{timeintegration_8h_a1d4c04e7bb8efd4927abe151320cb9a4}} 
+\index{timeintegration.h@{timeintegration.h}!matInternalFriction@{matInternalFriction}}
+\index{matInternalFriction@{matInternalFriction}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matInternalFriction}{matInternalFriction}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Internal\+Friction\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ad681ef650e43efd0f7051617df2c6775}\label{timeintegration_8h_ad681ef650e43efd0f7051617df2c6775}} 
+\index{timeintegration.h@{timeintegration.h}!matInternalFrictionDamaged@{matInternalFrictionDamaged}}
+\index{matInternalFrictionDamaged@{matInternalFrictionDamaged}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matInternalFrictionDamaged}{matInternalFrictionDamaged}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Internal\+Friction\+Damaged\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a0077dfe2e9b9c626043c9c7dbd5b69f9}\label{timeintegration_8h_a0077dfe2e9b9c626043c9c7dbd5b69f9}} 
+\index{timeintegration.h@{timeintegration.h}!matmean\_particle\_distance@{matmean\_particle\_distance}}
+\index{matmean\_particle\_distance@{matmean\_particle\_distance}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matmean\_particle\_distance}{matmean\_particle\_distance}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matmean\+\_\+particle\+\_\+distance\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a16f551b9e2a522feb7ad383a7103af74}\label{timeintegration_8h_a16f551b9e2a522feb7ad383a7103af74}} 
+\index{timeintegration.h@{timeintegration.h}!matN@{matN}}
+\index{matN@{matN}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matN}{matN}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matN\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ae2c28cd691c979bdf4c57130dbccccc5}\label{timeintegration_8h_ae2c28cd691c979bdf4c57130dbccccc5}} 
+\index{timeintegration.h@{timeintegration.h}!matN\_d@{matN\_d}}
+\index{matN\_d@{matN\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matN\_d}{matN\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+N\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ad1ed0179c2dbd99ebfc2b70abf0d0ed8}\label{timeintegration_8h_ad1ed0179c2dbd99ebfc2b70abf0d0ed8}} 
+\index{timeintegration.h@{timeintegration.h}!matnoi@{matnoi}}
+\index{matnoi@{matnoi}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matnoi}{matnoi}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ int$\ast$ matnoi\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a4441adfa1948612f2aadcfb2378b5330}\label{timeintegration_8h_a4441adfa1948612f2aadcfb2378b5330}} 
+\index{timeintegration.h@{timeintegration.h}!matnoi\_d@{matnoi\_d}}
+\index{matnoi\_d@{matnoi\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matnoi\_d}{matnoi\_d}}
+{\footnotesize\ttfamily int$\ast$ matnoi\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a892216a282edbaad2008fdaf8de503b9}\label{timeintegration_8h_a892216a282edbaad2008fdaf8de503b9}} 
+\index{timeintegration.h@{timeintegration.h}!matnu@{matnu}}
+\index{matnu@{matnu}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matnu}{matnu}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matnu\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a7863734cb88df196b5d8603a4ff36ff5}\label{timeintegration_8h_a7863734cb88df196b5d8603a4ff36ff5}} 
+\index{timeintegration.h@{timeintegration.h}!matnu\_d@{matnu\_d}}
+\index{matnu\_d@{matnu\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matnu\_d}{matnu\_d}}
+{\footnotesize\ttfamily double$\ast$ matnu\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a2c27b31b177ebcba1632ef5ffcf6298d}\label{timeintegration_8h_a2c27b31b177ebcba1632ef5ffcf6298d}} 
+\index{timeintegration.h@{timeintegration.h}!matPolytropicGamma@{matPolytropicGamma}}
+\index{matPolytropicGamma@{matPolytropicGamma}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matPolytropicGamma}{matPolytropicGamma}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Polytropic\+Gamma\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a67874191c369e641e194cb0e99ec944c}\label{timeintegration_8h_a67874191c369e641e194cb0e99ec944c}} 
+\index{timeintegration.h@{timeintegration.h}!matPolytropicGamma\_d@{matPolytropicGamma\_d}}
+\index{matPolytropicGamma\_d@{matPolytropicGamma\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matPolytropicGamma\_d}{matPolytropicGamma\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Polytropic\+Gamma\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a3573e343a61725d23fa2686b01adb8da}\label{timeintegration_8h_a3573e343a61725d23fa2686b01adb8da}} 
+\index{timeintegration.h@{timeintegration.h}!matPolytropicK@{matPolytropicK}}
+\index{matPolytropicK@{matPolytropicK}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matPolytropicK}{matPolytropicK}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+PolytropicK\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a043c81f76797bd484440ea4a564592f9}\label{timeintegration_8h_a043c81f76797bd484440ea4a564592f9}} 
+\index{timeintegration.h@{timeintegration.h}!matPolytropicK\_d@{matPolytropicK\_d}}
+\index{matPolytropicK\_d@{matPolytropicK\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matPolytropicK\_d}{matPolytropicK\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Polytropic\+K\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a3b1e7dfa414d959f4f25a75805b28842}\label{timeintegration_8h_a3b1e7dfa414d959f4f25a75805b28842}} 
+\index{timeintegration.h@{timeintegration.h}!matporepsilon\_alpha\_0@{matporepsilon\_alpha\_0}}
+\index{matporepsilon\_alpha\_0@{matporepsilon\_alpha\_0}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporepsilon\_alpha\_0}{matporepsilon\_alpha\_0}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporepsilon\+\_\+alpha\+\_\+0\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a59423d70fd36a20ffbddb25e6b1615df}\label{timeintegration_8h_a59423d70fd36a20ffbddb25e6b1615df}} 
+\index{timeintegration.h@{timeintegration.h}!matporepsilon\_alpha\_0\_d@{matporepsilon\_alpha\_0\_d}}
+\index{matporepsilon\_alpha\_0\_d@{matporepsilon\_alpha\_0\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporepsilon\_alpha\_0\_d}{matporepsilon\_alpha\_0\_d}}
+{\footnotesize\ttfamily double$\ast$ matporepsilon\+\_\+alpha\+\_\+0\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a7e8359692a9b2689894d6156c57428d7}\label{timeintegration_8h_a7e8359692a9b2689894d6156c57428d7}} 
+\index{timeintegration.h@{timeintegration.h}!matporepsilon\_epsilon\_c@{matporepsilon\_epsilon\_c}}
+\index{matporepsilon\_epsilon\_c@{matporepsilon\_epsilon\_c}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporepsilon\_epsilon\_c}{matporepsilon\_epsilon\_c}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporepsilon\+\_\+epsilon\+\_\+c\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a44db62ce508491ce1f552a6b84789516}\label{timeintegration_8h_a44db62ce508491ce1f552a6b84789516}} 
+\index{timeintegration.h@{timeintegration.h}!matporepsilon\_epsilon\_c\_d@{matporepsilon\_epsilon\_c\_d}}
+\index{matporepsilon\_epsilon\_c\_d@{matporepsilon\_epsilon\_c\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporepsilon\_epsilon\_c\_d}{matporepsilon\_epsilon\_c\_d}}
+{\footnotesize\ttfamily double$\ast$ matporepsilon\+\_\+epsilon\+\_\+c\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a5d3cecce05c2106ebbe6b762ad9dec45}\label{timeintegration_8h_a5d3cecce05c2106ebbe6b762ad9dec45}} 
+\index{timeintegration.h@{timeintegration.h}!matporepsilon\_epsilon\_e@{matporepsilon\_epsilon\_e}}
+\index{matporepsilon\_epsilon\_e@{matporepsilon\_epsilon\_e}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporepsilon\_epsilon\_e}{matporepsilon\_epsilon\_e}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporepsilon\+\_\+epsilon\+\_\+e\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a2a8c193bb4356b892a8ede14779d1d6d}\label{timeintegration_8h_a2a8c193bb4356b892a8ede14779d1d6d}} 
+\index{timeintegration.h@{timeintegration.h}!matporepsilon\_epsilon\_e\_d@{matporepsilon\_epsilon\_e\_d}}
+\index{matporepsilon\_epsilon\_e\_d@{matporepsilon\_epsilon\_e\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporepsilon\_epsilon\_e\_d}{matporepsilon\_epsilon\_e\_d}}
+{\footnotesize\ttfamily double$\ast$ matporepsilon\+\_\+epsilon\+\_\+e\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ad6622d057484d1869b398f741f3206aa}\label{timeintegration_8h_ad6622d057484d1869b398f741f3206aa}} 
+\index{timeintegration.h@{timeintegration.h}!matporepsilon\_epsilon\_x@{matporepsilon\_epsilon\_x}}
+\index{matporepsilon\_epsilon\_x@{matporepsilon\_epsilon\_x}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporepsilon\_epsilon\_x}{matporepsilon\_epsilon\_x}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporepsilon\+\_\+epsilon\+\_\+x\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a6c7fcab89e2a19fa2a2a3884c0226908}\label{timeintegration_8h_a6c7fcab89e2a19fa2a2a3884c0226908}} 
+\index{timeintegration.h@{timeintegration.h}!matporepsilon\_epsilon\_x\_d@{matporepsilon\_epsilon\_x\_d}}
+\index{matporepsilon\_epsilon\_x\_d@{matporepsilon\_epsilon\_x\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporepsilon\_epsilon\_x\_d}{matporepsilon\_epsilon\_x\_d}}
+{\footnotesize\ttfamily double$\ast$ matporepsilon\+\_\+epsilon\+\_\+x\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_adc05dc2ecb540597a37d3e195589e34e}\label{timeintegration_8h_adc05dc2ecb540597a37d3e195589e34e}} 
+\index{timeintegration.h@{timeintegration.h}!matporepsilon\_kappa@{matporepsilon\_kappa}}
+\index{matporepsilon\_kappa@{matporepsilon\_kappa}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporepsilon\_kappa}{matporepsilon\_kappa}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporepsilon\+\_\+kappa\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ad163dcb6c67a0bd47ce6812ac1b34151}\label{timeintegration_8h_ad163dcb6c67a0bd47ce6812ac1b34151}} 
+\index{timeintegration.h@{timeintegration.h}!matporepsilon\_kappa\_d@{matporepsilon\_kappa\_d}}
+\index{matporepsilon\_kappa\_d@{matporepsilon\_kappa\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporepsilon\_kappa\_d}{matporepsilon\_kappa\_d}}
+{\footnotesize\ttfamily double$\ast$ matporepsilon\+\_\+kappa\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ae5ee5e0a4e87b99b3dcd099a847237e6}\label{timeintegration_8h_ae5ee5e0a4e87b99b3dcd099a847237e6}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_alpha\_0@{matporjutzi\_alpha\_0}}
+\index{matporjutzi\_alpha\_0@{matporjutzi\_alpha\_0}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_alpha\_0}{matporjutzi\_alpha\_0}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporjutzi\+\_\+alpha\+\_\+0\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aa7675566cd922156b102f2cd879b3e63}\label{timeintegration_8h_aa7675566cd922156b102f2cd879b3e63}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_alpha\_0\_d@{matporjutzi\_alpha\_0\_d}}
+\index{matporjutzi\_alpha\_0\_d@{matporjutzi\_alpha\_0\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_alpha\_0\_d}{matporjutzi\_alpha\_0\_d}}
+{\footnotesize\ttfamily double$\ast$ matporjutzi\+\_\+alpha\+\_\+0\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a10b6dd1895fc553b839714468bd8f008}\label{timeintegration_8h_a10b6dd1895fc553b839714468bd8f008}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_alpha\_e@{matporjutzi\_alpha\_e}}
+\index{matporjutzi\_alpha\_e@{matporjutzi\_alpha\_e}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_alpha\_e}{matporjutzi\_alpha\_e}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporjutzi\+\_\+alpha\+\_\+e\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ab6260f10643f55c14f3948c63ff52354}\label{timeintegration_8h_ab6260f10643f55c14f3948c63ff52354}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_alpha\_e\_d@{matporjutzi\_alpha\_e\_d}}
+\index{matporjutzi\_alpha\_e\_d@{matporjutzi\_alpha\_e\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_alpha\_e\_d}{matporjutzi\_alpha\_e\_d}}
+{\footnotesize\ttfamily double$\ast$ matporjutzi\+\_\+alpha\+\_\+e\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_abea2a542b261837fc4570d7cfce236fd}\label{timeintegration_8h_abea2a542b261837fc4570d7cfce236fd}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_alpha\_t@{matporjutzi\_alpha\_t}}
+\index{matporjutzi\_alpha\_t@{matporjutzi\_alpha\_t}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_alpha\_t}{matporjutzi\_alpha\_t}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporjutzi\+\_\+alpha\+\_\+t\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a1998ea28e278edc1fad4101fd3f5710a}\label{timeintegration_8h_a1998ea28e278edc1fad4101fd3f5710a}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_alpha\_t\_d@{matporjutzi\_alpha\_t\_d}}
+\index{matporjutzi\_alpha\_t\_d@{matporjutzi\_alpha\_t\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_alpha\_t\_d}{matporjutzi\_alpha\_t\_d}}
+{\footnotesize\ttfamily double$\ast$ matporjutzi\+\_\+alpha\+\_\+t\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ac2219f33eab47f3a3235c846c14cd0ba}\label{timeintegration_8h_ac2219f33eab47f3a3235c846c14cd0ba}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_n1@{matporjutzi\_n1}}
+\index{matporjutzi\_n1@{matporjutzi\_n1}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_n1}{matporjutzi\_n1}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporjutzi\+\_\+n1\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a0a7ac91cecc598472913167eb6168b5d}\label{timeintegration_8h_a0a7ac91cecc598472913167eb6168b5d}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_n1\_d@{matporjutzi\_n1\_d}}
+\index{matporjutzi\_n1\_d@{matporjutzi\_n1\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_n1\_d}{matporjutzi\_n1\_d}}
+{\footnotesize\ttfamily double$\ast$ matporjutzi\+\_\+n1\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a4e4809bc501780aad2cb50133615fe29}\label{timeintegration_8h_a4e4809bc501780aad2cb50133615fe29}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_n2@{matporjutzi\_n2}}
+\index{matporjutzi\_n2@{matporjutzi\_n2}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_n2}{matporjutzi\_n2}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporjutzi\+\_\+n2\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a505e55238873754b8d6c1781d82cd850}\label{timeintegration_8h_a505e55238873754b8d6c1781d82cd850}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_n2\_d@{matporjutzi\_n2\_d}}
+\index{matporjutzi\_n2\_d@{matporjutzi\_n2\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_n2\_d}{matporjutzi\_n2\_d}}
+{\footnotesize\ttfamily double$\ast$ matporjutzi\+\_\+n2\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aa4a14281df36fda7999487f997944635}\label{timeintegration_8h_aa4a14281df36fda7999487f997944635}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_p\_compacted@{matporjutzi\_p\_compacted}}
+\index{matporjutzi\_p\_compacted@{matporjutzi\_p\_compacted}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_p\_compacted}{matporjutzi\_p\_compacted}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporjutzi\+\_\+p\+\_\+compacted\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a119c9cc237999fafbe1c731e11362165}\label{timeintegration_8h_a119c9cc237999fafbe1c731e11362165}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_p\_compacted\_d@{matporjutzi\_p\_compacted\_d}}
+\index{matporjutzi\_p\_compacted\_d@{matporjutzi\_p\_compacted\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_p\_compacted\_d}{matporjutzi\_p\_compacted\_d}}
+{\footnotesize\ttfamily double$\ast$ matporjutzi\+\_\+p\+\_\+compacted\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ad0e08a57865ecb920d5ba9f385354e97}\label{timeintegration_8h_ad0e08a57865ecb920d5ba9f385354e97}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_p\_elastic@{matporjutzi\_p\_elastic}}
+\index{matporjutzi\_p\_elastic@{matporjutzi\_p\_elastic}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_p\_elastic}{matporjutzi\_p\_elastic}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporjutzi\+\_\+p\+\_\+elastic\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a26f40e31f416e25c2681680b1f7cae2e}\label{timeintegration_8h_a26f40e31f416e25c2681680b1f7cae2e}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_p\_elastic\_d@{matporjutzi\_p\_elastic\_d}}
+\index{matporjutzi\_p\_elastic\_d@{matporjutzi\_p\_elastic\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_p\_elastic\_d}{matporjutzi\_p\_elastic\_d}}
+{\footnotesize\ttfamily double$\ast$ matporjutzi\+\_\+p\+\_\+elastic\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a163a34e9c2b63397106aac21177f61e3}\label{timeintegration_8h_a163a34e9c2b63397106aac21177f61e3}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_p\_transition@{matporjutzi\_p\_transition}}
+\index{matporjutzi\_p\_transition@{matporjutzi\_p\_transition}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_p\_transition}{matporjutzi\_p\_transition}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporjutzi\+\_\+p\+\_\+transition\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ae1d6060f960bf93bbd43a8a65fe59d94}\label{timeintegration_8h_ae1d6060f960bf93bbd43a8a65fe59d94}} 
+\index{timeintegration.h@{timeintegration.h}!matporjutzi\_p\_transition\_d@{matporjutzi\_p\_transition\_d}}
+\index{matporjutzi\_p\_transition\_d@{matporjutzi\_p\_transition\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporjutzi\_p\_transition\_d}{matporjutzi\_p\_transition\_d}}
+{\footnotesize\ttfamily double$\ast$ matporjutzi\+\_\+p\+\_\+transition\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a7673515442c3231145017a90d877ee0a}\label{timeintegration_8h_a7673515442c3231145017a90d877ee0a}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_alpha@{matporsirono\_alpha}}
+\index{matporsirono\_alpha@{matporsirono\_alpha}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_alpha}{matporsirono\_alpha}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporsirono\+\_\+alpha\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_abd00167b116cbf844062b5c5603fc8cb}\label{timeintegration_8h_abd00167b116cbf844062b5c5603fc8cb}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_alpha\_d@{matporsirono\_alpha\_d}}
+\index{matporsirono\_alpha\_d@{matporsirono\_alpha\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_alpha\_d}{matporsirono\_alpha\_d}}
+{\footnotesize\ttfamily double$\ast$ matporsirono\+\_\+alpha\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a13c8ee8be6f9d4c7a39201ccc91c1060}\label{timeintegration_8h_a13c8ee8be6f9d4c7a39201ccc91c1060}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_delta@{matporsirono\_delta}}
+\index{matporsirono\_delta@{matporsirono\_delta}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_delta}{matporsirono\_delta}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporsirono\+\_\+delta\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aba72c79ef54428da6ae2db4d9d21403b}\label{timeintegration_8h_aba72c79ef54428da6ae2db4d9d21403b}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_delta\_d@{matporsirono\_delta\_d}}
+\index{matporsirono\_delta\_d@{matporsirono\_delta\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_delta\_d}{matporsirono\_delta\_d}}
+{\footnotesize\ttfamily double$\ast$ matporsirono\+\_\+delta\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_abc10381fff10f22ab1a6c28047734860}\label{timeintegration_8h_abc10381fff10f22ab1a6c28047734860}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_gamma\_K@{matporsirono\_gamma\_K}}
+\index{matporsirono\_gamma\_K@{matporsirono\_gamma\_K}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_gamma\_K}{matporsirono\_gamma\_K}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporsirono\+\_\+gamma\+\_\+K\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a7f294789bc432899576079a9b7b357f7}\label{timeintegration_8h_a7f294789bc432899576079a9b7b357f7}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_gamma\_K\_d@{matporsirono\_gamma\_K\_d}}
+\index{matporsirono\_gamma\_K\_d@{matporsirono\_gamma\_K\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_gamma\_K\_d}{matporsirono\_gamma\_K\_d}}
+{\footnotesize\ttfamily double$\ast$ matporsirono\+\_\+gamma\+\_\+\+K\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ae0249e8e90dc7354f7da2bffd00341f1}\label{timeintegration_8h_ae0249e8e90dc7354f7da2bffd00341f1}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_K\_0@{matporsirono\_K\_0}}
+\index{matporsirono\_K\_0@{matporsirono\_K\_0}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_K\_0}{matporsirono\_K\_0}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporsirono\+\_\+\+K\+\_\+0\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a5228b62443fe9c3d3dab2e91846de4d5}\label{timeintegration_8h_a5228b62443fe9c3d3dab2e91846de4d5}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_K\_0\_d@{matporsirono\_K\_0\_d}}
+\index{matporsirono\_K\_0\_d@{matporsirono\_K\_0\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_K\_0\_d}{matporsirono\_K\_0\_d}}
+{\footnotesize\ttfamily double$\ast$ matporsirono\+\_\+\+K\+\_\+0\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_af98e0aa6750ee9b1e4bcb44471f41258}\label{timeintegration_8h_af98e0aa6750ee9b1e4bcb44471f41258}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_phi0@{matporsirono\_phi0}}
+\index{matporsirono\_phi0@{matporsirono\_phi0}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_phi0}{matporsirono\_phi0}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporsirono\+\_\+phi0\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_af4e1ade93af462b8d41c7cbb13e5769e}\label{timeintegration_8h_af4e1ade93af462b8d41c7cbb13e5769e}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_phi0\_d@{matporsirono\_phi0\_d}}
+\index{matporsirono\_phi0\_d@{matporsirono\_phi0\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_phi0\_d}{matporsirono\_phi0\_d}}
+{\footnotesize\ttfamily double$\ast$ matporsirono\+\_\+phi0\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ac0ec8e5bae0c456d668b56ec07ace192}\label{timeintegration_8h_ac0ec8e5bae0c456d668b56ec07ace192}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_phimax@{matporsirono\_phimax}}
+\index{matporsirono\_phimax@{matporsirono\_phimax}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_phimax}{matporsirono\_phimax}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporsirono\+\_\+phimax\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a4cce38779821d1d692544a3c18528dee}\label{timeintegration_8h_a4cce38779821d1d692544a3c18528dee}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_phimax\_d@{matporsirono\_phimax\_d}}
+\index{matporsirono\_phimax\_d@{matporsirono\_phimax\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_phimax\_d}{matporsirono\_phimax\_d}}
+{\footnotesize\ttfamily double$\ast$ matporsirono\+\_\+phimax\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aaa713da228b9788b3cee73f7e0515b01}\label{timeintegration_8h_aaa713da228b9788b3cee73f7e0515b01}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_pm@{matporsirono\_pm}}
+\index{matporsirono\_pm@{matporsirono\_pm}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_pm}{matporsirono\_pm}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporsirono\+\_\+pm\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a5b98599db1e03884ebc6381041e1aa63}\label{timeintegration_8h_a5b98599db1e03884ebc6381041e1aa63}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_pm\_d@{matporsirono\_pm\_d}}
+\index{matporsirono\_pm\_d@{matporsirono\_pm\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_pm\_d}{matporsirono\_pm\_d}}
+{\footnotesize\ttfamily double$\ast$ matporsirono\+\_\+pm\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aeb9278a1f276f824ebe2ada7bcdc00d2}\label{timeintegration_8h_aeb9278a1f276f824ebe2ada7bcdc00d2}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_rho\_0@{matporsirono\_rho\_0}}
+\index{matporsirono\_rho\_0@{matporsirono\_rho\_0}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_rho\_0}{matporsirono\_rho\_0}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporsirono\+\_\+rho\+\_\+0\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a4d251131a032485069d562affca71b7c}\label{timeintegration_8h_a4d251131a032485069d562affca71b7c}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_rho\_0\_d@{matporsirono\_rho\_0\_d}}
+\index{matporsirono\_rho\_0\_d@{matporsirono\_rho\_0\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_rho\_0\_d}{matporsirono\_rho\_0\_d}}
+{\footnotesize\ttfamily double$\ast$ matporsirono\+\_\+rho\+\_\+0\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a33441d6b8683551b93aa22fb3a9ac005}\label{timeintegration_8h_a33441d6b8683551b93aa22fb3a9ac005}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_rho\_s@{matporsirono\_rho\_s}}
+\index{matporsirono\_rho\_s@{matporsirono\_rho\_s}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_rho\_s}{matporsirono\_rho\_s}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matporsirono\+\_\+rho\+\_\+s\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a0a191d103426a3c0557fe3d50d34836c}\label{timeintegration_8h_a0a191d103426a3c0557fe3d50d34836c}} 
+\index{timeintegration.h@{timeintegration.h}!matporsirono\_rho\_s\_d@{matporsirono\_rho\_s\_d}}
+\index{matporsirono\_rho\_s\_d@{matporsirono\_rho\_s\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matporsirono\_rho\_s\_d}{matporsirono\_rho\_s\_d}}
+{\footnotesize\ttfamily double$\ast$ matporsirono\+\_\+rho\+\_\+s\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aebb33d4dbf50f65dcf2ae70d50446433}\label{timeintegration_8h_aebb33d4dbf50f65dcf2ae70d50446433}} 
+\index{timeintegration.h@{timeintegration.h}!matRho0@{matRho0}}
+\index{matRho0@{matRho0}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matRho0}{matRho0}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Rho0\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ac705af73b88b5a0d0cfe2fd93a3b5c3e}\label{timeintegration_8h_ac705af73b88b5a0d0cfe2fd93a3b5c3e}} 
+\index{timeintegration.h@{timeintegration.h}!matRho0\_d@{matRho0\_d}}
+\index{matRho0\_d@{matRho0\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matRho0\_d}{matRho0\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Rho0\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_afed7260a105483775f439f3c9a7403bd}\label{timeintegration_8h_afed7260a105483775f439f3c9a7403bd}} 
+\index{timeintegration.h@{timeintegration.h}!matRhoLimit@{matRhoLimit}}
+\index{matRhoLimit@{matRhoLimit}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matRhoLimit}{matRhoLimit}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Rho\+Limit\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_af6d1e6887d343f8e27b1257f1de552e4}\label{timeintegration_8h_af6d1e6887d343f8e27b1257f1de552e4}} 
+\index{timeintegration.h@{timeintegration.h}!matRhoLimit\_d@{matRhoLimit\_d}}
+\index{matRhoLimit\_d@{matRhoLimit\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matRhoLimit\_d}{matRhoLimit\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Rho\+Limit\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_af007f82768b7c88e51fdc6177687da7c}\label{timeintegration_8h_af007f82768b7c88e51fdc6177687da7c}} 
+\index{timeintegration.h@{timeintegration.h}!matShearmodulus@{matShearmodulus}}
+\index{matShearmodulus@{matShearmodulus}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matShearmodulus}{matShearmodulus}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Shearmodulus\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a431898edb1ba906793320f60f54b3037}\label{timeintegration_8h_a431898edb1ba906793320f60f54b3037}} 
+\index{timeintegration.h@{timeintegration.h}!matShearmodulus\_d@{matShearmodulus\_d}}
+\index{matShearmodulus\_d@{matShearmodulus\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matShearmodulus\_d}{matShearmodulus\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Shearmodulus\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ad2952da9a52b88fdb208c6926b546914}\label{timeintegration_8h_ad2952da9a52b88fdb208c6926b546914}} 
+\index{timeintegration.h@{timeintegration.h}!matSml@{matSml}}
+\index{matSml@{matSml}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matSml}{matSml}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Sml\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a0dc88b3ec8e33f317244afbbf757ca20}\label{timeintegration_8h_a0dc88b3ec8e33f317244afbbf757ca20}} 
+\index{timeintegration.h@{timeintegration.h}!matSml\_d@{matSml\_d}}
+\index{matSml\_d@{matSml\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matSml\_d}{matSml\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Sml\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a3613df9ff57e113755321bbfb4642394}\label{timeintegration_8h_a3613df9ff57e113755321bbfb4642394}} 
+\index{timeintegration.h@{timeintegration.h}!matTilla@{matTilla}}
+\index{matTilla@{matTilla}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTilla}{matTilla}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Tilla\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a4a6627b33a35ff5c483cccf6e7c5d5c2}\label{timeintegration_8h_a4a6627b33a35ff5c483cccf6e7c5d5c2}} 
+\index{timeintegration.h@{timeintegration.h}!matTillA@{matTillA}}
+\index{matTillA@{matTillA}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillA}{matTillA}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+TillA\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ac9079b7b7bb03e3465ee0471960ff985}\label{timeintegration_8h_ac9079b7b7bb03e3465ee0471960ff985}} 
+\index{timeintegration.h@{timeintegration.h}!matTilla\_d@{matTilla\_d}}
+\index{matTilla\_d@{matTilla\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTilla\_d}{matTilla\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Tilla\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aa848de6411e4e068c1850782ca03198d}\label{timeintegration_8h_aa848de6411e4e068c1850782ca03198d}} 
+\index{timeintegration.h@{timeintegration.h}!matTillA\_d@{matTillA\_d}}
+\index{matTillA\_d@{matTillA\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillA\_d}{matTillA\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Till\+A\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ad2409384296edbac96a76be4adfd8648}\label{timeintegration_8h_ad2409384296edbac96a76be4adfd8648}} 
+\index{timeintegration.h@{timeintegration.h}!matTillAlpha@{matTillAlpha}}
+\index{matTillAlpha@{matTillAlpha}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillAlpha}{matTillAlpha}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Till\+Alpha\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a55ebcad85bed2d8b9108982e8b41df82}\label{timeintegration_8h_a55ebcad85bed2d8b9108982e8b41df82}} 
+\index{timeintegration.h@{timeintegration.h}!matTillAlpha\_d@{matTillAlpha\_d}}
+\index{matTillAlpha\_d@{matTillAlpha\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillAlpha\_d}{matTillAlpha\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Till\+Alpha\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a0b9e61a5ca3b570042b9c456964ad490}\label{timeintegration_8h_a0b9e61a5ca3b570042b9c456964ad490}} 
+\index{timeintegration.h@{timeintegration.h}!matTillb@{matTillb}}
+\index{matTillb@{matTillb}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillb}{matTillb}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Tillb\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a08acea0c8206803e837aea416dbaac21}\label{timeintegration_8h_a08acea0c8206803e837aea416dbaac21}} 
+\index{timeintegration.h@{timeintegration.h}!matTillB@{matTillB}}
+\index{matTillB@{matTillB}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillB}{matTillB}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+TillB\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a7c6cae4b0899a0d3ad898c10b1d3024e}\label{timeintegration_8h_a7c6cae4b0899a0d3ad898c10b1d3024e}} 
+\index{timeintegration.h@{timeintegration.h}!matTillb\_d@{matTillb\_d}}
+\index{matTillb\_d@{matTillb\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillb\_d}{matTillb\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Tillb\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a22526f3762b6c8749f8b31adf0907439}\label{timeintegration_8h_a22526f3762b6c8749f8b31adf0907439}} 
+\index{timeintegration.h@{timeintegration.h}!matTillB\_d@{matTillB\_d}}
+\index{matTillB\_d@{matTillB\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillB\_d}{matTillB\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Till\+B\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ae6261d2976a1f4e4f13da547b2b377e8}\label{timeintegration_8h_ae6261d2976a1f4e4f13da547b2b377e8}} 
+\index{timeintegration.h@{timeintegration.h}!matTillBeta@{matTillBeta}}
+\index{matTillBeta@{matTillBeta}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillBeta}{matTillBeta}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Till\+Beta\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a39d5ebb00e3e9191efdc92ede3875f9f}\label{timeintegration_8h_a39d5ebb00e3e9191efdc92ede3875f9f}} 
+\index{timeintegration.h@{timeintegration.h}!matTillBeta\_d@{matTillBeta\_d}}
+\index{matTillBeta\_d@{matTillBeta\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillBeta\_d}{matTillBeta\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Till\+Beta\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a00c3b716a999139d1639a29d8f3a7045}\label{timeintegration_8h_a00c3b716a999139d1639a29d8f3a7045}} 
+\index{timeintegration.h@{timeintegration.h}!matTillE0@{matTillE0}}
+\index{matTillE0@{matTillE0}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillE0}{matTillE0}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Till\+E0\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ab625ba7b1f3fee1731fe8705a30bb728}\label{timeintegration_8h_ab625ba7b1f3fee1731fe8705a30bb728}} 
+\index{timeintegration.h@{timeintegration.h}!matTillE0\_d@{matTillE0\_d}}
+\index{matTillE0\_d@{matTillE0\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillE0\_d}{matTillE0\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Till\+E0\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ab75f5cc7fe479dcb95a8e328bd510472}\label{timeintegration_8h_ab75f5cc7fe479dcb95a8e328bd510472}} 
+\index{timeintegration.h@{timeintegration.h}!matTillEcv@{matTillEcv}}
+\index{matTillEcv@{matTillEcv}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillEcv}{matTillEcv}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Till\+Ecv\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a1676b5df20b48ce33528c00ce3184645}\label{timeintegration_8h_a1676b5df20b48ce33528c00ce3184645}} 
+\index{timeintegration.h@{timeintegration.h}!matTillEcv\_d@{matTillEcv\_d}}
+\index{matTillEcv\_d@{matTillEcv\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillEcv\_d}{matTillEcv\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Till\+Ecv\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aa27380a44359651705539e4cfc117d0d}\label{timeintegration_8h_aa27380a44359651705539e4cfc117d0d}} 
+\index{timeintegration.h@{timeintegration.h}!matTillEiv@{matTillEiv}}
+\index{matTillEiv@{matTillEiv}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillEiv}{matTillEiv}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Till\+Eiv\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a6ecb5db170130ad3c7046285b1ef4412}\label{timeintegration_8h_a6ecb5db170130ad3c7046285b1ef4412}} 
+\index{timeintegration.h@{timeintegration.h}!matTillEiv\_d@{matTillEiv\_d}}
+\index{matTillEiv\_d@{matTillEiv\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillEiv\_d}{matTillEiv\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Till\+Eiv\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ab8c4d7de8f985a5023f7477bc763ef40}\label{timeintegration_8h_ab8c4d7de8f985a5023f7477bc763ef40}} 
+\index{timeintegration.h@{timeintegration.h}!matTillRho0@{matTillRho0}}
+\index{matTillRho0@{matTillRho0}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillRho0}{matTillRho0}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Till\+Rho0\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_abffe1c8dc7dd3a319307a5c84c1bf52a}\label{timeintegration_8h_abffe1c8dc7dd3a319307a5c84c1bf52a}} 
+\index{timeintegration.h@{timeintegration.h}!matTillRho0\_d@{matTillRho0\_d}}
+\index{matTillRho0\_d@{matTillRho0\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matTillRho0\_d}{matTillRho0\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Till\+Rho0\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aac89127367f6df456815d67526014ee3}\label{timeintegration_8h_aac89127367f6df456815d67526014ee3}} 
+\index{timeintegration.h@{timeintegration.h}!matYieldStress@{matYieldStress}}
+\index{matYieldStress@{matYieldStress}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matYieldStress}{matYieldStress}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Yield\+Stress\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ac2fb086c1e389ce4b85265397bb4a0ae}\label{timeintegration_8h_ac2fb086c1e389ce4b85265397bb4a0ae}} 
+\index{timeintegration.h@{timeintegration.h}!matYieldStress\_d@{matYieldStress\_d}}
+\index{matYieldStress\_d@{matYieldStress\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matYieldStress\_d}{matYieldStress\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Yield\+Stress\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ae4f34a52048368f2c8eab168183b9191}\label{timeintegration_8h_ae4f34a52048368f2c8eab168183b9191}} 
+\index{timeintegration.h@{timeintegration.h}!matYoungModulus@{matYoungModulus}}
+\index{matYoungModulus@{matYoungModulus}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matYoungModulus}{matYoungModulus}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ mat\+Young\+Modulus\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ac0762c05eb2742959089a76d990ae3cf}\label{timeintegration_8h_ac0762c05eb2742959089a76d990ae3cf}} 
+\index{timeintegration.h@{timeintegration.h}!matYoungModulus\_d@{matYoungModulus\_d}}
+\index{matYoungModulus\_d@{matYoungModulus\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matYoungModulus\_d}{matYoungModulus\_d}}
+{\footnotesize\ttfamily double$\ast$ mat\+Young\+Modulus\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a23ffa4e4fb85e585927c399d704b8a81}\label{timeintegration_8h_a23ffa4e4fb85e585927c399d704b8a81}} 
+\index{timeintegration.h@{timeintegration.h}!matzeta@{matzeta}}
+\index{matzeta@{matzeta}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matzeta}{matzeta}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ matzeta\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a8ff794e55c190f84e978d99846c24e24}\label{timeintegration_8h_a8ff794e55c190f84e978d99846c24e24}} 
+\index{timeintegration.h@{timeintegration.h}!matzeta\_d@{matzeta\_d}}
+\index{matzeta\_d@{matzeta\_d}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{matzeta\_d}{matzeta\_d}}
+{\footnotesize\ttfamily double$\ast$ matzeta\+\_\+d\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a8071f72a9d4a16969693ee863dd4dbe1}\label{timeintegration_8h_a8071f72a9d4a16969693ee863dd4dbe1}} 
+\index{timeintegration.h@{timeintegration.h}!max\_abs\_pressure\_change@{max\_abs\_pressure\_change}}
+\index{max\_abs\_pressure\_change@{max\_abs\_pressure\_change}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{max\_abs\_pressure\_change}{max\_abs\_pressure\_change}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ double max\+\_\+abs\+\_\+pressure\+\_\+change\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a717f68f485eb342bb777d9dbea3b30e6}\label{timeintegration_8h_a717f68f485eb342bb777d9dbea3b30e6}} 
+\index{timeintegration.h@{timeintegration.h}!maxNodeIndex\_host@{maxNodeIndex\_host}}
+\index{maxNodeIndex\_host@{maxNodeIndex\_host}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{maxNodeIndex\_host}{maxNodeIndex\_host}}
+{\footnotesize\ttfamily int max\+Node\+Index\+\_\+host\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a0a51ab57e18c6bdc7baea94f1359d498}\label{timeintegration_8h_a0a51ab57e18c6bdc7baea94f1359d498}} 
+\index{timeintegration.h@{timeintegration.h}!maxNumFlaws@{maxNumFlaws}}
+\index{maxNumFlaws@{maxNumFlaws}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{maxNumFlaws}{maxNumFlaws}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ int max\+Num\+Flaws\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a4a761937631aa92a42314bbc2a415e6c}\label{timeintegration_8h_a4a761937631aa92a42314bbc2a415e6c}} 
+\index{timeintegration.h@{timeintegration.h}!maxNumParticles@{maxNumParticles}}
+\index{maxNumParticles@{maxNumParticles}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{maxNumParticles}{maxNumParticles}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ int max\+Num\+Particles\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a7f00ec370e9aef040c0b2831da3b71ce}\label{timeintegration_8h_a7f00ec370e9aef040c0b2831da3b71ce}} 
+\index{timeintegration.h@{timeintegration.h}!numberOfMaterials@{numberOfMaterials}}
+\index{numberOfMaterials@{numberOfMaterials}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{numberOfMaterials}{numberOfMaterials}}
+{\footnotesize\ttfamily int number\+Of\+Materials\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a228b22ece8bc2bc18f9b4442e3ebf552}\label{timeintegration_8h_a228b22ece8bc2bc18f9b4442e3ebf552}} 
+\index{timeintegration.h@{timeintegration.h}!numberOfTimesteps@{numberOfTimesteps}}
+\index{numberOfTimesteps@{numberOfTimesteps}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{numberOfTimesteps}{numberOfTimesteps}}
+{\footnotesize\ttfamily int number\+Of\+Timesteps\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_acf9cac2ae28ec52fe48fe2381912884a}\label{timeintegration_8h_acf9cac2ae28ec52fe48fe2381912884a}} 
+\index{timeintegration.h@{timeintegration.h}!numChildren@{numChildren}}
+\index{numChildren@{numChildren}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{numChildren}{numChildren}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ int num\+Children\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a404241ccbeab41e353de238c33074e7f}\label{timeintegration_8h_a404241ccbeab41e353de238c33074e7f}} 
+\index{timeintegration.h@{timeintegration.h}!numNodes@{numNodes}}
+\index{numNodes@{numNodes}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{numNodes}{numNodes}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ int num\+Nodes\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a40d97ea849bd3c92d6762a2c2e55f21f}\label{timeintegration_8h_a40d97ea849bd3c92d6762a2c2e55f21f}} 
+\index{timeintegration.h@{timeintegration.h}!numParticles@{numParticles}}
+\index{numParticles@{numParticles}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{numParticles}{numParticles}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ int num\+Particles\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a5a76fb3c65d0b67efab767b7feea24c3}\label{timeintegration_8h_a5a76fb3c65d0b67efab767b7feea24c3}} 
+\index{timeintegration.h@{timeintegration.h}!numPointmasses@{numPointmasses}}
+\index{numPointmasses@{numPointmasses}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{numPointmasses}{numPointmasses}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ int num\+Pointmasses\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ad2934c64153fe0ca8d8ae5797b53ec5e}\label{timeintegration_8h_ad2934c64153fe0ca8d8ae5797b53ec5e}} 
+\index{timeintegration.h@{timeintegration.h}!numRealParticles@{numRealParticles}}
+\index{numRealParticles@{numRealParticles}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{numRealParticles}{numRealParticles}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ int num\+Real\+Particles\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aabf2d912c2289161729037f032f7832e}\label{timeintegration_8h_aabf2d912c2289161729037f032f7832e}} 
+\index{timeintegration.h@{timeintegration.h}!relaxedPerBlock@{relaxedPerBlock}}
+\index{relaxedPerBlock@{relaxedPerBlock}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{relaxedPerBlock}{relaxedPerBlock}}
+{\footnotesize\ttfamily int$\ast$ relaxed\+Per\+Block\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_abecd46b516de41fd974cb4b7e1d96fb6}\label{timeintegration_8h_abecd46b516de41fd974cb4b7e1d96fb6}} 
+\index{timeintegration.h@{timeintegration.h}!scale\_height@{scale\_height}}
+\index{scale\_height@{scale\_height}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{scale\_height}{scale\_height}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ double scale\+\_\+height\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a8081340d58bc277e6a9164136a23872c}\label{timeintegration_8h_a8081340d58bc277e6a9164136a23872c}} 
+\index{timeintegration.h@{timeintegration.h}!sml@{sml}}
+\index{sml@{sml}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{sml}{sml}}
+{\footnotesize\ttfamily double$\ast$ sml\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a0a07a521d3525b9b7dc70c0a625adea0}\label{timeintegration_8h_a0a07a521d3525b9b7dc70c0a625adea0}} 
+\index{timeintegration.h@{timeintegration.h}!startTime@{startTime}}
+\index{startTime@{startTime}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{startTime}{startTime}}
+{\footnotesize\ttfamily double start\+Time\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a5aed643aa124d32fe1c43ae03990aa55}\label{timeintegration_8h_a5aed643aa124d32fe1c43ae03990aa55}} 
+\index{timeintegration.h@{timeintegration.h}!startTimestep@{startTimestep}}
+\index{startTimestep@{startTimestep}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{startTimestep}{startTimestep}}
+{\footnotesize\ttfamily int start\+Timestep\hspace{0.3cm}{\ttfamily [extern]}}
+
+\begin{DoxyAuthor}{Author}
+Christoph Schaefer \href{mailto:cm.schaefer@gmail.com}{\texttt{ cm.\+schaefer@gmail.\+com}} and Thomas I. Maindl
+\end{DoxyAuthor}
+\hypertarget{xsph_8h_LICENSE}{}\doxysubsection{L\+I\+C\+E\+N\+SE}\label{xsph_8h_LICENSE}
+Copyright (c) 2019 Christoph Schaefer
+
+This file is part of miluphcuda.
+
+miluphcuda is free software\+: you can redistribute it and/or modify it under the terms of the G\+NU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+miluphcuda is distributed in the hope that it will be useful, but W\+I\+T\+H\+O\+UT A\+NY W\+A\+R\+R\+A\+N\+TY; without even the implied warranty of M\+E\+R\+C\+H\+A\+N\+T\+A\+B\+I\+L\+I\+TY or F\+I\+T\+N\+E\+SS F\+OR A P\+A\+R\+T\+I\+C\+U\+L\+AR P\+U\+R\+P\+O\+SE. See the G\+NU General Public License for more details.
+
+You should have received a copy of the G\+NU General Public License along with miluphcuda. If not, see \href{http://www.gnu.org/licenses/}{\texttt{ http\+://www.\+gnu.\+org/licenses/}}. \mbox{\Hypertarget{timeintegration_8h_a59822940795faf2f262ff5fdb4f48f3b}\label{timeintegration_8h_a59822940795faf2f262ff5fdb4f48f3b}} 
+\index{timeintegration.h@{timeintegration.h}!tensorialCorrectiondWdrr@{tensorialCorrectiondWdrr}}
+\index{tensorialCorrectiondWdrr@{tensorialCorrectiondWdrr}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{tensorialCorrectiondWdrr}{tensorialCorrectiondWdrr}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ tensorial\+Correctiond\+Wdrr\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aaa87065c22a4f0eef5d62650f675efdb}\label{timeintegration_8h_aaa87065c22a4f0eef5d62650f675efdb}} 
+\index{timeintegration.h@{timeintegration.h}!tensorialCorrectionMatrix@{tensorialCorrectionMatrix}}
+\index{tensorialCorrectionMatrix@{tensorialCorrectionMatrix}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{tensorialCorrectionMatrix}{tensorialCorrectionMatrix}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double$\ast$ tensorial\+Correction\+Matrix\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_a55b4b57ff0890976692aae7ebc99a646}\label{timeintegration_8h_a55b4b57ff0890976692aae7ebc99a646}} 
+\index{timeintegration.h@{timeintegration.h}!theta@{theta}}
+\index{theta@{theta}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{theta}{theta}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ double theta\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_aee842e4d450666792e5cd8c6a7f6b9c1}\label{timeintegration_8h_aee842e4d450666792e5cd8c6a7f6b9c1}} 
+\index{timeintegration.h@{timeintegration.h}!till\_rho\_0@{till\_rho\_0}}
+\index{till\_rho\_0@{till\_rho\_0}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{till\_rho\_0}{till\_rho\_0}}
+{\footnotesize\ttfamily double$\ast$ till\+\_\+rho\+\_\+0\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{timeintegration_8h_ab85d10b965ecaf344a12fa36fec94cc5}\label{timeintegration_8h_ab85d10b965ecaf344a12fa36fec94cc5}} 
+\index{timeintegration.h@{timeintegration.h}!timePerStep@{timePerStep}}
+\index{timePerStep@{timePerStep}!timeintegration.h@{timeintegration.h}}
+\doxysubsubsection{\texorpdfstring{timePerStep}{timePerStep}}
+{\footnotesize\ttfamily double time\+Per\+Step\hspace{0.3cm}{\ttfamily [extern]}}
+

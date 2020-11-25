@@ -1,0 +1,345 @@
+\hypertarget{plasticity_8cu_source}{}\doxysection{plasticity.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 }
+\DoxyCodeLine{00025 }
+\DoxyCodeLine{00026 \#include "{}plasticity.h"{}}
+\DoxyCodeLine{00027 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00028 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00029 \#include "{}pressure.h"{}}
+\DoxyCodeLine{00030 \#include "{}float.h"{}}
+\DoxyCodeLine{00031 }
+\DoxyCodeLine{00032 \#if SOLID}
+\DoxyCodeLine{00033 \_\_global\_\_ void plasticity()}
+\DoxyCodeLine{00034 \{}
+\DoxyCodeLine{00035     register int i, inc, matId, d, e;}
+\DoxyCodeLine{00036     register double alpha\_phi, kc, I1, sqrt\_J2, rn;}
+\DoxyCodeLine{00037 \#if DIM == 2}
+\DoxyCodeLine{00038     register double shear, bulk, poissons\_ratio, sz;}
+\DoxyCodeLine{00039 \#endif}
+\DoxyCodeLine{00040     register double S\_i[DIM][DIM];}
+\DoxyCodeLine{00041     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00042     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00043         matId = p\_rhs.materialId[i];}
+\DoxyCodeLine{00044         if (EOS\_TYPE\_REGOLITH == matEOS[matId]) \{}
+\DoxyCodeLine{00045 }
+\DoxyCodeLine{00046             alpha\_phi = matAlphaPhi[matId];}
+\DoxyCodeLine{00047             kc = matCohesionCoefficient[matId];}
+\DoxyCodeLine{00048 }
+\DoxyCodeLine{00049 }
+\DoxyCodeLine{00050 \#if DIM == 2}
+\DoxyCodeLine{00051             shear = matShearmodulus[matId];}
+\DoxyCodeLine{00052             bulk = matBulkmodulus[matId];}
+\DoxyCodeLine{00053             poissons\_ratio = (3*bulk -\/ 2*shear) / (2*(3*bulk + shear));}
+\DoxyCodeLine{00054             I1 = (1 + poissons\_ratio) * (p.S[stressIndex(i, 0, 0)] + p.S[stressIndex(i, 1, 1)]);}
+\DoxyCodeLine{00055 \#else}
+\DoxyCodeLine{00056             I1 = p.S[stressIndex(i,0,0)] + p.S[stressIndex(i,1,1)] + p.S[stressIndex(i,2,2)];}
+\DoxyCodeLine{00057 \#endif}
+\DoxyCodeLine{00058 }
+\DoxyCodeLine{00059 }
+\DoxyCodeLine{00060             //Tension cracking treatment}
+\DoxyCodeLine{00061             //Equation 29, Bui et al., 2008}
+\DoxyCodeLine{00062             if (-\/I1*alpha\_phi + kc < 0) \{}
+\DoxyCodeLine{00063                 for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00064                     p.S[stressIndex(i, d, d)] -\/= (I1 -\/ kc/alpha\_phi)/3.0;}
+\DoxyCodeLine{00065                 \}}
+\DoxyCodeLine{00066             \}}
+\DoxyCodeLine{00067 }
+\DoxyCodeLine{00068 \#if DIM == 2}
+\DoxyCodeLine{00069             I1 = (1 + poissons\_ratio) * (p.S[stressIndex(i, 0, 0)] + p.S[stressIndex(i, 1, 1)]);}
+\DoxyCodeLine{00070 \#else}
+\DoxyCodeLine{00071             I1 = p.S[stressIndex(i,0,0)] + p.S[stressIndex(i,1,1)] + p.S[stressIndex(i,2,2)];}
+\DoxyCodeLine{00072 \#endif}
+\DoxyCodeLine{00073 }
+\DoxyCodeLine{00074 }
+\DoxyCodeLine{00075             //get S}
+\DoxyCodeLine{00076             for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00077                 for (e = 0; e < DIM; e++) \{}
+\DoxyCodeLine{00078                     S\_i[d][e] = p.S[stressIndex(i, d, e)];}
+\DoxyCodeLine{00079                 \}}
+\DoxyCodeLine{00080                 S\_i[d][d] -\/= I1/3.0;}
+\DoxyCodeLine{00081             \}}
+\DoxyCodeLine{00082 \#if DIM == 2}
+\DoxyCodeLine{00083             sz = poissons\_ratio*(S\_i[0][0] + S\_i[1][1]);}
+\DoxyCodeLine{00084 \#endif}
+\DoxyCodeLine{00085 }
+\DoxyCodeLine{00086             sqrt\_J2 = 0.0;}
+\DoxyCodeLine{00087             for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00088                 for (e = 0; e < DIM; e++) \{}
+\DoxyCodeLine{00089                     sqrt\_J2 += S\_i[d][e]*S\_i[d][e];}
+\DoxyCodeLine{00090                 \}}
+\DoxyCodeLine{00091             \}}
+\DoxyCodeLine{00092 \#if DIM == 2}
+\DoxyCodeLine{00093             sqrt\_J2 += sz*sz;}
+\DoxyCodeLine{00094 \#endif}
+\DoxyCodeLine{00095             sqrt\_J2 *= 0.5;}
+\DoxyCodeLine{00096             sqrt\_J2 = sqrt(sqrt\_J2);}
+\DoxyCodeLine{00097 }
+\DoxyCodeLine{00098 }
+\DoxyCodeLine{00099             //stress-\/scaling}
+\DoxyCodeLine{00100             //Equation 31, Bui et al., 2008}
+\DoxyCodeLine{00101             if (sqrt\_J2 > 0) \{}
+\DoxyCodeLine{00102                 rn = (-\/I1*alpha\_phi + kc) / sqrt\_J2;}
+\DoxyCodeLine{00103                 rn = min(rn, 1.0);}
+\DoxyCodeLine{00104                 for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00105                     for (e = 0; e < DIM; e++) \{}
+\DoxyCodeLine{00106                         p.S[stressIndex(i, d, e)] = rn*S\_i[d][e];}
+\DoxyCodeLine{00107                     \}}
+\DoxyCodeLine{00108                     p.S[stressIndex(i, d, d)] += I1/3.0;}
+\DoxyCodeLine{00109                 \}}
+\DoxyCodeLine{00110             \}}
+\DoxyCodeLine{00111 }
+\DoxyCodeLine{00112 }
+\DoxyCodeLine{00113         \} //end if (EOS\_TYPE\_REGOLITH)}
+\DoxyCodeLine{00114     \}}
+\DoxyCodeLine{00115 \}}
+\DoxyCodeLine{00116 \#endif}
+\DoxyCodeLine{00117 }
+\DoxyCodeLine{00118 \#if SOLID}
+\DoxyCodeLine{00119 \_\_global\_\_ void vonMisesPlasticity(void) \{}
+\DoxyCodeLine{00120     // introduce plastic behaviour by limiting the deviatoric stress}
+\DoxyCodeLine{00121     register int i, inc, d, e;}
+\DoxyCodeLine{00122     register double mises\_f, tmp;}
+\DoxyCodeLine{00123     register double I1, J2, sqrt\_J2;}
+\DoxyCodeLine{00124     register double y, y\_i, y\_M, y\_0, ytmp;}
+\DoxyCodeLine{00125     register double damage;}
+\DoxyCodeLine{00126     /* drucker prager constants */}
+\DoxyCodeLine{00127     register double A, B;}
+\DoxyCodeLine{00128     double mu\_i, mu\_d; // coefficients of internal friction}
+\DoxyCodeLine{00129 }
+\DoxyCodeLine{00130     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00131     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00132         // VISCOUS\_REGOLITH is treated in timeintegration.cu when \(\backslash\)sigma is calculated}
+\DoxyCodeLine{00133         if (matEOS[p\_rhs.materialId[i]] == EOS\_TYPE\_VISCOUS\_REGOLITH) \{}
+\DoxyCodeLine{00134             continue;}
+\DoxyCodeLine{00135         \}}
+\DoxyCodeLine{00136 }
+\DoxyCodeLine{00137         /* second invariant of the stress tensor */}
+\DoxyCodeLine{00138         J2 = 0;}
+\DoxyCodeLine{00139         mises\_f = 1;}
+\DoxyCodeLine{00140 }
+\DoxyCodeLine{00141         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00142             for (e = 0; e < DIM; e++) \{}
+\DoxyCodeLine{00143                 tmp = p.S[stressIndex(i, d, e)];}
+\DoxyCodeLine{00144                 J2 += tmp*tmp;}
+\DoxyCodeLine{00145             \}}
+\DoxyCodeLine{00146         \}}
+\DoxyCodeLine{00147 }
+\DoxyCodeLine{00148         J2 *= 0.5;}
+\DoxyCodeLine{00149         sqrt\_J2 = sqrt(J2);}
+\DoxyCodeLine{00150 }
+\DoxyCodeLine{00151         /* first invariant of the stress tensor */}
+\DoxyCodeLine{00152         I1 = -\/3.0 * p.p[i];}
+\DoxyCodeLine{00153 }
+\DoxyCodeLine{00154 }
+\DoxyCodeLine{00155 \#if MOHR\_COULOMB\_PLASTICITY}
+\DoxyCodeLine{00156         // mohr coulomb yield criterion}
+\DoxyCodeLine{00157         // matInternalFriction = \(\backslash\)mu = tan(matFrictionAngle)}
+\DoxyCodeLine{00158         y = matCohesion[p\_rhs.materialId[i]];}
+\DoxyCodeLine{00159         if (p.p[i] > 0) \{}
+\DoxyCodeLine{00160             y += matInternalFriction[p\_rhs.materialId[i]] * p.p[i];}
+\DoxyCodeLine{00161         \}}
+\DoxyCodeLine{00162         // drucker prager like -\/> compare to sqrt(J2)}
+\DoxyCodeLine{00163         if (J2 > 0) \{}
+\DoxyCodeLine{00164             mises\_f = y/sqrt\_J2;}
+\DoxyCodeLine{00165         \}}
+\DoxyCodeLine{00166 }
+\DoxyCodeLine{00167         if (mises\_f > 1)}
+\DoxyCodeLine{00168             mises\_f = 1;}
+\DoxyCodeLine{00169 \#elif DRUCKER\_PRAGER\_PLASTICITY}
+\DoxyCodeLine{00170         A = B = 0;}
+\DoxyCodeLine{00171         // drucker prager constants from mohr-\/coulomb constants -\/> 3D!}
+\DoxyCodeLine{00172         A = 6. * matCohesion[p\_rhs.materialId[i]] * cos(matFrictionAngle[p\_rhs.materialId[i]])}
+\DoxyCodeLine{00173                 / (sqrt(3.) * (3. -\/ sin(matFrictionAngle[p\_rhs.materialId[i]])));}
+\DoxyCodeLine{00174         B = 2. * sin(matFrictionAngle[p\_rhs.materialId[i]]) / (sqrt(3.) * (3. -\/ sin(matFrictionAngle[p\_rhs.materialId[i]])));}
+\DoxyCodeLine{00175 }
+\DoxyCodeLine{00176         // yield strength determined by drucker prager condition}
+\DoxyCodeLine{00177         y = A;}
+\DoxyCodeLine{00178         if (p.p[i] > 0) \{}
+\DoxyCodeLine{00179             y += 3.0*p.p[i]*B;}
+\DoxyCodeLine{00180         \}}
+\DoxyCodeLine{00181         // drucker prager like -\/> compare to sqrt(J2)}
+\DoxyCodeLine{00182         if (J2 > 0) \{}
+\DoxyCodeLine{00183             mises\_f = y/sqrt\_J2;}
+\DoxyCodeLine{00184         \}}
+\DoxyCodeLine{00185 }
+\DoxyCodeLine{00186         if (mises\_f > 1)}
+\DoxyCodeLine{00187             mises\_f = 1;}
+\DoxyCodeLine{00188 \#elif COLLINS\_PRESSURE\_DEPENDENT\_YIELD\_STRENGTH}
+\DoxyCodeLine{00189         y\_0 = matCohesion[p\_rhs.materialId[i]];}
+\DoxyCodeLine{00190         y\_M = matYieldStress[p\_rhs.materialId[i]];}
+\DoxyCodeLine{00191         mu\_i = matInternalFriction[p\_rhs.materialId[i]];}
+\DoxyCodeLine{00192 \#if FRAGMENTATION}
+\DoxyCodeLine{00193         mu\_d = matInternalFrictionDamaged[p\_rhs.materialId[i]];}
+\DoxyCodeLine{00194 \#endif}
+\DoxyCodeLine{00195         // shear strength of the intact material}
+\DoxyCodeLine{00196         ytmp = y\_0;}
+\DoxyCodeLine{00197         if (p.p[i] > 0) \{}
+\DoxyCodeLine{00198             ytmp += mu\_i * p.p[i]}
+\DoxyCodeLine{00199                 / (1 + mu\_i * p.p[i]  / (y\_M -\/ y\_0) );}
+\DoxyCodeLine{00200         \} else \{}
+\DoxyCodeLine{00201             ytmp = y\_0;}
+\DoxyCodeLine{00202         \}}
+\DoxyCodeLine{00203 \#if FRAGMENTATION}
+\DoxyCodeLine{00204         damage = p.damage\_total[i];}
+\DoxyCodeLine{00205         if (damage > 1) damage = 1.0;}
+\DoxyCodeLine{00206         // yield strength of damaged material}
+\DoxyCodeLine{00207         if (p.p[i] > 0) \{}
+\DoxyCodeLine{00208             y = mu\_d * p.p[i];}
+\DoxyCodeLine{00209             /* limit the yield strength of damaged material to the yield strength of intact material */}
+\DoxyCodeLine{00210             if (damage < 1) \{}
+\DoxyCodeLine{00211                 y = (1-\/damage) * ytmp + damage*y;}
+\DoxyCodeLine{00212                 if (y > ytmp) y = ytmp;}
+\DoxyCodeLine{00213             \}}
+\DoxyCodeLine{00214         \} else \{}
+\DoxyCodeLine{00215             y = y\_0;}
+\DoxyCodeLine{00216         \}}
+\DoxyCodeLine{00217 \#else}
+\DoxyCodeLine{00218         y = ytmp;}
+\DoxyCodeLine{00219 \#endif}
+\DoxyCodeLine{00220         // drucker prager like -\/> compare to sqrt(J2)}
+\DoxyCodeLine{00221         if (J2 > 0) \{}
+\DoxyCodeLine{00222             mises\_f = y/sqrt\_J2;}
+\DoxyCodeLine{00223         \}}
+\DoxyCodeLine{00224 }
+\DoxyCodeLine{00225         if (mises\_f > 1)}
+\DoxyCodeLine{00226             mises\_f = 1;}
+\DoxyCodeLine{00227 \#else // simple von Mises yield criterion without *any* dependency}
+\DoxyCodeLine{00228         y = matYieldStress[p\_rhs.materialId[i]];}
+\DoxyCodeLine{00229 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00230         // Shear Strength using Sironos Model}
+\DoxyCodeLine{00231         if (matEOS[p\_rhs.materialId[i]] == EOS\_TYPE\_SIRONO) \{}
+\DoxyCodeLine{00232             y = sqrt((-\/1.0) * p.tensile\_strength[i] * p.compressive\_strength[i]);}
+\DoxyCodeLine{00233             p.shear\_strength[i] = y;}
+\DoxyCodeLine{00234         \} else \{}
+\DoxyCodeLine{00235             p.shear\_strength[i] = DBL\_MAX;}
+\DoxyCodeLine{00236             y = p.shear\_strength[i];}
+\DoxyCodeLine{00237         \}}
+\DoxyCodeLine{00238 \#endif}
+\DoxyCodeLine{00239         // von mises limit like}
+\DoxyCodeLine{00240         if (J2 > 0) \{}
+\DoxyCodeLine{00241             mises\_f = y*y/(3*J2);}
+\DoxyCodeLine{00242         \}}
+\DoxyCodeLine{00243 }
+\DoxyCodeLine{00244         if (mises\_f > 1)}
+\DoxyCodeLine{00245             mises\_f = 1;}
+\DoxyCodeLine{00246 \#endif}
+\DoxyCodeLine{00247 }
+\DoxyCodeLine{00248         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00249             for (e = 0; e < DIM; e++) \{}
+\DoxyCodeLine{00250                 p.S[stressIndex(i, d, e)] *= mises\_f;}
+\DoxyCodeLine{00251             \}}
+\DoxyCodeLine{00252         \}}
+\DoxyCodeLine{00253     \}}
+\DoxyCodeLine{00254 \}}
+\DoxyCodeLine{00255 }
+\DoxyCodeLine{00256 \#endif}
+\DoxyCodeLine{00257 }
+\DoxyCodeLine{00258 }
+\DoxyCodeLine{00259 }
+\DoxyCodeLine{00260 }
+\DoxyCodeLine{00261 }
+\DoxyCodeLine{00262 \#if SOLID}
+\DoxyCodeLine{00263 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00264 \_\_global\_\_ void JohnsonCookPlasticity(void) \{}
+\DoxyCodeLine{00265     // introduce plastic behaviour by limiting the deviatoric stress}
+\DoxyCodeLine{00266     register int i, inc, d, e;}
+\DoxyCodeLine{00267     register double J2, jc\_f, y\_0, tmp;}
+\DoxyCodeLine{00268 }
+\DoxyCodeLine{00269     register double y\_jc = 0;}
+\DoxyCodeLine{00270     register double T\_star = 0;}
+\DoxyCodeLine{00271     register double B, n, m, edot0, C, Tref, Tmelt;}
+\DoxyCodeLine{00272     /*register double Cp, CV;*/}
+\DoxyCodeLine{00273 }
+\DoxyCodeLine{00274     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00275     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00276 }
+\DoxyCodeLine{00277         J2 = 0;}
+\DoxyCodeLine{00278         jc\_f = 1;}
+\DoxyCodeLine{00279         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00280             for (e = 0; e < DIM; e++) \{}
+\DoxyCodeLine{00281                 tmp = p.S[stressIndex(i, d, e)];}
+\DoxyCodeLine{00282                 J2 += tmp*tmp;}
+\DoxyCodeLine{00283             \}}
+\DoxyCodeLine{00284         \}}
+\DoxyCodeLine{00285 }
+\DoxyCodeLine{00286 }
+\DoxyCodeLine{00287         y\_0 = matjc\_y0[p\_rhs.materialId[i]];}
+\DoxyCodeLine{00288         B = matjc\_B[p\_rhs.materialId[i]];}
+\DoxyCodeLine{00289         n = matjc\_n[p\_rhs.materialId[i]];}
+\DoxyCodeLine{00290         m = matjc\_m[p\_rhs.materialId[i]];}
+\DoxyCodeLine{00291         edot0 = matjc\_edot0[p\_rhs.materialId[i]];}
+\DoxyCodeLine{00292         C = matjc\_C[p\_rhs.materialId[i]];}
+\DoxyCodeLine{00293         Tref = matjc\_Tref[p\_rhs.materialId[i]];}
+\DoxyCodeLine{00294         Tmelt = matjc\_Tmelt[p\_rhs.materialId[i]];}
+\DoxyCodeLine{00295         /*Cp = matCp[p\_rhs.materialId[i]];*/}
+\DoxyCodeLine{00296         /*CV = matCV[p\_rhs.materialId[i]];*/}
+\DoxyCodeLine{00297 }
+\DoxyCodeLine{00298         register double edotp = p.edotp[i];}
+\DoxyCodeLine{00299         register double ep = p.ep[i];}
+\DoxyCodeLine{00300         register double T = p.T[i];}
+\DoxyCodeLine{00301 }
+\DoxyCodeLine{00302         // T\_star has to be different for different cases, otherwise we have complex numbers and nans}
+\DoxyCodeLine{00303         if (T < Tref) \{}
+\DoxyCodeLine{00304             T\_star = 0;}
+\DoxyCodeLine{00305         \} else if (T > Tmelt) \{}
+\DoxyCodeLine{00306             T\_star = 1;}
+\DoxyCodeLine{00307         \} else \{}
+\DoxyCodeLine{00308             T\_star = (T -\/ Tref) / (Tmelt -\/ Tref);}
+\DoxyCodeLine{00309         \}}
+\DoxyCodeLine{00310 }
+\DoxyCodeLine{00311 }
+\DoxyCodeLine{00312         // Calculating flow stress according to Johnson and Cook}
+\DoxyCodeLine{00313         if (edotp > 0) \{}
+\DoxyCodeLine{00314             y\_jc = (y\_0 + B*(pow(ep,n))) * (1 + C*log(edotp / edot0)) * (1 -\/ pow(T\_star,m));}
+\DoxyCodeLine{00315         \} else \{}
+\DoxyCodeLine{00316             y\_jc = y\_0;}
+\DoxyCodeLine{00317         \}}
+\DoxyCodeLine{00318 }
+\DoxyCodeLine{00319 }
+\DoxyCodeLine{00320         y\_jc = y\_jc * y\_jc;}
+\DoxyCodeLine{00321         J2 = J2 * 1.5;}
+\DoxyCodeLine{00322         if (J2 > y\_jc)}
+\DoxyCodeLine{00323             jc\_f = y\_jc/J2;}
+\DoxyCodeLine{00324         else}
+\DoxyCodeLine{00325             jc\_f = 1;}
+\DoxyCodeLine{00326         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00327             for (e = 0; e < DIM; e++) \{}
+\DoxyCodeLine{00328                 p.S[stressIndex(i, d, e)] *= jc\_f;}
+\DoxyCodeLine{00329             \}}
+\DoxyCodeLine{00330         \}}
+\DoxyCodeLine{00331 }
+\DoxyCodeLine{00332         /* remember for calculation of edotp later on */}
+\DoxyCodeLine{00333         p.jc\_f[i] = jc\_f;}
+\DoxyCodeLine{00334         p.edotp[i] = 0.0;}
+\DoxyCodeLine{00335     \}}
+\DoxyCodeLine{00336 }
+\DoxyCodeLine{00337 \}}
+\DoxyCodeLine{00338 }
+\DoxyCodeLine{00339 \#endif // jc\_plasticity}
+\DoxyCodeLine{00340 \#endif}
+
+\end{DoxyCode}

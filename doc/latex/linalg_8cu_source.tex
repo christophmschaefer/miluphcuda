@@ -1,0 +1,342 @@
+\hypertarget{linalg_8cu_source}{}\doxysection{linalg.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 }
+\DoxyCodeLine{00025 \#include "{}timeintegration.h"{}}
+\DoxyCodeLine{00026 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00027 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00028 \#include "{}linalg.h"{}}
+\DoxyCodeLine{00029 }
+\DoxyCodeLine{00030 }
+\DoxyCodeLine{00031 }
+\DoxyCodeLine{00032 \_\_device\_\_ void copy\_matrix(double src[DIM][DIM], double dst[DIM][DIM])}
+\DoxyCodeLine{00033 \{}
+\DoxyCodeLine{00034     int i, j;}
+\DoxyCodeLine{00035 }
+\DoxyCodeLine{00036     for (i = 0; i < DIM; i++) \{}
+\DoxyCodeLine{00037         for (j = 0; j < DIM; j++) \{}
+\DoxyCodeLine{00038             dst[i][j] = src[i][j];}
+\DoxyCodeLine{00039         \}}
+\DoxyCodeLine{00040     \}}
+\DoxyCodeLine{00041 }
+\DoxyCodeLine{00042 \}}
+\DoxyCodeLine{00043 }
+\DoxyCodeLine{00044 \_\_device\_\_ void transpose\_matrix(double m[DIM][DIM])}
+\DoxyCodeLine{00045 \{}
+\DoxyCodeLine{00046     int i, j;}
+\DoxyCodeLine{00047     double mt[DIM][DIM];}
+\DoxyCodeLine{00048     for (i = 0; i < DIM; i++) \{}
+\DoxyCodeLine{00049         for (j = 0; j < DIM; j++) \{}
+\DoxyCodeLine{00050             mt[j][i] = m[i][j];}
+\DoxyCodeLine{00051         \}}
+\DoxyCodeLine{00052     \}}
+\DoxyCodeLine{00053     for (i = 0; i < DIM; i++) \{}
+\DoxyCodeLine{00054         for (j = 0; j < DIM; j++) \{}
+\DoxyCodeLine{00055             m[i][j] = mt[i][j];}
+\DoxyCodeLine{00056         \}}
+\DoxyCodeLine{00057     \}}
+\DoxyCodeLine{00058 \}}
+\DoxyCodeLine{00059 }
+\DoxyCodeLine{00060 // calculates C = A B and stores in C}
+\DoxyCodeLine{00061 \_\_device\_\_  void multiply\_matrix(double A[DIM][DIM], double B[DIM][DIM], double C[DIM][DIM])}
+\DoxyCodeLine{00062 \{}
+\DoxyCodeLine{00063     int i, j, k;}
+\DoxyCodeLine{00064 }
+\DoxyCodeLine{00065     double vprime[DIM][DIM];}
+\DoxyCodeLine{00066 }
+\DoxyCodeLine{00067     for (i = 0; i < DIM; i++) \{}
+\DoxyCodeLine{00068         for (j = 0; j < DIM; j++) \{}
+\DoxyCodeLine{00069             vprime[i][j] = 0.0;}
+\DoxyCodeLine{00070         \}}
+\DoxyCodeLine{00071     \}}
+\DoxyCodeLine{00072 }
+\DoxyCodeLine{00073     for (i = 0; i < DIM; i++) \{}
+\DoxyCodeLine{00074         for (j = 0; j < DIM; j++) \{}
+\DoxyCodeLine{00075             for (k = 0; k < DIM; k++) \{}
+\DoxyCodeLine{00076                 vprime[i][j] += A[i][k]*B[k][j];}
+\DoxyCodeLine{00077             \}}
+\DoxyCodeLine{00078         \}}
+\DoxyCodeLine{00079     \}}
+\DoxyCodeLine{00080     for (i = 0; i < DIM; i++) \{}
+\DoxyCodeLine{00081         for (j = 0; j < DIM; j++) \{}
+\DoxyCodeLine{00082             C[i][j] = vprime[i][j];}
+\DoxyCodeLine{00083         \}}
+\DoxyCodeLine{00084     \}}
+\DoxyCodeLine{00085 }
+\DoxyCodeLine{00086 \}}
+\DoxyCodeLine{00087 }
+\DoxyCodeLine{00088 \_\_device\_\_ void identity\_matrix(double A[DIM][DIM])}
+\DoxyCodeLine{00089 \{}
+\DoxyCodeLine{00090     int i, j;}
+\DoxyCodeLine{00091     for (i = 0; i < DIM; i++) \{}
+\DoxyCodeLine{00092         for (j = 0; j < DIM; j++) \{}
+\DoxyCodeLine{00093             A[i][j] = 0.0;}
+\DoxyCodeLine{00094         \}}
+\DoxyCodeLine{00095         A[i][i] = 1.0;}
+\DoxyCodeLine{00096     \}}
+\DoxyCodeLine{00097 \}}
+\DoxyCodeLine{00098 }
+\DoxyCodeLine{00099 }
+\DoxyCodeLine{00100 }
+\DoxyCodeLine{00101 }
+\DoxyCodeLine{00102 }
+\DoxyCodeLine{00103 // returns the indices of the greatest non-\/diagonal element of M}
+\DoxyCodeLine{00104 \_\_device\_\_ int max\_Matrix(double M[DIM][DIM], int *e, int *f, double *elmax)}
+\DoxyCodeLine{00105 \{}
+\DoxyCodeLine{00106     int i, j;}
+\DoxyCodeLine{00107     double max = 0.0;}
+\DoxyCodeLine{00108     int ierror = 1;}
+\DoxyCodeLine{00109 }
+\DoxyCodeLine{00110     for (i = 0; i < DIM; i++) \{}
+\DoxyCodeLine{00111         for (j = 0; j < DIM; j++) \{}
+\DoxyCodeLine{00112             if (i == j)}
+\DoxyCodeLine{00113                 continue;}
+\DoxyCodeLine{00114             if (fabs(M[i][j]) >= max) \{}
+\DoxyCodeLine{00115                 max = fabs(M[i][j]);}
+\DoxyCodeLine{00116                 *e = i;}
+\DoxyCodeLine{00117                 *f = j;}
+\DoxyCodeLine{00118                 ierror = 0;}
+\DoxyCodeLine{00119             \}}
+\DoxyCodeLine{00120         \}}
+\DoxyCodeLine{00121     \}}
+\DoxyCodeLine{00122     *elmax = max;}
+\DoxyCodeLine{00123     return ierror;}
+\DoxyCodeLine{00124 \}}
+\DoxyCodeLine{00125 }
+\DoxyCodeLine{00126 }
+\DoxyCodeLine{00127 /*}
+\DoxyCodeLine{00128  * help function for the jacobi method}
+\DoxyCodeLine{00129  * returns: M' = A\string^T M A, and A\_ef = s = -\/A\_ef, A\_ee = A\_ff = c}
+\DoxyCodeLine{00130  */}
+\DoxyCodeLine{00131 \_\_device\_\_ void rotate\_matrix(volatile double m[DIM][DIM], volatile double c, volatile double s, volatile int e,}
+\DoxyCodeLine{00132 volatile int f)}
+\DoxyCodeLine{00133 \{}
+\DoxyCodeLine{00134     int i, j;}
+\DoxyCodeLine{00135     volatile double mprime[DIM][DIM];}
+\DoxyCodeLine{00136 }
+\DoxyCodeLine{00137     /* first copy the matrix */}
+\DoxyCodeLine{00138     for (i = 0; i < DIM; i++)}
+\DoxyCodeLine{00139         for (j = 0; j < DIM; j++)}
+\DoxyCodeLine{00140             mprime[i][j] = m[i][j];}
+\DoxyCodeLine{00141 }
+\DoxyCodeLine{00142     /* now the elements that change */}
+\DoxyCodeLine{00143     mprime[e][e] = c*c*m[e][e] + s*s*m[f][f] -\/ 2*s*c*m[e][f];}
+\DoxyCodeLine{00144     mprime[f][f] = c*c*m[f][f] + s*s*m[e][e] + 2*s*c*m[e][f];}
+\DoxyCodeLine{00145     mprime[e][f] = (c*c-\/s*s)*m[e][f] + s*c*(m[e][e]-\/m[f][f]);}
+\DoxyCodeLine{00146     mprime[f][e] = mprime[e][f];}
+\DoxyCodeLine{00147 }
+\DoxyCodeLine{00148     /* the other elements in columns and rows e, f*/}
+\DoxyCodeLine{00149     /* actually, this is only one in 3D and 0 in 2D */}
+\DoxyCodeLine{00150     for (i = 0; i < DIM; i++) \{}
+\DoxyCodeLine{00151         if (i == f || i == e)}
+\DoxyCodeLine{00152             continue;}
+\DoxyCodeLine{00153         mprime[e][i] = c*m[i][e] -\/ s*m[i][f];}
+\DoxyCodeLine{00154         mprime[i][e] = mprime[e][i];}
+\DoxyCodeLine{00155         mprime[f][i] = c*m[i][f] + s*m[i][e];}
+\DoxyCodeLine{00156         mprime[i][f] = mprime[f][i];}
+\DoxyCodeLine{00157     \}}
+\DoxyCodeLine{00158 }
+\DoxyCodeLine{00159     /* set the matrix to the rotated one */}
+\DoxyCodeLine{00160     for (i = 0; i < DIM; i++)}
+\DoxyCodeLine{00161         for (j = 0; j < DIM; j++)}
+\DoxyCodeLine{00162             m[i][j] = mprime[i][j];}
+\DoxyCodeLine{00163 \}}
+\DoxyCodeLine{00164 }
+\DoxyCodeLine{00165 }
+\DoxyCodeLine{00166 }
+\DoxyCodeLine{00167 /*}
+\DoxyCodeLine{00168  * computes all eigenvalues and eigenvectors of the \_symmetric\_ matrix M}
+\DoxyCodeLine{00169  * using the jacobi method and stores them in eigenvals and the eigenvecs as columns}
+\DoxyCodeLine{00170  * in the transformation matrix v}
+\DoxyCodeLine{00171  *}
+\DoxyCodeLine{00172  * returns the number of iterations}
+\DoxyCodeLine{00173  */}
+\DoxyCodeLine{00174 \_\_device\_\_ int calculate\_all\_eigenvalues(double M[DIM][DIM], double eigenvalues[DIM], double v[DIM][DIM]) \{}
+\DoxyCodeLine{00175     int i, j;}
+\DoxyCodeLine{00176     double diagM[DIM][DIM] = \{0.0, \};}
+\DoxyCodeLine{00177     double c, s, t, thta;}
+\DoxyCodeLine{00178     double A[DIM][DIM];}
+\DoxyCodeLine{00179     double vtmp[DIM][DIM];}
+\DoxyCodeLine{00180     int e, f;}
+\DoxyCodeLine{00181     int error;}
+\DoxyCodeLine{00182     double max = -\/1e300;}
+\DoxyCodeLine{00183     int nit = 0;}
+\DoxyCodeLine{00184     i = j = e = f = 0;}
+\DoxyCodeLine{00185     c = s = t = thta = 0.0;}
+\DoxyCodeLine{00186     error = 0;}
+\DoxyCodeLine{00187 }
+\DoxyCodeLine{00188 \#define EPS\_JACOBI 1e-\/10}
+\DoxyCodeLine{00189 }
+\DoxyCodeLine{00190     for (i = 0; i < DIM; i++) \{}
+\DoxyCodeLine{00191         for (j = 0; j < DIM; j++) \{}
+\DoxyCodeLine{00192             diagM[i][j] = M[i][j];}
+\DoxyCodeLine{00193             v[i][j] = 0.0;}
+\DoxyCodeLine{00194         \}}
+\DoxyCodeLine{00195         v[i][i] = 1.0;}
+\DoxyCodeLine{00196     \}}
+\DoxyCodeLine{00197 }
+\DoxyCodeLine{00198     do \{}
+\DoxyCodeLine{00199         nit++;}
+\DoxyCodeLine{00200         error = max\_Matrix(diagM, \&e, \&f, \&max);}
+\DoxyCodeLine{00201         if (error) \{}
+\DoxyCodeLine{00202             printf("{}No maximum element found.\(\backslash\)n"{});}
+\DoxyCodeLine{00203         \}}
+\DoxyCodeLine{00204         if (max > 0) \{}
+\DoxyCodeLine{00205             // rotate matrix}
+\DoxyCodeLine{00206             thta = (diagM[f][f] -\/ diagM[e][e])/(2*diagM[e][f]);}
+\DoxyCodeLine{00207             if (thta < 0)}
+\DoxyCodeLine{00208                 t = -\/1./(fabs(thta) + sqrt(thta*thta+1));}
+\DoxyCodeLine{00209             else}
+\DoxyCodeLine{00210                 t = 1./(fabs(thta) + sqrt(thta*thta+1));}
+\DoxyCodeLine{00211             // the elements of the rotation matrix}
+\DoxyCodeLine{00212             c = 1./(sqrt(t*t+1));}
+\DoxyCodeLine{00213             s = t*c;}
+\DoxyCodeLine{00214             // do diagM' = A\string^T diagM A}
+\DoxyCodeLine{00215             rotate\_matrix(diagM, c, s, e, f);}
+\DoxyCodeLine{00216             identity\_matrix(A);}
+\DoxyCodeLine{00217             A[e][e] = c;}
+\DoxyCodeLine{00218             A[f][f] = c;}
+\DoxyCodeLine{00219             A[e][f] = -\/s;}
+\DoxyCodeLine{00220             A[f][e] = s;}
+\DoxyCodeLine{00221             // calculate the eigenvectors}
+\DoxyCodeLine{00222             multiply\_matrix(v, A, vtmp);}
+\DoxyCodeLine{00223             copy\_matrix(vtmp, v);}
+\DoxyCodeLine{00224         \}}
+\DoxyCodeLine{00225     \} while (max > EPS\_JACOBI);}
+\DoxyCodeLine{00226 }
+\DoxyCodeLine{00227     for (i = 0; i < DIM; i++) \{}
+\DoxyCodeLine{00228         eigenvalues[i] = diagM[i][i];}
+\DoxyCodeLine{00229     \}}
+\DoxyCodeLine{00230     return nit;}
+\DoxyCodeLine{00231 \}}
+\DoxyCodeLine{00232 }
+\DoxyCodeLine{00233 }
+\DoxyCodeLine{00234 }
+\DoxyCodeLine{00235 }
+\DoxyCodeLine{00236 }
+\DoxyCodeLine{00237 /*}
+\DoxyCodeLine{00238  * computes the eigenvalues of the \_symmetric\_ matrix M}
+\DoxyCodeLine{00239  * using the jacobi method}
+\DoxyCodeLine{00240  * returns the greatest eigenvalue}
+\DoxyCodeLine{00241  */}
+\DoxyCodeLine{00242 \_\_device\_\_ double calculateMaxEigenvalue(double M[DIM][DIM]) \{}
+\DoxyCodeLine{00243     int i, j;}
+\DoxyCodeLine{00244     double diagM[DIM][DIM] = \{0.0, \};}
+\DoxyCodeLine{00245     double c, s, t, thta;}
+\DoxyCodeLine{00246     int e, f;}
+\DoxyCodeLine{00247     int error;}
+\DoxyCodeLine{00248     double max;}
+\DoxyCodeLine{00249     double max\_ev;}
+\DoxyCodeLine{00250     int nit = 0;}
+\DoxyCodeLine{00251     i = j = e = f = 0;}
+\DoxyCodeLine{00252     c = s = t = thta = 0.0;}
+\DoxyCodeLine{00253     max = max\_ev = 0;}
+\DoxyCodeLine{00254     error = 0;}
+\DoxyCodeLine{00255 }
+\DoxyCodeLine{00256 }
+\DoxyCodeLine{00257 \#define EPS\_JACOBI 1e-\/10}
+\DoxyCodeLine{00258 }
+\DoxyCodeLine{00259     for (i = 0; i < DIM; i++)}
+\DoxyCodeLine{00260         for (j = 0; j < DIM; j++)}
+\DoxyCodeLine{00261             diagM[i][j] = M[i][j];}
+\DoxyCodeLine{00262 }
+\DoxyCodeLine{00263     do \{}
+\DoxyCodeLine{00264         nit++;}
+\DoxyCodeLine{00265         error = max\_Matrix(diagM, \&e, \&f, \&max);}
+\DoxyCodeLine{00266         if (error) \{}
+\DoxyCodeLine{00267             printf("{}No maximum element found.\(\backslash\)n"{});}
+\DoxyCodeLine{00268         \}}
+\DoxyCodeLine{00269         if (max > 0) \{}
+\DoxyCodeLine{00270             // rotate matrix}
+\DoxyCodeLine{00271             thta = (diagM[f][f] -\/ diagM[e][e])/(2*diagM[e][f]);}
+\DoxyCodeLine{00272             if (thta < 0)}
+\DoxyCodeLine{00273                 t = -\/1./(fabs(thta) + sqrt(thta*thta+1));}
+\DoxyCodeLine{00274             else}
+\DoxyCodeLine{00275                 t = 1./(fabs(thta) + sqrt(thta*thta+1));}
+\DoxyCodeLine{00276             // the elements of the rotation matrix}
+\DoxyCodeLine{00277             c = 1./(sqrt(t*t+1));}
+\DoxyCodeLine{00278             s = t*c;}
+\DoxyCodeLine{00279             // do diagM' = A\string^T diagM A}
+\DoxyCodeLine{00280             rotate\_matrix(diagM, c, s, e, f);}
+\DoxyCodeLine{00281         \}}
+\DoxyCodeLine{00282     \} while (max > EPS\_JACOBI || nit < 5);}
+\DoxyCodeLine{00283 }
+\DoxyCodeLine{00284     max\_ev = diagM[0][0];}
+\DoxyCodeLine{00285     for (i = 1; i < DIM; i++) \{}
+\DoxyCodeLine{00286         if (diagM[i][i] > max\_ev) \{}
+\DoxyCodeLine{00287             max\_ev = diagM[i][i];}
+\DoxyCodeLine{00288         \}}
+\DoxyCodeLine{00289     \}}
+\DoxyCodeLine{00290     return max\_ev;}
+\DoxyCodeLine{00291 \}}
+\DoxyCodeLine{00292 }
+\DoxyCodeLine{00293 \_\_device\_\_ double det2x2(double a, double b, double c, double d) \{}
+\DoxyCodeLine{00294     return a*d-\/c*b;}
+\DoxyCodeLine{00295 \}}
+\DoxyCodeLine{00296 }
+\DoxyCodeLine{00297 \_\_device\_\_ int invertMatrix(double *m, double *inverted) \{}
+\DoxyCodeLine{00298     double det;}
+\DoxyCodeLine{00299 \#if (DIM == 2)}
+\DoxyCodeLine{00300     double a, b, c, d;}
+\DoxyCodeLine{00301     a = m[0*DIM+0];}
+\DoxyCodeLine{00302     b = m[0*DIM+1];}
+\DoxyCodeLine{00303     c = m[1*DIM+0];}
+\DoxyCodeLine{00304     d = m[1*DIM+1];}
+\DoxyCodeLine{00305 }
+\DoxyCodeLine{00306     det = det2x2(a,b,c,d);}
+\DoxyCodeLine{00307   //  if (det < 1e-\/8) return -\/1;}
+\DoxyCodeLine{00308    // if (det < 1e-\/10) det = 1e-\/10;}
+\DoxyCodeLine{00309     det = 1./det;}
+\DoxyCodeLine{00310 }
+\DoxyCodeLine{00311     inverted[0*DIM+0] = det*d;}
+\DoxyCodeLine{00312     inverted[0*DIM+1] = -\/det*b;}
+\DoxyCodeLine{00313     inverted[1*DIM+0] = -\/det*c;}
+\DoxyCodeLine{00314     inverted[1*DIM+1] = det*a;}
+\DoxyCodeLine{00315 \#elif (DIM == 3)}
+\DoxyCodeLine{00316     det = m[0 * DIM + 0] * (m[1 * DIM + 1] * m[2 * DIM + 2] -\/ m[2 * DIM + 1] * m[1 * DIM + 2])}
+\DoxyCodeLine{00317         -\/ m[0 * DIM + 1] * (m[1 * DIM + 0] * m[2 * DIM + 2] -\/ m[1 * DIM + 2] * m[2 * DIM + 0])}
+\DoxyCodeLine{00318         + m[0 * DIM + 2] * (m[1 * DIM + 0] * m[2 * DIM + 1] -\/ m[1 * DIM + 1] * m[2 * DIM + 0]);}
+\DoxyCodeLine{00319 }
+\DoxyCodeLine{00320     // inverse determinante}
+\DoxyCodeLine{00321 }
+\DoxyCodeLine{00322     if (det < 1e-\/8) return -\/1;}
+\DoxyCodeLine{00323     det = 1.0 / det;}
+\DoxyCodeLine{00324 }
+\DoxyCodeLine{00325     inverted[0*DIM+0] = (m[1*DIM+ 1] * m[2*DIM+ 2] -\/ m[2*DIM+ 1] * m[1*DIM+ 2]) * det;}
+\DoxyCodeLine{00326     inverted[0*DIM+1] = (m[0*DIM+ 2] * m[2*DIM+ 1] -\/ m[0*DIM+ 1] * m[2*DIM+ 2]) * det;}
+\DoxyCodeLine{00327     inverted[0*DIM+2] = (m[0*DIM+ 1] * m[1*DIM+ 2] -\/ m[0*DIM+ 2] * m[1*DIM+ 1]) * det;}
+\DoxyCodeLine{00328     inverted[1*DIM+0] = (m[1*DIM+ 2] * m[2*DIM+ 0] -\/ m[1*DIM+ 0] * m[2*DIM+ 2]) * det;}
+\DoxyCodeLine{00329     inverted[1*DIM+1] = (m[0*DIM+ 0] * m[2*DIM+ 2] -\/ m[0*DIM+ 2] * m[2*DIM+ 0]) * det;}
+\DoxyCodeLine{00330     inverted[1*DIM+2] = (m[1*DIM+ 0] * m[0*DIM+ 2] -\/ m[0*DIM+ 0] * m[1*DIM+ 2]) * det;}
+\DoxyCodeLine{00331     inverted[2*DIM+0] = (m[1*DIM+ 0] * m[2*DIM+ 1] -\/ m[2*DIM+ 0] * m[1*DIM+ 1]) * det;}
+\DoxyCodeLine{00332     inverted[2*DIM+1] = (m[2*DIM+ 0] * m[0*DIM+ 1] -\/ m[0*DIM+ 0] * m[2*DIM+ 1]) * det;}
+\DoxyCodeLine{00333     inverted[2*DIM+2] = (m[0*DIM+ 0] * m[1*DIM+ 1] -\/ m[1*DIM+ 0] * m[0*DIM+ 1]) * det;}
+\DoxyCodeLine{00334 \#endif}
+\DoxyCodeLine{00335 }
+\DoxyCodeLine{00336     return 1;}
+\DoxyCodeLine{00337 \}}
+
+\end{DoxyCode}

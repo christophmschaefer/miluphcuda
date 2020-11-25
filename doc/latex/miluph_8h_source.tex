@@ -1,0 +1,351 @@
+\hypertarget{miluph_8h_source}{}\doxysection{miluph.\+h}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 }
+\DoxyCodeLine{00025 \textcolor{preprocessor}{\#ifndef \_MILUPH\_H}}
+\DoxyCodeLine{00026 \textcolor{preprocessor}{\#define \_MILUPH\_H}}
+\DoxyCodeLine{00027 }
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00028}\mbox{\hyperlink{miluph_8h_aa93f0eb578d23995850d61f7d61c55c1}{00028}} \textcolor{preprocessor}{\#define FALSE 0}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00029}\mbox{\hyperlink{miluph_8h_aa8cecfc5c5c054d2875c03e77b7be15d}{00029}} \textcolor{preprocessor}{\#define TRUE 1}}
+\DoxyCodeLine{00030 }
+\DoxyCodeLine{00031 \textcolor{preprocessor}{\#include <math.h>}}
+\DoxyCodeLine{00032 \textcolor{preprocessor}{\#include <errno.h>}}
+\DoxyCodeLine{00033 \textcolor{preprocessor}{\#include <getopt.h>}}
+\DoxyCodeLine{00034 \textcolor{preprocessor}{\#include <string.h>}}
+\DoxyCodeLine{00035 \textcolor{preprocessor}{\#include <unistd.h>}}
+\DoxyCodeLine{00036 \textcolor{preprocessor}{\#include <math.h>}}
+\DoxyCodeLine{00037 \textcolor{preprocessor}{\#include <stdio.h>}}
+\DoxyCodeLine{00038 \textcolor{preprocessor}{\#include <stdlib.h>}}
+\DoxyCodeLine{00039 \textcolor{preprocessor}{\#include <libconfig.h>}}
+\DoxyCodeLine{00040 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{cuda__utils_8h}{cuda\_utils.h}}"{}}}
+\DoxyCodeLine{00041 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h}{parameter.h}}"{}}}
+\DoxyCodeLine{00042 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{io_8h}{io.h}}"{}}}
+\DoxyCodeLine{00043 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{timeintegration_8h}{timeintegration.h}}"{}}}
+\DoxyCodeLine{00044 \textcolor{preprocessor}{\#include "{}cuda\_profiler\_api.h"{}}}
+\DoxyCodeLine{00045 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{checks_8h}{checks.h}}"{}}}
+\DoxyCodeLine{00046 }
+\DoxyCodeLine{00047 \textcolor{comment}{// particle structure for memory management}}
+\DoxyCodeLine{00048 \textcolor{comment}{// on host and device}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00049}\mbox{\hyperlink{struct_particle}{00049}} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_particle}{Particle}} \{}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00050}\mbox{\hyperlink{struct_particle_abde6722464c0b3bc87650dc99e5b3714}{00050}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_abde6722464c0b3bc87650dc99e5b3714}{x0}};}
+\DoxyCodeLine{00051 \textcolor{preprocessor}{\#if DIM > 1}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00052}\mbox{\hyperlink{struct_particle_a2939e60dc3d4c5f57c28fd57b8b6f067}{00052}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a2939e60dc3d4c5f57c28fd57b8b6f067}{y0}};}
+\DoxyCodeLine{00053 \textcolor{preprocessor}{\#if DIM > 2}}
+\DoxyCodeLine{00054     \textcolor{keywordtype}{double} *z0;}
+\DoxyCodeLine{00055 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00056 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00057}\mbox{\hyperlink{struct_particle_ad93c572bcbd802033fa462017b104952}{00057}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_ad93c572bcbd802033fa462017b104952}{x}};}
+\DoxyCodeLine{00058 \textcolor{preprocessor}{\#if DIM > 1}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00059}\mbox{\hyperlink{struct_particle_a512aa631bf082567c98c8c26cf48950a}{00059}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a512aa631bf082567c98c8c26cf48950a}{y}};}
+\DoxyCodeLine{00060 \textcolor{preprocessor}{\#if DIM > 2}}
+\DoxyCodeLine{00061     \textcolor{keywordtype}{double} *z;}
+\DoxyCodeLine{00062 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00063 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00064}\mbox{\hyperlink{struct_particle_a43d5144a8cdd77c139e1e83d67a9df4e}{00064}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a43d5144a8cdd77c139e1e83d67a9df4e}{dxdt}};}
+\DoxyCodeLine{00065 \textcolor{preprocessor}{\#if DIM > 1}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00066}\mbox{\hyperlink{struct_particle_afdb0141f115bf57a530ad057ca8a3a5e}{00066}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_afdb0141f115bf57a530ad057ca8a3a5e}{dydt}};}
+\DoxyCodeLine{00067 \textcolor{preprocessor}{\#if DIM > 2}}
+\DoxyCodeLine{00068     \textcolor{keywordtype}{double} *dzdt;}
+\DoxyCodeLine{00069 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00070 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00071}\mbox{\hyperlink{struct_particle_a244b8b92b755b1be6beaee16efd0cfc7}{00071}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a244b8b92b755b1be6beaee16efd0cfc7}{vx}};}
+\DoxyCodeLine{00072 \textcolor{preprocessor}{\#if DIM > 1}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00073}\mbox{\hyperlink{struct_particle_a899efd3815bd01d50e37c84926b462d2}{00073}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a899efd3815bd01d50e37c84926b462d2}{vy}};}
+\DoxyCodeLine{00074 \textcolor{preprocessor}{\#if DIM > 2}}
+\DoxyCodeLine{00075     \textcolor{keywordtype}{double} *vz;}
+\DoxyCodeLine{00076 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00077 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00078}\mbox{\hyperlink{struct_particle_a2465448cf3d831f7b3f3dbb751c13070}{00078}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a2465448cf3d831f7b3f3dbb751c13070}{ax}};}
+\DoxyCodeLine{00079 \textcolor{preprocessor}{\#if DIM > 1}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00080}\mbox{\hyperlink{struct_particle_a7250d3b078aa2b8fb64b377fbc4f393d}{00080}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a7250d3b078aa2b8fb64b377fbc4f393d}{ay}};}
+\DoxyCodeLine{00081 \textcolor{preprocessor}{\#if DIM > 2}}
+\DoxyCodeLine{00082     \textcolor{keywordtype}{double} *az;}
+\DoxyCodeLine{00083 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00084 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00085}\mbox{\hyperlink{struct_particle_ab3e500a1d9127f74e9cac1a5e238fb71}{00085}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_ab3e500a1d9127f74e9cac1a5e238fb71}{g\_ax}};}
+\DoxyCodeLine{00086 \textcolor{preprocessor}{\#if DIM > 1}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00087}\mbox{\hyperlink{struct_particle_a9d1eb8c398721222e223c2f3771e9a69}{00087}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a9d1eb8c398721222e223c2f3771e9a69}{g\_ay}};}
+\DoxyCodeLine{00088 \textcolor{preprocessor}{\#if DIM > 2}}
+\DoxyCodeLine{00089     \textcolor{keywordtype}{double} *g\_az;}
+\DoxyCodeLine{00090 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00091 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00092 }
+\DoxyCodeLine{00093 \textcolor{comment}{// for tree change algorithm}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00094}\mbox{\hyperlink{struct_particle_a490be54759ae6343fed13dcccde6c4a6}{00094}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a490be54759ae6343fed13dcccde6c4a6}{g\_local\_cellsize}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00095}\mbox{\hyperlink{struct_particle_a39bafe3ff6d3eaa4765ef0104ad180eb}{00095}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a39bafe3ff6d3eaa4765ef0104ad180eb}{g\_x}};}
+\DoxyCodeLine{00096 \textcolor{preprocessor}{\#if DIM > 1}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00097}\mbox{\hyperlink{struct_particle_a4c0e5b9a50494c37eff75d7eb6c445da}{00097}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a4c0e5b9a50494c37eff75d7eb6c445da}{g\_y}};}
+\DoxyCodeLine{00098 \textcolor{preprocessor}{\# if DIM > 2}}
+\DoxyCodeLine{00099     \textcolor{keywordtype}{double} *g\_z;}
+\DoxyCodeLine{00100 \textcolor{preprocessor}{\# endif}}
+\DoxyCodeLine{00101 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00102 }
+\DoxyCodeLine{00103 }
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00104}\mbox{\hyperlink{struct_particle_a4c6a2f933fed2fb9355a55ae17ab11a4}{00104}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a4c6a2f933fed2fb9355a55ae17ab11a4}{m}};}
+\DoxyCodeLine{00105 \textcolor{comment}{// the smoothing length}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00106}\mbox{\hyperlink{struct_particle_a18b95a8086a1bd120f3b6e6850152802}{00106}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a18b95a8086a1bd120f3b6e6850152802}{h}};}
+\DoxyCodeLine{00107 \textcolor{preprocessor}{\#if INTEGRATE\_SML}}
+\DoxyCodeLine{00108     \textcolor{keywordtype}{double} *dhdt;}
+\DoxyCodeLine{00109 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00110}\mbox{\hyperlink{struct_particle_a679c91d88b1ce54aec008ff070516add}{00110}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a679c91d88b1ce54aec008ff070516add}{rho}};}
+\DoxyCodeLine{00111 }
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00112}\mbox{\hyperlink{struct_particle_a80398b24fb1c3d04d13d150e6612fa8a}{00112}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a80398b24fb1c3d04d13d150e6612fa8a}{drhodt}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00113}\mbox{\hyperlink{struct_particle_af43ccd2d4b0d70c48acbcddedbfa8fe0}{00113}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_af43ccd2d4b0d70c48acbcddedbfa8fe0}{p}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00114}\mbox{\hyperlink{struct_particle_a82a7d9530235b490387323de00382a53}{00114}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a82a7d9530235b490387323de00382a53}{e}};}
+\DoxyCodeLine{00115 \textcolor{preprocessor}{\#if INTEGRATE\_ENERGY}}
+\DoxyCodeLine{00116     \textcolor{keywordtype}{double} *dedt;}
+\DoxyCodeLine{00117 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00118 }
+\DoxyCodeLine{00119 \textcolor{preprocessor}{\#if NAVIER\_STOKES}}
+\DoxyCodeLine{00120     \textcolor{comment}{// the viscous shear tensor}}
+\DoxyCodeLine{00121     \textcolor{comment}{// note: this is the traceless tensor }}
+\DoxyCodeLine{00122     \textcolor{comment}{// the viscous tensor is given by sigma = eta T + zeta div v}}
+\DoxyCodeLine{00123     \textcolor{comment}{// and since we're storing div v for each particle, we do not store it here}}
+\DoxyCodeLine{00124     \textcolor{keywordtype}{double} *Tshear;}
+\DoxyCodeLine{00125 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00126 }
+\DoxyCodeLine{00127 \textcolor{preprocessor}{\#if SOLID}}
+\DoxyCodeLine{00128     \textcolor{comment}{//in case of soil S will be used as sigma}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00129}\mbox{\hyperlink{struct_particle_a06dcf6021acf16eae05f211ba5898855}{00129}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a06dcf6021acf16eae05f211ba5898855}{S}};}
+\DoxyCodeLine{00130 \textcolor{preprocessor}{\#if FRAGMENTATION}}
+\DoxyCodeLine{00131     \textcolor{keywordtype}{double} *Sreal;}
+\DoxyCodeLine{00132 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00133}\mbox{\hyperlink{struct_particle_aa7da1ac50f504edc248e1b746ae466c1}{00133}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_aa7da1ac50f504edc248e1b746ae466c1}{dSdt}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00134}\mbox{\hyperlink{struct_particle_a7bf0aa6ef21073cca9790128bd482045}{00134}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a7bf0aa6ef21073cca9790128bd482045}{local\_strain}};}
+\DoxyCodeLine{00135 }
+\DoxyCodeLine{00136     \textcolor{comment}{// *the* one and only stress tensor (note: not in the soil case, where S is the stress tensor)}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00137}\mbox{\hyperlink{struct_particle_a7492d53cea5f3254f278fd3907f19206}{00137}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_a7492d53cea5f3254f278fd3907f19206}{sigma}};}
+\DoxyCodeLine{00138 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00139 }
+\DoxyCodeLine{00140 \textcolor{preprocessor}{\#if ARTIFICIAL\_STRESS}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00141}\mbox{\hyperlink{struct_particle_ac8284f633a069d8f92cab8fa40281b42}{00141}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_ac8284f633a069d8f92cab8fa40281b42}{R}};}
+\DoxyCodeLine{00142 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00143 }
+\DoxyCodeLine{00144 \textcolor{preprocessor}{\#if JC\_PLASTICITY}}
+\DoxyCodeLine{00145     \textcolor{keywordtype}{double} *ep;}
+\DoxyCodeLine{00146     \textcolor{keywordtype}{double} *edotp;}
+\DoxyCodeLine{00147     \textcolor{keywordtype}{double} *T;}
+\DoxyCodeLine{00148     \textcolor{keywordtype}{double} *dTdt;}
+\DoxyCodeLine{00149     \textcolor{keywordtype}{double} *jc\_f;}
+\DoxyCodeLine{00150 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00151 }
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00152}\mbox{\hyperlink{struct_particle_aed207bd3dc0b95977e17230978bf4000}{00152}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_aed207bd3dc0b95977e17230978bf4000}{xsphvx}};}
+\DoxyCodeLine{00153 \textcolor{preprocessor}{\#if DIM > 1}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00154}\mbox{\hyperlink{struct_particle_aba65ff96b8318478a4d988740471ec47}{00154}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_aba65ff96b8318478a4d988740471ec47}{xsphvy}};}
+\DoxyCodeLine{00155 \textcolor{preprocessor}{\#if DIM > 2}}
+\DoxyCodeLine{00156     \textcolor{keywordtype}{double} *xsphvz;}
+\DoxyCodeLine{00157 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00158 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00159 }
+\DoxyCodeLine{00160 \textcolor{preprocessor}{\#if (NAVIER\_STOKES || BALSARA\_SWITCH || INVISCID\_SPH || INTEGRATE\_ENERGY)}}
+\DoxyCodeLine{00161     \textcolor{keywordtype}{double} *curlv;}
+\DoxyCodeLine{00162     \textcolor{keywordtype}{double} *divv;}
+\DoxyCodeLine{00163 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00164 }
+\DoxyCodeLine{00165 \textcolor{preprocessor}{\#if FRAGMENTATION}}
+\DoxyCodeLine{00166     \textcolor{keywordtype}{double} *d;}
+\DoxyCodeLine{00167     \textcolor{keywordtype}{double} *damage\_total; \textcolor{comment}{// = tensile damage plus porous damage}}
+\DoxyCodeLine{00168     \textcolor{keywordtype}{double} *dddt;}
+\DoxyCodeLine{00169     \textcolor{keywordtype}{int} *numFlaws;}
+\DoxyCodeLine{00170     \textcolor{keywordtype}{int} \mbox{\hyperlink{timeintegration_8h_a0a51ab57e18c6bdc7baea94f1359d498}{maxNumFlaws}};}
+\DoxyCodeLine{00171     \textcolor{keywordtype}{int} *numActiveFlaws;}
+\DoxyCodeLine{00172     \textcolor{keywordtype}{double} *flaws;}
+\DoxyCodeLine{00173 \textcolor{preprocessor}{\#if PALPHA\_POROSITY}}
+\DoxyCodeLine{00174     \textcolor{keywordtype}{double} *damage\_porjutzi;}
+\DoxyCodeLine{00175     \textcolor{keywordtype}{double} *ddamage\_porjutzidt;}
+\DoxyCodeLine{00176     \textcolor{keywordtype}{double} *cs\_old;}
+\DoxyCodeLine{00177 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00178 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00179 }
+\DoxyCodeLine{00180 \textcolor{preprocessor}{\#if ARTIFICIAL\_VISCOSITY}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00181}\mbox{\hyperlink{struct_particle_af93d61719325984226e209efbe4c58a2}{00181}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_af93d61719325984226e209efbe4c58a2}{muijmax}};}
+\DoxyCodeLine{00182 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00183 \textcolor{preprocessor}{\#if INVISCID\_SPH}}
+\DoxyCodeLine{00184     \textcolor{keywordtype}{double} *beta;}
+\DoxyCodeLine{00185     \textcolor{keywordtype}{double} *beta\_old;}
+\DoxyCodeLine{00186     \textcolor{keywordtype}{double} *divv\_old;}
+\DoxyCodeLine{00187     \textcolor{keywordtype}{double} *dbetadt;}
+\DoxyCodeLine{00188 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00189 }
+\DoxyCodeLine{00190 \textcolor{preprocessor}{\#if PALPHA\_POROSITY}}
+\DoxyCodeLine{00191     \textcolor{keywordtype}{double} *pold;}
+\DoxyCodeLine{00192     \textcolor{keywordtype}{double} *alpha\_jutzi;}
+\DoxyCodeLine{00193     \textcolor{keywordtype}{double} *alpha\_jutzi\_old;}
+\DoxyCodeLine{00194     \textcolor{keywordtype}{double} *dalphadt;}
+\DoxyCodeLine{00195     \textcolor{keywordtype}{double} *dalphadp;}
+\DoxyCodeLine{00196     \textcolor{keywordtype}{double} *dp;}
+\DoxyCodeLine{00197     \textcolor{keywordtype}{double} *dalphadrho;}
+\DoxyCodeLine{00198     \textcolor{keywordtype}{double} *f;}
+\DoxyCodeLine{00199     \textcolor{keywordtype}{double} *delpdelrho;}
+\DoxyCodeLine{00200     \textcolor{keywordtype}{double} *delpdele;}
+\DoxyCodeLine{00201 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00202 }
+\DoxyCodeLine{00203 \textcolor{preprocessor}{\#if SIRONO\_POROSITY}}
+\DoxyCodeLine{00204     \textcolor{keywordtype}{double} *compressive\_strength;}
+\DoxyCodeLine{00205     \textcolor{keywordtype}{double} *tensile\_strength;}
+\DoxyCodeLine{00206     \textcolor{keywordtype}{double} *shear\_strength;}
+\DoxyCodeLine{00207     \textcolor{keywordtype}{double} *K;}
+\DoxyCodeLine{00208     \textcolor{keywordtype}{double} *rho\_0prime;}
+\DoxyCodeLine{00209     \textcolor{keywordtype}{double} *rho\_c\_plus;}
+\DoxyCodeLine{00210     \textcolor{keywordtype}{double} *rho\_c\_minus;}
+\DoxyCodeLine{00211     \textcolor{keywordtype}{int} *flag\_rho\_0prime;}
+\DoxyCodeLine{00212     \textcolor{keywordtype}{int} *flag\_plastic;}
+\DoxyCodeLine{00213 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00214 }
+\DoxyCodeLine{00215 \textcolor{preprocessor}{\#if EPSALPHA\_POROSITY}}
+\DoxyCodeLine{00216     \textcolor{keywordtype}{double} *alpha\_epspor;}
+\DoxyCodeLine{00217     \textcolor{keywordtype}{double} *dalpha\_epspordt;}
+\DoxyCodeLine{00218     \textcolor{keywordtype}{double} *epsilon\_v;}
+\DoxyCodeLine{00219     \textcolor{keywordtype}{double} *depsilon\_vdt;}
+\DoxyCodeLine{00220 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00221 }
+\DoxyCodeLine{00222 \textcolor{preprocessor}{\#if GHOST\_BOUNDARIES}}
+\DoxyCodeLine{00223     \textcolor{comment}{/* the corresponding real particle index of a ghost particle */}}
+\DoxyCodeLine{00224     \textcolor{keywordtype}{int} *real\_partner;}
+\DoxyCodeLine{00225 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00226 }
+\DoxyCodeLine{00227 \textcolor{preprocessor}{\#if TENSORIAL\_CORRECTION}}
+\DoxyCodeLine{00228     \textcolor{keywordtype}{double} *\mbox{\hyperlink{timeintegration_8h_aaa87065c22a4f0eef5d62650f675efdb}{tensorialCorrectionMatrix}};}
+\DoxyCodeLine{00229     \textcolor{keywordtype}{double} *\mbox{\hyperlink{timeintegration_8h_a59822940795faf2f262ff5fdb4f48f3b}{tensorialCorrectiondWdrr}};}
+\DoxyCodeLine{00230 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00231}\mbox{\hyperlink{struct_particle_abfd4c69742e558917bc06e3941b2fe02}{00231}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_particle_abfd4c69742e558917bc06e3941b2fe02}{cs}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00232}\mbox{\hyperlink{struct_particle_a54d63482d07d98baa2e436c0ad4095af}{00232}}     \textcolor{keywordtype}{int} *\mbox{\hyperlink{struct_particle_a54d63482d07d98baa2e436c0ad4095af}{noi}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00233}\mbox{\hyperlink{struct_particle_af78f015011d80da80f065aee6ac19898}{00233}}     \textcolor{keywordtype}{int} *\mbox{\hyperlink{struct_particle_af78f015011d80da80f065aee6ac19898}{materialId}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00234}\mbox{\hyperlink{struct_particle_ab1770b2d516b9a7afb34712b44ab2d9d}{00234}}     \textcolor{keywordtype}{int} *\mbox{\hyperlink{struct_particle_ab1770b2d516b9a7afb34712b44ab2d9d}{depth}};}
+\DoxyCodeLine{00235 \};}
+\DoxyCodeLine{00236 }
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00237}\mbox{\hyperlink{struct_pointmass}{00237}} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_pointmass}{Pointmass}} \{}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00238}\mbox{\hyperlink{struct_pointmass_a10c6503ec3b95922a1b73c6060933038}{00238}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_pointmass_a10c6503ec3b95922a1b73c6060933038}{x}};}
+\DoxyCodeLine{00239 \textcolor{preprocessor}{\#if DIM > 1}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00240}\mbox{\hyperlink{struct_pointmass_a529f44eeb434351945ab40b7f39cf5cc}{00240}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_pointmass_a529f44eeb434351945ab40b7f39cf5cc}{y}};}
+\DoxyCodeLine{00241 \textcolor{preprocessor}{\#if DIM > 2}}
+\DoxyCodeLine{00242     \textcolor{keywordtype}{double} *z;}
+\DoxyCodeLine{00243 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00244 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00245}\mbox{\hyperlink{struct_pointmass_abed92c37b890d737e368acd354efb4aa}{00245}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_pointmass_abed92c37b890d737e368acd354efb4aa}{vx}};}
+\DoxyCodeLine{00246 \textcolor{preprocessor}{\#if DIM > 1}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00247}\mbox{\hyperlink{struct_pointmass_a1e2a138cc7697a8f665f8d66622b8739}{00247}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_pointmass_a1e2a138cc7697a8f665f8d66622b8739}{vy}};}
+\DoxyCodeLine{00248 \textcolor{preprocessor}{\#if DIM > 2}}
+\DoxyCodeLine{00249     \textcolor{keywordtype}{double} *vz;}
+\DoxyCodeLine{00250 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00251 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00252}\mbox{\hyperlink{struct_pointmass_a519fc772c6c330ca6fa62670eed54532}{00252}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_pointmass_a519fc772c6c330ca6fa62670eed54532}{ax}};}
+\DoxyCodeLine{00253 \textcolor{preprocessor}{\#if DIM > 1}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00254}\mbox{\hyperlink{struct_pointmass_a7e3d67e230d4bcd3a273a2772dd06c42}{00254}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_pointmass_a7e3d67e230d4bcd3a273a2772dd06c42}{ay}};}
+\DoxyCodeLine{00255 \textcolor{preprocessor}{\#if DIM > 2}}
+\DoxyCodeLine{00256     \textcolor{keywordtype}{double} *az;}
+\DoxyCodeLine{00257 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00258 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00259}\mbox{\hyperlink{struct_pointmass_aab9fff20d20369762e79a0f13f544c0b}{00259}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_pointmass_aab9fff20d20369762e79a0f13f544c0b}{m}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00260}\mbox{\hyperlink{struct_pointmass_a06d075a5c4a01722f7830651b159887b}{00260}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_pointmass_a06d075a5c4a01722f7830651b159887b}{rmin}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00261}\mbox{\hyperlink{struct_pointmass_a66b7cf77e93a25037dfd1db0a873774f}{00261}}     \textcolor{keywordtype}{double} *\mbox{\hyperlink{struct_pointmass_a66b7cf77e93a25037dfd1db0a873774f}{rmax}};}
+\DoxyCodeLine{00262 \};}
+\DoxyCodeLine{00263 }
+\DoxyCodeLine{00264 }
+\DoxyCodeLine{00265 \textcolor{comment}{// the pointers to the arrays on the host}}
+\DoxyCodeLine{00266 \textcolor{keyword}{extern} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_pointmass}{Pointmass}} \mbox{\hyperlink{miluph_8h_ae8a81884fe1ed60eefa06f22a2ec2f1b}{pointmass\_host}};}
+\DoxyCodeLine{00267 \textcolor{comment}{// the pointers to the arrays on the device in constant memory}}
+\DoxyCodeLine{00268 \textcolor{keyword}{extern} \_\_constant\_\_ \textcolor{keyword}{struct }\mbox{\hyperlink{struct_pointmass}{Pointmass}} \mbox{\hyperlink{miluph_8h_a8798c21a7b2043e5155ca22c2b398cf6}{pointmass}};}
+\DoxyCodeLine{00269 \textcolor{comment}{// the pointers to the arrays on the device residing on the host}}
+\DoxyCodeLine{00270 \textcolor{keyword}{extern} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_pointmass}{Pointmass}} \mbox{\hyperlink{miluph_8h_aea5ac75f4380143b585f49ab962ab822}{pointmass\_device}};}
+\DoxyCodeLine{00271 \textcolor{comment}{// the pointers to the arrays for the runge-\/kutta integrator}}
+\DoxyCodeLine{00272 \textcolor{keyword}{extern} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_pointmass}{Pointmass}} \mbox{\hyperlink{miluph_8h_aacd189a1104a14b8bd9fa8f34653678c}{rk\_pointmass\_device}}[3];}
+\DoxyCodeLine{00273 \textcolor{keyword}{extern} \_\_constant\_\_ \textcolor{keyword}{struct }\mbox{\hyperlink{struct_pointmass}{Pointmass}} \mbox{\hyperlink{miluph_8h_a50749133e014ae2cc306ea78084cffd9}{rk\_pointmass}}[3];}
+\DoxyCodeLine{00274 }
+\DoxyCodeLine{00275 \textcolor{keyword}{extern} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_pointmass}{Pointmass}} \mbox{\hyperlink{miluph_8h_a8ffcf340b094bce9bbb25c354cf7e796}{predictor\_pointmass\_device}};}
+\DoxyCodeLine{00276 \textcolor{keyword}{extern} \_\_constant\_\_ \textcolor{keyword}{struct }\mbox{\hyperlink{struct_pointmass}{Pointmass}} \mbox{\hyperlink{miluph_8h_a199ee8d4374bbb3c3a76b6073e109735}{predictor\_pointmass}};}
+\DoxyCodeLine{00277 }
+\DoxyCodeLine{00278 \textcolor{comment}{// the pointers to the arrays on the host}}
+\DoxyCodeLine{00279 \textcolor{keyword}{extern} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_a43f583b42078aa24dd8da16315918b4d}{p\_host}};}
+\DoxyCodeLine{00280 \textcolor{comment}{// the pointers to the arrays on the device in constant memory}}
+\DoxyCodeLine{00281 \textcolor{keyword}{extern} \_\_constant\_\_ \textcolor{keyword}{struct }\mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_a9c416f8a5261389ba7b66c159c03d53d}{p}};}
+\DoxyCodeLine{00282 \textcolor{keyword}{extern} \_\_constant\_\_ \textcolor{keyword}{struct }\mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_aa7123d849e86157036f10deaa6be2558}{p\_rhs}};}
+\DoxyCodeLine{00283 \textcolor{comment}{// the pointers to the arrays on the device residing on the host}}
+\DoxyCodeLine{00284 \textcolor{keyword}{extern} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_a9de5c2e08c156c001e1b244acb3caf3e}{p\_device}};}
+\DoxyCodeLine{00285 \textcolor{comment}{// the pointers to the arrays for the runge-\/kutta integrator}}
+\DoxyCodeLine{00286 \textcolor{keyword}{extern} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_ad14f5c9f5d1b53b977aede013407bb27}{rk\_device}}[3];}
+\DoxyCodeLine{00287 \textcolor{keyword}{extern} \_\_constant\_\_ \textcolor{keyword}{struct }\mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_a4a6c73e833d232244b849c1e8156329e}{rk}}[3];}
+\DoxyCodeLine{00288 }
+\DoxyCodeLine{00289 \textcolor{keyword}{extern} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_ad59732ba733939c11cb3db84edfffccd}{predictor\_device}};}
+\DoxyCodeLine{00290 \textcolor{keyword}{extern} \_\_constant\_\_ \textcolor{keyword}{struct }\mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_a6d1c593c1ad5b070b3b40acaad4eda44}{predictor}};}
+\DoxyCodeLine{00291 }
+\DoxyCodeLine{00292 \textcolor{comment}{// the three integrator steps}}
+\DoxyCodeLine{00293 \textcolor{keyword}{enum} \{}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00294}\mbox{\hyperlink{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55baacab89fffe1a3997dfb89071df5ae943}{00294}}     \mbox{\hyperlink{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55baacab89fffe1a3997dfb89071df5ae943}{RKSTART}},}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00295}\mbox{\hyperlink{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55bacaf1b9b57a3f73eca5a455bdf5602ac9}{00295}}     \mbox{\hyperlink{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55bacaf1b9b57a3f73eca5a455bdf5602ac9}{RKFIRST}},}
+\DoxyCodeLine{00296     \mbox{\hyperlink{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55babb952d593bd6f9ae35648033e8bf7af9}{RKSECOND}}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00297}\mbox{\hyperlink{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55babb952d593bd6f9ae35648033e8bf7af9}{00297}} \};}
+\DoxyCodeLine{00298 }
+\DoxyCodeLine{00299 }
+\DoxyCodeLine{00300 \textcolor{comment}{// the implemented integrators}}
+\DoxyCodeLine{00301 }
+\DoxyCodeLine{00302 \textcolor{keyword}{enum} \{}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00303}\mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7ab29a294112c9ef5c3c0c7db6363a6d2e}{00303}}     \mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7ab29a294112c9ef5c3c0c7db6363a6d2e}{EULER}},}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00304}\mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7acd343968fdf1f81d98e598822641ebbe}{00304}}     \mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7acd343968fdf1f81d98e598822641ebbe}{RK2\_ADAPTIVE}},}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00305}\mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7a9e2a351047afa1abab0f2037aad734b0}{00305}}     \mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7a9e2a351047afa1abab0f2037aad734b0}{MONAGHAN\_PC}},}
+\DoxyCodeLine{00306     \mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7adce75d88594d2a63dec1a4ea2f669254}{EULER\_PC}}}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00307}\mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7adce75d88594d2a63dec1a4ea2f669254}{00307}} \};}
+\DoxyCodeLine{00308 }
+\DoxyCodeLine{00309 }
+\DoxyCodeLine{00310 }
+\DoxyCodeLine{00311 \textcolor{preprocessor}{\#if FRAGMENTATION}}
+\DoxyCodeLine{00312 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} maxNumFlaws\_host;}
+\DoxyCodeLine{00313 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00314 }
+\DoxyCodeLine{00315 }
+\DoxyCodeLine{00316 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} *\mbox{\hyperlink{miluph_8h_a6452a9acca23effecb6f5a6e0cd332ec}{interactions}};}
+\DoxyCodeLine{00317 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} *\mbox{\hyperlink{miluph_8h_a572e71e272ac3b2dc96e75c46e95572a}{interactions\_host}};}
+\DoxyCodeLine{00318 }
+\DoxyCodeLine{00319 }
+\DoxyCodeLine{00320 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} *\mbox{\hyperlink{miluph_8h_ad23cf9629b76b621151904d6d9551d5c}{childList\_host}};}
+\DoxyCodeLine{00321 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} *\mbox{\hyperlink{miluph_8h_a81c529c63618e550b35e2091e9573751}{childListd}};}
+\DoxyCodeLine{00322 \textcolor{keyword}{extern} \_\_constant\_\_ \textcolor{keyword}{volatile} \textcolor{keywordtype}{int} *\mbox{\hyperlink{miluph_8h_a086693613dbb3693485ba52b97c4e465}{childList}};}
+\DoxyCodeLine{00323 }
+\DoxyCodeLine{00324 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{miluph_8h_a0991032076bf439261a04c42163df141}{numberOfParticles}};}
+\DoxyCodeLine{00325 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{miluph_8h_aa484b076a954486d3a4a527e57045f3b}{maxNumberOfParticles}};}
+\DoxyCodeLine{00326 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{miluph_8h_aef84c66ae80d51f0400be806d8b25a02}{numberOfRealParticles}};}
+\DoxyCodeLine{00327 }
+\DoxyCodeLine{00328 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{miluph_8h_a5b6a390fce314f1da2360859a60ae27f}{numberOfPointmasses}};}
+\DoxyCodeLine{00329 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{miluph_8h_a4911d0367b4953405b93a67be90981b0}{memorySizeForPointmasses}};}
+\DoxyCodeLine{00330 }
+\DoxyCodeLine{00331 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{miluph_8h_a53ebfa70db06da872a90c16a7196d696}{memorySizeForParticles}};}
+\DoxyCodeLine{00332 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{miluph_8h_a4fc0d3b9311b16ae575855f7ddba7cde}{memorySizeForTree}};}
+\DoxyCodeLine{00333 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{miluph_8h_acbacf33e888881503c94c6669df253cf}{memorySizeForInteractions}};}
+\DoxyCodeLine{00334 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{miluph_8h_a6eafc402e9ece597895784f6634d8980}{memorySizeForChildren}};}
+\DoxyCodeLine{00335 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{miluph_8h_a767bbecc7f2df0c39a4b88e7da71d2bb}{memorySizeForStress}};}
+\DoxyCodeLine{00336 \textcolor{preprocessor}{\#if FRAGMENTATION}}
+\DoxyCodeLine{00337 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} memorySizeForActivationThreshold;}
+\DoxyCodeLine{00338 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00339 }
+\DoxyCodeLine{00340 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{miluph_8h_a4c8f9b962957f758f66a7e9a4367d567}{numberOfChildren}}; \textcolor{comment}{// 4 for 2D, 8 for 3D}}
+\DoxyCodeLine{00341 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{miluph_8h_a05037792b8959d7a716948abd0021655}{numberOfNodes}};}
+\DoxyCodeLine{00342 }
+\DoxyCodeLine{00343 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{miluph_8h_ac2181c08064123d55cc01a6b99278766}{restartedRun}};}
+\DoxyCodeLine{00344 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{miluph_8h_ad8a83283303f020de0d8ed12f3478bfa}{numberOfMultiprocessors}};}
+\DoxyCodeLine{00345 }
+\DoxyCodeLine{00346 \textcolor{keyword}{extern} \textcolor{keywordtype}{double} \mbox{\hyperlink{miluph_8h_a5d095fb4b7849b1d981d6a8d45d5ad88}{treeTheta}};}
+\DoxyCodeLine{00347 }
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00348}\mbox{\hyperlink{struct_run_parameter}{00348}} \textcolor{keyword}{typedef} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_run_parameter}{RunParameter}} \{}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00349}\mbox{\hyperlink{struct_run_parameter_af6468853e00cc9e0dad34217d8818bc8}{00349}}         \textcolor{keywordtype}{int} \mbox{\hyperlink{struct_run_parameter_af6468853e00cc9e0dad34217d8818bc8}{performanceTest}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00350}\mbox{\hyperlink{struct_run_parameter_adab1684f873e6568ba0603d3d17b6611}{00350}}         \textcolor{keywordtype}{int} \mbox{\hyperlink{struct_run_parameter_adab1684f873e6568ba0603d3d17b6611}{verbose}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00351}\mbox{\hyperlink{struct_run_parameter_aed4fd879f7fb81e11eafa2cb571badc6}{00351}}     \textcolor{keywordtype}{int} \mbox{\hyperlink{struct_run_parameter_aed4fd879f7fb81e11eafa2cb571badc6}{restart}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00352}\mbox{\hyperlink{struct_run_parameter_a6d5502005c48b3d5f16f0a047918ffb2}{00352}}         \textcolor{keywordtype}{int} \mbox{\hyperlink{struct_run_parameter_a6d5502005c48b3d5f16f0a047918ffb2}{selfgravity}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00353}\mbox{\hyperlink{struct_run_parameter_a8c4c8c6d1ee4d3898685dda3ee1a64f8}{00353}}         \textcolor{keywordtype}{int} \mbox{\hyperlink{struct_run_parameter_a8c4c8c6d1ee4d3898685dda3ee1a64f8}{directselfgravity}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00354}\mbox{\hyperlink{struct_run_parameter_a25dd5aa2645243410355a575e0d19614}{00354}}     \textcolor{keywordtype}{int} \mbox{\hyperlink{struct_run_parameter_a25dd5aa2645243410355a575e0d19614}{decouplegravity}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00355}\mbox{\hyperlink{struct_run_parameter_a9df1cfa5cbde647eb1d469b955f42afe}{00355}}     \textcolor{keywordtype}{int} \mbox{\hyperlink{struct_run_parameter_a9df1cfa5cbde647eb1d469b955f42afe}{hdf5output}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00356}\mbox{\hyperlink{struct_run_parameter_a443259acd2ba0066d509d8453732d6d7}{00356}}     \textcolor{keywordtype}{int} \mbox{\hyperlink{struct_run_parameter_a443259acd2ba0066d509d8453732d6d7}{hdf5input}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00357}\mbox{\hyperlink{struct_run_parameter_ac3778f7e51d5790ee875aef5f4ed6eac}{00357}}     \textcolor{keywordtype}{int} \mbox{\hyperlink{struct_run_parameter_ac3778f7e51d5790ee875aef5f4ed6eac}{ascii\_output}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00358}\mbox{\hyperlink{struct_run_parameter_ac761f3733fec81b4af4be0f274adcd78}{00358}}     \textcolor{keywordtype}{int} \mbox{\hyperlink{struct_run_parameter_ac761f3733fec81b4af4be0f274adcd78}{integrator\_type}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00359}\mbox{\hyperlink{struct_run_parameter_a58df015c16fa18e20bdef15df3371880}{00359}}     \textcolor{keywordtype}{double} \mbox{\hyperlink{struct_run_parameter_a58df015c16fa18e20bdef15df3371880}{maxtimestep}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00360}\mbox{\hyperlink{struct_run_parameter_a6e40376cb083732b122ed7e4c94e3170}{00360}}     \textcolor{keywordtype}{double} \mbox{\hyperlink{struct_run_parameter_a6e40376cb083732b122ed7e4c94e3170}{angular\_momentum\_check}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00361}\mbox{\hyperlink{struct_run_parameter_a50efe63001714405bea22595bcb8c2ac}{00361}}     \textcolor{keywordtype}{double} \mbox{\hyperlink{struct_run_parameter_a50efe63001714405bea22595bcb8c2ac}{rk\_epsrel}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00362}\mbox{\hyperlink{struct_run_parameter_a09873f3031f6c27a3a6c5c90adcddf22}{00362}}     \textcolor{keywordtype}{double} \mbox{\hyperlink{struct_run_parameter_a09873f3031f6c27a3a6c5c90adcddf22}{boundary\_ratio}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00363}\mbox{\hyperlink{struct_run_parameter_a34499d8dd0e7d3df1c716ead4eaec154}{00363}}     \textcolor{keywordtype}{char} \mbox{\hyperlink{struct_run_parameter_a34499d8dd0e7d3df1c716ead4eaec154}{kernel}}[256];}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00364}\mbox{\hyperlink{struct_run_parameter_a731418d0a081d9538e3303dc4bbe9691}{00364}}         config\_t \mbox{\hyperlink{struct_run_parameter_a731418d0a081d9538e3303dc4bbe9691}{config}};}
+\DoxyCodeLine{\Hypertarget{miluph_8h_source_l00365}\mbox{\hyperlink{miluph_8h_a985cd2d9f23132f86fac13d3455ed185}{00365}} \} \mbox{\hyperlink{miluph_8h_a985cd2d9f23132f86fac13d3455ed185}{RunParameter}};}
+\DoxyCodeLine{00366 }
+\DoxyCodeLine{00367 \textcolor{keyword}{extern} \mbox{\hyperlink{struct_run_parameter}{RunParameter}} \mbox{\hyperlink{miluph_8h_a52ddd705ed657b9eccbcfa25d8bd9d5c}{param}};}
+\DoxyCodeLine{00368 }
+\DoxyCodeLine{00369 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

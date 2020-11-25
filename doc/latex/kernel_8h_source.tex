@@ -1,0 +1,52 @@
+\hypertarget{kernel_8h_source}{}\doxysection{kernel.\+h}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 }
+\DoxyCodeLine{00024 \textcolor{preprocessor}{\#ifndef \_KERNEL\_H}}
+\DoxyCodeLine{00025 \textcolor{preprocessor}{\#define \_KERNEL\_H}}
+\DoxyCodeLine{00026 }
+\DoxyCodeLine{00027 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h}{parameter.h}}"{}}}
+\DoxyCodeLine{00028 }
+\DoxyCodeLine{\Hypertarget{kernel_8h_source_l00029}\mbox{\hyperlink{kernel_8h_a8bb5da029e8f5558454e05cb737ccd21}{00029}} \_\_device\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{kernel_8h_a8bb5da029e8f5558454e05cb737ccd21}{fastKernelvalueAndDerivative}}(}
+\DoxyCodeLine{00030         \textcolor{keywordtype}{double} \&W, \textcolor{keywordtype}{double} \&dWdx}
+\DoxyCodeLine{00031 \#\textcolor{keywordflow}{if} \mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}} > 1}
+\DoxyCodeLine{00032         , \textcolor{keywordtype}{double} \&dWdy}
+\DoxyCodeLine{00033 \#endif}
+\DoxyCodeLine{00034 \#\textcolor{keywordflow}{if} \mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}} == 3}
+\DoxyCodeLine{00035         , \textcolor{keywordtype}{double} \&dWdz}
+\DoxyCodeLine{00036 \#endif}
+\DoxyCodeLine{00037         , \textcolor{keywordtype}{double} \&dWdr,  \textcolor{keywordtype}{int} particle1, \textcolor{keywordtype}{int} particle2,}
+\DoxyCodeLine{00038         \textcolor{keywordtype}{double} dx}
+\DoxyCodeLine{00039 \#\textcolor{keywordflow}{if} \mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}} > 1}
+\DoxyCodeLine{00040         , \textcolor{keywordtype}{double} dy}
+\DoxyCodeLine{00041 \#endif}
+\DoxyCodeLine{00042 \#\textcolor{keywordflow}{if} \mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}} == 3}
+\DoxyCodeLine{00043         , \textcolor{keywordtype}{double} dz}
+\DoxyCodeLine{00044 \#endif}
+\DoxyCodeLine{00045 );}
+\DoxyCodeLine{00046 }
+\DoxyCodeLine{00047 \textcolor{comment}{// function pointer to generic SPH kernel function}}
+\DoxyCodeLine{00048 \textcolor{comment}{// cuda allows function pointers since Fermi architecture.}}
+\DoxyCodeLine{00049 \textcolor{comment}{// however, we need a typedef to set the function pointers}}
+\DoxyCodeLine{\Hypertarget{kernel_8h_source_l00050}\mbox{\hyperlink{kernel_8h_a40a471d0ec79a6a6b1312378cfb6a2c0}{00050}} \textcolor{keyword}{typedef} void (*\mbox{\hyperlink{kernel_8h_a40a471d0ec79a6a6b1312378cfb6a2c0}{SPH\_kernel}}) (\textcolor{keywordtype}{double} *W, \textcolor{keywordtype}{double} dWdx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} *dWdr, \textcolor{keywordtype}{double} dx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} h);}
+\DoxyCodeLine{\Hypertarget{kernel_8h_source_l00051}\mbox{\hyperlink{kernel_8h_ae4afca34ada47ee8b03ebabf93bdce35}{00051}} \_\_device\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{kernel_8h_ae4afca34ada47ee8b03ebabf93bdce35}{cubic\_spline}}(\textcolor{keywordtype}{double} *W, \textcolor{keywordtype}{double} dWdx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} *dWdr, \textcolor{keywordtype}{double} dx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} h);}
+\DoxyCodeLine{\Hypertarget{kernel_8h_source_l00052}\mbox{\hyperlink{kernel_8h_aab0a7249efed6c33b6abe4219b3fde50}{00052}} \_\_device\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{kernel_8h_aab0a7249efed6c33b6abe4219b3fde50}{spiky}}(\textcolor{keywordtype}{double} *W, \textcolor{keywordtype}{double} dWdx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} *dWdr, \textcolor{keywordtype}{double} dx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} h);}
+\DoxyCodeLine{\Hypertarget{kernel_8h_source_l00053}\mbox{\hyperlink{kernel_8h_a44af4981f58b8ecfdb34527d69d76392}{00053}} \_\_device\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{kernel_8h_a44af4981f58b8ecfdb34527d69d76392}{quartic\_spline}}(\textcolor{keywordtype}{double} *W, \textcolor{keywordtype}{double} dWdx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} *dWdr, \textcolor{keywordtype}{double} dx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} h);}
+\DoxyCodeLine{\Hypertarget{kernel_8h_source_l00054}\mbox{\hyperlink{kernel_8h_a66f1273af07fe487dd7fdf9b84f32a3e}{00054}} \_\_device\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{kernel_8h_a66f1273af07fe487dd7fdf9b84f32a3e}{quintic\_spline}}(\textcolor{keywordtype}{double} *W, \textcolor{keywordtype}{double} dWdx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} *dWdr, \textcolor{keywordtype}{double} dx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} h);}
+\DoxyCodeLine{\Hypertarget{kernel_8h_source_l00055}\mbox{\hyperlink{kernel_8h_a242017431bb5b529b4ef7b7384ce5be9}{00055}} \_\_device\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{kernel_8h_a242017431bb5b529b4ef7b7384ce5be9}{wendlandc2}}(\textcolor{keywordtype}{double} *W, \textcolor{keywordtype}{double} dWdx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} *dWdr, \textcolor{keywordtype}{double} dx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} h);}
+\DoxyCodeLine{\Hypertarget{kernel_8h_source_l00056}\mbox{\hyperlink{kernel_8h_ae4103bb99e622eeaddca79e77a59b43a}{00056}} \_\_device\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{kernel_8h_ae4103bb99e622eeaddca79e77a59b43a}{wendlandc4}}(\textcolor{keywordtype}{double} *W, \textcolor{keywordtype}{double} dWdx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} *dWdr, \textcolor{keywordtype}{double} dx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} h);}
+\DoxyCodeLine{\Hypertarget{kernel_8h_source_l00057}\mbox{\hyperlink{kernel_8h_a1d584c5f92f2b94b5b79fde28bd191fa}{00057}} \_\_device\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{kernel_8h_a1d584c5f92f2b94b5b79fde28bd191fa}{wendlandc6}}(\textcolor{keywordtype}{double} *W, \textcolor{keywordtype}{double} dWdx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} *dWdr, \textcolor{keywordtype}{double} dx[\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} h);}
+\DoxyCodeLine{\Hypertarget{kernel_8h_source_l00058}\mbox{\hyperlink{kernel_8h_a2a443adf99ecedaef93c397e196b2b41}{00058}} \_\_device\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{kernel_8h_a2a443adf99ecedaef93c397e196b2b41}{kernelvalue}}(\textcolor{keywordtype}{double} \&W, \textcolor{keywordtype}{int} particle1, \textcolor{keywordtype}{int} particle2);}
+\DoxyCodeLine{\Hypertarget{kernel_8h_source_l00059}\mbox{\hyperlink{kernel_8h_ac08dd7ddfda91dd3c7337df6fdb6244b}{00059}} \_\_device\_\_ \textcolor{keywordtype}{double} \mbox{\hyperlink{kernel_8h_ac08dd7ddfda91dd3c7337df6fdb6244b}{fixTensileInstability}}( \textcolor{keywordtype}{int} particle1, \textcolor{keywordtype}{int} particle2);}
+\DoxyCodeLine{\Hypertarget{kernel_8h_source_l00060}\mbox{\hyperlink{kernel_8h_adfb4edbc8801ad7272d4bfa4e39495c3}{00060}} \_\_global\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{kernel_8h_adfb4edbc8801ad7272d4bfa4e39495c3}{tensorialCorrection}}(\textcolor{keywordtype}{int} *\mbox{\hyperlink{miluph_8h_a6452a9acca23effecb6f5a6e0cd332ec}{interactions}});}
+\DoxyCodeLine{00061 }
+\DoxyCodeLine{00062 }
+\DoxyCodeLine{00063 }
+\DoxyCodeLine{\Hypertarget{kernel_8h_source_l00064}\mbox{\hyperlink{kernel_8h_a574755ce5da7bc304ea1752e5e3d125b}{00064}} \_\_global\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{kernel_8h_a574755ce5da7bc304ea1752e5e3d125b}{CalcDivvandCurlv}}(\textcolor{keywordtype}{int} *\mbox{\hyperlink{miluph_8h_a6452a9acca23effecb6f5a6e0cd332ec}{interactions}});}
+\DoxyCodeLine{00065 }
+\DoxyCodeLine{00066 }
+\DoxyCodeLine{00067 }
+\DoxyCodeLine{00068 }
+\DoxyCodeLine{00069 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

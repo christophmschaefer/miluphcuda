@@ -1,0 +1,113 @@
+\hypertarget{porosity_8cu_source}{}\doxysection{porosity.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Oliver Wandel and Christoph Schaefer cm.schaefer@gmail.com}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00025 \#include "{}timeintegration.h"{}}
+\DoxyCodeLine{00026 \#include "{}porosity.h"{}}
+\DoxyCodeLine{00027 \#include "{}pressure.h"{}}
+\DoxyCodeLine{00028 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00029 \#include "{}math.h"{}}
+\DoxyCodeLine{00030 \#include "{}float.h"{}}
+\DoxyCodeLine{00031 }
+\DoxyCodeLine{00032 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00033 }
+\DoxyCodeLine{00034 \_\_global\_\_ void calculateDistensionChange()}
+\DoxyCodeLine{00035 \{}
+\DoxyCodeLine{00036 /*}
+\DoxyCodeLine{00037     register int i, inc, matId;}
+\DoxyCodeLine{00038     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00039     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00040         matId = p\_rhs.materialId[i];}
+\DoxyCodeLine{00041         if (matEOS[matId] == EOS\_TYPE\_JUTZI || matEOS[matId] == EOS\_TYPE\_JUTZI\_MURNAGHAN) \{}
+\DoxyCodeLine{00042             if (p.alpha\_jutzi[i] <= 1.0) \{}
+\DoxyCodeLine{00043                 p.dalphadt[i] = 0.0;}
+\DoxyCodeLine{00044                 p.alpha\_jutzi[i] = 1.0;}
+\DoxyCodeLine{00045             \} else \{}
+\DoxyCodeLine{00046                 p.dalphadt[i] = ((p.dedt[i] * p.delpdele[i] + p.alpha\_jutzi[i] * p.drhodt[i] * p.delpdelrho[i])}
+\DoxyCodeLine{00047                             * p.dalphadp[i]) / (p.alpha\_jutzi[i] + p.dalphadp[i] * (p.p[i] -\/ p.rho[i] * p.delpdelrho[i]));}
+\DoxyCodeLine{00048                 if (p.dalphadt[i] > 0.0) \{}
+\DoxyCodeLine{00049                     p.dalphadt[i] = 0.0;}
+\DoxyCodeLine{00050                 \}}
+\DoxyCodeLine{00051                 \}}
+\DoxyCodeLine{00052         \} else \{}
+\DoxyCodeLine{00053             p.dalphadt[i] = 0.0;}
+\DoxyCodeLine{00054         \}}
+\DoxyCodeLine{00055     \}}
+\DoxyCodeLine{00056 */}
+\DoxyCodeLine{00057 \}}
+\DoxyCodeLine{00058 \#endif}
+\DoxyCodeLine{00059 }
+\DoxyCodeLine{00060 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00061 \#define MAXFLOAT DBL\_MAX}
+\DoxyCodeLine{00062 }
+\DoxyCodeLine{00063 \_\_global\_\_ void calculateCompressiveStrength()}
+\DoxyCodeLine{00064 \{}
+\DoxyCodeLine{00065     register int i, inc, matId;}
+\DoxyCodeLine{00066     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00067     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00068         matId = p\_rhs.materialId[i];}
+\DoxyCodeLine{00069         if (matEOS[matId] == EOS\_TYPE\_SIRONO) \{}
+\DoxyCodeLine{00070             double alpha = matporsirono\_alpha[matId];}
+\DoxyCodeLine{00071             double pm = matporsirono\_pm[matId];}
+\DoxyCodeLine{00072             double phimax = matporsirono\_phimax[matId];}
+\DoxyCodeLine{00073             double phi0 = matporsirono\_phi0[matId];}
+\DoxyCodeLine{00074             double delta = matporsirono\_delta[matId];}
+\DoxyCodeLine{00075             double rho\_s = matporsirono\_rho\_s[matId];}
+\DoxyCodeLine{00076             double phi = p.rho[i] / rho\_s;}
+\DoxyCodeLine{00077             /* Using omni-\/sided\_compression curve for compressive strength */}
+\DoxyCodeLine{00078             if (phi <= 0.125)}
+\DoxyCodeLine{00079                 p.compressive\_strength[i] = alpha * 31.45166;}
+\DoxyCodeLine{00080             if ((phi > 0.125) \&\& (phi < 0.58))}
+\DoxyCodeLine{00081                 p.compressive\_strength[i] = alpha * pm * pow(((phimax -\/ phi0) / (phimax -\/ phi) -\/ 1.0), delta * 2.302585);}
+\DoxyCodeLine{00082             if (phi >= 0.58)}
+\DoxyCodeLine{00083                 p.compressive\_strength[i] = MAXFLOAT;}
+\DoxyCodeLine{00084         \} else \{}
+\DoxyCodeLine{00085             p.compressive\_strength[i] = MAXFLOAT;}
+\DoxyCodeLine{00086         \}}
+\DoxyCodeLine{00087     \}}
+\DoxyCodeLine{00088 \}}
+\DoxyCodeLine{00089 }
+\DoxyCodeLine{00090 \_\_global\_\_ void calculateTensileStrength()}
+\DoxyCodeLine{00091 \{}
+\DoxyCodeLine{00092     register int i, inc, matId;}
+\DoxyCodeLine{00093     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00094     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00095         matId = p\_rhs.materialId[i];}
+\DoxyCodeLine{00096         if (matEOS[matId] == EOS\_TYPE\_SIRONO) \{}
+\DoxyCodeLine{00097             double rho\_s = matporsirono\_rho\_s[matId];}
+\DoxyCodeLine{00098             double phi = p.rho[i] / rho\_s;}
+\DoxyCodeLine{00099             double tensStrength;}
+\DoxyCodeLine{00100             tensStrength = pow(10.0, (2.8 + 1.48 * phi));}
+\DoxyCodeLine{00101             p.tensile\_strength[i] = tensStrength * (-\/1.0);}
+\DoxyCodeLine{00102         \} else \{}
+\DoxyCodeLine{00103             p.tensile\_strength[i] = -\/MAXFLOAT;}
+\DoxyCodeLine{00104         \}}
+\DoxyCodeLine{00105     \}}
+\DoxyCodeLine{00106 \}}
+\DoxyCodeLine{00107 }
+\DoxyCodeLine{00108 \#endif}
+
+\end{DoxyCode}

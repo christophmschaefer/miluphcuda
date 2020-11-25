@@ -1,0 +1,589 @@
+\hypertarget{aneos_8cu_source}{}\doxysection{aneos.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Burger}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Burger, Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 \#include <stdio.h>}
+\DoxyCodeLine{00025 \#include <stdlib.h>}
+\DoxyCodeLine{00026 \#include "{}aneos.h"{}}
+\DoxyCodeLine{00027 \#include "{}timeintegration.h"{}}
+\DoxyCodeLine{00028 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00029 }
+\DoxyCodeLine{00030 }
+\DoxyCodeLine{00031 }
+\DoxyCodeLine{00032 // global variables (on the host)}
+\DoxyCodeLine{00033 int *g\_eos\_is\_aneos;    // TRUE if eos of material is ANEOS}
+\DoxyCodeLine{00034 const char **g\_aneos\_tab\_file;}
+\DoxyCodeLine{00035 int *g\_aneos\_n\_rho;}
+\DoxyCodeLine{00036 int *g\_aneos\_n\_e;}
+\DoxyCodeLine{00037 double *g\_aneos\_rho\_0;}
+\DoxyCodeLine{00038 double *g\_aneos\_bulk\_cs;}
+\DoxyCodeLine{00039 double **g\_aneos\_rho;}
+\DoxyCodeLine{00040 double **g\_aneos\_e;}
+\DoxyCodeLine{00041 double ***g\_aneos\_p;}
+\DoxyCodeLine{00042 \#if MORE\_ANEOS\_OUTPUT}
+\DoxyCodeLine{00043 double ***g\_aneos\_T;}
+\DoxyCodeLine{00044 double ***g\_aneos\_cs;}
+\DoxyCodeLine{00045 double ***g\_aneos\_entropy;}
+\DoxyCodeLine{00046 int ***g\_aneos\_phase\_flag;}
+\DoxyCodeLine{00047 \#endif}
+\DoxyCodeLine{00048 }
+\DoxyCodeLine{00049 }
+\DoxyCodeLine{00050 }
+\DoxyCodeLine{00051 \#if MORE\_ANEOS\_OUTPUT}
+\DoxyCodeLine{00052 void initialize\_aneos\_eos\_full(const char *aneos\_tab\_file, int n\_rho, int n\_e, double *rho, double *e, double **p, double **T, double **cs, double **entropy, int **phase\_flag)}
+\DoxyCodeLine{00053 /* Fully initializes ANEOS EOS for one material by reading full lookup table from file.*/}
+\DoxyCodeLine{00054 \{}
+\DoxyCodeLine{00055     int i,j;}
+\DoxyCodeLine{00056     FILE *f;}
+\DoxyCodeLine{00057     }
+\DoxyCodeLine{00058     // open file containing ANEOS lookup table}
+\DoxyCodeLine{00059     if ( (f = fopen(aneos\_tab\_file,"{}r"{})) == NULL )}
+\DoxyCodeLine{00060         ERRORVAR("{}FILE ERROR! Cannot open \%s for reading!\(\backslash\)n"{}, aneos\_tab\_file)}
+\DoxyCodeLine{00061     }
+\DoxyCodeLine{00062     // read rho and e (vectors) and p, T, cs, entropy and phase-\/flag (matrices) from file}
+\DoxyCodeLine{00063     for(i=0; i<3; i++)}
+\DoxyCodeLine{00064         fscanf(f, "{}\%*[\string^\(\backslash\)n]\(\backslash\)n"{});     // ignore first three lines}
+\DoxyCodeLine{00065     if ( fscanf(f, "{}\%le \%le \%le \%le \%le \%le \%d\%*[\string^\(\backslash\)n]\(\backslash\)n"{}, rho, e, \&p[0][0], \&T[0][0], \&cs[0][0], \&entropy[0][0], \&phase\_flag[0][0] ) != 7 )}
+\DoxyCodeLine{00066         ERRORVAR("{}ERROR! Something's wrong with the ANEOS lookup table in \%s\(\backslash\)n"{}, aneos\_tab\_file)}
+\DoxyCodeLine{00067     for(j=1; j<n\_e; j++)}
+\DoxyCodeLine{00068         fscanf(f, "{}\%*le \%le \%le \%le \%le \%le \%d\%*[\string^\(\backslash\)n]\(\backslash\)n"{}, \&e[j], \&p[0][j], \&T[0][j], \&cs[0][j], \&entropy[0][j], \&phase\_flag[0][j] );}
+\DoxyCodeLine{00069     for(i=1; i<n\_rho; i++) \{}
+\DoxyCodeLine{00070         fscanf(f, "{}\%le \%*le \%le \%le \%le \%le \%d\%*[\string^\(\backslash\)n]\(\backslash\)n"{}, \&rho[i], \&p[i][0], \&T[i][0], \&cs[i][0], \&entropy[i][0], \&phase\_flag[i][0] );}
+\DoxyCodeLine{00071         for(j=1; j<n\_e; j++)}
+\DoxyCodeLine{00072             fscanf(f, "{}\%*le \%*le \%le \%le \%le \%le \%d\%*[\string^\(\backslash\)n]\(\backslash\)n"{}, \&p[i][j], \&T[i][j], \&cs[i][j], \&entropy[i][j], \&phase\_flag[i][j] );}
+\DoxyCodeLine{00073     \}}
+\DoxyCodeLine{00074     fclose(f);}
+\DoxyCodeLine{00075 \}}
+\DoxyCodeLine{00076 }
+\DoxyCodeLine{00077 }
+\DoxyCodeLine{00078 }
+\DoxyCodeLine{00079 \#else}
+\DoxyCodeLine{00080 void initialize\_aneos\_eos\_basic(const char *aneos\_tab\_file, int n\_rho, int n\_e, double *rho, double *e, double **p)}
+\DoxyCodeLine{00081 /* Initializes basic quantities of the ANEOS EOS for one material by reading only these quantities from the lookup table file.*/}
+\DoxyCodeLine{00082 \{}
+\DoxyCodeLine{00083     int i,j;}
+\DoxyCodeLine{00084     FILE *f;}
+\DoxyCodeLine{00085     }
+\DoxyCodeLine{00086     // open file containing ANEOS lookup table}
+\DoxyCodeLine{00087     if ( (f = fopen(aneos\_tab\_file,"{}r"{})) == NULL )}
+\DoxyCodeLine{00088         ERRORVAR("{}FILE ERROR! Cannot open \%s for reading!\(\backslash\)n"{}, aneos\_tab\_file)}
+\DoxyCodeLine{00089     }
+\DoxyCodeLine{00090     // read rho and e (vectors) and p (matrix) from file}
+\DoxyCodeLine{00091     for(i=0; i<3; i++)}
+\DoxyCodeLine{00092         fscanf(f, "{}\%*[\string^\(\backslash\)n]\(\backslash\)n"{});     // ignore first three lines}
+\DoxyCodeLine{00093     if ( fscanf(f, "{}\%le \%le \%le\%*[\string^\(\backslash\)n]\(\backslash\)n"{}, rho, e, \&p[0][0] ) != 3 )}
+\DoxyCodeLine{00094         ERRORVAR("{}ERROR! Something's wrong with the ANEOS lookup table in \%s\(\backslash\)n"{}, aneos\_tab\_file)}
+\DoxyCodeLine{00095     for(j=1; j<n\_e; j++)}
+\DoxyCodeLine{00096         fscanf(f, "{}\%*le \%le \%le\%*[\string^\(\backslash\)n]\(\backslash\)n"{}, \&e[j], \&p[0][j] );}
+\DoxyCodeLine{00097     for(i=1; i<n\_rho; i++) \{}
+\DoxyCodeLine{00098         fscanf(f, "{}\%le \%*le \%le\%*[\string^\(\backslash\)n]\(\backslash\)n"{}, \&rho[i], \&p[i][0] );}
+\DoxyCodeLine{00099         for(j=1; j<n\_e; j++)}
+\DoxyCodeLine{00100             fscanf(f, "{}\%*le \%*le \%le\%*[\string^\(\backslash\)n]\(\backslash\)n"{}, \&p[i][j] );}
+\DoxyCodeLine{00101     \}}
+\DoxyCodeLine{00102     fclose(f);}
+\DoxyCodeLine{00103 \}}
+\DoxyCodeLine{00104 \#endif}
+\DoxyCodeLine{00105 }
+\DoxyCodeLine{00106 }
+\DoxyCodeLine{00107 }
+\DoxyCodeLine{00108 void free\_aneos\_memory()}
+\DoxyCodeLine{00109 /* Frees (global) ANEOS memory on the host */}
+\DoxyCodeLine{00110 \{}
+\DoxyCodeLine{00111     int i,j;}
+\DoxyCodeLine{00112     }
+\DoxyCodeLine{00113     for (i=0; i<numberOfMaterials; i++) \{}
+\DoxyCodeLine{00114         if (g\_eos\_is\_aneos[i]) \{}
+\DoxyCodeLine{00115             free(g\_aneos\_rho[i]);}
+\DoxyCodeLine{00116             free(g\_aneos\_e[i]);}
+\DoxyCodeLine{00117             for(j = 0; j < g\_aneos\_n\_rho[i]; j++) \{}
+\DoxyCodeLine{00118                 free(g\_aneos\_p[i][j]);}
+\DoxyCodeLine{00119 \#if MORE\_ANEOS\_OUTPUT}
+\DoxyCodeLine{00120                 free(g\_aneos\_T[i][j]);}
+\DoxyCodeLine{00121                 free(g\_aneos\_cs[i][j]);}
+\DoxyCodeLine{00122                 free(g\_aneos\_entropy[i][j]);}
+\DoxyCodeLine{00123                 free(g\_aneos\_phase\_flag[i][j]);}
+\DoxyCodeLine{00124 \#endif}
+\DoxyCodeLine{00125             \}}
+\DoxyCodeLine{00126             free(g\_aneos\_p[i]);}
+\DoxyCodeLine{00127 \#if MORE\_ANEOS\_OUTPUT}
+\DoxyCodeLine{00128             free(g\_aneos\_T[i]);}
+\DoxyCodeLine{00129             free(g\_aneos\_cs[i]);}
+\DoxyCodeLine{00130             free(g\_aneos\_entropy[i]);}
+\DoxyCodeLine{00131             free(g\_aneos\_phase\_flag[i]);}
+\DoxyCodeLine{00132 \#endif}
+\DoxyCodeLine{00133         \}}
+\DoxyCodeLine{00134     \}}
+\DoxyCodeLine{00135     free(g\_aneos\_rho);}
+\DoxyCodeLine{00136     free(g\_aneos\_e);}
+\DoxyCodeLine{00137     free(g\_aneos\_p);}
+\DoxyCodeLine{00138 \#if MORE\_ANEOS\_OUTPUT}
+\DoxyCodeLine{00139     free(g\_aneos\_T);}
+\DoxyCodeLine{00140     free(g\_aneos\_cs);}
+\DoxyCodeLine{00141     free(g\_aneos\_entropy);}
+\DoxyCodeLine{00142     free(g\_aneos\_phase\_flag);}
+\DoxyCodeLine{00143 \#endif}
+\DoxyCodeLine{00144     free(g\_eos\_is\_aneos);}
+\DoxyCodeLine{00145     free(g\_aneos\_tab\_file);}
+\DoxyCodeLine{00146     free(g\_aneos\_n\_rho);}
+\DoxyCodeLine{00147     free(g\_aneos\_n\_e);}
+\DoxyCodeLine{00148     free(g\_aneos\_rho\_0);}
+\DoxyCodeLine{00149     free(g\_aneos\_bulk\_cs);}
+\DoxyCodeLine{00150 \}}
+\DoxyCodeLine{00151 }
+\DoxyCodeLine{00152 }
+\DoxyCodeLine{00153 }
+\DoxyCodeLine{00154 \_\_device\_\_ int array\_index(double x, double* array, int n)}
+\DoxyCodeLine{00155 /* Uses simple bisection to find the index i in an ordered array (length n)}
+\DoxyCodeLine{00156  * that satisfies 'array[i] <= x < array[i+1]'. If x lies outside the array-\/covered values it returns -\/1.}
+\DoxyCodeLine{00157  */}
+\DoxyCodeLine{00158 \{}
+\DoxyCodeLine{00159     int i,i1,i2;    // current index and its lower and upper bound}
+\DoxyCodeLine{00160     }
+\DoxyCodeLine{00161     // return -\/1 if x lies outside the array-\/covered values}
+\DoxyCodeLine{00162     if( x < array[0] || x >= array[n-\/1])}
+\DoxyCodeLine{00163         return(-\/1);}
+\DoxyCodeLine{00164     }
+\DoxyCodeLine{00165     i1 = 0;}
+\DoxyCodeLine{00166     i2 = n-\/1;}
+\DoxyCodeLine{00167     do \{}
+\DoxyCodeLine{00168         i = (int)( (double)(i1+i2)/2.0 );}
+\DoxyCodeLine{00169         if( array[i] <= x )}
+\DoxyCodeLine{00170             i1 = i;    // 'i' becomes new lower bound}
+\DoxyCodeLine{00171         else}
+\DoxyCodeLine{00172             i2 = i;    // 'i' becomes new upper bound}
+\DoxyCodeLine{00173     \}}
+\DoxyCodeLine{00174     while( (i2-\/i1)>1 );}
+\DoxyCodeLine{00175     }
+\DoxyCodeLine{00176     return(i1);}
+\DoxyCodeLine{00177 \}}
+\DoxyCodeLine{00178 }
+\DoxyCodeLine{00179 }
+\DoxyCodeLine{00180 }
+\DoxyCodeLine{00181 \#if MORE\_ANEOS\_OUTPUT}
+\DoxyCodeLine{00182 int array\_index\_host(double x, double* array, int n)}
+\DoxyCodeLine{00183 /* Uses simple bisection to find the index i in an ordered array (length n)}
+\DoxyCodeLine{00184  * that satisfies 'array[i] <= x < array[i+1]'. If x lies outside the array-\/covered values it returns -\/1.}
+\DoxyCodeLine{00185  */}
+\DoxyCodeLine{00186 \{}
+\DoxyCodeLine{00187     int i,i1,i2;    // current index and its lower and upper bound}
+\DoxyCodeLine{00188     }
+\DoxyCodeLine{00189     // return -\/1 if x lies outside the array-\/covered values}
+\DoxyCodeLine{00190     if( x < array[0] || x >= array[n-\/1])}
+\DoxyCodeLine{00191         return(-\/1);}
+\DoxyCodeLine{00192     }
+\DoxyCodeLine{00193     i1 = 0;}
+\DoxyCodeLine{00194     i2 = n-\/1;}
+\DoxyCodeLine{00195     do \{}
+\DoxyCodeLine{00196         i = (int)( (double)(i1+i2)/2.0 );}
+\DoxyCodeLine{00197         if( array[i] <= x )}
+\DoxyCodeLine{00198             i1 = i;    // 'i' becomes new lower bound}
+\DoxyCodeLine{00199         else}
+\DoxyCodeLine{00200             i2 = i;    // 'i' becomes new upper bound}
+\DoxyCodeLine{00201     \}}
+\DoxyCodeLine{00202     while( (i2-\/i1)>1 );}
+\DoxyCodeLine{00203     }
+\DoxyCodeLine{00204     return(i1);}
+\DoxyCodeLine{00205 \}}
+\DoxyCodeLine{00206 \#endif}
+\DoxyCodeLine{00207 }
+\DoxyCodeLine{00208 }
+\DoxyCodeLine{00209 }
+\DoxyCodeLine{00210 \_\_device\_\_ double bilinear\_interpolation\_from\_linearized(double x, double y, double* table, double* xtab, double* ytab, int ix, int iy, int n\_x, int n\_y)}
+\DoxyCodeLine{00211 /* Performs bilinear interpolation (2d lin. interp.) of values in 'table' which correspond to x-\/ and y-\/values in xtab and ytab.}
+\DoxyCodeLine{00212  * table is a linearized array where rows (connected y-\/values for a single x-\/value) are saved successively.}
+\DoxyCodeLine{00213  * The target values are x and y. ix holds the index that satisfies 'xtab[ix] <= x < xtab[ix+1]' (similar for iy).}
+\DoxyCodeLine{00214  * n\_x holds the length of a row of x-\/values for a single y-\/value (similar for n\_y).}
+\DoxyCodeLine{00215  * If (x,y) lies outside the table then ix<0 || iy<0 and the table values are (somewhat linearly) extrapolated.}
+\DoxyCodeLine{00216  */}
+\DoxyCodeLine{00217 \{}
+\DoxyCodeLine{00218     double normx, normy, a, b, p;}
+\DoxyCodeLine{00219     }
+\DoxyCodeLine{00220     // if (x,y) lies outside table then extrapolate (somewhat linearly) and print a warning}
+\DoxyCodeLine{00221     if( ix < 0 || iy < 0 )}
+\DoxyCodeLine{00222     \{}
+\DoxyCodeLine{00223         if( ix < 0 \&\& iy < 0 )  // (x,y) lies in one of the 4 "{}corners"{}}
+\DoxyCodeLine{00224         \{}
+\DoxyCodeLine{00225             if( x < xtab[0] \&\& y < ytab[0] )}
+\DoxyCodeLine{00226             \{}
+\DoxyCodeLine{00227                 normx = (xtab[0]-\/x) / (xtab[1]-\/xtab[0]);    // (always positive) distance from table end, normalized to x-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00228                 normy = (ytab[0]-\/y) / (ytab[1]-\/ytab[0]);    // (always positive) distance from table end, normalized to y-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00229                 p = table[0] + normx*(table[0]-\/table[n\_y]) + normy*(table[0]-\/table[1]);}
+\DoxyCodeLine{00230             \}}
+\DoxyCodeLine{00231             else if( x < xtab[0] \&\& y >= ytab[n\_y-\/1] )}
+\DoxyCodeLine{00232             \{}
+\DoxyCodeLine{00233                 normx = (xtab[0]-\/x) / (xtab[1]-\/xtab[0]);    // (always positive) distance from table end, normalized to x-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00234                 normy = (y-\/ytab[n\_y-\/1]) / (ytab[n\_y-\/1]-\/ytab[n\_y-\/2]);    // (always positive) distance from table end, normalized to y-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00235                 p = table[n\_y-\/1] + normx*(table[n\_y-\/1]-\/table[2*n\_y-\/1]) + normy*(table[n\_y-\/1]-\/table[n\_y-\/2]);}
+\DoxyCodeLine{00236             \}}
+\DoxyCodeLine{00237             else if( x >= xtab[n\_x-\/1] \&\& y < ytab[0] )}
+\DoxyCodeLine{00238             \{}
+\DoxyCodeLine{00239                 normx = (x-\/xtab[n\_x-\/1]) / (xtab[n\_x-\/1]-\/xtab[n\_x-\/2]);    // (always positive) distance from table end, normalized to x-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00240                 normy = (ytab[0]-\/y) / (ytab[1]-\/ytab[0]);    // (always positive) distance from table end, normalized to y-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00241                 p = table[(n\_x-\/1)*n\_y] + normx*(table[(n\_x-\/1)*n\_y]-\/table[(n\_x-\/2)*n\_y]) + normy*(table[(n\_x-\/1)*n\_y]-\/table[(n\_x-\/1)*n\_y+1]);}
+\DoxyCodeLine{00242             \}}
+\DoxyCodeLine{00243             else if( x >= xtab[n\_x-\/1] \&\& y >= ytab[n\_y-\/1] )}
+\DoxyCodeLine{00244             \{}
+\DoxyCodeLine{00245                 normx = (x-\/xtab[n\_x-\/1]) / (xtab[n\_x-\/1]-\/xtab[n\_x-\/2]);    // (always positive) distance from table end, normalized to x-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00246                 normy = (y-\/ytab[n\_y-\/1]) / (ytab[n\_y-\/1]-\/ytab[n\_y-\/2]);    // (always positive) distance from table end, normalized to y-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00247                 p = table[n\_x*n\_y-\/1] + normx*(table[n\_x*n\_y-\/1]-\/table[(n\_x-\/1)*n\_y-\/1]) + normy*(table[n\_x*n\_y-\/1]-\/table[n\_x*n\_y-\/2]);}
+\DoxyCodeLine{00248             \}}
+\DoxyCodeLine{00249             else}
+\DoxyCodeLine{00250                 printf("{}WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y);}
+\DoxyCodeLine{00251         \}}
+\DoxyCodeLine{00252         else if( ix < 0 )}
+\DoxyCodeLine{00253         \{}
+\DoxyCodeLine{00254             normy = (y-\/ytab[iy]) / (ytab[iy+1]-\/ytab[iy]);}
+\DoxyCodeLine{00255             if( x < xtab[0] )}
+\DoxyCodeLine{00256             \{}
+\DoxyCodeLine{00257                 // linear interpolation in y-\/direction at xtab[0] and xtab[1]}
+\DoxyCodeLine{00258                 a = table[iy] + normy*(table[iy+1]-\/table[iy]);}
+\DoxyCodeLine{00259                 b = table[n\_y+iy] + normy*(table[n\_y+iy+1]-\/table[n\_y+iy]);}
+\DoxyCodeLine{00260                 // linear extrapolation in x-\/direction from a and b}
+\DoxyCodeLine{00261                 normx = (x-\/xtab[0]) / (xtab[1]-\/xtab[0]);    // (always negative) distance from table end, normalized to x-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00262                 p = a + normx*(b-\/a);}
+\DoxyCodeLine{00263             \}}
+\DoxyCodeLine{00264             else if( x >= xtab[n\_x-\/1] )}
+\DoxyCodeLine{00265             \{}
+\DoxyCodeLine{00266                 // linear interpolation in y-\/direction at xtab[n\_x-\/1] and xtab[n\_x-\/2]}
+\DoxyCodeLine{00267                 a = table[(n\_x-\/1)*n\_y+iy] + normy*(table[(n\_x-\/1)*n\_y+iy+1]-\/table[(n\_x-\/1)*n\_y+iy]);}
+\DoxyCodeLine{00268                 b = table[(n\_x-\/2)*n\_y+iy] + normy*(table[(n\_x-\/2)*n\_y+iy+1]-\/table[(n\_x-\/2)*n\_y+iy]);}
+\DoxyCodeLine{00269                 // linear extrapolation in x-\/direction from a and b}
+\DoxyCodeLine{00270                 normx = (x-\/xtab[n\_x-\/1]) / (xtab[n\_x-\/1]-\/xtab[n\_x-\/2]);    // (always positive) distance from table end, normalized to x-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00271                 p = a + normx*(a-\/b);}
+\DoxyCodeLine{00272             \}}
+\DoxyCodeLine{00273             else}
+\DoxyCodeLine{00274                 printf("{}WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y);}
+\DoxyCodeLine{00275         \}}
+\DoxyCodeLine{00276         else if( iy < 0 )}
+\DoxyCodeLine{00277         \{}
+\DoxyCodeLine{00278             normx = (x-\/xtab[ix]) / (xtab[ix+1]-\/xtab[ix]);}
+\DoxyCodeLine{00279             if( y < ytab[0] )}
+\DoxyCodeLine{00280             \{}
+\DoxyCodeLine{00281                 // linear interpolation in x-\/direction at ytab[0] and ytab[1]}
+\DoxyCodeLine{00282                 a = table[ix*n\_y] + normx*(table[(ix+1)*n\_y]-\/table[ix*n\_y]);}
+\DoxyCodeLine{00283                 b = table[ix*n\_y+1] + normx*(table[(ix+1)*n\_y+1]-\/table[ix*n\_y+1]);}
+\DoxyCodeLine{00284                 // linear extrapolation in y-\/direction from a and b}
+\DoxyCodeLine{00285                 normy = (y-\/ytab[0]) / (ytab[1]-\/ytab[0]);    // (always negative) distance from table end, normalized to y-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00286                 p = a + normy*(b-\/a);}
+\DoxyCodeLine{00287             \}}
+\DoxyCodeLine{00288             else if( y >= ytab[n\_y-\/1] )}
+\DoxyCodeLine{00289             \{}
+\DoxyCodeLine{00290                 // linear interpolation in x-\/direction at ytab[n\_y-\/1] and ytab[n\_y-\/2]}
+\DoxyCodeLine{00291                 a = table[(ix+1)*n\_y-\/1] + normx*(table[(ix+2)*n\_y-\/1]-\/table[(ix+1)*n\_y-\/1]);}
+\DoxyCodeLine{00292                 b = table[(ix+1)*n\_y-\/2] + normx*(table[(ix+2)*n\_y-\/2]-\/table[(ix+1)*n\_y-\/2]);}
+\DoxyCodeLine{00293                 // linear extrapolation in y-\/direction from a and b}
+\DoxyCodeLine{00294                 normy = (y-\/ytab[n\_y-\/1]) / (ytab[n\_y-\/1]-\/ytab[n\_y-\/2]);    // (always positive) distance from table end, normalized to y-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00295                 p = a + normy*(a-\/b);}
+\DoxyCodeLine{00296             \}}
+\DoxyCodeLine{00297             else}
+\DoxyCodeLine{00298                 printf("{}WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y);}
+\DoxyCodeLine{00299         \}}
+\DoxyCodeLine{00300         else}
+\DoxyCodeLine{00301             printf("{}WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y);}
+\DoxyCodeLine{00302         }
+\DoxyCodeLine{00303         printf("{}WARNING: At least one of rho = \%e and e = \%e is out of ANEOS lookup table range! Use extrapolated f(rho,e) = \%e\(\backslash\)n"{}, x, y, p);}
+\DoxyCodeLine{00304         return(p);}
+\DoxyCodeLine{00305     \}}
+\DoxyCodeLine{00306     }
+\DoxyCodeLine{00307     // calculate normalized distances of x and y from (lower) table values}
+\DoxyCodeLine{00308     normx = (x-\/xtab[ix]) / (xtab[ix+1]-\/xtab[ix]);}
+\DoxyCodeLine{00309     normy = (y-\/ytab[iy]) / (ytab[iy+1]-\/ytab[iy]);}
+\DoxyCodeLine{00310 }
+\DoxyCodeLine{00311     // linear interpolation in x-\/direction at ytab[iy] and ytab[iy+1]}
+\DoxyCodeLine{00312     a = table[ix*n\_y+iy] + normx*(table[(ix+1)*n\_y+iy]-\/table[ix*n\_y+iy]);}
+\DoxyCodeLine{00313     b = table[ix*n\_y+iy+1] + normx*(table[(ix+1)*n\_y+iy+1]-\/table[ix*n\_y+iy+1]);}
+\DoxyCodeLine{00314     }
+\DoxyCodeLine{00315     // linear interpolation in y-\/direction between a and b}
+\DoxyCodeLine{00316     return( a + normy*(b-\/a) );}
+\DoxyCodeLine{00317 \}}
+\DoxyCodeLine{00318 }
+\DoxyCodeLine{00319 }
+\DoxyCodeLine{00320 }
+\DoxyCodeLine{00321 \#if MORE\_ANEOS\_OUTPUT}
+\DoxyCodeLine{00322 double bilinear\_interpolation\_from\_matrix(double x, double y, double** table, double* xtab, double* ytab, int ix, int iy, int n\_x, int n\_y)}
+\DoxyCodeLine{00323 // Performs bilinear interpolation (2d lin. interp.) of values in 'table' which correspond to x-\/ and y-\/values in 'xtab' and 'ytab'.}
+\DoxyCodeLine{00324 // The target values are 'x' and 'y'. 'ix' holds the index that satisfies 'xtab[ix] <= x < xtab[ix+1]' (similar for iy).}
+\DoxyCodeLine{00325 // 'n\_x' holds the length of a row of x-\/values for a single y-\/value (similar for n\_y).}
+\DoxyCodeLine{00326 // If (x,y) lies outside the table then ix<0 || iy<0 and the table values are (somewhat linearly) extrapolated.}
+\DoxyCodeLine{00327 \{}
+\DoxyCodeLine{00328     double normx = -\/1.0, normy = -\/1.0;}
+\DoxyCodeLine{00329     double a, b, p = -\/1.0;}
+\DoxyCodeLine{00330 //    FILE *f;}
+\DoxyCodeLine{00331     }
+\DoxyCodeLine{00332     }
+\DoxyCodeLine{00333     // if (x,y) lies outside table then extrapolate (somewhat linearly) and print a warning}
+\DoxyCodeLine{00334     if( ix < 0 || iy < 0 )}
+\DoxyCodeLine{00335     \{}
+\DoxyCodeLine{00336         if( ix < 0 \&\& iy < 0 )  // (x,y) lies in one of the 4 "{}corners"{}}
+\DoxyCodeLine{00337         \{}
+\DoxyCodeLine{00338             if( x < xtab[0] \&\& y < ytab[0] )}
+\DoxyCodeLine{00339             \{}
+\DoxyCodeLine{00340                 normx = (xtab[0]-\/x) / (xtab[1]-\/xtab[0]);    // (always positive) distance from table end, normalized to x-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00341                 normy = (ytab[0]-\/y) / (ytab[1]-\/ytab[0]);    // (always positive) distance from table end, normalized to y-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00342                 p = table[0][0] + normx*(table[0][0]-\/table[1][0]) + normy*(table[0][0]-\/table[0][1]);}
+\DoxyCodeLine{00343             \}}
+\DoxyCodeLine{00344             else if( x < xtab[0] \&\& y >= ytab[n\_y-\/1] )}
+\DoxyCodeLine{00345             \{}
+\DoxyCodeLine{00346                 normx = (xtab[0]-\/x) / (xtab[1]-\/xtab[0]);    // (always positive) distance from table end, normalized to x-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00347                 normy = (y-\/ytab[n\_y-\/1]) / (ytab[n\_y-\/1]-\/ytab[n\_y-\/2]);    // (always positive) distance from table end, normalized to y-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00348                 p = table[0][n\_y-\/1] + normx*(table[0][n\_y-\/1]-\/table[1][n\_y-\/1]) + normy*(table[0][n\_y-\/1]-\/table[0][n\_y-\/2]);}
+\DoxyCodeLine{00349             \}}
+\DoxyCodeLine{00350             else if( x >= xtab[n\_x-\/1] \&\& y < ytab[0] )}
+\DoxyCodeLine{00351             \{}
+\DoxyCodeLine{00352                 normx = (x-\/xtab[n\_x-\/1]) / (xtab[n\_x-\/1]-\/xtab[n\_x-\/2]);    // (always positive) distance from table end, normalized to x-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00353                 normy = (ytab[0]-\/y) / (ytab[1]-\/ytab[0]);    // (always positive) distance from table end, normalized to y-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00354                 p = table[n\_x-\/1][0] + normx*(table[n\_x-\/1][0]-\/table[n\_x-\/2][0]) + normy*(table[n\_x-\/1][0]-\/table[n\_x-\/1][1]);}
+\DoxyCodeLine{00355             \}}
+\DoxyCodeLine{00356             else if( x >= xtab[n\_x-\/1] \&\& y >= ytab[n\_y-\/1] )}
+\DoxyCodeLine{00357             \{}
+\DoxyCodeLine{00358                 normx = (x-\/xtab[n\_x-\/1]) / (xtab[n\_x-\/1]-\/xtab[n\_x-\/2]);    // (always positive) distance from table end, normalized to x-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00359                 normy = (y-\/ytab[n\_y-\/1]) / (ytab[n\_y-\/1]-\/ytab[n\_y-\/2]);    // (always positive) distance from table end, normalized to y-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00360                 p = table[n\_x-\/1][n\_y-\/1] + normx*(table[n\_x-\/1][n\_y-\/1]-\/table[n\_x-\/2][n\_y-\/1]) + normy*(table[n\_x-\/1][n\_y-\/1]-\/table[n\_x-\/1][n\_y-\/2]);}
+\DoxyCodeLine{00361             \}}
+\DoxyCodeLine{00362             else}
+\DoxyCodeLine{00363                 ERRORVAR2("{}ERROR: Some odd behavior during extrapolation from ANEOS table encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y)}
+\DoxyCodeLine{00364         \}}
+\DoxyCodeLine{00365         else if( ix < 0 )}
+\DoxyCodeLine{00366         \{}
+\DoxyCodeLine{00367             normy = (y-\/ytab[iy]) / (ytab[iy+1]-\/ytab[iy]);}
+\DoxyCodeLine{00368             if( x < xtab[0] )}
+\DoxyCodeLine{00369             \{}
+\DoxyCodeLine{00370                 // linear interpolation in y-\/direction at xtab[0] and xtab[1]}
+\DoxyCodeLine{00371                 a = table[0][iy] + normy*(table[0][iy+1]-\/table[0][iy]);}
+\DoxyCodeLine{00372                 b = table[1][iy] + normy*(table[1][iy+1]-\/table[1][iy]);}
+\DoxyCodeLine{00373                 // linear extrapolation in x-\/direction from a and b}
+\DoxyCodeLine{00374                 normx = (x-\/xtab[0]) / (xtab[1]-\/xtab[0]);    // (always negative) distance from table end, normalized to x-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00375                 p = a + normx*(b-\/a);}
+\DoxyCodeLine{00376             \}}
+\DoxyCodeLine{00377             else if( x >= xtab[n\_x-\/1] )}
+\DoxyCodeLine{00378             \{}
+\DoxyCodeLine{00379                 // linear interpolation in y-\/direction at xtab[n\_x-\/1] and xtab[n\_x-\/2]}
+\DoxyCodeLine{00380                 a = table[n\_x-\/1][iy] + normy*(table[n\_x-\/1][iy+1]-\/table[n\_x-\/1][iy]);}
+\DoxyCodeLine{00381                 b = table[n\_x-\/2][iy] + normy*(table[n\_x-\/2][iy+1]-\/table[n\_x-\/2][iy]);}
+\DoxyCodeLine{00382                 // linear extrapolation in x-\/direction from a and b}
+\DoxyCodeLine{00383                 normx = (x-\/xtab[n\_x-\/1]) / (xtab[n\_x-\/1]-\/xtab[n\_x-\/2]);    // (always positive) distance from table end, normalized to x-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00384                 p = a + normx*(a-\/b);}
+\DoxyCodeLine{00385             \}}
+\DoxyCodeLine{00386             else}
+\DoxyCodeLine{00387                 ERRORVAR2("{}ERROR: Some odd behavior during extrapolation from ANEOS table encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y)}
+\DoxyCodeLine{00388         \}}
+\DoxyCodeLine{00389         else if( iy < 0 )}
+\DoxyCodeLine{00390         \{}
+\DoxyCodeLine{00391             normx = (x-\/xtab[ix]) / (xtab[ix+1]-\/xtab[ix]);}
+\DoxyCodeLine{00392             if( y < ytab[0] )}
+\DoxyCodeLine{00393             \{}
+\DoxyCodeLine{00394                 // linear interpolation in x-\/direction at ytab[0] and ytab[1]}
+\DoxyCodeLine{00395                 a = table[ix][0] + normx*(table[ix+1][0]-\/table[ix][0]);}
+\DoxyCodeLine{00396                 b = table[ix][1] + normx*(table[ix+1][1]-\/table[ix][1]);}
+\DoxyCodeLine{00397                 // linear extrapolation in y-\/direction from a and b}
+\DoxyCodeLine{00398                 normy = (y-\/ytab[0]) / (ytab[1]-\/ytab[0]);    // (always negative) distance from table end, normalized to y-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00399                 p = a + normy*(b-\/a);}
+\DoxyCodeLine{00400             \}}
+\DoxyCodeLine{00401             else if( y >= ytab[n\_y-\/1] )}
+\DoxyCodeLine{00402             \{}
+\DoxyCodeLine{00403                 // linear interpolation in x-\/direction at ytab[n\_y-\/1] and ytab[n\_y-\/2]}
+\DoxyCodeLine{00404                 a = table[ix][n\_y-\/1] + normx*(table[ix+1][n\_y-\/1]-\/table[ix][n\_y-\/1]);}
+\DoxyCodeLine{00405                 b = table[ix][n\_y-\/2] + normx*(table[ix+1][n\_y-\/2]-\/table[ix][n\_y-\/2]);}
+\DoxyCodeLine{00406                 // linear extrapolation in y-\/direction from a and b}
+\DoxyCodeLine{00407                 normy = (y-\/ytab[n\_y-\/1]) / (ytab[n\_y-\/1]-\/ytab[n\_y-\/2]);    // (always positive) distance from table end, normalized to y-\/spacing between 2 outermost table values}
+\DoxyCodeLine{00408                 p = a + normy*(a-\/b);}
+\DoxyCodeLine{00409             \}}
+\DoxyCodeLine{00410             else}
+\DoxyCodeLine{00411                 ERRORVAR2("{}ERROR: Some odd behavior during extrapolation from ANEOS table encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y)}
+\DoxyCodeLine{00412         \}}
+\DoxyCodeLine{00413         else}
+\DoxyCodeLine{00414             ERRORVAR2("{}ERROR: Some odd behavior during extrapolation from ANEOS table encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y)}
+\DoxyCodeLine{00415         }
+\DoxyCodeLine{00416         // write a warning to warnings file}
+\DoxyCodeLine{00417 //        if ( (f = fopen("{}miluphcuda.warnings"{}, "{}a"{})) == NULL )}
+\DoxyCodeLine{00418 //            ERRORTEXT("{}FILE ERROR! Cannot open 'miluphcuda.warnings' for appending!\(\backslash\)n"{})}
+\DoxyCodeLine{00419 //        fprintf(f, "{}WARNING: At least one of rho = \%e and e = \%e is out of ANEOS lookup table range! Use extrapolated p(rho,e) = \%e\(\backslash\)n"{}, x, y, p);}
+\DoxyCodeLine{00420 //        fclose(f);}
+\DoxyCodeLine{00421         }
+\DoxyCodeLine{00422         return(p);}
+\DoxyCodeLine{00423     \}}
+\DoxyCodeLine{00424     }
+\DoxyCodeLine{00425     }
+\DoxyCodeLine{00426     // calculate normalized distances of x and y from (lower) table values}
+\DoxyCodeLine{00427     normx = (x-\/xtab[ix]) / (xtab[ix+1]-\/xtab[ix]);}
+\DoxyCodeLine{00428     normy = (y-\/ytab[iy]) / (ytab[iy+1]-\/ytab[iy]);}
+\DoxyCodeLine{00429     }
+\DoxyCodeLine{00430     // linear interpolation in x-\/direction at ytab[iy] and ytab[iy+1]}
+\DoxyCodeLine{00431     a = table[ix][iy] + normx*(table[ix+1][iy]-\/table[ix][iy]);}
+\DoxyCodeLine{00432     b = table[ix][iy+1] + normx*(table[ix+1][iy+1]-\/table[ix][iy+1]);}
+\DoxyCodeLine{00433     }
+\DoxyCodeLine{00434     // linear interpolation in y-\/direction between a and b}
+\DoxyCodeLine{00435     return( a + normy*(b-\/a) );}
+\DoxyCodeLine{00436     }
+\DoxyCodeLine{00437 \}   // end function 'bilinear\_interpolation()'}
+\DoxyCodeLine{00438 \#endif}
+\DoxyCodeLine{00439 }
+\DoxyCodeLine{00440 }
+\DoxyCodeLine{00441 }
+\DoxyCodeLine{00442 \#if MORE\_ANEOS\_OUTPUT}
+\DoxyCodeLine{00443 int discrete\_value\_table\_lookup\_from\_matrix(double x, double y, int** table, double* xtab, double* ytab, int ix, int iy, int n\_x, int n\_y)}
+\DoxyCodeLine{00444 // Discrete (int) values in 'table' correspond to x-\/ and y-\/values (doubles) in 'xtab' and 'ytab'.}
+\DoxyCodeLine{00445 // This function finds the closest "{}corner"{} (in the x-\/y-\/plane) of the respective cell and returns the value of 'table' in that corner.}
+\DoxyCodeLine{00446 // The target values are 'x' and 'y'. 'ix' holds the index that satisfies 'xtab[ix] <= x < xtab[ix+1]' (similar for iy).}
+\DoxyCodeLine{00447 // 'n\_x' holds the length of a row of x-\/values for a single y-\/value (similar for n\_y).}
+\DoxyCodeLine{00448 // If (x,y) lies outside the table then ix<0 || iy<0 and the closest (in the x-\/y-\/plane) value of 'table' is returned.}
+\DoxyCodeLine{00449 \{}
+\DoxyCodeLine{00450     int phase\_flag = -\/1;}
+\DoxyCodeLine{00451     double normx = -\/1.0, normy = -\/1.0;}
+\DoxyCodeLine{00452 //    FILE *f;}
+\DoxyCodeLine{00453     }
+\DoxyCodeLine{00454     }
+\DoxyCodeLine{00455     // if (x,y) lies outside table then find the closest value (in the x-\/y-\/plane) of 'table' and print a warning}
+\DoxyCodeLine{00456     if( ix < 0 || iy < 0 )}
+\DoxyCodeLine{00457     \{}
+\DoxyCodeLine{00458         if( ix < 0 \&\& iy < 0 )  // (x,y) lies in one of the 4 "{}corners"{}}
+\DoxyCodeLine{00459         \{}
+\DoxyCodeLine{00460             if( x < xtab[0] \&\& y < ytab[0] )    // "{}lower left"{} corner}
+\DoxyCodeLine{00461             \{}
+\DoxyCodeLine{00462                 phase\_flag = table[0][0];}
+\DoxyCodeLine{00463             \}}
+\DoxyCodeLine{00464             else if( x < xtab[0] \&\& y >= ytab[n\_y-\/1] )  // "{}upper left"{} corner}
+\DoxyCodeLine{00465             \{}
+\DoxyCodeLine{00466                 phase\_flag = table[0][n\_y-\/1];}
+\DoxyCodeLine{00467             \}}
+\DoxyCodeLine{00468             else if( x >= xtab[n\_x-\/1] \&\& y < ytab[0] )  // "{}lower right"{} corner}
+\DoxyCodeLine{00469             \{}
+\DoxyCodeLine{00470                 phase\_flag = table[n\_x-\/1][0];}
+\DoxyCodeLine{00471             \}}
+\DoxyCodeLine{00472             else if( x >= xtab[n\_x-\/1] \&\& y >= ytab[n\_y-\/1] ) // "{}upper right"{} corner}
+\DoxyCodeLine{00473             \{}
+\DoxyCodeLine{00474                 phase\_flag = table[n\_x-\/1][n\_y-\/1];}
+\DoxyCodeLine{00475             \}}
+\DoxyCodeLine{00476             else}
+\DoxyCodeLine{00477                 ERRORVAR2("{}ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete\_value\_table\_lookup()' encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y)}
+\DoxyCodeLine{00478         \}}
+\DoxyCodeLine{00479         else if( ix < 0 )}
+\DoxyCodeLine{00480         \{}
+\DoxyCodeLine{00481             normy = (y-\/ytab[iy]) / (ytab[iy+1]-\/ytab[iy]);}
+\DoxyCodeLine{00482             if( normy >= 0.5 \&\& normy <= 1.0 )}
+\DoxyCodeLine{00483             \{}
+\DoxyCodeLine{00484                 if( x < xtab[0] )}
+\DoxyCodeLine{00485                 \{}
+\DoxyCodeLine{00486                     phase\_flag = table[0][iy+1];}
+\DoxyCodeLine{00487                 \}}
+\DoxyCodeLine{00488                 else if( x >= xtab[n\_x-\/1] )}
+\DoxyCodeLine{00489                 \{}
+\DoxyCodeLine{00490                     phase\_flag = table[n\_x-\/1][iy+1];}
+\DoxyCodeLine{00491                 \}}
+\DoxyCodeLine{00492                 else}
+\DoxyCodeLine{00493                     ERRORVAR2("{}ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete\_value\_table\_lookup()' encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y)}
+\DoxyCodeLine{00494             \}}
+\DoxyCodeLine{00495             else if( normy < 0.5 \&\& normy >= 0.0 )}
+\DoxyCodeLine{00496             \{}
+\DoxyCodeLine{00497                 if( x < xtab[0] )}
+\DoxyCodeLine{00498                 \{}
+\DoxyCodeLine{00499                     phase\_flag = table[0][iy];}
+\DoxyCodeLine{00500                 \}}
+\DoxyCodeLine{00501                 else if( x >= xtab[n\_x-\/1] )}
+\DoxyCodeLine{00502                 \{}
+\DoxyCodeLine{00503                     phase\_flag = table[n\_x-\/1][iy];}
+\DoxyCodeLine{00504                 \}}
+\DoxyCodeLine{00505                 else}
+\DoxyCodeLine{00506                     ERRORVAR2("{}ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete\_value\_table\_lookup()' encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y)}
+\DoxyCodeLine{00507             \}}
+\DoxyCodeLine{00508             else}
+\DoxyCodeLine{00509                 ERRORVAR("{}ERROR! 'normy' = \%e (is not in [0,1]) in 'discrete\_value\_table\_lookup()' ...\(\backslash\)n"{}, normy)}
+\DoxyCodeLine{00510         \}}
+\DoxyCodeLine{00511         else if( iy < 0 )}
+\DoxyCodeLine{00512         \{}
+\DoxyCodeLine{00513             normx = (x-\/xtab[ix]) / (xtab[ix+1]-\/xtab[ix]);}
+\DoxyCodeLine{00514             if( normx >= 0.5 \&\& normx <= 1.0 )}
+\DoxyCodeLine{00515             \{}
+\DoxyCodeLine{00516                 if( y < ytab[0] )}
+\DoxyCodeLine{00517                 \{}
+\DoxyCodeLine{00518                     phase\_flag = table[ix+1][0];}
+\DoxyCodeLine{00519                 \}}
+\DoxyCodeLine{00520                 else if( y >= ytab[n\_y-\/1] )}
+\DoxyCodeLine{00521                 \{}
+\DoxyCodeLine{00522                     phase\_flag = table[ix+1][n\_y-\/1];}
+\DoxyCodeLine{00523                 \}}
+\DoxyCodeLine{00524                 else}
+\DoxyCodeLine{00525                     ERRORVAR2("{}ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete\_value\_table\_lookup()' encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y)}
+\DoxyCodeLine{00526             \}}
+\DoxyCodeLine{00527             else if( normx < 0.5 \&\& normx >= 0.0 )}
+\DoxyCodeLine{00528             \{}
+\DoxyCodeLine{00529                 if( y < ytab[0] )}
+\DoxyCodeLine{00530                 \{}
+\DoxyCodeLine{00531                     phase\_flag = table[ix][0];}
+\DoxyCodeLine{00532                 \}}
+\DoxyCodeLine{00533                 else if( y >= ytab[n\_y-\/1] )}
+\DoxyCodeLine{00534                 \{}
+\DoxyCodeLine{00535                     phase\_flag = table[ix][n\_y-\/1];}
+\DoxyCodeLine{00536                 \}}
+\DoxyCodeLine{00537                 else}
+\DoxyCodeLine{00538                     ERRORVAR2("{}ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete\_value\_table\_lookup()' encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y)}
+\DoxyCodeLine{00539             \}}
+\DoxyCodeLine{00540             else}
+\DoxyCodeLine{00541                 ERRORVAR("{}ERROR! 'normx' = \%e (is not in [0,1]) in 'discrete\_value\_table\_lookup()' ...\(\backslash\)n"{}, normx)}
+\DoxyCodeLine{00542         \}}
+\DoxyCodeLine{00543         else}
+\DoxyCodeLine{00544             ERRORVAR2("{}ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete\_value\_table\_lookup()' encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y)}
+\DoxyCodeLine{00545         }
+\DoxyCodeLine{00546         // write a warning to warnings file}
+\DoxyCodeLine{00547 //        if ( (f = fopen("{}miluphcuda.warnings"{}, "{}a"{})) == NULL )}
+\DoxyCodeLine{00548 //            ERRORTEXT("{}FILE ERROR! Cannot open 'miluphcuda.warnings' for appending!\(\backslash\)n"{})}
+\DoxyCodeLine{00549 //        fprintf(f, "{}WARNING: At least one of rho = \%e and e = \%e is out of ANEOS lookup table range! Use extrapolated phase-\/flag = \%d\(\backslash\)n"{}, x, y, phase\_flag);}
+\DoxyCodeLine{00550 //        fclose(f);}
+\DoxyCodeLine{00551         }
+\DoxyCodeLine{00552         return(phase\_flag);}
+\DoxyCodeLine{00553     \}}
+\DoxyCodeLine{00554     }
+\DoxyCodeLine{00555     }
+\DoxyCodeLine{00556     // calculate normalized distances of x and y from (lower) table values}
+\DoxyCodeLine{00557     normx = (x-\/xtab[ix]) / (xtab[ix+1]-\/xtab[ix]);}
+\DoxyCodeLine{00558     normy = (y-\/ytab[iy]) / (ytab[iy+1]-\/ytab[iy]);}
+\DoxyCodeLine{00559     }
+\DoxyCodeLine{00560     // find the closest "{}corner"{} (in the x-\/y-\/plane) and return respective value of 'table'}
+\DoxyCodeLine{00561     if( normx >= 0.5 \&\& normx <= 1.0 \&\& normy >= 0.5 \&\& normy <= 1.0 )  // "{}upper right"{} quadrant of cell}
+\DoxyCodeLine{00562     \{}
+\DoxyCodeLine{00563         phase\_flag = table[ix+1][iy+1];}
+\DoxyCodeLine{00564     \}}
+\DoxyCodeLine{00565     else if( normx >= 0.5 \&\& normx <= 1.0 \&\& normy < 0.5 \&\& normy >= 0.0 )  // "{}lower right"{} quadrant of cell}
+\DoxyCodeLine{00566     \{}
+\DoxyCodeLine{00567         phase\_flag = table[ix+1][iy];}
+\DoxyCodeLine{00568     \}}
+\DoxyCodeLine{00569     else if( normx < 0.5 \&\& normx >= 0.0 \&\& normy >= 0.5 \&\& normy <= 1.0 )  // "{}upper left"{} quadrant of cell}
+\DoxyCodeLine{00570     \{}
+\DoxyCodeLine{00571         phase\_flag = table[ix][iy+1];}
+\DoxyCodeLine{00572     \}}
+\DoxyCodeLine{00573     else if( normx < 0.5 \&\& normx >= 0.0 \&\& normy < 0.5 \&\& normy >= 0.0 )   // "{}lower left"{} quadrant of cell}
+\DoxyCodeLine{00574     \{}
+\DoxyCodeLine{00575         phase\_flag = table[ix][iy];}
+\DoxyCodeLine{00576     \}}
+\DoxyCodeLine{00577     else}
+\DoxyCodeLine{00578         ERRORVAR2("{}ERROR: Some odd behavior during \(\backslash\)"{}discrete interpolation\(\backslash\)"{} from ANEOS table in 'discrete\_value\_table\_lookup()' encountered for rho = \%e and e = \%e !\(\backslash\)n"{}, x, y)}
+\DoxyCodeLine{00579     }
+\DoxyCodeLine{00580     return( phase\_flag );}
+\DoxyCodeLine{00581     }
+\DoxyCodeLine{00582 \}   // end function 'discrete\_value\_table\_lookup()'}
+\DoxyCodeLine{00583 \#endif}
+\DoxyCodeLine{00584 }
+
+\end{DoxyCode}

@@ -1,0 +1,3 @@
+INPUT = README.md .
+FILE_PATTERNS = *.md *.h *.cu
+OUTPUT_DIRECTORY = doc/

@@ -1,0 +1,1312 @@
+\hypertarget{memory__handling_8cu_source}{}\doxysection{memory\+\_\+handling.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00025 \#include "{}memory\_handling.h"{}}
+\DoxyCodeLine{00026 \#include "{}aneos.h"{}}
+\DoxyCodeLine{00027 }
+\DoxyCodeLine{00028 /* allocate memory on the device for pointmasses */}
+\DoxyCodeLine{00029 int allocate\_pointmass\_memory(struct Pointmass *a, int allocate\_immutables)}
+\DoxyCodeLine{00030 \{}
+\DoxyCodeLine{00031     int rc = 0;}
+\DoxyCodeLine{00032         cudaVerify(cudaMalloc((void**)\&a-\/>x, memorySizeForPointmasses));}
+\DoxyCodeLine{00033         cudaVerify(cudaMalloc((void**)\&a-\/>vx, memorySizeForPointmasses));}
+\DoxyCodeLine{00034         cudaVerify(cudaMalloc((void**)\&a-\/>ax, memorySizeForPointmasses));}
+\DoxyCodeLine{00035 \#if DIM > 1}
+\DoxyCodeLine{00036         cudaVerify(cudaMalloc((void**)\&a-\/>y, memorySizeForPointmasses));}
+\DoxyCodeLine{00037         cudaVerify(cudaMalloc((void**)\&a-\/>vy, memorySizeForPointmasses));}
+\DoxyCodeLine{00038         cudaVerify(cudaMalloc((void**)\&a-\/>ay, memorySizeForPointmasses));}
+\DoxyCodeLine{00039 \# if DIM > 2}
+\DoxyCodeLine{00040         cudaVerify(cudaMalloc((void**)\&a-\/>z, memorySizeForPointmasses));}
+\DoxyCodeLine{00041         cudaVerify(cudaMalloc((void**)\&a-\/>vz, memorySizeForPointmasses));}
+\DoxyCodeLine{00042         cudaVerify(cudaMalloc((void**)\&a-\/>az, memorySizeForPointmasses));}
+\DoxyCodeLine{00043 \# endif}
+\DoxyCodeLine{00044 \#endif}
+\DoxyCodeLine{00045         cudaVerify(cudaMalloc((void**)\&a-\/>m, memorySizeForPointmasses));}
+\DoxyCodeLine{00046         cudaVerify(cudaMalloc((void**)\&a-\/>rmin, memorySizeForPointmasses));}
+\DoxyCodeLine{00047         cudaVerify(cudaMalloc((void**)\&a-\/>rmax, memorySizeForPointmasses));}
+\DoxyCodeLine{00048     return rc;}
+\DoxyCodeLine{00049 \}}
+\DoxyCodeLine{00050 }
+\DoxyCodeLine{00051 /* allocate memory on the device for particles */}
+\DoxyCodeLine{00052 int allocate\_particles\_memory(struct Particle *a, int allocate\_immutables)}
+\DoxyCodeLine{00053 \{}
+\DoxyCodeLine{00054     int rc = 0;}
+\DoxyCodeLine{00055 }
+\DoxyCodeLine{00056 \#if TENSORIAL\_CORRECTION}
+\DoxyCodeLine{00057     // also moved to p\_device only}
+\DoxyCodeLine{00058 //      cudaVerify(cudaMalloc((void**)\&a-\/>tensorialCorrectionMatrix, memorySizeForStress));}
+\DoxyCodeLine{00059     // not needed anymore, let's save memory -\/-\/-\/ tschakka!}
+\DoxyCodeLine{00060 /*    if (allocate\_immutables) \{}
+\DoxyCodeLine{00061         cudaVerify(cudaMalloc((void**)\&a-\/>tensorialCorrectiondWdrr, MAX\_NUM\_INTERACTIONS * maxNumberOfParticles * sizeof(double)));}
+\DoxyCodeLine{00062     \} */}
+\DoxyCodeLine{00063 \#endif}
+\DoxyCodeLine{00064 }
+\DoxyCodeLine{00065 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00066         cudaVerify(cudaMalloc((void**)\&a-\/>dedt, memorySizeForParticles));}
+\DoxyCodeLine{00067 \#endif}
+\DoxyCodeLine{00068 }
+\DoxyCodeLine{00069 \#if ARTIFICIAL\_VISCOSITY}
+\DoxyCodeLine{00070         cudaVerify(cudaMalloc((void**)\&a-\/>muijmax, memorySizeForParticles));}
+\DoxyCodeLine{00071 \#endif}
+\DoxyCodeLine{00072 }
+\DoxyCodeLine{00073         cudaVerify(cudaMalloc((void**)\&a-\/>drhodt, memorySizeForParticles));}
+\DoxyCodeLine{00074 }
+\DoxyCodeLine{00075 }
+\DoxyCodeLine{00076 \#if SOLID}
+\DoxyCodeLine{00077         cudaVerify(cudaMalloc((void**)\&a-\/>S, memorySizeForStress));}
+\DoxyCodeLine{00078         cudaVerify(cudaMalloc((void**)\&a-\/>dSdt, memorySizeForStress));}
+\DoxyCodeLine{00079         cudaVerify(cudaMalloc((void**)\&a-\/>local\_strain, memorySizeForParticles));}
+\DoxyCodeLine{00080 \#endif}
+\DoxyCodeLine{00081 }
+\DoxyCodeLine{00082 \#if NAVIER\_STOKES}
+\DoxyCodeLine{00083         cudaVerify(cudaMalloc((void**)\&a-\/>Tshear, memorySizeForStress));}
+\DoxyCodeLine{00084 \#endif}
+\DoxyCodeLine{00085 }
+\DoxyCodeLine{00086 \#if INVISCID\_SPH}
+\DoxyCodeLine{00087         cudaVerify(cudaMalloc((void**)\&a-\/>beta, memorySizeForParticles));}
+\DoxyCodeLine{00088         cudaVerify(cudaMalloc((void**)\&a-\/>beta\_old, memorySizeForParticles));}
+\DoxyCodeLine{00089         cudaVerify(cudaMalloc((void**)\&a-\/>divv\_old, memorySizeForParticles));}
+\DoxyCodeLine{00090         cudaVerify(cudaMalloc((void**)\&a-\/>dbetadt, memorySizeForParticles));}
+\DoxyCodeLine{00091 \#endif}
+\DoxyCodeLine{00092 }
+\DoxyCodeLine{00093 \#if FRAGMENTATION}
+\DoxyCodeLine{00094         memorySizeForActivationThreshold = maxNumberOfParticles * MAX\_NUM\_FLAWS * sizeof(double);}
+\DoxyCodeLine{00095         cudaVerify(cudaMalloc((void**)\&a-\/>d, memorySizeForParticles));}
+\DoxyCodeLine{00096         cudaVerify(cudaMalloc((void**)\&a-\/>damage\_total, memorySizeForParticles));}
+\DoxyCodeLine{00097         cudaVerify(cudaMalloc((void**)\&a-\/>dddt, memorySizeForParticles));}
+\DoxyCodeLine{00098 }
+\DoxyCodeLine{00099         cudaVerify(cudaMalloc((void**)\&a-\/>numFlaws, memorySizeForInteractions));}
+\DoxyCodeLine{00100         cudaVerify(cudaMalloc((void**)\&a-\/>numActiveFlaws, memorySizeForInteractions));}
+\DoxyCodeLine{00101     if (allocate\_immutables) \{}
+\DoxyCodeLine{00102             cudaVerify(cudaMalloc((void**)\&a-\/>flaws, memorySizeForActivationThreshold));}
+\DoxyCodeLine{00103     \}}
+\DoxyCodeLine{00104 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00105         cudaVerify(cudaMalloc((void**)\&a-\/>damage\_porjutzi, memorySizeForParticles));}
+\DoxyCodeLine{00106         cudaVerify(cudaMalloc((void**)\&a-\/>ddamage\_porjutzidt, memorySizeForParticles));}
+\DoxyCodeLine{00107 \#endif}
+\DoxyCodeLine{00108 \#endif}
+\DoxyCodeLine{00109 }
+\DoxyCodeLine{00110 \#if GHOST\_BOUNDARIES}
+\DoxyCodeLine{00111         cudaVerify(cudaMalloc((void**)\&a-\/>real\_partner, memorySizeForInteractions));}
+\DoxyCodeLine{00112 \#endif}
+\DoxyCodeLine{00113 }
+\DoxyCodeLine{00114 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00115         cudaVerify(cudaMalloc((void**)\&a-\/>pold, memorySizeForParticles));}
+\DoxyCodeLine{00116         cudaVerify(cudaMalloc((void**)\&a-\/>alpha\_jutzi, memorySizeForParticles));}
+\DoxyCodeLine{00117         cudaVerify(cudaMalloc((void**)\&a-\/>alpha\_jutzi\_old, memorySizeForParticles));}
+\DoxyCodeLine{00118         cudaVerify(cudaMalloc((void**)\&a-\/>dalphadt, memorySizeForParticles));}
+\DoxyCodeLine{00119         cudaVerify(cudaMalloc((void**)\&a-\/>dp, memorySizeForParticles));}
+\DoxyCodeLine{00120         cudaVerify(cudaMalloc((void**)\&a-\/>dalphadp, memorySizeForParticles));}
+\DoxyCodeLine{00121         cudaVerify(cudaMalloc((void**)\&a-\/>dalphadrho, memorySizeForParticles));}
+\DoxyCodeLine{00122         cudaVerify(cudaMalloc((void**)\&a-\/>delpdelrho, memorySizeForParticles));}
+\DoxyCodeLine{00123         cudaVerify(cudaMalloc((void**)\&a-\/>delpdele, memorySizeForParticles));}
+\DoxyCodeLine{00124         cudaVerify(cudaMalloc((void**)\&a-\/>f, memorySizeForParticles));}
+\DoxyCodeLine{00125 \#endif}
+\DoxyCodeLine{00126 }
+\DoxyCodeLine{00127 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00128     cudaVerify(cudaMalloc((void**)\&a-\/>compressive\_strength, memorySizeForParticles));}
+\DoxyCodeLine{00129     cudaVerify(cudaMalloc((void**)\&a-\/>tensile\_strength, memorySizeForParticles));}
+\DoxyCodeLine{00130     cudaVerify(cudaMalloc((void**)\&a-\/>shear\_strength, memorySizeForParticles));}
+\DoxyCodeLine{00131     cudaVerify(cudaMalloc((void**)\&a-\/>K, memorySizeForParticles));}
+\DoxyCodeLine{00132     cudaVerify(cudaMalloc((void**)\&a-\/>rho\_0prime, memorySizeForParticles));}
+\DoxyCodeLine{00133     cudaVerify(cudaMalloc((void**)\&a-\/>rho\_c\_plus, memorySizeForParticles));}
+\DoxyCodeLine{00134     cudaVerify(cudaMalloc((void**)\&a-\/>rho\_c\_minus, memorySizeForParticles));}
+\DoxyCodeLine{00135     cudaVerify(cudaMalloc((void**)\&a-\/>flag\_rho\_0prime, memorySizeForInteractions));}
+\DoxyCodeLine{00136     cudaVerify(cudaMalloc((void**)\&a-\/>flag\_plastic, memorySizeForInteractions));}
+\DoxyCodeLine{00137 \#endif}
+\DoxyCodeLine{00138 }
+\DoxyCodeLine{00139 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00140     cudaVerify(cudaMalloc((void**)\&a-\/>alpha\_epspor, memorySizeForParticles));}
+\DoxyCodeLine{00141     cudaVerify(cudaMalloc((void**)\&a-\/>dalpha\_epspordt, memorySizeForParticles));}
+\DoxyCodeLine{00142     cudaVerify(cudaMalloc((void**)\&a-\/>epsilon\_v, memorySizeForParticles));}
+\DoxyCodeLine{00143     cudaVerify(cudaMalloc((void**)\&a-\/>depsilon\_vdt, memorySizeForParticles));}
+\DoxyCodeLine{00144 \#endif}
+\DoxyCodeLine{00145 }
+\DoxyCodeLine{00146     cudaVerify(cudaMalloc((void**)\&a-\/>x0, memorySizeForTree));}
+\DoxyCodeLine{00147 \#if DIM > 1}
+\DoxyCodeLine{00148     cudaVerify(cudaMalloc((void**)\&a-\/>y0, memorySizeForTree));}
+\DoxyCodeLine{00149 \#if DIM > 2}
+\DoxyCodeLine{00150     cudaVerify(cudaMalloc((void**)\&a-\/>z0, memorySizeForTree));}
+\DoxyCodeLine{00151 \#endif}
+\DoxyCodeLine{00152 \#endif}
+\DoxyCodeLine{00153         cudaVerify(cudaMalloc((void**)\&a-\/>x, memorySizeForTree));}
+\DoxyCodeLine{00154 \#if DIM > 1}
+\DoxyCodeLine{00155         cudaVerify(cudaMalloc((void**)\&a-\/>y, memorySizeForTree));}
+\DoxyCodeLine{00156 \#endif}
+\DoxyCodeLine{00157         cudaVerify(cudaMalloc((void**)\&a-\/>vx, memorySizeForParticles));}
+\DoxyCodeLine{00158 \#if DIM > 1}
+\DoxyCodeLine{00159         cudaVerify(cudaMalloc((void**)\&a-\/>vy, memorySizeForParticles));}
+\DoxyCodeLine{00160 \#endif}
+\DoxyCodeLine{00161         cudaVerify(cudaMalloc((void**)\&a-\/>dxdt, memorySizeForParticles));}
+\DoxyCodeLine{00162 \#if DIM > 1}
+\DoxyCodeLine{00163         cudaVerify(cudaMalloc((void**)\&a-\/>dydt, memorySizeForParticles));}
+\DoxyCodeLine{00164 \#endif}
+\DoxyCodeLine{00165 }
+\DoxyCodeLine{00166 \#if XSPH}
+\DoxyCodeLine{00167         cudaVerify(cudaMalloc((void**)\&a-\/>xsphvx, memorySizeForParticles));}
+\DoxyCodeLine{00168 \#if DIM > 1}
+\DoxyCodeLine{00169         cudaVerify(cudaMalloc((void**)\&a-\/>xsphvy, memorySizeForParticles));}
+\DoxyCodeLine{00170 \#endif}
+\DoxyCodeLine{00171 \#endif}
+\DoxyCodeLine{00172         cudaVerify(cudaMalloc((void**)\&a-\/>ax, memorySizeForParticles));}
+\DoxyCodeLine{00173         cudaVerify(cudaMalloc((void**)\&a-\/>g\_ax, memorySizeForParticles));}
+\DoxyCodeLine{00174 \#if DIM > 1}
+\DoxyCodeLine{00175         cudaVerify(cudaMalloc((void**)\&a-\/>ay, memorySizeForParticles));}
+\DoxyCodeLine{00176         cudaVerify(cudaMalloc((void**)\&a-\/>g\_ay, memorySizeForParticles));}
+\DoxyCodeLine{00177 \#endif}
+\DoxyCodeLine{00178         cudaVerify(cudaMalloc((void**)\&a-\/>m, memorySizeForTree));}
+\DoxyCodeLine{00179         cudaVerify(cudaMalloc((void**)\&a-\/>h, memorySizeForParticles));}
+\DoxyCodeLine{00180 \#if INTEGRATE\_SML}
+\DoxyCodeLine{00181         cudaVerify(cudaMalloc((void**)\&a-\/>dhdt, memorySizeForParticles));}
+\DoxyCodeLine{00182 \#endif}
+\DoxyCodeLine{00183 }
+\DoxyCodeLine{00184         cudaVerify(cudaMalloc((void**)\&a-\/>rho, memorySizeForParticles));}
+\DoxyCodeLine{00185         cudaVerify(cudaMalloc((void**)\&a-\/>p, memorySizeForParticles));}
+\DoxyCodeLine{00186         cudaVerify(cudaMalloc((void**)\&a-\/>e, memorySizeForParticles));}
+\DoxyCodeLine{00187         cudaVerify(cudaMalloc((void**)\&a-\/>cs, memorySizeForParticles));}
+\DoxyCodeLine{00188         cudaVerify(cudaMalloc((void**)\&a-\/>noi, memorySizeForInteractions));}
+\DoxyCodeLine{00189         cudaVerify(cudaMalloc((void**)\&a-\/>depth, memorySizeForInteractions));}
+\DoxyCodeLine{00190 // moved to p\_device only, so we don't need mem here anymore}
+\DoxyCodeLine{00191 //      cudaVerify(cudaMalloc((void**)\&a-\/>materialId, memorySizeForInteractions));}
+\DoxyCodeLine{00192 }
+\DoxyCodeLine{00193 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00194         cudaVerify(cudaMalloc((void**)\&a-\/>ep, memorySizeForParticles));}
+\DoxyCodeLine{00195         cudaVerify(cudaMalloc((void**)\&a-\/>edotp, memorySizeForParticles));}
+\DoxyCodeLine{00196         cudaVerify(cudaMalloc((void**)\&a-\/>T, memorySizeForParticles));}
+\DoxyCodeLine{00197         cudaVerify(cudaMalloc((void**)\&a-\/>dTdt, memorySizeForParticles));}
+\DoxyCodeLine{00198         cudaVerify(cudaMalloc((void**)\&a-\/>jc\_f, memorySizeForParticles));}
+\DoxyCodeLine{00199 \#endif}
+\DoxyCodeLine{00200 }
+\DoxyCodeLine{00201 }
+\DoxyCodeLine{00202 \#if DIM > 2}
+\DoxyCodeLine{00203         cudaVerify(cudaMalloc((void**)\&a-\/>z, memorySizeForTree));}
+\DoxyCodeLine{00204         cudaVerify(cudaMalloc((void**)\&a-\/>dzdt, memorySizeForParticles));}
+\DoxyCodeLine{00205         cudaVerify(cudaMalloc((void**)\&a-\/>vz, memorySizeForParticles));}
+\DoxyCodeLine{00206         cudaVerify(cudaMalloc((void**)\&a-\/>az, memorySizeForParticles));}
+\DoxyCodeLine{00207         cudaVerify(cudaMalloc((void**)\&a-\/>g\_az, memorySizeForParticles));}
+\DoxyCodeLine{00208 \#if XSPH}
+\DoxyCodeLine{00209         cudaVerify(cudaMalloc((void**)\&a-\/>xsphvz, memorySizeForParticles));}
+\DoxyCodeLine{00210 \#endif}
+\DoxyCodeLine{00211 \#endif}
+\DoxyCodeLine{00212         cudaVerify(cudaMemset(a-\/>ax, 0, memorySizeForParticles));}
+\DoxyCodeLine{00213         cudaVerify(cudaMemset(a-\/>g\_ax, 0, memorySizeForParticles));}
+\DoxyCodeLine{00214 \#if DIM > 1}
+\DoxyCodeLine{00215         cudaVerify(cudaMemset(a-\/>ay, 0, memorySizeForParticles));}
+\DoxyCodeLine{00216         cudaVerify(cudaMemset(a-\/>g\_ay, 0, memorySizeForParticles));}
+\DoxyCodeLine{00217 \#if DIM == 3}
+\DoxyCodeLine{00218         cudaVerify(cudaMemset(a-\/>az, 0, memorySizeForParticles));}
+\DoxyCodeLine{00219         cudaVerify(cudaMemset(a-\/>g\_az, 0, memorySizeForParticles));}
+\DoxyCodeLine{00220 \#endif}
+\DoxyCodeLine{00221 \#endif}
+\DoxyCodeLine{00222 }
+\DoxyCodeLine{00223     return rc;}
+\DoxyCodeLine{00224 \}}
+\DoxyCodeLine{00225 }
+\DoxyCodeLine{00226 }
+\DoxyCodeLine{00227 int copy\_gravitational\_accels\_device\_to\_device(struct Particle *dst, struct Particle *src)}
+\DoxyCodeLine{00228 \{}
+\DoxyCodeLine{00229     int rc = 0;}
+\DoxyCodeLine{00230     cudaVerify(cudaMemcpy(dst-\/>g\_ax, src-\/>g\_ax, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00231 \#if DIM > 1}
+\DoxyCodeLine{00232     cudaVerify(cudaMemcpy(dst-\/>g\_ay, src-\/>g\_ay, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00233 \#if DIM > 2}
+\DoxyCodeLine{00234     cudaVerify(cudaMemcpy(dst-\/>g\_az, src-\/>g\_az, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00235 \#endif}
+\DoxyCodeLine{00236 \#endif}
+\DoxyCodeLine{00237 }
+\DoxyCodeLine{00238     return rc;}
+\DoxyCodeLine{00239 }
+\DoxyCodeLine{00240 \}}
+\DoxyCodeLine{00241 }
+\DoxyCodeLine{00242 int copy\_pointmass\_derivatives\_device\_to\_device(struct Pointmass *dst, struct Pointmass *src)}
+\DoxyCodeLine{00243 \{}
+\DoxyCodeLine{00244     int rc = 0;}
+\DoxyCodeLine{00245     cudaVerify(cudaMemcpy(dst-\/>ax, src-\/>ax, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00246 \#if DIM > 1}
+\DoxyCodeLine{00247     cudaVerify(cudaMemcpy(dst-\/>ay, src-\/>ay, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00248 \# if DIM > 2}
+\DoxyCodeLine{00249     cudaVerify(cudaMemcpy(dst-\/>az, src-\/>az, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00250 \# endif}
+\DoxyCodeLine{00251 \#endif}
+\DoxyCodeLine{00252     return rc;}
+\DoxyCodeLine{00253 \}}
+\DoxyCodeLine{00254 }
+\DoxyCodeLine{00255 int copy\_particles\_derivatives\_device\_to\_device(struct Particle *dst, struct Particle *src)}
+\DoxyCodeLine{00256 \{}
+\DoxyCodeLine{00257     int rc = 0;}
+\DoxyCodeLine{00258 }
+\DoxyCodeLine{00259     cudaVerify(cudaMemcpy(dst-\/>ax, src-\/>ax, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00260     cudaVerify(cudaMemcpy(dst-\/>g\_ax, src-\/>g\_ax, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00261     cudaVerify(cudaMemcpy(dst-\/>dxdt, src-\/>dxdt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00262 }
+\DoxyCodeLine{00263 \#if DIM > 1}
+\DoxyCodeLine{00264     cudaVerify(cudaMemcpy(dst-\/>ay, src-\/>ay, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00265     cudaVerify(cudaMemcpy(dst-\/>g\_ay, src-\/>g\_ay, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00266     cudaVerify(cudaMemcpy(dst-\/>dydt, src-\/>dydt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00267 \#if DIM > 2}
+\DoxyCodeLine{00268     cudaVerify(cudaMemcpy(dst-\/>az, src-\/>az, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00269     cudaVerify(cudaMemcpy(dst-\/>g\_az, src-\/>g\_az, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00270     cudaVerify(cudaMemcpy(dst-\/>dzdt, src-\/>dzdt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00271 \#endif}
+\DoxyCodeLine{00272 \#endif}
+\DoxyCodeLine{00273 }
+\DoxyCodeLine{00274     cudaVerify(cudaMemcpy(dst-\/>drhodt, src-\/>drhodt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00275 }
+\DoxyCodeLine{00276 \#if INTEGRATE\_SML}
+\DoxyCodeLine{00277     cudaVerify(cudaMemcpy(dst-\/>dhdt, src-\/>dhdt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00278 \#endif}
+\DoxyCodeLine{00279 }
+\DoxyCodeLine{00280 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00281     cudaVerify(cudaMemcpy(dst-\/>dalphadt, src-\/>dalphadt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00282 \#if FRAGMENTATION}
+\DoxyCodeLine{00283     cudaVerify(cudaMemcpy(dst-\/>ddamage\_porjutzidt, src-\/>ddamage\_porjutzidt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00284 \#endif}
+\DoxyCodeLine{00285 \#endif}
+\DoxyCodeLine{00286 }
+\DoxyCodeLine{00287 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00288     cudaVerify(cudaMemcpy(dst-\/>dalpha\_epspordt, src-\/>dalpha\_epspordt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00289     cudaVerify(cudaMemcpy(dst-\/>depsilon\_vdt, src-\/>depsilon\_vdt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00290 \#endif}
+\DoxyCodeLine{00291 }
+\DoxyCodeLine{00292 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00293     cudaVerify(cudaMemcpy(dst-\/>dedt, src-\/>dedt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00294 \#endif}
+\DoxyCodeLine{00295 }
+\DoxyCodeLine{00296 \#if SOLID}
+\DoxyCodeLine{00297     cudaVerify(cudaMemcpy(dst-\/>dSdt, src-\/>dSdt, memorySizeForStress, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00298 \#endif}
+\DoxyCodeLine{00299 }
+\DoxyCodeLine{00300 \#if INVISCID\_SPH}
+\DoxyCodeLine{00301         cudaVerify(cudaMemcpy(dst-\/>dbetadt, src-\/>dbetadt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00302 \#endif}
+\DoxyCodeLine{00303 }
+\DoxyCodeLine{00304 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00305     cudaVerify(cudaMemcpy(dst-\/>edotp, src-\/>edotp, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00306     cudaVerify(cudaMemcpy(dst-\/>dTdt, src-\/>dTdt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00307 \#endif}
+\DoxyCodeLine{00308 }
+\DoxyCodeLine{00309 \#if FRAGMENTATION}
+\DoxyCodeLine{00310     cudaVerify(cudaMemcpy(dst-\/>dddt, src-\/>dddt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00311     cudaVerify(cudaMemcpy(dst-\/>numActiveFlaws, src-\/>numActiveFlaws, memorySizeForInteractions, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00312 \#endif}
+\DoxyCodeLine{00313 }
+\DoxyCodeLine{00314     return rc;}
+\DoxyCodeLine{00315 }
+\DoxyCodeLine{00316 \}}
+\DoxyCodeLine{00317 }
+\DoxyCodeLine{00318 int copy\_pointmass\_immutables\_device\_to\_device(struct Pointmass *dst, struct Pointmass *src)}
+\DoxyCodeLine{00319 \{}
+\DoxyCodeLine{00320     int rc = 0;}
+\DoxyCodeLine{00321     cudaVerify(cudaMemcpy((*dst).m, (*src).m, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00322     cudaVerify(cudaMemcpy((*dst).rmin, (*src).rmin, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00323     cudaVerify(cudaMemcpy((*dst).rmax, (*src).rmax, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00324     return rc;}
+\DoxyCodeLine{00325 \}}
+\DoxyCodeLine{00326 }
+\DoxyCodeLine{00327 int copy\_particles\_immutables\_device\_to\_device(struct Particle *dst, struct Particle *src)}
+\DoxyCodeLine{00328 \{}
+\DoxyCodeLine{00329     int rc = 0;}
+\DoxyCodeLine{00330 }
+\DoxyCodeLine{00331     cudaVerify(cudaMemcpy((*dst).x0, (*src).x0, memorySizeForTree, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00332 \#if DIM > 1}
+\DoxyCodeLine{00333     cudaVerify(cudaMemcpy((*dst).y0, (*src).y0, memorySizeForTree, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00334 \#endif}
+\DoxyCodeLine{00335 \#if DIM > 2}
+\DoxyCodeLine{00336     cudaVerify(cudaMemcpy((*dst).z0, (*src).z0, memorySizeForTree, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00337 \#endif}
+\DoxyCodeLine{00338     cudaVerify(cudaMemcpy((*dst).m, (*src).m, memorySizeForTree, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00339     cudaVerify(cudaMemcpy((*dst).h, (*src).h, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00340     cudaVerify(cudaMemcpy((*dst).cs, (*src).cs, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00341     //cudaVerify(cudaMemcpy((*dst).materialId, (*src).materialId, memorySizeForInteractions, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00342 \#if FRAGMENTATION}
+\DoxyCodeLine{00343         cudaVerify(cudaMemcpy(dst-\/>numFlaws, src-\/>numFlaws, memorySizeForInteractions, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00344     //cudaVerify(cudaMemcpy(dst-\/>flaws, src-\/>flaws, memorySizeForActivationThreshold, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00345 \#endif}
+\DoxyCodeLine{00346 }
+\DoxyCodeLine{00347     return rc;}
+\DoxyCodeLine{00348 \}}
+\DoxyCodeLine{00349 }
+\DoxyCodeLine{00350 int copy\_pointmass\_variables\_device\_to\_device(struct Pointmass *dst, struct Pointmass *src)}
+\DoxyCodeLine{00351 \{}
+\DoxyCodeLine{00352     int rc = 0;}
+\DoxyCodeLine{00353     cudaVerify(cudaMemcpy(dst-\/>x, src-\/>x, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00354     cudaVerify(cudaMemcpy(dst-\/>vx, src-\/>vx, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00355 \#if DIM > 1}
+\DoxyCodeLine{00356     cudaVerify(cudaMemcpy(dst-\/>y, src-\/>y, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00357     cudaVerify(cudaMemcpy(dst-\/>vy, src-\/>vy, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00358 \# if DIM > 2}
+\DoxyCodeLine{00359     cudaVerify(cudaMemcpy(dst-\/>z, src-\/>z, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00360     cudaVerify(cudaMemcpy(dst-\/>vz, src-\/>vz, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00361 \# endif}
+\DoxyCodeLine{00362 \#endif}
+\DoxyCodeLine{00363     return rc;}
+\DoxyCodeLine{00364 \}}
+\DoxyCodeLine{00365 }
+\DoxyCodeLine{00366 }
+\DoxyCodeLine{00367 }
+\DoxyCodeLine{00368 int copy\_particles\_variables\_device\_to\_device(struct Particle *dst, struct Particle *src)}
+\DoxyCodeLine{00369 \{}
+\DoxyCodeLine{00370     int rc = 0;}
+\DoxyCodeLine{00371 }
+\DoxyCodeLine{00372     cudaVerify(cudaMemcpy(dst-\/>x, src-\/>x, memorySizeForTree, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00373     cudaVerify(cudaMemcpy(dst-\/>x0, src-\/>x0, memorySizeForTree, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00374     // materialId moved to p\_device aka p\_rhs only}
+\DoxyCodeLine{00375     //cudaVerify(cudaMemcpy((*dst).materialId, (*src).materialId, memorySizeForInteractions, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00376 \#if DIM > 1}
+\DoxyCodeLine{00377     cudaVerify(cudaMemcpy(dst-\/>y, src-\/>y, memorySizeForTree, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00378     cudaVerify(cudaMemcpy(dst-\/>y0, src-\/>y0, memorySizeForTree, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00379     cudaVerify(cudaMemcpy(dst-\/>vy, src-\/>vy, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00380 \#endif}
+\DoxyCodeLine{00381 \#if DIM > 2}
+\DoxyCodeLine{00382     cudaVerify(cudaMemcpy(dst-\/>z0, src-\/>z0, memorySizeForTree, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00383 \#endif}
+\DoxyCodeLine{00384 }
+\DoxyCodeLine{00385     cudaVerify(cudaMemcpy(dst-\/>vx, src-\/>vx, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00386 }
+\DoxyCodeLine{00387     cudaVerify(cudaMemcpy(dst-\/>rho, src-\/>rho, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00388 }
+\DoxyCodeLine{00389     cudaVerify(cudaMemcpy(dst-\/>h, src-\/>h, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00390 }
+\DoxyCodeLine{00391 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00392     cudaVerify(cudaMemcpy(dst-\/>e, src-\/>e, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00393 \#endif}
+\DoxyCodeLine{00394 }
+\DoxyCodeLine{00395 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00396     cudaVerify(cudaMemcpy(dst-\/>alpha\_jutzi, src-\/>alpha\_jutzi, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00397     cudaVerify(cudaMemcpy(dst-\/>alpha\_jutzi\_old, src-\/>alpha\_jutzi, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00398     cudaVerify(cudaMemcpy(dst-\/>dalphadp, src-\/>dalphadp, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00399     cudaVerify(cudaMemcpy(dst-\/>dalphadrho, src-\/>dalphadrho, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00400     cudaVerify(cudaMemcpy(dst-\/>dp, src-\/>dp, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00401     cudaVerify(cudaMemcpy(dst-\/>delpdelrho, src-\/>delpdelrho, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00402     cudaVerify(cudaMemcpy(dst-\/>delpdele, src-\/>delpdele, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00403     cudaVerify(cudaMemcpy(dst-\/>f, src-\/>f, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00404     cudaVerify(cudaMemcpy(dst-\/>p, src-\/>p, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00405     cudaVerify(cudaMemcpy(dst-\/>pold, src-\/>pold, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00406 \#if FRAGMENTATION}
+\DoxyCodeLine{00407     cudaVerify(cudaMemcpy(dst-\/>damage\_porjutzi, src-\/>damage\_porjutzi, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00408 \#endif}
+\DoxyCodeLine{00409 \#endif}
+\DoxyCodeLine{00410 }
+\DoxyCodeLine{00411 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00412     cudaVerify(cudaMemcpy(dst-\/>compressive\_strength, src-\/>compressive\_strength, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00413     cudaVerify(cudaMemcpy(dst-\/>tensile\_strength, src-\/>tensile\_strength, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00414     cudaVerify(cudaMemcpy(dst-\/>shear\_strength, src-\/>shear\_strength, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00415     cudaVerify(cudaMemcpy(dst-\/>K, src-\/>K, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00416     cudaVerify(cudaMemcpy(dst-\/>rho\_0prime, src-\/>rho\_0prime, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00417     cudaVerify(cudaMemcpy(dst-\/>rho\_c\_plus, src-\/>rho\_c\_plus, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00418     cudaVerify(cudaMemcpy(dst-\/>rho\_c\_minus, src-\/>rho\_c\_minus, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00419     cudaVerify(cudaMemcpy(dst-\/>flag\_rho\_0prime, src-\/>flag\_rho\_0prime, memorySizeForInteractions, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00420     cudaVerify(cudaMemcpy(dst-\/>flag\_plastic, src-\/>flag\_plastic, memorySizeForInteractions, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00421 \#endif}
+\DoxyCodeLine{00422 }
+\DoxyCodeLine{00423 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00424     cudaVerify(cudaMemcpy(dst-\/>alpha\_epspor, src-\/>alpha\_epspor, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00425     cudaVerify(cudaMemcpy(dst-\/>dalpha\_epspordt, src-\/>dalpha\_epspordt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00426     cudaVerify(cudaMemcpy(dst-\/>epsilon\_v, src-\/>epsilon\_v, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00427     cudaVerify(cudaMemcpy(dst-\/>depsilon\_vdt, src-\/>depsilon\_vdt, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00428 \#endif}
+\DoxyCodeLine{00429 }
+\DoxyCodeLine{00430 \#if DIM > 2}
+\DoxyCodeLine{00431     cudaVerify(cudaMemcpy(dst-\/>z, src-\/>z, memorySizeForTree, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00432     cudaVerify(cudaMemcpy(dst-\/>vz, src-\/>vz, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00433 \#endif}
+\DoxyCodeLine{00434 \#if SOLID}
+\DoxyCodeLine{00435     cudaVerify(cudaMemcpy(dst-\/>S, src-\/>S, memorySizeForStress, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00436 \#endif}
+\DoxyCodeLine{00437 \#if NAVIER\_STOKES}
+\DoxyCodeLine{00438     cudaVerify(cudaMemcpy(dst-\/>Tshear, src-\/>Tshear, memorySizeForStress, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00439 \#endif}
+\DoxyCodeLine{00440 }
+\DoxyCodeLine{00441 \#if INVISCID\_SPH}
+\DoxyCodeLine{00442     cudaVerify(cudaMemcpy(dst-\/>beta, src-\/>beta, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00443     cudaVerify(cudaMemcpy(dst-\/>beta\_old, src-\/>beta\_old, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00444     cudaVerify(cudaMemcpy(dst-\/>divv\_old, src-\/>divv\_old, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00445 \#endif}
+\DoxyCodeLine{00446 }
+\DoxyCodeLine{00447 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00448     cudaVerify(cudaMemcpy(dst-\/>ep, src-\/>ep, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00449     cudaVerify(cudaMemcpy(dst-\/>T, src-\/>T, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00450     cudaVerify(cudaMemcpy(dst-\/>jc\_f, src-\/>jc\_f, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00451 \#endif}
+\DoxyCodeLine{00452 }
+\DoxyCodeLine{00453 \#if FRAGMENTATION}
+\DoxyCodeLine{00454     cudaVerify(cudaMemcpy(dst-\/>d, src-\/>d, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00455     cudaVerify(cudaMemcpy(dst-\/>damage\_total, src-\/>damage\_total, memorySizeForParticles, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00456     cudaVerify(cudaMemcpy(dst-\/>numActiveFlaws, src-\/>numActiveFlaws, memorySizeForInteractions, cudaMemcpyDeviceToDevice));}
+\DoxyCodeLine{00457 \#endif}
+\DoxyCodeLine{00458     return rc;}
+\DoxyCodeLine{00459 \}}
+\DoxyCodeLine{00460 /* free runge-\/kutta memory for pointmasses on the device */}
+\DoxyCodeLine{00461 int free\_pointmass\_memory(struct Pointmass *a, int free\_immutables)}
+\DoxyCodeLine{00462 \{}
+\DoxyCodeLine{00463     int rc = 0;}
+\DoxyCodeLine{00464         cudaVerify(cudaFree(a-\/>x));}
+\DoxyCodeLine{00465         cudaVerify(cudaFree(a-\/>vx));}
+\DoxyCodeLine{00466         cudaVerify(cudaFree(a-\/>ax));}
+\DoxyCodeLine{00467         cudaVerify(cudaFree(a-\/>m));}
+\DoxyCodeLine{00468         cudaVerify(cudaFree(a-\/>rmin));}
+\DoxyCodeLine{00469         cudaVerify(cudaFree(a-\/>rmax));}
+\DoxyCodeLine{00470 \#if DIM > 1}
+\DoxyCodeLine{00471         cudaVerify(cudaFree(a-\/>y));}
+\DoxyCodeLine{00472         cudaVerify(cudaFree(a-\/>vy));}
+\DoxyCodeLine{00473         cudaVerify(cudaFree(a-\/>ay));}
+\DoxyCodeLine{00474 \# if DIM > 2}
+\DoxyCodeLine{00475         cudaVerify(cudaFree(a-\/>z));}
+\DoxyCodeLine{00476         cudaVerify(cudaFree(a-\/>vz));}
+\DoxyCodeLine{00477         cudaVerify(cudaFree(a-\/>az));}
+\DoxyCodeLine{00478 \# endif}
+\DoxyCodeLine{00479 \#endif}
+\DoxyCodeLine{00480     return rc;}
+\DoxyCodeLine{00481 \}}
+\DoxyCodeLine{00482 }
+\DoxyCodeLine{00483 /* free runge-\/kutta memory on the device */}
+\DoxyCodeLine{00484 int free\_particles\_memory(struct Particle *a, int free\_immutables)}
+\DoxyCodeLine{00485 \{}
+\DoxyCodeLine{00486     int rc = 0;}
+\DoxyCodeLine{00487 }
+\DoxyCodeLine{00488         cudaVerify(cudaFree(a-\/>x));}
+\DoxyCodeLine{00489         cudaVerify(cudaFree(a-\/>x0));}
+\DoxyCodeLine{00490         cudaVerify(cudaFree(a-\/>dxdt));}
+\DoxyCodeLine{00491         cudaVerify(cudaFree(a-\/>vx));}
+\DoxyCodeLine{00492         cudaVerify(cudaFree(a-\/>ax));}
+\DoxyCodeLine{00493         cudaVerify(cudaFree(a-\/>g\_ax));}
+\DoxyCodeLine{00494         cudaVerify(cudaFree(a-\/>m));}
+\DoxyCodeLine{00495 }
+\DoxyCodeLine{00496 \#if DIM > 1}
+\DoxyCodeLine{00497         cudaVerify(cudaFree(a-\/>dydt));}
+\DoxyCodeLine{00498         cudaVerify(cudaFree(a-\/>y));}
+\DoxyCodeLine{00499         cudaVerify(cudaFree(a-\/>y0));}
+\DoxyCodeLine{00500         cudaVerify(cudaFree(a-\/>vy));}
+\DoxyCodeLine{00501         cudaVerify(cudaFree(a-\/>ay));}
+\DoxyCodeLine{00502         cudaVerify(cudaFree(a-\/>g\_ay));}
+\DoxyCodeLine{00503 \#endif}
+\DoxyCodeLine{00504 }
+\DoxyCodeLine{00505 }
+\DoxyCodeLine{00506 \#if XSPH}
+\DoxyCodeLine{00507         cudaVerify(cudaFree(a-\/>xsphvx));}
+\DoxyCodeLine{00508 \#if DIM > 1}
+\DoxyCodeLine{00509         cudaVerify(cudaFree(a-\/>xsphvy));}
+\DoxyCodeLine{00510 \#endif}
+\DoxyCodeLine{00511 \#endif}
+\DoxyCodeLine{00512         cudaVerify(cudaFree(a-\/>h));}
+\DoxyCodeLine{00513         cudaVerify(cudaFree(a-\/>rho));}
+\DoxyCodeLine{00514         cudaVerify(cudaFree(a-\/>p));}
+\DoxyCodeLine{00515         cudaVerify(cudaFree(a-\/>e));}
+\DoxyCodeLine{00516         cudaVerify(cudaFree(a-\/>cs));}
+\DoxyCodeLine{00517         cudaVerify(cudaFree(a-\/>noi));}
+\DoxyCodeLine{00518         cudaVerify(cudaFree(a-\/>depth));}
+\DoxyCodeLine{00519     // materialId only on p\_device}
+\DoxyCodeLine{00520         //cudaVerify(cudaFree(a-\/>materialId));}
+\DoxyCodeLine{00521 \#if DIM > 2}
+\DoxyCodeLine{00522         cudaVerify(cudaFree(a-\/>z));}
+\DoxyCodeLine{00523         cudaVerify(cudaFree(a-\/>z0));}
+\DoxyCodeLine{00524         cudaVerify(cudaFree(a-\/>dzdt));}
+\DoxyCodeLine{00525         cudaVerify(cudaFree(a-\/>vz));}
+\DoxyCodeLine{00526 \#if XSPH}
+\DoxyCodeLine{00527         cudaVerify(cudaFree(a-\/>xsphvz));}
+\DoxyCodeLine{00528 \#endif}
+\DoxyCodeLine{00529         cudaVerify(cudaFree(a-\/>az));}
+\DoxyCodeLine{00530         cudaVerify(cudaFree(a-\/>g\_az));}
+\DoxyCodeLine{00531 \#endif}
+\DoxyCodeLine{00532 }
+\DoxyCodeLine{00533 }
+\DoxyCodeLine{00534 \#if ARTIFICIAL\_VISCOSITY}
+\DoxyCodeLine{00535         cudaVerify(cudaFree(a-\/>muijmax));}
+\DoxyCodeLine{00536 \#endif}
+\DoxyCodeLine{00537 \#if (NAVIER\_STOKES || BALSARA\_SWITCH || INVISCID\_SPH || INTEGRATE\_ENERGY) }
+\DoxyCodeLine{00538         cudaVerify(cudaFree(a-\/>divv));}
+\DoxyCodeLine{00539         cudaVerify(cudaFree(a-\/>curlv));}
+\DoxyCodeLine{00540 \#endif}
+\DoxyCodeLine{00541 }
+\DoxyCodeLine{00542 \#if INVISCID\_SPH}
+\DoxyCodeLine{00543         cudaVerify(cudaFree(a-\/>beta));}
+\DoxyCodeLine{00544         cudaVerify(cudaFree(a-\/>beta\_old));}
+\DoxyCodeLine{00545         cudaVerify(cudaFree(a-\/>divv\_old));}
+\DoxyCodeLine{00546         cudaVerify(cudaFree(a-\/>dbetadt));}
+\DoxyCodeLine{00547 \#endif}
+\DoxyCodeLine{00548 }
+\DoxyCodeLine{00549 \#if TENSORIAL\_CORRECTION}
+\DoxyCodeLine{00550         //cudaVerify(cudaFree(a-\/>tensorialCorrectionMatrix));}
+\DoxyCodeLine{00551     /*}
+\DoxyCodeLine{00552     if (free\_immutables) \{}
+\DoxyCodeLine{00553             cudaVerify(cudaFree(a-\/>tensorialCorrectiondWdrr));}
+\DoxyCodeLine{00554     \} */}
+\DoxyCodeLine{00555 \#endif}
+\DoxyCodeLine{00556 }
+\DoxyCodeLine{00557 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00558         cudaVerify(cudaFree(a-\/>dedt));}
+\DoxyCodeLine{00559 \#endif}
+\DoxyCodeLine{00560 \#if GHOST\_BOUNDARIES}
+\DoxyCodeLine{00561         cudaVerify(cudaFree(a-\/>real\_partner));}
+\DoxyCodeLine{00562 \#endif}
+\DoxyCodeLine{00563 }
+\DoxyCodeLine{00564         cudaVerify(cudaFree(a-\/>drhodt));}
+\DoxyCodeLine{00565 }
+\DoxyCodeLine{00566 \#if INTEGRATE\_SML}
+\DoxyCodeLine{00567         cudaVerify(cudaFree(a-\/>dhdt));}
+\DoxyCodeLine{00568 \#endif}
+\DoxyCodeLine{00569 }
+\DoxyCodeLine{00570 }
+\DoxyCodeLine{00571 \#if SOLID}
+\DoxyCodeLine{00572         cudaVerify(cudaFree(a-\/>S));}
+\DoxyCodeLine{00573         cudaVerify(cudaFree(a-\/>dSdt));}
+\DoxyCodeLine{00574         cudaVerify(cudaFree(a-\/>local\_strain));}
+\DoxyCodeLine{00575 \#endif}
+\DoxyCodeLine{00576 \#if NAVIER\_STOKES}
+\DoxyCodeLine{00577         cudaVerify(cudaFree(a-\/>Tshear));}
+\DoxyCodeLine{00578 \#endif}
+\DoxyCodeLine{00579 }
+\DoxyCodeLine{00580 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00581         cudaVerify(cudaFree(a-\/>ep));}
+\DoxyCodeLine{00582         cudaVerify(cudaFree(a-\/>edotp));}
+\DoxyCodeLine{00583         cudaVerify(cudaFree(a-\/>T));}
+\DoxyCodeLine{00584         cudaVerify(cudaFree(a-\/>dTdt));}
+\DoxyCodeLine{00585         cudaVerify(cudaFree(a-\/>jc\_f));}
+\DoxyCodeLine{00586 \#endif}
+\DoxyCodeLine{00587 }
+\DoxyCodeLine{00588 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00589         cudaVerify(cudaFree(a-\/>pold));}
+\DoxyCodeLine{00590         cudaVerify(cudaFree(a-\/>alpha\_jutzi));}
+\DoxyCodeLine{00591         cudaVerify(cudaFree(a-\/>alpha\_jutzi\_old));}
+\DoxyCodeLine{00592         cudaVerify(cudaFree(a-\/>dalphadt));}
+\DoxyCodeLine{00593         cudaVerify(cudaFree(a-\/>f));}
+\DoxyCodeLine{00594         cudaVerify(cudaFree(a-\/>dalphadp));}
+\DoxyCodeLine{00595         cudaVerify(cudaFree(a-\/>dp));}
+\DoxyCodeLine{00596         cudaVerify(cudaFree(a-\/>delpdelrho));}
+\DoxyCodeLine{00597         cudaVerify(cudaFree(a-\/>delpdele));}
+\DoxyCodeLine{00598         cudaVerify(cudaFree(a-\/>dalphadrho));}
+\DoxyCodeLine{00599 \#endif}
+\DoxyCodeLine{00600 }
+\DoxyCodeLine{00601 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00602     cudaVerify(cudaFree(a-\/>compressive\_strength));}
+\DoxyCodeLine{00603     cudaVerify(cudaFree(a-\/>tensile\_strength));}
+\DoxyCodeLine{00604     cudaVerify(cudaFree(a-\/>shear\_strength));}
+\DoxyCodeLine{00605     cudaVerify(cudaFree(a-\/>K));}
+\DoxyCodeLine{00606     cudaVerify(cudaFree(a-\/>rho\_0prime));}
+\DoxyCodeLine{00607     cudaVerify(cudaFree(a-\/>rho\_c\_plus));}
+\DoxyCodeLine{00608     cudaVerify(cudaFree(a-\/>rho\_c\_minus));}
+\DoxyCodeLine{00609     cudaVerify(cudaFree(a-\/>flag\_rho\_0prime));}
+\DoxyCodeLine{00610     cudaVerify(cudaFree(a-\/>flag\_plastic));}
+\DoxyCodeLine{00611 \#endif}
+\DoxyCodeLine{00612 }
+\DoxyCodeLine{00613 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00614     cudaVerify(cudaFree(a-\/>alpha\_epspor));}
+\DoxyCodeLine{00615     cudaVerify(cudaFree(a-\/>dalpha\_epspordt));}
+\DoxyCodeLine{00616     cudaVerify(cudaFree(a-\/>epsilon\_v));}
+\DoxyCodeLine{00617     cudaVerify(cudaFree(a-\/>depsilon\_vdt));}
+\DoxyCodeLine{00618 \#endif}
+\DoxyCodeLine{00619 }
+\DoxyCodeLine{00620 \#if FRAGMENTATION}
+\DoxyCodeLine{00621         cudaVerify(cudaFree(a-\/>d));}
+\DoxyCodeLine{00622         cudaVerify(cudaFree(a-\/>damage\_total));}
+\DoxyCodeLine{00623         cudaVerify(cudaFree(a-\/>dddt));}
+\DoxyCodeLine{00624         cudaVerify(cudaFree(a-\/>numFlaws));}
+\DoxyCodeLine{00625         cudaVerify(cudaFree(a-\/>numActiveFlaws));}
+\DoxyCodeLine{00626     if (free\_immutables) \{}
+\DoxyCodeLine{00627             cudaVerify(cudaFree(a-\/>flaws));}
+\DoxyCodeLine{00628     \}}
+\DoxyCodeLine{00629 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00630         cudaVerify(cudaFree(a-\/>damage\_porjutzi));}
+\DoxyCodeLine{00631         cudaVerify(cudaFree(a-\/>ddamage\_porjutzidt));}
+\DoxyCodeLine{00632 \#endif}
+\DoxyCodeLine{00633 \#endif}
+\DoxyCodeLine{00634 }
+\DoxyCodeLine{00635 }
+\DoxyCodeLine{00636     return rc;}
+\DoxyCodeLine{00637 }
+\DoxyCodeLine{00638 \}}
+\DoxyCodeLine{00639 }
+\DoxyCodeLine{00640 }
+\DoxyCodeLine{00641 /* allocate memory for tree and basical particle struct */}
+\DoxyCodeLine{00642 int init\_allocate\_memory(void)}
+\DoxyCodeLine{00643 \{}
+\DoxyCodeLine{00644     int rc = 0;}
+\DoxyCodeLine{00645         numberOfNodes = ceil(2.5 * maxNumberOfParticles);}
+\DoxyCodeLine{00646     if (numberOfNodes < 1024*numberOfMultiprocessors)}
+\DoxyCodeLine{00647         numberOfNodes = 1024*numberOfMultiprocessors;}
+\DoxyCodeLine{00648 \#define WARPSIZE 32}
+\DoxyCodeLine{00649     while ((numberOfNodes \& (WARPSIZE-\/1)) != 0) numberOfNodes++;}
+\DoxyCodeLine{00650 }
+\DoxyCodeLine{00651 }
+\DoxyCodeLine{00652 }
+\DoxyCodeLine{00653 }
+\DoxyCodeLine{00654 }
+\DoxyCodeLine{00655         // allocating memory}
+\DoxyCodeLine{00656         if (param.verbose) \{}
+\DoxyCodeLine{00657         printf("{}allocating memory for \%d particles ...\(\backslash\)n"{}, numberOfParticles);}
+\DoxyCodeLine{00658             printf("{}allocating memory for \%d pointmasses...\(\backslash\)n"{}, numberOfPointmasses);}
+\DoxyCodeLine{00659         fprintf(stdout, "{}Number of nodes of tree: \%d\(\backslash\)n"{}, numberOfNodes);}
+\DoxyCodeLine{00660     \}}
+\DoxyCodeLine{00661         memorySizeForParticles = maxNumberOfParticles * sizeof(double);}
+\DoxyCodeLine{00662         memorySizeForPointmasses = numberOfPointmasses * sizeof(double);}
+\DoxyCodeLine{00663         memorySizeForTree = numberOfNodes * sizeof(double);}
+\DoxyCodeLine{00664         memorySizeForStress = maxNumberOfParticles * DIM * DIM * sizeof(double);}
+\DoxyCodeLine{00665         memorySizeForChildren = numberOfChildren * (numberOfNodes-\/numberOfRealParticles) * sizeof(int);}
+\DoxyCodeLine{00666         memorySizeForInteractions = maxNumberOfParticles * sizeof(int);}
+\DoxyCodeLine{00667         cudaVerify(cudaMallocHost((void**)\&p\_host.x, memorySizeForTree));}
+\DoxyCodeLine{00668         cudaVerify(cudaMallocHost((void**)\&p\_host.vx, memorySizeForParticles));}
+\DoxyCodeLine{00669         cudaVerify(cudaMallocHost((void**)\&p\_host.ax, memorySizeForParticles));}
+\DoxyCodeLine{00670 \#if DIM > 1}
+\DoxyCodeLine{00671     cudaVerify(cudaMallocHost((void**)\&p\_host.y, memorySizeForTree));}
+\DoxyCodeLine{00672         cudaVerify(cudaMallocHost((void**)\&p\_host.vy, memorySizeForParticles));}
+\DoxyCodeLine{00673         cudaVerify(cudaMallocHost((void**)\&p\_host.ay, memorySizeForParticles));}
+\DoxyCodeLine{00674         cudaVerify(cudaMallocHost((void**)\&p\_host.g\_ay, memorySizeForParticles));}
+\DoxyCodeLine{00675 \#endif}
+\DoxyCodeLine{00676 }
+\DoxyCodeLine{00677 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00678         cudaVerify(cudaMallocHost((void**)\&pointmass\_host.x, memorySizeForPointmasses));}
+\DoxyCodeLine{00679         cudaVerify(cudaMallocHost((void**)\&pointmass\_host.vx, memorySizeForPointmasses));}
+\DoxyCodeLine{00680         cudaVerify(cudaMallocHost((void**)\&pointmass\_host.ax, memorySizeForPointmasses));}
+\DoxyCodeLine{00681         cudaVerify(cudaMalloc((void**)\&pointmass\_device.x, memorySizeForPointmasses));}
+\DoxyCodeLine{00682         cudaVerify(cudaMalloc((void**)\&pointmass\_device.vx, memorySizeForPointmasses));}
+\DoxyCodeLine{00683         cudaVerify(cudaMalloc((void**)\&pointmass\_device.ax, memorySizeForPointmasses));}
+\DoxyCodeLine{00684 \#if DIM > 1}
+\DoxyCodeLine{00685         cudaVerify(cudaMallocHost((void**)\&pointmass\_host.y, memorySizeForPointmasses));}
+\DoxyCodeLine{00686         cudaVerify(cudaMallocHost((void**)\&pointmass\_host.vy, memorySizeForPointmasses));}
+\DoxyCodeLine{00687         cudaVerify(cudaMallocHost((void**)\&pointmass\_host.ay, memorySizeForPointmasses));}
+\DoxyCodeLine{00688         cudaVerify(cudaMalloc((void**)\&pointmass\_device.y, memorySizeForPointmasses));}
+\DoxyCodeLine{00689         cudaVerify(cudaMalloc((void**)\&pointmass\_device.vy, memorySizeForPointmasses));}
+\DoxyCodeLine{00690         cudaVerify(cudaMalloc((void**)\&pointmass\_device.ay, memorySizeForPointmasses));}
+\DoxyCodeLine{00691 \#if DIM > 2}
+\DoxyCodeLine{00692         cudaVerify(cudaMallocHost((void**)\&pointmass\_host.z, memorySizeForPointmasses));}
+\DoxyCodeLine{00693         cudaVerify(cudaMallocHost((void**)\&pointmass\_host.vz, memorySizeForPointmasses));}
+\DoxyCodeLine{00694         cudaVerify(cudaMallocHost((void**)\&pointmass\_host.az, memorySizeForPointmasses));}
+\DoxyCodeLine{00695         cudaVerify(cudaMalloc((void**)\&pointmass\_device.z, memorySizeForPointmasses));}
+\DoxyCodeLine{00696         cudaVerify(cudaMalloc((void**)\&pointmass\_device.vz, memorySizeForPointmasses));}
+\DoxyCodeLine{00697         cudaVerify(cudaMalloc((void**)\&pointmass\_device.az, memorySizeForPointmasses));}
+\DoxyCodeLine{00698 \#endif}
+\DoxyCodeLine{00699 \#endif}
+\DoxyCodeLine{00700         cudaVerify(cudaMallocHost((void**)\&pointmass\_host.rmin, memorySizeForPointmasses));}
+\DoxyCodeLine{00701         cudaVerify(cudaMallocHost((void**)\&pointmass\_host.rmax, memorySizeForPointmasses));}
+\DoxyCodeLine{00702         cudaVerify(cudaMalloc((void**)\&pointmass\_device.rmin, memorySizeForPointmasses));}
+\DoxyCodeLine{00703         cudaVerify(cudaMalloc((void**)\&pointmass\_device.rmax, memorySizeForPointmasses));}
+\DoxyCodeLine{00704         cudaVerify(cudaMallocHost((void**)\&pointmass\_host.m, memorySizeForPointmasses));}
+\DoxyCodeLine{00705         cudaVerify(cudaMalloc((void**)\&pointmass\_device.m, memorySizeForPointmasses));}
+\DoxyCodeLine{00706 \#endif}
+\DoxyCodeLine{00707 }
+\DoxyCodeLine{00708         cudaVerify(cudaMallocHost((void**)\&p\_host.g\_ax, memorySizeForParticles));}
+\DoxyCodeLine{00709         cudaVerify(cudaMallocHost((void**)\&p\_host.m, memorySizeForTree));}
+\DoxyCodeLine{00710         cudaVerify(cudaMallocHost((void**)\&p\_host.h, memorySizeForParticles));}
+\DoxyCodeLine{00711         cudaVerify(cudaMallocHost((void**)\&p\_host.rho, memorySizeForParticles));}
+\DoxyCodeLine{00712         cudaVerify(cudaMallocHost((void**)\&p\_host.p, memorySizeForParticles));}
+\DoxyCodeLine{00713         cudaVerify(cudaMallocHost((void**)\&p\_host.e, memorySizeForParticles));}
+\DoxyCodeLine{00714         cudaVerify(cudaMallocHost((void**)\&p\_host.cs, memorySizeForParticles));}
+\DoxyCodeLine{00715 }
+\DoxyCodeLine{00716         cudaVerify(cudaMallocHost((void**)\&p\_host.noi, memorySizeForInteractions));}
+\DoxyCodeLine{00717         cudaVerify(cudaMallocHost((void**)\&p\_host.depth, memorySizeForInteractions));}
+\DoxyCodeLine{00718         cudaVerify(cudaMallocHost((void**)\&interactions\_host, memorySizeForInteractions*MAX\_NUM\_INTERACTIONS));}
+\DoxyCodeLine{00719         cudaVerify(cudaMallocHost((void**)\&p\_host.materialId, memorySizeForInteractions));}
+\DoxyCodeLine{00720         cudaVerify(cudaMallocHost((void**)\&childList\_host, memorySizeForChildren));}
+\DoxyCodeLine{00721 \#if DIM > 2}
+\DoxyCodeLine{00722         cudaVerify(cudaMallocHost((void**)\&p\_host.z, memorySizeForTree));}
+\DoxyCodeLine{00723         cudaVerify(cudaMallocHost((void**)\&p\_host.vz, memorySizeForParticles));}
+\DoxyCodeLine{00724         cudaVerify(cudaMallocHost((void**)\&p\_host.az, memorySizeForParticles));}
+\DoxyCodeLine{00725         cudaVerify(cudaMallocHost((void**)\&p\_host.g\_az, memorySizeForParticles));}
+\DoxyCodeLine{00726 \#endif}
+\DoxyCodeLine{00727 }
+\DoxyCodeLine{00728 \#if ARTIFICIAL\_VISCOSITY}
+\DoxyCodeLine{00729         cudaVerify(cudaMalloc((void**)\&p\_device.muijmax, memorySizeForParticles));}
+\DoxyCodeLine{00730 \#endif}
+\DoxyCodeLine{00731 }
+\DoxyCodeLine{00732 \#if (NAVIER\_STOKES || BALSARA\_SWITCH || INVISCID\_SPH || INTEGRATE\_ENERGY)}
+\DoxyCodeLine{00733         cudaVerify(cudaMalloc((void**)\&p\_device.divv, memorySizeForParticles));}
+\DoxyCodeLine{00734         cudaVerify(cudaMalloc((void**)\&p\_device.curlv, memorySizeForParticles*DIM));}
+\DoxyCodeLine{00735 \#endif}
+\DoxyCodeLine{00736 }
+\DoxyCodeLine{00737 \#if INVISCID\_SPH}
+\DoxyCodeLine{00738         cudaVerify(cudaMalloc((void**)\&p\_device.beta, memorySizeForParticles));}
+\DoxyCodeLine{00739         cudaVerify(cudaMalloc((void**)\&p\_device.beta\_old, memorySizeForParticles));}
+\DoxyCodeLine{00740         cudaVerify(cudaMalloc((void**)\&p\_device.divv\_old, memorySizeForParticles));}
+\DoxyCodeLine{00741         cudaVerify(cudaMalloc((void**)\&p\_device.dbetadt, memorySizeForParticles));}
+\DoxyCodeLine{00742 \#endif}
+\DoxyCodeLine{00743 }
+\DoxyCodeLine{00744 \#if TENSORIAL\_CORRECTION}
+\DoxyCodeLine{00745         cudaVerify(cudaMalloc((void**)\&p\_device.tensorialCorrectionMatrix, memorySizeForStress));}
+\DoxyCodeLine{00746         //cudaVerify(cudaMalloc((void**)\&p\_device.tensorialCorrectiondWdrr, MAX\_NUM\_INTERACTIONS * maxNumberOfParticles * sizeof(double)));}
+\DoxyCodeLine{00747 \#endif}
+\DoxyCodeLine{00748 }
+\DoxyCodeLine{00749 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00750         cudaVerify(cudaMallocHost((void**)\&p\_host.dedt, memorySizeForParticles));}
+\DoxyCodeLine{00751         cudaVerify(cudaMalloc((void**)\&p\_device.dedt, memorySizeForParticles));}
+\DoxyCodeLine{00752 \#endif}
+\DoxyCodeLine{00753 }
+\DoxyCodeLine{00754         cudaVerify(cudaMallocHost((void**)\&p\_host.drhodt, memorySizeForParticles));}
+\DoxyCodeLine{00755         cudaVerify(cudaMalloc((void**)\&p\_device.drhodt, memorySizeForParticles));}
+\DoxyCodeLine{00756 }
+\DoxyCodeLine{00757 \#if SOLID}
+\DoxyCodeLine{00758         cudaVerify(cudaMallocHost((void**)\&p\_host.S, memorySizeForStress));}
+\DoxyCodeLine{00759         cudaVerify(cudaMallocHost((void**)\&p\_host.dSdt, memorySizeForStress));}
+\DoxyCodeLine{00760         cudaVerify(cudaMalloc((void**)\&p\_device.S, memorySizeForStress));}
+\DoxyCodeLine{00761         cudaVerify(cudaMalloc((void**)\&p\_device.dSdt, memorySizeForStress));}
+\DoxyCodeLine{00762         cudaVerify(cudaMallocHost((void**)\&p\_host.local\_strain, memorySizeForParticles));}
+\DoxyCodeLine{00763         cudaVerify(cudaMalloc((void**)\&p\_device.local\_strain, memorySizeForParticles));}
+\DoxyCodeLine{00764         cudaVerify(cudaMalloc((void**) \&p\_device.sigma, memorySizeForStress));}
+\DoxyCodeLine{00765 \#endif}
+\DoxyCodeLine{00766 }
+\DoxyCodeLine{00767 \#if NAVIER\_STOKES}
+\DoxyCodeLine{00768         cudaVerify(cudaMallocHost((void**)\&p\_host.Tshear, memorySizeForStress));}
+\DoxyCodeLine{00769         cudaVerify(cudaMalloc((void**)\&p\_device.Tshear, memorySizeForStress));}
+\DoxyCodeLine{00770 \#endif}
+\DoxyCodeLine{00771 }
+\DoxyCodeLine{00772 \#if ARTIFICIAL\_STRESS}
+\DoxyCodeLine{00773         cudaVerify(cudaMalloc((void**) \&p\_device.R, memorySizeForStress));}
+\DoxyCodeLine{00774 \#endif}
+\DoxyCodeLine{00775 }
+\DoxyCodeLine{00776 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00777         cudaVerify(cudaMallocHost((void**)\&p\_host.ep, memorySizeForParticles));}
+\DoxyCodeLine{00778         cudaVerify(cudaMallocHost((void**)\&p\_host.T, memorySizeForParticles));}
+\DoxyCodeLine{00779         cudaVerify(cudaMalloc((void**)\&p\_device.ep, memorySizeForParticles));}
+\DoxyCodeLine{00780         cudaVerify(cudaMalloc((void**)\&p\_device.edotp, memorySizeForParticles));}
+\DoxyCodeLine{00781         cudaVerify(cudaMalloc((void**)\&p\_device.T, memorySizeForParticles));}
+\DoxyCodeLine{00782         cudaVerify(cudaMalloc((void**)\&p\_device.dTdt, memorySizeForParticles));}
+\DoxyCodeLine{00783         cudaVerify(cudaMalloc((void**)\&p\_device.jc\_f, memorySizeForParticles));}
+\DoxyCodeLine{00784 \#endif}
+\DoxyCodeLine{00785 }
+\DoxyCodeLine{00786 \#if FRAGMENTATION}
+\DoxyCodeLine{00787         memorySizeForActivationThreshold = maxNumberOfParticles * MAX\_NUM\_FLAWS * sizeof(double);}
+\DoxyCodeLine{00788         cudaVerify(cudaMallocHost((void**)\&p\_host.d, memorySizeForParticles));}
+\DoxyCodeLine{00789         cudaVerify(cudaMallocHost((void**)\&p\_host.dddt, memorySizeForParticles));}
+\DoxyCodeLine{00790         cudaVerify(cudaMalloc((void**)\&p\_device.d, memorySizeForParticles));}
+\DoxyCodeLine{00791         cudaVerify(cudaMalloc((void**)\&p\_device.damage\_total, memorySizeForParticles));}
+\DoxyCodeLine{00792         cudaVerify(cudaMalloc((void**)\&p\_device.dddt, memorySizeForParticles));}
+\DoxyCodeLine{00793 }
+\DoxyCodeLine{00794         cudaVerify(cudaMallocHost((void**)\&p\_host.numFlaws, memorySizeForInteractions));}
+\DoxyCodeLine{00795         cudaVerify(cudaMalloc((void**)\&p\_device.numFlaws, memorySizeForInteractions));}
+\DoxyCodeLine{00796         cudaVerify(cudaMallocHost((void**)\&p\_host.numActiveFlaws, memorySizeForInteractions));}
+\DoxyCodeLine{00797         cudaVerify(cudaMalloc((void**)\&p\_device.numActiveFlaws, memorySizeForInteractions));}
+\DoxyCodeLine{00798         cudaVerify(cudaMallocHost((void**)\&p\_host.flaws, memorySizeForActivationThreshold));}
+\DoxyCodeLine{00799         cudaVerify(cudaMalloc((void**)\&p\_device.flaws, memorySizeForActivationThreshold));}
+\DoxyCodeLine{00800 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00801     cudaVerify(cudaMallocHost((void**)\&p\_host.damage\_porjutzi, memorySizeForParticles));}
+\DoxyCodeLine{00802         cudaVerify(cudaMallocHost((void**)\&p\_host.ddamage\_porjutzidt, memorySizeForParticles));}
+\DoxyCodeLine{00803         cudaVerify(cudaMalloc((void**)\&p\_device.damage\_porjutzi, memorySizeForParticles));}
+\DoxyCodeLine{00804         cudaVerify(cudaMalloc((void**)\&p\_device.ddamage\_porjutzidt, memorySizeForParticles));}
+\DoxyCodeLine{00805 \#endif}
+\DoxyCodeLine{00806 \#endif}
+\DoxyCodeLine{00807 }
+\DoxyCodeLine{00808 \#if GHOST\_BOUNDARIES}
+\DoxyCodeLine{00809         cudaVerify(cudaMalloc((void**)\&p\_device.real\_partner, memorySizeForInteractions));}
+\DoxyCodeLine{00810 \#endif}
+\DoxyCodeLine{00811 }
+\DoxyCodeLine{00812 }
+\DoxyCodeLine{00813 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00814         cudaVerify(cudaMallocHost((void**)\&p\_host.alpha\_jutzi, memorySizeForParticles));}
+\DoxyCodeLine{00815         cudaVerify(cudaMallocHost((void**)\&p\_host.alpha\_jutzi\_old, memorySizeForParticles));}
+\DoxyCodeLine{00816         cudaVerify(cudaMallocHost((void**)\&p\_host.pold, memorySizeForParticles));}
+\DoxyCodeLine{00817     cudaVerify(cudaMallocHost((void**)\&p\_host.dalphadt, memorySizeForParticles));}
+\DoxyCodeLine{00818         cudaVerify(cudaMalloc((void**)\&p\_device.pold, memorySizeForParticles));}
+\DoxyCodeLine{00819         cudaVerify(cudaMalloc((void**)\&p\_device.alpha\_jutzi, memorySizeForParticles));}
+\DoxyCodeLine{00820         cudaVerify(cudaMalloc((void**)\&p\_device.alpha\_jutzi\_old, memorySizeForParticles));}
+\DoxyCodeLine{00821         cudaVerify(cudaMalloc((void**)\&p\_device.dalphadt, memorySizeForParticles));}
+\DoxyCodeLine{00822         cudaVerify(cudaMalloc((void**)\&p\_device.dalphadp, memorySizeForParticles));}
+\DoxyCodeLine{00823         cudaVerify(cudaMalloc((void**)\&p\_device.dp, memorySizeForParticles));}
+\DoxyCodeLine{00824         cudaVerify(cudaMalloc((void**)\&p\_device.dalphadrho, memorySizeForParticles));}
+\DoxyCodeLine{00825         cudaVerify(cudaMalloc((void**)\&p\_device.f, memorySizeForParticles));}
+\DoxyCodeLine{00826         cudaVerify(cudaMalloc((void**)\&p\_device.delpdelrho, memorySizeForParticles));}
+\DoxyCodeLine{00827         cudaVerify(cudaMalloc((void**)\&p\_device.delpdele, memorySizeForParticles));}
+\DoxyCodeLine{00828         cudaVerify(cudaMalloc((void**)\&p\_device.cs\_old, memorySizeForParticles));}
+\DoxyCodeLine{00829 \#endif}
+\DoxyCodeLine{00830 }
+\DoxyCodeLine{00831 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00832     cudaVerify(cudaMallocHost((void**)\&p\_host.compressive\_strength, memorySizeForParticles));}
+\DoxyCodeLine{00833     cudaVerify(cudaMallocHost((void**)\&p\_host.tensile\_strength, memorySizeForParticles));}
+\DoxyCodeLine{00834     cudaVerify(cudaMallocHost((void**)\&p\_host.shear\_strength, memorySizeForParticles));}
+\DoxyCodeLine{00835     cudaVerify(cudaMallocHost((void**)\&p\_host.rho\_0prime, memorySizeForParticles));}
+\DoxyCodeLine{00836     cudaVerify(cudaMallocHost((void**)\&p\_host.rho\_c\_plus, memorySizeForParticles));}
+\DoxyCodeLine{00837     cudaVerify(cudaMallocHost((void**)\&p\_host.rho\_c\_minus, memorySizeForParticles));}
+\DoxyCodeLine{00838     cudaVerify(cudaMallocHost((void**)\&p\_host.K, memorySizeForParticles));}
+\DoxyCodeLine{00839     cudaVerify(cudaMallocHost((void**)\&p\_host.flag\_rho\_0prime, memorySizeForInteractions));}
+\DoxyCodeLine{00840     cudaVerify(cudaMallocHost((void**)\&p\_host.flag\_plastic, memorySizeForInteractions));}
+\DoxyCodeLine{00841     cudaVerify(cudaMalloc((void**)\&p\_device.compressive\_strength, memorySizeForParticles));}
+\DoxyCodeLine{00842     cudaVerify(cudaMalloc((void**)\&p\_device.tensile\_strength, memorySizeForParticles));}
+\DoxyCodeLine{00843     cudaVerify(cudaMalloc((void**)\&p\_device.shear\_strength, memorySizeForParticles));}
+\DoxyCodeLine{00844     cudaVerify(cudaMalloc((void**)\&p\_device.K, memorySizeForParticles));}
+\DoxyCodeLine{00845     cudaVerify(cudaMalloc((void**)\&p\_device.rho\_0prime, memorySizeForParticles));}
+\DoxyCodeLine{00846     cudaVerify(cudaMalloc((void**)\&p\_device.rho\_c\_plus, memorySizeForParticles));}
+\DoxyCodeLine{00847     cudaVerify(cudaMalloc((void**)\&p\_device.rho\_c\_minus, memorySizeForParticles));}
+\DoxyCodeLine{00848     cudaVerify(cudaMalloc((void**)\&p\_device.flag\_rho\_0prime, memorySizeForInteractions));}
+\DoxyCodeLine{00849     cudaVerify(cudaMalloc((void**)\&p\_device.flag\_plastic, memorySizeForInteractions));}
+\DoxyCodeLine{00850 \#endif}
+\DoxyCodeLine{00851 }
+\DoxyCodeLine{00852 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00853     cudaVerify(cudaMallocHost((void**)\&p\_host.alpha\_epspor, memorySizeForParticles));}
+\DoxyCodeLine{00854     cudaVerify(cudaMallocHost((void**)\&p\_host.epsilon\_v, memorySizeForParticles));}
+\DoxyCodeLine{00855     cudaVerify(cudaMalloc((void**)\&p\_device.alpha\_epspor, memorySizeForParticles));}
+\DoxyCodeLine{00856     cudaVerify(cudaMalloc((void**)\&p\_device.dalpha\_epspordt, memorySizeForParticles));}
+\DoxyCodeLine{00857     cudaVerify(cudaMalloc((void**)\&p\_device.epsilon\_v, memorySizeForParticles));}
+\DoxyCodeLine{00858     cudaVerify(cudaMalloc((void**)\&p\_device.depsilon\_vdt, memorySizeForParticles));}
+\DoxyCodeLine{00859 \#endif}
+\DoxyCodeLine{00860 }
+\DoxyCodeLine{00861         cudaVerify(cudaMalloc((void**)\&p\_device.x, memorySizeForTree));}
+\DoxyCodeLine{00862         cudaVerify(cudaMalloc((void**)\&p\_device.g\_x, memorySizeForParticles));}
+\DoxyCodeLine{00863         cudaVerify(cudaMalloc((void**)\&p\_device.g\_local\_cellsize, memorySizeForParticles));}
+\DoxyCodeLine{00864         cudaVerify(cudaMalloc((void**)\&p\_device.vx, memorySizeForParticles));}
+\DoxyCodeLine{00865         cudaVerify(cudaMalloc((void**)\&p\_device.dxdt, memorySizeForParticles));}
+\DoxyCodeLine{00866 }
+\DoxyCodeLine{00867 \#if DIM > 1}
+\DoxyCodeLine{00868         cudaVerify(cudaMalloc((void**)\&p\_device.y, memorySizeForTree));}
+\DoxyCodeLine{00869         cudaVerify(cudaMalloc((void**)\&p\_device.g\_y, memorySizeForParticles));}
+\DoxyCodeLine{00870         cudaVerify(cudaMalloc((void**)\&p\_device.vy, memorySizeForParticles));}
+\DoxyCodeLine{00871         cudaVerify(cudaMalloc((void**)\&p\_device.dydt, memorySizeForParticles));}
+\DoxyCodeLine{00872     cudaVerify(cudaMalloc((void**)\&p\_device.y0, memorySizeForTree));}
+\DoxyCodeLine{00873 \#endif}
+\DoxyCodeLine{00874 }
+\DoxyCodeLine{00875     cudaVerify(cudaMalloc((void**)\&p\_device.x0, memorySizeForTree));}
+\DoxyCodeLine{00876 \#if DIM > 2}
+\DoxyCodeLine{00877     cudaVerify(cudaMalloc((void**)\&p\_device.z0, memorySizeForTree));}
+\DoxyCodeLine{00878 \#endif}
+\DoxyCodeLine{00879 }
+\DoxyCodeLine{00880 }
+\DoxyCodeLine{00881 }
+\DoxyCodeLine{00882 \#if XSPH}
+\DoxyCodeLine{00883         cudaVerify(cudaMalloc((void**)\&p\_device.xsphvx, memorySizeForParticles));}
+\DoxyCodeLine{00884 \#if DIM > 1}
+\DoxyCodeLine{00885         cudaVerify(cudaMalloc((void**)\&p\_device.xsphvy, memorySizeForParticles));}
+\DoxyCodeLine{00886 \#endif}
+\DoxyCodeLine{00887 \#endif}
+\DoxyCodeLine{00888         cudaVerify(cudaMalloc((void**)\&p\_device.ax, memorySizeForParticles));}
+\DoxyCodeLine{00889         cudaVerify(cudaMalloc((void**)\&p\_device.g\_ax, memorySizeForParticles));}
+\DoxyCodeLine{00890 }
+\DoxyCodeLine{00891 \#if DIM > 1}
+\DoxyCodeLine{00892         cudaVerify(cudaMalloc((void**)\&p\_device.ay, memorySizeForParticles));}
+\DoxyCodeLine{00893         cudaVerify(cudaMalloc((void**)\&p\_device.g\_ay, memorySizeForParticles));}
+\DoxyCodeLine{00894 \#endif}
+\DoxyCodeLine{00895 }
+\DoxyCodeLine{00896         cudaVerify(cudaMalloc((void**)\&p\_device.m, memorySizeForTree));}
+\DoxyCodeLine{00897         cudaVerify(cudaMalloc((void**)\&p\_device.h, memorySizeForParticles));}
+\DoxyCodeLine{00898 }
+\DoxyCodeLine{00899 \#if INTEGRATE\_SML}
+\DoxyCodeLine{00900         cudaVerify(cudaMalloc((void**)\&p\_device.dhdt, memorySizeForParticles));}
+\DoxyCodeLine{00901 \#endif}
+\DoxyCodeLine{00902 }
+\DoxyCodeLine{00903 }
+\DoxyCodeLine{00904         cudaVerify(cudaMalloc((void**)\&p\_device.rho, memorySizeForParticles));}
+\DoxyCodeLine{00905         cudaVerify(cudaMalloc((void**)\&p\_device.p, memorySizeForParticles));}
+\DoxyCodeLine{00906         cudaVerify(cudaMalloc((void**)\&p\_device.e, memorySizeForParticles));}
+\DoxyCodeLine{00907         cudaVerify(cudaMalloc((void**)\&p\_device.cs, memorySizeForParticles));}
+\DoxyCodeLine{00908         cudaVerify(cudaMalloc((void**)\&p\_device.depth, memorySizeForInteractions));}
+\DoxyCodeLine{00909         cudaVerify(cudaMalloc((void**)\&p\_device.noi, memorySizeForInteractions));}
+\DoxyCodeLine{00910         cudaVerify(cudaMalloc((void**)\&p\_device.materialId, memorySizeForInteractions));}
+\DoxyCodeLine{00911 }
+\DoxyCodeLine{00912 }
+\DoxyCodeLine{00913         cudaVerify(cudaMalloc((void**)\&interactions, memorySizeForInteractions*MAX\_NUM\_INTERACTIONS));}
+\DoxyCodeLine{00914         cudaVerify(cudaMalloc((void**)\&childListd, memorySizeForChildren));}
+\DoxyCodeLine{00915 \#if DIM > 2}
+\DoxyCodeLine{00916         cudaVerify(cudaMalloc((void**)\&p\_device.z, memorySizeForTree));}
+\DoxyCodeLine{00917         cudaVerify(cudaMalloc((void**)\&p\_device.g\_z, memorySizeForParticles));}
+\DoxyCodeLine{00918         cudaVerify(cudaMalloc((void**)\&p\_device.dzdt, memorySizeForParticles));}
+\DoxyCodeLine{00919         cudaVerify(cudaMalloc((void**)\&p\_device.vz, memorySizeForParticles));}
+\DoxyCodeLine{00920         cudaVerify(cudaMalloc((void**)\&p\_device.az, memorySizeForParticles));}
+\DoxyCodeLine{00921         cudaVerify(cudaMalloc((void**)\&p\_device.g\_az, memorySizeForParticles));}
+\DoxyCodeLine{00922 \#if XSPH}
+\DoxyCodeLine{00923         cudaVerify(cudaMalloc((void**)\&p\_device.xsphvz, memorySizeForParticles));}
+\DoxyCodeLine{00924 \#endif}
+\DoxyCodeLine{00925 \#endif}
+\DoxyCodeLine{00926 }
+\DoxyCodeLine{00927         cudaVerify(cudaMemset(p\_device.ax, 0, memorySizeForParticles));}
+\DoxyCodeLine{00928         cudaVerify(cudaMemset(p\_device.g\_ax, 0, memorySizeForParticles));}
+\DoxyCodeLine{00929 \#if DIM > 1}
+\DoxyCodeLine{00930         cudaVerify(cudaMemset(p\_device.ay, 0, memorySizeForParticles));}
+\DoxyCodeLine{00931         cudaVerify(cudaMemset(p\_device.g\_ay, 0, memorySizeForParticles));}
+\DoxyCodeLine{00932 \#endif}
+\DoxyCodeLine{00933 \#if DIM > 2}
+\DoxyCodeLine{00934         cudaVerify(cudaMemset(p\_device.az, 0, memorySizeForParticles));}
+\DoxyCodeLine{00935         cudaVerify(cudaMemset(p\_device.g\_az, 0, memorySizeForParticles));}
+\DoxyCodeLine{00936 \#endif}
+\DoxyCodeLine{00937 }
+\DoxyCodeLine{00938 }
+\DoxyCodeLine{00939 }
+\DoxyCodeLine{00940     return rc;}
+\DoxyCodeLine{00941 \}}
+\DoxyCodeLine{00942 }
+\DoxyCodeLine{00943 int copy\_particle\_data\_to\_device()}
+\DoxyCodeLine{00944 \{}
+\DoxyCodeLine{00945     int rc = 0;}
+\DoxyCodeLine{00946         // copy particle data to device}
+\DoxyCodeLine{00947         if (param.verbose) printf("{}copying particle data to device ...\(\backslash\)n"{});}
+\DoxyCodeLine{00948 }
+\DoxyCodeLine{00949         cudaVerify(cudaMemcpy(p\_device.x0, p\_host.x, memorySizeForTree, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00950         cudaVerify(cudaMemcpy(p\_device.x, p\_host.x, memorySizeForTree, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00951         cudaVerify(cudaMemcpy(p\_device.vx, p\_host.vx, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00952 \#if DIM > 1}
+\DoxyCodeLine{00953         cudaVerify(cudaMemcpy(p\_device.y0, p\_host.y, memorySizeForTree, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00954         cudaVerify(cudaMemcpy(p\_device.y, p\_host.y, memorySizeForTree, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00955         cudaVerify(cudaMemcpy(p\_device.vy, p\_host.vy, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00956 \#endif}
+\DoxyCodeLine{00957 \#if DIM > 2}
+\DoxyCodeLine{00958         cudaVerify(cudaMemcpy(p\_device.z0, p\_host.z, memorySizeForTree, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00959 \#endif}
+\DoxyCodeLine{00960 }
+\DoxyCodeLine{00961 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00962         cudaVerify(cudaMemcpy(pointmass\_device.x, pointmass\_host.x, memorySizeForPointmasses, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00963         cudaVerify(cudaMemcpy(pointmass\_device.vx, pointmass\_host.vx, memorySizeForPointmasses, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00964 \# if DIM > 1}
+\DoxyCodeLine{00965         cudaVerify(cudaMemcpy(pointmass\_device.y, pointmass\_host.y, memorySizeForPointmasses, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00966         cudaVerify(cudaMemcpy(pointmass\_device.vy, pointmass\_host.vy, memorySizeForPointmasses, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00967 \#  if DIM > 2}
+\DoxyCodeLine{00968         cudaVerify(cudaMemcpy(pointmass\_device.z, pointmass\_host.z, memorySizeForPointmasses, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00969         cudaVerify(cudaMemcpy(pointmass\_device.vz, pointmass\_host.vz, memorySizeForPointmasses, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00970 \#  endif}
+\DoxyCodeLine{00971 \# endif}
+\DoxyCodeLine{00972         cudaVerify(cudaMemcpy(pointmass\_device.rmin, pointmass\_host.rmin, memorySizeForPointmasses, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00973         cudaVerify(cudaMemcpy(pointmass\_device.rmax, pointmass\_host.rmax, memorySizeForPointmasses, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00974         cudaVerify(cudaMemcpy(pointmass\_device.m, pointmass\_host.m, memorySizeForPointmasses, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00975 \#endif}
+\DoxyCodeLine{00976 }
+\DoxyCodeLine{00977         cudaVerify(cudaMemcpy(p\_device.h, p\_host.h, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00978         cudaVerify(cudaMemcpy(p\_device.cs, p\_host.cs, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00979         cudaVerify(cudaMemcpy(p\_device.m, p\_host.m, memorySizeForTree, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00980         cudaVerify(cudaMemcpy(p\_device.rho, p\_host.rho, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00981 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00982         cudaVerify(cudaMemcpy(p\_device.e, p\_host.e, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00983 \#endif}
+\DoxyCodeLine{00984 \#if SOLID}
+\DoxyCodeLine{00985         cudaVerify(cudaMemcpy(p\_device.S, p\_host.S, memorySizeForStress, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00986 \#endif}
+\DoxyCodeLine{00987 \#if NAVIER\_STOKES}
+\DoxyCodeLine{00988         cudaVerify(cudaMemcpy(p\_device.Tshear, p\_host.Tshear, memorySizeForStress, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00989 \#endif}
+\DoxyCodeLine{00990 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00991         cudaVerify(cudaMemcpy(p\_device.alpha\_jutzi, p\_host.alpha\_jutzi, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00992         cudaVerify(cudaMemcpy(p\_device.alpha\_jutzi\_old, p\_host.alpha\_jutzi\_old, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00993         cudaVerify(cudaMemcpy(p\_device.p, p\_host.p, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00994         cudaVerify(cudaMemcpy(p\_device.pold, p\_host.pold, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00995 \#endif}
+\DoxyCodeLine{00996 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00997     cudaVerify(cudaMemcpy(p\_device.compressive\_strength, p\_host.compressive\_strength, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00998     cudaVerify(cudaMemcpy(p\_device.tensile\_strength, p\_host.tensile\_strength, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00999     cudaVerify(cudaMemcpy(p\_device.shear\_strength, p\_host.shear\_strength, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01000     cudaVerify(cudaMemcpy(p\_device.rho\_0prime, p\_host.rho\_0prime, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01001     cudaVerify(cudaMemcpy(p\_device.rho\_c\_plus, p\_host.rho\_c\_plus, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01002     cudaVerify(cudaMemcpy(p\_device.rho\_c\_minus, p\_host.rho\_c\_minus, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01003     cudaVerify(cudaMemcpy(p\_device.K, p\_host.K, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01004     cudaVerify(cudaMemcpy(p\_device.flag\_rho\_0prime, p\_host.flag\_rho\_0prime, memorySizeForInteractions, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01005     cudaVerify(cudaMemcpy(p\_device.flag\_plastic, p\_host.flag\_plastic, memorySizeForInteractions, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01006 \#endif}
+\DoxyCodeLine{01007 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{01008     cudaVerify(cudaMemcpy(p\_device.alpha\_epspor, p\_host.alpha\_epspor, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01009     cudaVerify(cudaMemcpy(p\_device.epsilon\_v, p\_host.epsilon\_v, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01010 \#endif}
+\DoxyCodeLine{01011 \#if JC\_PLASTICITY}
+\DoxyCodeLine{01012         cudaVerify(cudaMemcpy(p\_device.ep, p\_host.ep, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01013         cudaVerify(cudaMemcpy(p\_device.T, p\_host.T, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01014 \#endif}
+\DoxyCodeLine{01015 \#if FRAGMENTATION}
+\DoxyCodeLine{01016         cudaVerify(cudaMemcpy(p\_device.d, p\_host.d, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01017         cudaVerify(cudaMemcpy(p\_device.numFlaws, p\_host.numFlaws, memorySizeForInteractions, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01018         cudaVerify(cudaMemcpy(p\_device.numActiveFlaws, p\_host.numActiveFlaws, memorySizeForInteractions, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01019     cudaVerify(cudaMemcpy(p\_device.flaws, p\_host.flaws, memorySizeForActivationThreshold, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01020 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01021     cudaVerify(cudaMemcpy(p\_device.damage\_porjutzi, p\_host.damage\_porjutzi, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01022 \#endif}
+\DoxyCodeLine{01023 \#endif}
+\DoxyCodeLine{01024         cudaVerify(cudaMemcpy(p\_device.noi, p\_host.noi, memorySizeForInteractions, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01025         cudaVerify(cudaMemcpy(p\_device.materialId, p\_host.materialId, memorySizeForInteractions, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01026 \#if DIM > 2}
+\DoxyCodeLine{01027         cudaVerify(cudaMemcpy(p\_device.z, p\_host.z, memorySizeForTree, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01028         cudaVerify(cudaMemcpy(p\_device.vz, p\_host.vz, memorySizeForParticles, cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01029 \#endif}
+\DoxyCodeLine{01030         cudaVerify(cudaMemset((void *) childListd, -\/1, memorySizeForChildren));}
+\DoxyCodeLine{01031 }
+\DoxyCodeLine{01032 }
+\DoxyCodeLine{01033     return rc;}
+\DoxyCodeLine{01034 \}}
+\DoxyCodeLine{01035 }
+\DoxyCodeLine{01036 }
+\DoxyCodeLine{01037 int free\_memory()}
+\DoxyCodeLine{01038 \{}
+\DoxyCodeLine{01039 }
+\DoxyCodeLine{01040     int rc = 0;}
+\DoxyCodeLine{01041         // free device memory}
+\DoxyCodeLine{01042         if (param.verbose) printf("{}freeing device memory...\(\backslash\)n"{});}
+\DoxyCodeLine{01043         cudaVerify(cudaFree(p\_device.x));}
+\DoxyCodeLine{01044         cudaVerify(cudaFree(p\_device.g\_x));}
+\DoxyCodeLine{01045         cudaVerify(cudaFree(p\_device.g\_local\_cellsize));}
+\DoxyCodeLine{01046         cudaVerify(cudaFree(p\_device.depth));}
+\DoxyCodeLine{01047         cudaVerify(cudaFree(p\_device.x0));}
+\DoxyCodeLine{01048         cudaVerify(cudaFree(p\_device.dxdt));}
+\DoxyCodeLine{01049         cudaVerify(cudaFree(p\_device.vx));}
+\DoxyCodeLine{01050         cudaVerify(cudaFree(p\_device.ax));}
+\DoxyCodeLine{01051         cudaVerify(cudaFree(p\_device.g\_ax));}
+\DoxyCodeLine{01052         cudaVerify(cudaFree(p\_device.m));}
+\DoxyCodeLine{01053 }
+\DoxyCodeLine{01054 \#if DIM > 1}
+\DoxyCodeLine{01055         cudaVerify(cudaFree(p\_device.y));}
+\DoxyCodeLine{01056         cudaVerify(cudaFree(p\_device.g\_y));}
+\DoxyCodeLine{01057         cudaVerify(cudaFree(p\_device.y0));}
+\DoxyCodeLine{01058         cudaVerify(cudaFree(p\_device.vy));}
+\DoxyCodeLine{01059         cudaVerify(cudaFree(p\_device.dydt));}
+\DoxyCodeLine{01060         cudaVerify(cudaFree(p\_device.ay));}
+\DoxyCodeLine{01061         cudaVerify(cudaFree(p\_device.g\_ay));}
+\DoxyCodeLine{01062 \#endif}
+\DoxyCodeLine{01063 }
+\DoxyCodeLine{01064 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{01065         cudaVerify(cudaFree(pointmass\_device.x));}
+\DoxyCodeLine{01066         cudaVerify(cudaFree(pointmass\_device.vx));}
+\DoxyCodeLine{01067         cudaVerify(cudaFree(pointmass\_device.ax));}
+\DoxyCodeLine{01068 \# if DIM > 1}
+\DoxyCodeLine{01069         cudaVerify(cudaFree(pointmass\_device.y));}
+\DoxyCodeLine{01070         cudaVerify(cudaFree(pointmass\_device.vy));}
+\DoxyCodeLine{01071         cudaVerify(cudaFree(pointmass\_device.ay));}
+\DoxyCodeLine{01072 \#  if DIM > 2}
+\DoxyCodeLine{01073         cudaVerify(cudaFree(pointmass\_device.z));}
+\DoxyCodeLine{01074         cudaVerify(cudaFree(pointmass\_device.vz));}
+\DoxyCodeLine{01075         cudaVerify(cudaFree(pointmass\_device.az));}
+\DoxyCodeLine{01076 \#  endif}
+\DoxyCodeLine{01077 \# endif}
+\DoxyCodeLine{01078         cudaVerify(cudaFree(pointmass\_device.m));}
+\DoxyCodeLine{01079         cudaVerify(cudaFree(pointmass\_device.rmin));}
+\DoxyCodeLine{01080         cudaVerify(cudaFree(pointmass\_device.rmax));}
+\DoxyCodeLine{01081 }
+\DoxyCodeLine{01082         cudaVerify(cudaFreeHost(pointmass\_host.x));}
+\DoxyCodeLine{01083         cudaVerify(cudaFreeHost(pointmass\_host.vx));}
+\DoxyCodeLine{01084         cudaVerify(cudaFreeHost(pointmass\_host.ax));}
+\DoxyCodeLine{01085 \# if DIM > 1}
+\DoxyCodeLine{01086         cudaVerify(cudaFreeHost(pointmass\_host.y));}
+\DoxyCodeLine{01087         cudaVerify(cudaFreeHost(pointmass\_host.vy));}
+\DoxyCodeLine{01088         cudaVerify(cudaFreeHost(pointmass\_host.ay));}
+\DoxyCodeLine{01089 \#  if DIM > 2}
+\DoxyCodeLine{01090         cudaVerify(cudaFreeHost(pointmass\_host.z));}
+\DoxyCodeLine{01091         cudaVerify(cudaFreeHost(pointmass\_host.vz));}
+\DoxyCodeLine{01092         cudaVerify(cudaFreeHost(pointmass\_host.az));}
+\DoxyCodeLine{01093 \#  endif}
+\DoxyCodeLine{01094 \# endif}
+\DoxyCodeLine{01095         cudaVerify(cudaFreeHost(pointmass\_host.m));}
+\DoxyCodeLine{01096         cudaVerify(cudaFreeHost(pointmass\_host.rmin));}
+\DoxyCodeLine{01097         cudaVerify(cudaFreeHost(pointmass\_host.rmax));}
+\DoxyCodeLine{01098 \#endif}
+\DoxyCodeLine{01099 }
+\DoxyCodeLine{01100 \#if XSPH}
+\DoxyCodeLine{01101         cudaVerify(cudaFree(p\_device.xsphvx));}
+\DoxyCodeLine{01102 \#if DIM > 1}
+\DoxyCodeLine{01103         cudaVerify(cudaFree(p\_device.xsphvy));}
+\DoxyCodeLine{01104 \#endif}
+\DoxyCodeLine{01105 \#endif}
+\DoxyCodeLine{01106         cudaVerify(cudaFree(p\_device.h));}
+\DoxyCodeLine{01107         cudaVerify(cudaFree(p\_device.rho));}
+\DoxyCodeLine{01108         cudaVerify(cudaFree(p\_device.p));}
+\DoxyCodeLine{01109         cudaVerify(cudaFree(p\_device.e));}
+\DoxyCodeLine{01110         cudaVerify(cudaFree(p\_device.cs));}
+\DoxyCodeLine{01111         cudaVerify(cudaFree(p\_device.noi));}
+\DoxyCodeLine{01112 \#if ARTIFICIAL\_VISCOSITY}
+\DoxyCodeLine{01113         cudaVerify(cudaFree(p\_device.muijmax));}
+\DoxyCodeLine{01114 \#endif}
+\DoxyCodeLine{01115 \#if INVISCID\_SPH}
+\DoxyCodeLine{01116         cudaVerify(cudaFree(p\_device.beta));}
+\DoxyCodeLine{01117         cudaVerify(cudaFree(p\_device.beta\_old));}
+\DoxyCodeLine{01118         cudaVerify(cudaFree(p\_device.divv\_old));}
+\DoxyCodeLine{01119 \#endif}
+\DoxyCodeLine{01120         cudaVerify(cudaFree(interactions));}
+\DoxyCodeLine{01121         cudaVerify(cudaFree(p\_device.materialId));}
+\DoxyCodeLine{01122         cudaVerify(cudaFree(childListd));}
+\DoxyCodeLine{01123 \#if DIM > 2}
+\DoxyCodeLine{01124         cudaVerify(cudaFree(p\_device.z));}
+\DoxyCodeLine{01125         cudaVerify(cudaFree(p\_device.g\_z));}
+\DoxyCodeLine{01126         cudaVerify(cudaFree(p\_device.z0));}
+\DoxyCodeLine{01127         cudaVerify(cudaFree(p\_device.dzdt));}
+\DoxyCodeLine{01128         cudaVerify(cudaFree(p\_device.vz));}
+\DoxyCodeLine{01129 \#if XSPH}
+\DoxyCodeLine{01130         cudaVerify(cudaFree(p\_device.xsphvz));}
+\DoxyCodeLine{01131 \#endif}
+\DoxyCodeLine{01132         cudaVerify(cudaFree(p\_device.az));}
+\DoxyCodeLine{01133         cudaVerify(cudaFree(p\_device.g\_az));}
+\DoxyCodeLine{01134 \#endif}
+\DoxyCodeLine{01135 }
+\DoxyCodeLine{01136 \#if TENSORIAL\_CORRECTION}
+\DoxyCodeLine{01137         cudaVerify(cudaFree(p\_device.tensorialCorrectionMatrix));}
+\DoxyCodeLine{01138         //cudaVerify(cudaFree(p\_device.tensorialCorrectiondWdrr));}
+\DoxyCodeLine{01139 \#endif}
+\DoxyCodeLine{01140 }
+\DoxyCodeLine{01141 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{01142         cudaVerify(cudaFreeHost(p\_host.dedt));}
+\DoxyCodeLine{01143         cudaVerify(cudaFree(p\_device.dedt));}
+\DoxyCodeLine{01144 \#endif}
+\DoxyCodeLine{01145 }
+\DoxyCodeLine{01146         cudaVerify(cudaFreeHost(p\_host.drhodt));}
+\DoxyCodeLine{01147         cudaVerify(cudaFree(p\_device.drhodt));}
+\DoxyCodeLine{01148 }
+\DoxyCodeLine{01149 \#if INTEGRATE\_SML}
+\DoxyCodeLine{01150         cudaVerify(cudaFree(p\_device.dhdt));}
+\DoxyCodeLine{01151 \#endif}
+\DoxyCodeLine{01152 }
+\DoxyCodeLine{01153 \#if NAVIER\_STOKES}
+\DoxyCodeLine{01154         cudaVerify(cudaFree(p\_device.Tshear));}
+\DoxyCodeLine{01155         cudaVerify(cudaFreeHost(p\_host.Tshear));}
+\DoxyCodeLine{01156 \#endif}
+\DoxyCodeLine{01157 \#if SOLID}
+\DoxyCodeLine{01158         cudaVerify(cudaFree(p\_device.S));}
+\DoxyCodeLine{01159         cudaVerify(cudaFree(p\_device.dSdt));}
+\DoxyCodeLine{01160         cudaVerify(cudaFreeHost(p\_host.S));}
+\DoxyCodeLine{01161         cudaVerify(cudaFreeHost(p\_host.dSdt));}
+\DoxyCodeLine{01162         cudaVerify(cudaFree(p\_device.local\_strain));}
+\DoxyCodeLine{01163         cudaVerify(cudaFreeHost(p\_host.local\_strain));}
+\DoxyCodeLine{01164         cudaVerify(cudaFree(p\_device.sigma));}
+\DoxyCodeLine{01165 \#endif}
+\DoxyCodeLine{01166 \#if ARTIFICIAL\_STRESS}
+\DoxyCodeLine{01167         cudaVerify(cudaFree(p\_device.R));}
+\DoxyCodeLine{01168 \#endif}
+\DoxyCodeLine{01169 }
+\DoxyCodeLine{01170 \#if JC\_PLASTICITY}
+\DoxyCodeLine{01171         cudaVerify(cudaFree(p\_device.ep));}
+\DoxyCodeLine{01172         cudaVerify(cudaFree(p\_device.edotp));}
+\DoxyCodeLine{01173         cudaVerify(cudaFree(p\_device.T));}
+\DoxyCodeLine{01174         cudaVerify(cudaFree(p\_device.dTdt));}
+\DoxyCodeLine{01175         cudaVerify(cudaFree(p\_device.jc\_f));}
+\DoxyCodeLine{01176 \#endif}
+\DoxyCodeLine{01177 }
+\DoxyCodeLine{01178 \#if GHOST\_BOUNDARIES}
+\DoxyCodeLine{01179         cudaVerify(cudaFree(p\_device.real\_partner));}
+\DoxyCodeLine{01180 \#endif}
+\DoxyCodeLine{01181 }
+\DoxyCodeLine{01182 \#if FRAGMENTATION}
+\DoxyCodeLine{01183         cudaVerify(cudaFreeHost(p\_host.d));}
+\DoxyCodeLine{01184         cudaVerify(cudaFree(p\_device.d));}
+\DoxyCodeLine{01185         cudaVerify(cudaFree(p\_device.damage\_total));}
+\DoxyCodeLine{01186         cudaVerify(cudaFree(p\_device.dddt));}
+\DoxyCodeLine{01187         cudaVerify(cudaFreeHost(p\_host.dddt));}
+\DoxyCodeLine{01188         cudaVerify(cudaFreeHost(p\_host.numFlaws));}
+\DoxyCodeLine{01189         cudaVerify(cudaFree(p\_device.numFlaws));}
+\DoxyCodeLine{01190         cudaVerify(cudaFreeHost(p\_host.numActiveFlaws));}
+\DoxyCodeLine{01191         cudaVerify(cudaFree(p\_device.numActiveFlaws));}
+\DoxyCodeLine{01192         cudaVerify(cudaFreeHost(p\_host.flaws));}
+\DoxyCodeLine{01193         cudaVerify(cudaFree(p\_device.flaws));}
+\DoxyCodeLine{01194 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01195         cudaVerify(cudaFree(p\_device.damage\_porjutzi));}
+\DoxyCodeLine{01196         cudaVerify(cudaFree(p\_device.cs\_old));}
+\DoxyCodeLine{01197         cudaVerify(cudaFree(p\_device.ddamage\_porjutzidt));}
+\DoxyCodeLine{01198 \#endif}
+\DoxyCodeLine{01199 \#endif}
+\DoxyCodeLine{01200 }
+\DoxyCodeLine{01201 }
+\DoxyCodeLine{01202 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01203         cudaVerify(cudaFree(p\_device.alpha\_jutzi));}
+\DoxyCodeLine{01204         cudaVerify(cudaFree(p\_device.alpha\_jutzi\_old));}
+\DoxyCodeLine{01205         cudaVerify(cudaFree(p\_device.pold));}
+\DoxyCodeLine{01206         cudaVerify(cudaFree(p\_device.dalphadt));}
+\DoxyCodeLine{01207         cudaVerify(cudaFree(p\_device.dalphadp));}
+\DoxyCodeLine{01208         cudaVerify(cudaFree(p\_device.dp));}
+\DoxyCodeLine{01209         cudaVerify(cudaFree(p\_device.dalphadrho));}
+\DoxyCodeLine{01210         cudaVerify(cudaFree(p\_device.f));}
+\DoxyCodeLine{01211         cudaVerify(cudaFree(p\_device.delpdelrho));}
+\DoxyCodeLine{01212         cudaVerify(cudaFree(p\_device.delpdele));}
+\DoxyCodeLine{01213 \#endif}
+\DoxyCodeLine{01214 }
+\DoxyCodeLine{01215 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{01216     cudaVerify(cudaFree(p\_device.compressive\_strength));}
+\DoxyCodeLine{01217     cudaVerify(cudaFree(p\_device.tensile\_strength));}
+\DoxyCodeLine{01218     cudaVerify(cudaFree(p\_device.shear\_strength));}
+\DoxyCodeLine{01219     cudaVerify(cudaFree(p\_device.K));}
+\DoxyCodeLine{01220     cudaVerify(cudaFree(p\_device.rho\_0prime));}
+\DoxyCodeLine{01221     cudaVerify(cudaFree(p\_device.rho\_c\_plus));}
+\DoxyCodeLine{01222     cudaVerify(cudaFree(p\_device.rho\_c\_minus));}
+\DoxyCodeLine{01223     cudaVerify(cudaFree(p\_device.flag\_rho\_0prime));}
+\DoxyCodeLine{01224     cudaVerify(cudaFree(p\_device.flag\_plastic));}
+\DoxyCodeLine{01225 \#endif}
+\DoxyCodeLine{01226 }
+\DoxyCodeLine{01227 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{01228     cudaVerify(cudaFree(p\_device.alpha\_epspor));}
+\DoxyCodeLine{01229     cudaVerify(cudaFree(p\_device.dalpha\_epspordt));}
+\DoxyCodeLine{01230     cudaVerify(cudaFree(p\_device.epsilon\_v));}
+\DoxyCodeLine{01231     cudaVerify(cudaFree(p\_device.depsilon\_vdt));}
+\DoxyCodeLine{01232 \#endif}
+\DoxyCodeLine{01233 }
+\DoxyCodeLine{01234         // free host memory}
+\DoxyCodeLine{01235         if (param.verbose) printf("{}freeing host memory...\(\backslash\)n"{});}
+\DoxyCodeLine{01236         cudaVerify(cudaFreeHost(p\_host.x));}
+\DoxyCodeLine{01237         cudaVerify(cudaFreeHost(p\_host.vx));}
+\DoxyCodeLine{01238         cudaVerify(cudaFreeHost(p\_host.ax));}
+\DoxyCodeLine{01239     cudaVerify(cudaFreeHost(p\_host.g\_ax));}
+\DoxyCodeLine{01240 \#if DIM > 1}
+\DoxyCodeLine{01241         cudaVerify(cudaFreeHost(p\_host.y));}
+\DoxyCodeLine{01242         cudaVerify(cudaFreeHost(p\_host.vy));}
+\DoxyCodeLine{01243         cudaVerify(cudaFreeHost(p\_host.ay));}
+\DoxyCodeLine{01244     cudaVerify(cudaFreeHost(p\_host.g\_ay));}
+\DoxyCodeLine{01245 \#endif}
+\DoxyCodeLine{01246         cudaVerify(cudaFreeHost(p\_host.m));}
+\DoxyCodeLine{01247         cudaVerify(cudaFreeHost(p\_host.h));}
+\DoxyCodeLine{01248         cudaVerify(cudaFreeHost(p\_host.rho));}
+\DoxyCodeLine{01249         cudaVerify(cudaFreeHost(p\_host.p));}
+\DoxyCodeLine{01250         cudaVerify(cudaFreeHost(p\_host.e));}
+\DoxyCodeLine{01251         cudaVerify(cudaFreeHost(p\_host.cs));}
+\DoxyCodeLine{01252         cudaVerify(cudaFreeHost(p\_host.noi));}
+\DoxyCodeLine{01253         cudaVerify(cudaFreeHost(interactions\_host));}
+\DoxyCodeLine{01254         cudaVerify(cudaFreeHost(p\_host.depth));}
+\DoxyCodeLine{01255         cudaVerify(cudaFreeHost(p\_host.materialId));}
+\DoxyCodeLine{01256         cudaVerify(cudaFreeHost(childList\_host));}
+\DoxyCodeLine{01257 \#if INVISCID\_SPH}
+\DoxyCodeLine{01258         cudaVerify(cudaFreeHost(p\_host.beta));}
+\DoxyCodeLine{01259         cudaVerify(cudaFreeHost(p\_host.beta\_old));}
+\DoxyCodeLine{01260         cudaVerify(cudaFreeHost(p\_host.divv\_old));}
+\DoxyCodeLine{01261 \#endif}
+\DoxyCodeLine{01262 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01263         cudaVerify(cudaFreeHost(p\_host.alpha\_jutzi));}
+\DoxyCodeLine{01264         cudaVerify(cudaFreeHost(p\_host.alpha\_jutzi\_old));}
+\DoxyCodeLine{01265         cudaVerify(cudaFreeHost(p\_host.dalphadt));}
+\DoxyCodeLine{01266         cudaVerify(cudaFreeHost(p\_host.pold));}
+\DoxyCodeLine{01267 \#if FRAGMENTATION}
+\DoxyCodeLine{01268     cudaVerify(cudaFreeHost(p\_host.damage\_porjutzi));}
+\DoxyCodeLine{01269     cudaVerify(cudaFreeHost(p\_host.ddamage\_porjutzidt));}
+\DoxyCodeLine{01270 \#endif}
+\DoxyCodeLine{01271 \#endif}
+\DoxyCodeLine{01272 }
+\DoxyCodeLine{01273 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{01274     cudaVerify(cudaFreeHost(p\_host.compressive\_strength));}
+\DoxyCodeLine{01275     cudaVerify(cudaFreeHost(p\_host.tensile\_strength));}
+\DoxyCodeLine{01276     cudaVerify(cudaFreeHost(p\_host.shear\_strength));}
+\DoxyCodeLine{01277     cudaVerify(cudaFreeHost(p\_host.rho\_0prime));}
+\DoxyCodeLine{01278     cudaVerify(cudaFreeHost(p\_host.rho\_c\_plus));}
+\DoxyCodeLine{01279     cudaVerify(cudaFreeHost(p\_host.rho\_c\_minus));}
+\DoxyCodeLine{01280     cudaVerify(cudaFreeHost(p\_host.K));}
+\DoxyCodeLine{01281     cudaVerify(cudaFreeHost(p\_host.flag\_rho\_0prime));}
+\DoxyCodeLine{01282     cudaVerify(cudaFreeHost(p\_host.flag\_plastic));}
+\DoxyCodeLine{01283 \#endif}
+\DoxyCodeLine{01284 }
+\DoxyCodeLine{01285 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{01286     cudaVerify(cudaFreeHost(p\_host.alpha\_epspor));}
+\DoxyCodeLine{01287     cudaVerify(cudaFreeHost(p\_host.epsilon\_v));}
+\DoxyCodeLine{01288 \#endif}
+\DoxyCodeLine{01289 }
+\DoxyCodeLine{01290 \#if JC\_PLASTICITY}
+\DoxyCodeLine{01291         cudaVerify(cudaFreeHost(p\_host.ep));}
+\DoxyCodeLine{01292         cudaVerify(cudaFreeHost(p\_host.T));}
+\DoxyCodeLine{01293 \#endif}
+\DoxyCodeLine{01294 \#if DIM > 2}
+\DoxyCodeLine{01295         cudaVerify(cudaFreeHost(p\_host.z));}
+\DoxyCodeLine{01296         cudaVerify(cudaFreeHost(p\_host.vz));}
+\DoxyCodeLine{01297         cudaVerify(cudaFreeHost(p\_host.az));}
+\DoxyCodeLine{01298     cudaVerify(cudaFreeHost(p\_host.g\_az));}
+\DoxyCodeLine{01299 \#endif}
+\DoxyCodeLine{01300 }
+\DoxyCodeLine{01301     if (param.verbose) printf("{}freeing ANEOS (global) host memory...\(\backslash\)n"{});}
+\DoxyCodeLine{01302     free\_aneos\_memory();}
+\DoxyCodeLine{01303 }
+\DoxyCodeLine{01304     return rc;}
+\DoxyCodeLine{01305 }
+\DoxyCodeLine{01306 }
+\DoxyCodeLine{01307 \}}
+
+\end{DoxyCode}

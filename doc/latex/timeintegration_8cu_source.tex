@@ -1,0 +1,1622 @@
+\hypertarget{timeintegration_8cu_source}{}\doxysection{timeintegration.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com and Thomas I. Maindl}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 \#include "{}boundary.h"{}}
+\DoxyCodeLine{00025 \#include "{}timeintegration.h"{}}
+\DoxyCodeLine{00026 \#include "{}tree.h"{}}
+\DoxyCodeLine{00027 \#include "{}porosity.h"{}}
+\DoxyCodeLine{00028 \#include "{}pressure.h"{}}
+\DoxyCodeLine{00029 \#include "{}plasticity.h"{}}
+\DoxyCodeLine{00030 \#include "{}soundspeed.h"{}}
+\DoxyCodeLine{00031 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00032 \#include "{}io.h"{}}
+\DoxyCodeLine{00033 \#include "{}xsph.h"{}}
+\DoxyCodeLine{00034 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00035 \#include "{}aneos.h"{}}
+\DoxyCodeLine{00036 \#include "{}linalg.h"{}}
+\DoxyCodeLine{00037 \#include "{}density.h"{}}
+\DoxyCodeLine{00038 \#include "{}rhs.h"{}}
+\DoxyCodeLine{00039 \#include "{}viscosity.h"{}}
+\DoxyCodeLine{00040 \#include "{}float.h"{}}
+\DoxyCodeLine{00041 }
+\DoxyCodeLine{00042 pthread\_t fileIOthread;}
+\DoxyCodeLine{00043 }
+\DoxyCodeLine{00044 }
+\DoxyCodeLine{00045 double L\_ini = 0.0;}
+\DoxyCodeLine{00046 }
+\DoxyCodeLine{00047 double *matSml\_d;}
+\DoxyCodeLine{00048 int *matnoi\_d;}
+\DoxyCodeLine{00049 int *matEOS\_d;}
+\DoxyCodeLine{00050 double *matPolytropicK\_d;}
+\DoxyCodeLine{00051 double *matPolytropicGamma\_d;}
+\DoxyCodeLine{00052 double *matAlpha\_d;}
+\DoxyCodeLine{00053 double *matBeta\_d;}
+\DoxyCodeLine{00054 double *matBulkmodulus\_d;}
+\DoxyCodeLine{00055 double *matShearmodulus\_d;}
+\DoxyCodeLine{00056 double *matYieldStress\_d;}
+\DoxyCodeLine{00057 double *matInternalFriction\_d;}
+\DoxyCodeLine{00058 double *matInternalFrictionDamaged\_d;}
+\DoxyCodeLine{00059 double *matRho0\_d;}
+\DoxyCodeLine{00060 double *matTillRho0\_d;}
+\DoxyCodeLine{00061 double *matTillEiv\_d;}
+\DoxyCodeLine{00062 double *matTillEcv\_d;}
+\DoxyCodeLine{00063 double *matTillE0\_d;}
+\DoxyCodeLine{00064 double *matTilla\_d;}
+\DoxyCodeLine{00065 double *matTillb\_d;}
+\DoxyCodeLine{00066 double *matTillA\_d;}
+\DoxyCodeLine{00067 double *matTillB\_d;}
+\DoxyCodeLine{00068 double *matTillAlpha\_d;}
+\DoxyCodeLine{00069 double *matTillBeta\_d;}
+\DoxyCodeLine{00070 double *matRhoLimit\_d;}
+\DoxyCodeLine{00071 double *matN\_d;}
+\DoxyCodeLine{00072 double *matCohesion\_d;}
+\DoxyCodeLine{00073 double *matFrictionAngle\_d;}
+\DoxyCodeLine{00074 double *matFrictionAngleDamaged\_d;}
+\DoxyCodeLine{00075 double *matAlphaPhi\_d;}
+\DoxyCodeLine{00076 double *matCohesionCoefficient\_d;}
+\DoxyCodeLine{00077 // viscosity coefficients for Navier-\/Stokes}
+\DoxyCodeLine{00078 double *matnu\_d;}
+\DoxyCodeLine{00079 double *matzeta\_d;}
+\DoxyCodeLine{00080 }
+\DoxyCodeLine{00081 }
+\DoxyCodeLine{00082 \#if ARTIFICIAL\_STRESS}
+\DoxyCodeLine{00083 double *matexponent\_tensor\_d;}
+\DoxyCodeLine{00084 double *matepsilon\_stress\_d;}
+\DoxyCodeLine{00085 double *matmean\_particle\_distance\_d;}
+\DoxyCodeLine{00086 }
+\DoxyCodeLine{00087 \_\_constant\_\_ double *matexponent\_tensor;}
+\DoxyCodeLine{00088 \_\_constant\_\_ double *matepsilon\_stress;}
+\DoxyCodeLine{00089 \_\_constant\_\_ double *matmean\_particle\_distance;}
+\DoxyCodeLine{00090 }
+\DoxyCodeLine{00091 }
+\DoxyCodeLine{00092 // material stress parameters / material specific -\/> needed for ARTIFICIAL\_STRESS}
+\DoxyCodeLine{00093 double *exponent\_tensor;}
+\DoxyCodeLine{00094 double *epsilon\_stress;}
+\DoxyCodeLine{00095 double *mean\_particle\_distance;}
+\DoxyCodeLine{00096 \#endif}
+\DoxyCodeLine{00097 }
+\DoxyCodeLine{00098 }
+\DoxyCodeLine{00099 double *mat\_f\_sml\_min\_d;}
+\DoxyCodeLine{00100 double *mat\_f\_sml\_max\_d;}
+\DoxyCodeLine{00101 \_\_constant\_\_ double *mat\_f\_sml\_min;}
+\DoxyCodeLine{00102 \_\_constant\_\_ double *mat\_f\_sml\_max;}
+\DoxyCodeLine{00103 }
+\DoxyCodeLine{00104 }
+\DoxyCodeLine{00105 //begin ANEOS device variables (in global and constant memory)}
+\DoxyCodeLine{00106 int *aneos\_n\_rho\_d;}
+\DoxyCodeLine{00107 int *aneos\_n\_e\_d;}
+\DoxyCodeLine{00108 double *aneos\_bulk\_cs\_d;}
+\DoxyCodeLine{00109 double *aneos\_rho\_d;}
+\DoxyCodeLine{00110 double *aneos\_e\_d;}
+\DoxyCodeLine{00111 double *aneos\_p\_d;}
+\DoxyCodeLine{00112 int *aneos\_rho\_id\_d;}
+\DoxyCodeLine{00113 int *aneos\_e\_id\_d;}
+\DoxyCodeLine{00114 int *aneos\_matrix\_id\_d;}
+\DoxyCodeLine{00115 \_\_constant\_\_ int *aneos\_n\_rho\_c;}
+\DoxyCodeLine{00116 \_\_constant\_\_ int *aneos\_n\_e\_c;}
+\DoxyCodeLine{00117 \_\_constant\_\_ double *aneos\_bulk\_cs\_c;}
+\DoxyCodeLine{00118 \_\_constant\_\_ double *aneos\_rho\_c;}
+\DoxyCodeLine{00119 \_\_constant\_\_ double *aneos\_e\_c;}
+\DoxyCodeLine{00120 \_\_constant\_\_ double *aneos\_p\_c;}
+\DoxyCodeLine{00121 \_\_constant\_\_ int *aneos\_rho\_id\_c;}
+\DoxyCodeLine{00122 \_\_constant\_\_ int *aneos\_e\_id\_c;}
+\DoxyCodeLine{00123 \_\_constant\_\_ int *aneos\_matrix\_id\_c;}
+\DoxyCodeLine{00124 //end ANEOS device variables (in global and constant memory)}
+\DoxyCodeLine{00125 }
+\DoxyCodeLine{00126 /* POROUS\_JUTZI device variables */}
+\DoxyCodeLine{00127 double *matporjutzi\_p\_elastic\_d;}
+\DoxyCodeLine{00128 double *matporjutzi\_p\_transition\_d;}
+\DoxyCodeLine{00129 double *matporjutzi\_p\_compacted\_d;}
+\DoxyCodeLine{00130 double *matporjutzi\_alpha\_0\_d;}
+\DoxyCodeLine{00131 double *matporjutzi\_alpha\_e\_d;}
+\DoxyCodeLine{00132 double *matporjutzi\_alpha\_t\_d;}
+\DoxyCodeLine{00133 double *matporjutzi\_n1\_d;}
+\DoxyCodeLine{00134 double *matporjutzi\_n2\_d;}
+\DoxyCodeLine{00135 double *matcs\_porous\_d;}
+\DoxyCodeLine{00136 double *matcs\_solid\_d;}
+\DoxyCodeLine{00137 int *matcrushcurve\_style\_d;}
+\DoxyCodeLine{00138 }
+\DoxyCodeLine{00139 /* POROUS\_SIRONO device variables */}
+\DoxyCodeLine{00140 double *matporsirono\_K\_0\_d;}
+\DoxyCodeLine{00141 double *matporsirono\_rho\_0\_d;}
+\DoxyCodeLine{00142 double *matporsirono\_rho\_s\_d;}
+\DoxyCodeLine{00143 double *matporsirono\_gamma\_K\_d;}
+\DoxyCodeLine{00144 double *matporsirono\_alpha\_d;}
+\DoxyCodeLine{00145 double *matporsirono\_pm\_d;}
+\DoxyCodeLine{00146 double *matporsirono\_phimax\_d;}
+\DoxyCodeLine{00147 double *matporsirono\_phi0\_d;}
+\DoxyCodeLine{00148 double *matporsirono\_delta\_d;}
+\DoxyCodeLine{00149 }
+\DoxyCodeLine{00150 /* EPSALPHA\_POROSITY variables */}
+\DoxyCodeLine{00151 double *matporepsilon\_kappa\_d;}
+\DoxyCodeLine{00152 double *matporepsilon\_alpha\_0\_d;}
+\DoxyCodeLine{00153 double *matporepsilon\_epsilon\_e\_d;}
+\DoxyCodeLine{00154 double *matporepsilon\_epsilon\_x\_d;}
+\DoxyCodeLine{00155 double *matporepsilon\_epsilon\_c\_d;}
+\DoxyCodeLine{00156 }
+\DoxyCodeLine{00157 double *matjc\_y0\_d;}
+\DoxyCodeLine{00158 double *matjc\_B\_d;}
+\DoxyCodeLine{00159 double *matjc\_n\_d;}
+\DoxyCodeLine{00160 double *matjc\_m\_d;}
+\DoxyCodeLine{00161 double *matjc\_edot0\_d;}
+\DoxyCodeLine{00162 double *matjc\_C\_d;}
+\DoxyCodeLine{00163 double *matjc\_Tref\_d;}
+\DoxyCodeLine{00164 double *matjc\_Tmelt\_d;}
+\DoxyCodeLine{00165 double *matCp\_d;}
+\DoxyCodeLine{00166 double *matCV\_d;}
+\DoxyCodeLine{00167 }
+\DoxyCodeLine{00168 }
+\DoxyCodeLine{00169 }
+\DoxyCodeLine{00170 }
+\DoxyCodeLine{00171 /* for the predictor corrector integrator */}
+\DoxyCodeLine{00172 double Smin;}
+\DoxyCodeLine{00173 double rhomin;}
+\DoxyCodeLine{00174 double emin;}
+\DoxyCodeLine{00175 double damagemin;}
+\DoxyCodeLine{00176 double alphamin;}
+\DoxyCodeLine{00177 double betamin;}
+\DoxyCodeLine{00178 double alpha\_epspormin;}
+\DoxyCodeLine{00179 double epsilon\_vmin;}
+\DoxyCodeLine{00180 \_\_device\_\_ double Smin\_d;}
+\DoxyCodeLine{00181 \_\_device\_\_ double rhomin\_d;}
+\DoxyCodeLine{00182 \_\_device\_\_ double emin\_d;}
+\DoxyCodeLine{00183 \_\_device\_\_ double damagemin\_d;}
+\DoxyCodeLine{00184 \_\_device\_\_ double alphamin\_d;}
+\DoxyCodeLine{00185 \_\_device\_\_ double betamin\_d;}
+\DoxyCodeLine{00186 \_\_device\_\_ double alpha\_epspormin\_d;}
+\DoxyCodeLine{00187 \_\_device\_\_ double epsilon\_vmin\_d;}
+\DoxyCodeLine{00188 \_\_device\_\_ double maxpressureDiff = 0.0;}
+\DoxyCodeLine{00189 \_\_device\_\_ int pressureChangeSmallEnough = FALSE;}
+\DoxyCodeLine{00190 }
+\DoxyCodeLine{00191 \_\_device\_\_ double scale\_height;}
+\DoxyCodeLine{00192 }
+\DoxyCodeLine{00193 }
+\DoxyCodeLine{00194 \_\_device\_\_ double density\_floor\_d;}
+\DoxyCodeLine{00195 }
+\DoxyCodeLine{00196 }
+\DoxyCodeLine{00197 double *matYoungModulus\_d;}
+\DoxyCodeLine{00198 \_\_constant\_\_ double *matYoungModulus;}
+\DoxyCodeLine{00199 }
+\DoxyCodeLine{00200 }
+\DoxyCodeLine{00201 \_\_constant\_\_ double *matporjutzi\_p\_elastic;}
+\DoxyCodeLine{00202 \_\_constant\_\_ double *matporjutzi\_p\_transition;}
+\DoxyCodeLine{00203 \_\_constant\_\_ double *matporjutzi\_p\_compacted;}
+\DoxyCodeLine{00204 \_\_constant\_\_ double *matporjutzi\_alpha\_0;}
+\DoxyCodeLine{00205 \_\_constant\_\_ double *matporjutzi\_alpha\_e;}
+\DoxyCodeLine{00206 \_\_constant\_\_ double *matporjutzi\_alpha\_t;}
+\DoxyCodeLine{00207 \_\_constant\_\_ double *matporjutzi\_n1;}
+\DoxyCodeLine{00208 \_\_constant\_\_ double *matporjutzi\_n2;}
+\DoxyCodeLine{00209 \_\_constant\_\_ double *matcs\_porous;}
+\DoxyCodeLine{00210 \_\_constant\_\_ double *matcs\_solid;}
+\DoxyCodeLine{00211 \_\_constant\_\_ int *matcrushcurve\_style;}
+\DoxyCodeLine{00212 }
+\DoxyCodeLine{00213 }
+\DoxyCodeLine{00214 \_\_constant\_\_ double *matporsirono\_K\_0;}
+\DoxyCodeLine{00215 \_\_constant\_\_ double *matporsirono\_rho\_0;}
+\DoxyCodeLine{00216 \_\_constant\_\_ double *matporsirono\_rho\_s;}
+\DoxyCodeLine{00217 \_\_constant\_\_ double *matporsirono\_gamma\_K;}
+\DoxyCodeLine{00218 \_\_constant\_\_ double *matporsirono\_alpha;}
+\DoxyCodeLine{00219 \_\_constant\_\_ double *matporsirono\_pm;}
+\DoxyCodeLine{00220 \_\_constant\_\_ double *matporsirono\_phimax;}
+\DoxyCodeLine{00221 \_\_constant\_\_ double *matporsirono\_phi0;}
+\DoxyCodeLine{00222 \_\_constant\_\_ double *matporsirono\_delta;}
+\DoxyCodeLine{00223 }
+\DoxyCodeLine{00224 \_\_constant\_\_ double *matporepsilon\_kappa;}
+\DoxyCodeLine{00225 \_\_constant\_\_ double *matporepsilon\_alpha\_0;}
+\DoxyCodeLine{00226 \_\_constant\_\_ double *matporepsilon\_epsilon\_e;}
+\DoxyCodeLine{00227 \_\_constant\_\_ double *matporepsilon\_epsilon\_x;}
+\DoxyCodeLine{00228 \_\_constant\_\_ double *matporepsilon\_epsilon\_c;}
+\DoxyCodeLine{00229 }
+\DoxyCodeLine{00230 \_\_constant\_\_ double *matjc\_y0;}
+\DoxyCodeLine{00231 \_\_constant\_\_ double *matjc\_B;}
+\DoxyCodeLine{00232 \_\_constant\_\_ double *matjc\_n;}
+\DoxyCodeLine{00233 \_\_constant\_\_ double *matjc\_m;}
+\DoxyCodeLine{00234 \_\_constant\_\_ double *matjc\_edot0;}
+\DoxyCodeLine{00235 \_\_constant\_\_ double *matjc\_C;}
+\DoxyCodeLine{00236 \_\_constant\_\_ double *matjc\_Tref;}
+\DoxyCodeLine{00237 \_\_constant\_\_ double *matjc\_Tmelt;}
+\DoxyCodeLine{00238 \_\_constant\_\_ double *matCp;}
+\DoxyCodeLine{00239 \_\_constant\_\_ double *matCV;}
+\DoxyCodeLine{00240 \_\_constant\_\_ double *matnu;}
+\DoxyCodeLine{00241 \_\_constant\_\_ double *matzeta;}
+\DoxyCodeLine{00242 }
+\DoxyCodeLine{00243 }
+\DoxyCodeLine{00244 }
+\DoxyCodeLine{00245 \_\_constant\_\_ double *matSml;}
+\DoxyCodeLine{00246 \_\_constant\_\_ int *matnoi;}
+\DoxyCodeLine{00247 \_\_constant\_\_ int *matEOS;}
+\DoxyCodeLine{00248 \_\_constant\_\_ double *matPolytropicK;}
+\DoxyCodeLine{00249 \_\_constant\_\_ double *matPolytropicGamma;}
+\DoxyCodeLine{00250 \_\_constant\_\_ double *matBeta;}
+\DoxyCodeLine{00251 \_\_constant\_\_ double *matAlpha;}
+\DoxyCodeLine{00252 \_\_constant\_\_ double *matBulkmodulus;}
+\DoxyCodeLine{00253 \_\_constant\_\_ double *matShearmodulus;}
+\DoxyCodeLine{00254 \_\_constant\_\_ double *matYieldStress;}
+\DoxyCodeLine{00255 \_\_constant\_\_ double *matInternalFriction;}
+\DoxyCodeLine{00256 \_\_constant\_\_ double *matInternalFrictionDamaged;}
+\DoxyCodeLine{00257 \_\_constant\_\_ double *matRho0;}
+\DoxyCodeLine{00258 \_\_constant\_\_ double *matTillRho0;}
+\DoxyCodeLine{00259 \_\_constant\_\_ double *matTillEiv;}
+\DoxyCodeLine{00260 \_\_constant\_\_ double *matTillEcv;}
+\DoxyCodeLine{00261 \_\_constant\_\_ double *matTillE0;}
+\DoxyCodeLine{00262 \_\_constant\_\_ double *matTilla;}
+\DoxyCodeLine{00263 \_\_constant\_\_ double *matTillb;}
+\DoxyCodeLine{00264 \_\_constant\_\_ double *matTillA;}
+\DoxyCodeLine{00265 \_\_constant\_\_ double *matTillB;}
+\DoxyCodeLine{00266 \_\_constant\_\_ double *matTillAlpha;}
+\DoxyCodeLine{00267 \_\_constant\_\_ double *matTillBeta;}
+\DoxyCodeLine{00268 \_\_constant\_\_ int *materialId;}
+\DoxyCodeLine{00269 \_\_constant\_\_ double *matRhoLimit;}
+\DoxyCodeLine{00270 \_\_constant\_\_ double *matN;}
+\DoxyCodeLine{00271 \_\_constant\_\_ double *matCohesion;}
+\DoxyCodeLine{00272 \_\_constant\_\_ double *matFrictionAngle;}
+\DoxyCodeLine{00273 \_\_constant\_\_ double *matFrictionAngleDamaged;}
+\DoxyCodeLine{00274 \_\_constant\_\_ double *matAlphaPhi;}
+\DoxyCodeLine{00275 \_\_constant\_\_ double *matCohesionCoefficient;}
+\DoxyCodeLine{00276 \_\_constant\_\_ double *tensorialCorrectionMatrix;}
+\DoxyCodeLine{00277 \_\_constant\_\_ double *tensorialCorrectiondWdrr;}
+\DoxyCodeLine{00278 \_\_device\_\_ int numParticles;}
+\DoxyCodeLine{00279 \_\_device\_\_ int numPointmasses;}
+\DoxyCodeLine{00280 \_\_constant\_\_ int maxNumParticles;}
+\DoxyCodeLine{00281 \_\_constant\_\_ int numRealParticles;}
+\DoxyCodeLine{00282 \_\_constant\_\_ int numChildren;}
+\DoxyCodeLine{00283 \_\_constant\_\_ int numNodes;}
+\DoxyCodeLine{00284 \_\_constant\_\_ int maxNumFlaws;}
+\DoxyCodeLine{00285 \_\_device\_\_ double max\_abs\_pressure\_change;}
+\DoxyCodeLine{00286 \_\_constant\_\_ double theta; // tree theta}
+\DoxyCodeLine{00287 int *relaxedPerBlock;}
+\DoxyCodeLine{00288 }
+\DoxyCodeLine{00289 }
+\DoxyCodeLine{00290 // integration parameters}
+\DoxyCodeLine{00291 \_\_constant\_\_ double b21 = 0.5;}
+\DoxyCodeLine{00292 \_\_constant\_\_ double b31 = -\/1.0;}
+\DoxyCodeLine{00293 \_\_constant\_\_ double b32 = 2.0;}
+\DoxyCodeLine{00294 \_\_constant\_\_ double c1 = 1.0;}
+\DoxyCodeLine{00295 \_\_constant\_\_ double c2 = 4.0;}
+\DoxyCodeLine{00296 \_\_constant\_\_ double c3 = 1.0;}
+\DoxyCodeLine{00297 }
+\DoxyCodeLine{00298 \_\_constant\_\_ double safety = 0.9;}
+\DoxyCodeLine{00299 \_\_device\_\_ double maxPosAbsError;}
+\DoxyCodeLine{00300 \_\_device\_\_ double maxVelAbsError;}
+\DoxyCodeLine{00301 \_\_device\_\_ int treeMaxDepth = 0;}
+\DoxyCodeLine{00302 \_\_device\_\_ int movingparticles = 0;}
+\DoxyCodeLine{00303 \_\_device\_\_ int reset\_movingparticles = 1;}
+\DoxyCodeLine{00304 \_\_device\_\_ double dtNewErrorCheck = 0.0;}
+\DoxyCodeLine{00305 \_\_device\_\_ double dtNewAlphaCheck = 0.0;}
+\DoxyCodeLine{00306 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00307 \_\_device\_\_ double maxDensityAbsError;}
+\DoxyCodeLine{00308 \#endif}
+\DoxyCodeLine{00309 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00310 \_\_device\_\_ double maxEnergyAbsError;}
+\DoxyCodeLine{00311 \#endif}
+\DoxyCodeLine{00312 \_\_device\_\_ double maxPressureAbsChange;}
+\DoxyCodeLine{00313 \#if FRAGMENTATION}
+\DoxyCodeLine{00314 \_\_device\_\_ double maxDamageTimeStep;}
+\DoxyCodeLine{00315 \#endif}
+\DoxyCodeLine{00316 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00317 \_\_device\_\_ double maxalphaDiff = 0.0;}
+\DoxyCodeLine{00318 \#endif}
+\DoxyCodeLine{00319 \_\_device\_\_ int errorSmallEnough = FALSE;}
+\DoxyCodeLine{00320 \_\_constant\_\_ int isRelaxationRun = FALSE;}
+\DoxyCodeLine{00321 \_\_constant\_\_ volatile int *childList;}
+\DoxyCodeLine{00322 int *childListd;}
+\DoxyCodeLine{00323 }
+\DoxyCodeLine{00324 }
+\DoxyCodeLine{00325 }
+\DoxyCodeLine{00326 /* time variables */}
+\DoxyCodeLine{00327 void (*integrator)();}
+\DoxyCodeLine{00328 int startTimestep = 0;}
+\DoxyCodeLine{00329 int numberOfTimesteps = 1;}
+\DoxyCodeLine{00330 double timePerStep;}
+\DoxyCodeLine{00331 double dt\_host;}
+\DoxyCodeLine{00332 double dt\_grav;}
+\DoxyCodeLine{00333 int gravity\_index = 0;}
+\DoxyCodeLine{00334 int flag\_force\_gravity\_calc = 0;}
+\DoxyCodeLine{00335 double currentTime;}
+\DoxyCodeLine{00336 double startTime;}
+\DoxyCodeLine{00337 double h5time;}
+\DoxyCodeLine{00338 \_\_device\_\_ double dt;}
+\DoxyCodeLine{00339 \_\_device\_\_ double dtmax;}
+\DoxyCodeLine{00340 \_\_device\_\_ double endTimeD, currentTimeD;}
+\DoxyCodeLine{00341 \_\_device\_\_ double substep\_currentTimeD;}
+\DoxyCodeLine{00342 }
+\DoxyCodeLine{00343 }
+\DoxyCodeLine{00344 \_\_device\_\_ int blockCount = 0;}
+\DoxyCodeLine{00345 \_\_device\_\_ volatile int maxNodeIndex;}
+\DoxyCodeLine{00346 int maxNodeIndex\_host;}
+\DoxyCodeLine{00347 \_\_device\_\_ volatile double radius;}
+\DoxyCodeLine{00348 }
+\DoxyCodeLine{00349 // tree computational domain}
+\DoxyCodeLine{00350 double *minxPerBlock, *maxxPerBlock;}
+\DoxyCodeLine{00351 \_\_device\_\_ double minx, maxx;}
+\DoxyCodeLine{00352 \#if DIM > 1}
+\DoxyCodeLine{00353 double *minyPerBlock, *maxyPerBlock;}
+\DoxyCodeLine{00354 \_\_device\_\_ double miny, maxy;}
+\DoxyCodeLine{00355 \#endif}
+\DoxyCodeLine{00356 \#if DIM == 3}
+\DoxyCodeLine{00357 double *minzPerBlock, *maxzPerBlock;}
+\DoxyCodeLine{00358 \_\_device\_\_ double minz, maxz;}
+\DoxyCodeLine{00359 \#endif}
+\DoxyCodeLine{00360 }
+\DoxyCodeLine{00361 }
+\DoxyCodeLine{00362 // map [i][j] to [i*DIM*DIM+j] for the tensors}
+\DoxyCodeLine{00363 \_\_device\_\_ int stressIndex(int particleIndex, int row, int col) \{}
+\DoxyCodeLine{00364     return particleIndex*DIM*DIM+row*DIM+col;}
+\DoxyCodeLine{00365 \}}
+\DoxyCodeLine{00366 }
+\DoxyCodeLine{00367 }
+\DoxyCodeLine{00368 \#if SOLID}
+\DoxyCodeLine{00369 \_\_global\_\_ void symmetrizeStress(void) \{}
+\DoxyCodeLine{00370     register int i, j, k, inc;}
+\DoxyCodeLine{00371     register double val;}
+\DoxyCodeLine{00372     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00373     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00374         for (j = 0; j < DIM; j ++) \{}
+\DoxyCodeLine{00375             for (k = 0; k < j; k++) \{}
+\DoxyCodeLine{00376                 val = 0.5 * (p.S[stressIndex(i,j,k)] + p.S[stressIndex(i,k,j)]);}
+\DoxyCodeLine{00377                 p.S[stressIndex(i,j,k)] = val;}
+\DoxyCodeLine{00378                 p.S[stressIndex(i,k,j)] = val;}
+\DoxyCodeLine{00379             \}}
+\DoxyCodeLine{00380         \}}
+\DoxyCodeLine{00381     \}}
+\DoxyCodeLine{00382 \}}
+\DoxyCodeLine{00383 \#endif}
+\DoxyCodeLine{00384 }
+\DoxyCodeLine{00385 }
+\DoxyCodeLine{00386 double calculate\_angular\_momentum(void)}
+\DoxyCodeLine{00387 \{}
+\DoxyCodeLine{00388     int i;}
+\DoxyCodeLine{00389     double l\_i = 0.0;}
+\DoxyCodeLine{00390     double Lx = 0.0;}
+\DoxyCodeLine{00391     double Ly = 0.0;}
+\DoxyCodeLine{00392     double Lz = 0.0;}
+\DoxyCodeLine{00393     double L = 0.0;}
+\DoxyCodeLine{00394 }
+\DoxyCodeLine{00395 \#if DIM > 1}
+\DoxyCodeLine{00396     for (i = 0; i < numberOfParticles; i++) \{}
+\DoxyCodeLine{00397         l\_i = 0;}
+\DoxyCodeLine{00398 \#if DIM > 2}
+\DoxyCodeLine{00399         l\_i = p\_host.m[i]*(p\_host.y[i]*p\_host.vz[i] -\/ p\_host.z[i]*p\_host.vy[i]);}
+\DoxyCodeLine{00400         Lx += l\_i;}
+\DoxyCodeLine{00401         l\_i = p\_host.m[i]*(p\_host.z[i]*p\_host.vx[i] -\/ p\_host.x[i]*p\_host.vz[i]);}
+\DoxyCodeLine{00402         Ly += l\_i;}
+\DoxyCodeLine{00403         l\_i = p\_host.m[i]*(p\_host.x[i]*p\_host.vy[i] -\/ p\_host.y[i]*p\_host.vx[i]);}
+\DoxyCodeLine{00404         Lz += l\_i;}
+\DoxyCodeLine{00405 \#else}
+\DoxyCodeLine{00406         l\_i = p\_host.m[i]*(p\_host.x[i]*p\_host.vy[i] -\/ p\_host.y[i]*p\_host.vx[i]);}
+\DoxyCodeLine{00407         Lz += l\_i;}
+\DoxyCodeLine{00408 \#endif}
+\DoxyCodeLine{00409     \}}
+\DoxyCodeLine{00410     L = sqrt(Lx*Lx + Ly*Ly + Lz*Lz);}
+\DoxyCodeLine{00411 \#endif}
+\DoxyCodeLine{00412 }
+\DoxyCodeLine{00413     return L;}
+\DoxyCodeLine{00414 }
+\DoxyCodeLine{00415 \}}
+\DoxyCodeLine{00416 }
+\DoxyCodeLine{00417 void initIntegration()}
+\DoxyCodeLine{00418 \{}
+\DoxyCodeLine{00419 }
+\DoxyCodeLine{00420 }
+\DoxyCodeLine{00421     L\_ini = calculate\_angular\_momentum();}
+\DoxyCodeLine{00422     if (param.verbose) \{}
+\DoxyCodeLine{00423         fprintf(stdout, "{}Initial angular momentum is: \%.17e\(\backslash\)n"{}, L\_ini);}
+\DoxyCodeLine{00424     \}}
+\DoxyCodeLine{00425 }
+\DoxyCodeLine{00426     dt\_host = timePerStep;}
+\DoxyCodeLine{00427     // copy constants to device}
+\DoxyCodeLine{00428     cudaVerify(cudaMemcpyToSymbol(dt, \&dt\_host, sizeof(double)));}
+\DoxyCodeLine{00429     cudaVerify(cudaMemcpyToSymbol(dtmax, \&param.maxtimestep, sizeof(double)));}
+\DoxyCodeLine{00430     cudaVerify(cudaMemcpyToSymbol(theta, \&treeTheta, sizeof(double)));}
+\DoxyCodeLine{00431     cudaVerify(cudaMemcpyToSymbol(numParticles, \&numberOfParticles, sizeof(int)));}
+\DoxyCodeLine{00432     cudaVerify(cudaMemcpyToSymbol(numPointmasses, \&numberOfPointmasses, sizeof(int)));}
+\DoxyCodeLine{00433     cudaVerify(cudaMemcpyToSymbol(maxNumParticles, \&maxNumberOfParticles, sizeof(int)));}
+\DoxyCodeLine{00434     cudaVerify(cudaMemcpyToSymbol(numRealParticles, \&numberOfRealParticles, sizeof(int)));}
+\DoxyCodeLine{00435     cudaVerify(cudaMemcpyToSymbol(numChildren, \&numberOfChildren, sizeof(int)));}
+\DoxyCodeLine{00436     cudaVerify(cudaMemcpyToSymbol(numNodes, \&numberOfNodes, sizeof(int)));}
+\DoxyCodeLine{00437 }
+\DoxyCodeLine{00438 \#if FRAGMENTATION}
+\DoxyCodeLine{00439     cudaVerify(cudaMemcpyToSymbol(maxNumFlaws, \&maxNumFlaws\_host, sizeof(int)));}
+\DoxyCodeLine{00440 \#endif}
+\DoxyCodeLine{00441     // memory for tree}
+\DoxyCodeLine{00442     cudaVerify(cudaMalloc((void**)\&minxPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00443     cudaVerify(cudaMalloc((void**)\&maxxPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00444 \#if DIM > 1}
+\DoxyCodeLine{00445     cudaVerify(cudaMalloc((void**)\&minyPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00446     cudaVerify(cudaMalloc((void**)\&maxyPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00447 \#endif}
+\DoxyCodeLine{00448 \#if DIM == 3}
+\DoxyCodeLine{00449     cudaVerify(cudaMalloc((void**)\&minzPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00450     cudaVerify(cudaMalloc((void**)\&maxzPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00451 \#endif}
+\DoxyCodeLine{00452 }
+\DoxyCodeLine{00453     // set the pointer on the gpu to p\_device}
+\DoxyCodeLine{00454     cudaVerify(cudaMemcpyToSymbol(p, \&p\_device, sizeof(struct Particle)));}
+\DoxyCodeLine{00455     cudaVerify(cudaMemcpyToSymbol(p\_rhs, \&p\_device, sizeof(struct Particle)));}
+\DoxyCodeLine{00456 }
+\DoxyCodeLine{00457     cudaVerify(cudaMemcpyToSymbol(pointmass, \&pointmass\_device, sizeof(struct Pointmass)));}
+\DoxyCodeLine{00458 }
+\DoxyCodeLine{00459     cudaVerifyKernel((initializeSoundspeed<<<numberOfMultiprocessors*4, NUM\_THREADS\_512>>>()));}
+\DoxyCodeLine{00460 \}}
+\DoxyCodeLine{00461 }
+\DoxyCodeLine{00462 void endIntegration(void)}
+\DoxyCodeLine{00463 \{}
+\DoxyCodeLine{00464 }
+\DoxyCodeLine{00465     int rc = pthread\_join(fileIOthread, NULL);}
+\DoxyCodeLine{00466     assert(0 == rc);}
+\DoxyCodeLine{00467 }
+\DoxyCodeLine{00468     // free memory}
+\DoxyCodeLine{00469     cudaVerify(cudaFree(minxPerBlock));}
+\DoxyCodeLine{00470     cudaVerify(cudaFree(maxxPerBlock));}
+\DoxyCodeLine{00471 \#if DIM > 1}
+\DoxyCodeLine{00472     cudaVerify(cudaFree(minyPerBlock));}
+\DoxyCodeLine{00473     cudaVerify(cudaFree(maxyPerBlock));}
+\DoxyCodeLine{00474 \#endif}
+\DoxyCodeLine{00475 \#if DIM == 3}
+\DoxyCodeLine{00476     cudaVerify(cudaFree(minzPerBlock));}
+\DoxyCodeLine{00477     cudaVerify(cudaFree(maxzPerBlock));}
+\DoxyCodeLine{00478 \#endif}
+\DoxyCodeLine{00479 }
+\DoxyCodeLine{00480     cleanupMaterials();}
+\DoxyCodeLine{00481 \}}
+\DoxyCodeLine{00482 }
+\DoxyCodeLine{00483 }
+\DoxyCodeLine{00484 }
+\DoxyCodeLine{00485 double *sml;}
+\DoxyCodeLine{00486 double *till\_rho\_0;}
+\DoxyCodeLine{00487 double *bulk\_modulus;}
+\DoxyCodeLine{00488 double *cs\_porous;}
+\DoxyCodeLine{00489 int numberOfMaterials;}
+\DoxyCodeLine{00490 }
+\DoxyCodeLine{00491 }
+\DoxyCodeLine{00492 void transferMaterialsToGPU()}
+\DoxyCodeLine{00493 \{}
+\DoxyCodeLine{00494     double *pc\_pointer;}
+\DoxyCodeLine{00495     double smallest\_rho = 1e30;}
+\DoxyCodeLine{00496     double tmp\_dens;}
+\DoxyCodeLine{00497     double scale\_height\_host;}
+\DoxyCodeLine{00498     config\_setting\_t *materials;}
+\DoxyCodeLine{00499     config\_setting\_t *disk;}
+\DoxyCodeLine{00500     disk = config\_lookup(\&param.config, "{}disk"{});}
+\DoxyCodeLine{00501 }
+\DoxyCodeLine{00502     // set some stuff for some integrators}
+\DoxyCodeLine{00503     set\_integration\_parameters();}
+\DoxyCodeLine{00504 }
+\DoxyCodeLine{00505     // read disk properties}
+\DoxyCodeLine{00506     if (disk != NULL) \{}
+\DoxyCodeLine{00507         config\_setting\_lookup\_float(disk, "{}scale\_height"{}, \&scale\_height\_host);}
+\DoxyCodeLine{00508         fprintf(stdout, "{}Found disk scale height: \%e\(\backslash\)n"{}, scale\_height\_host);}
+\DoxyCodeLine{00509     \}}
+\DoxyCodeLine{00510 }
+\DoxyCodeLine{00511 }
+\DoxyCodeLine{00512     materials = config\_lookup(\&param.config, "{}materials"{});}
+\DoxyCodeLine{00513 }
+\DoxyCodeLine{00514     // read material properties}
+\DoxyCodeLine{00515     if (materials != NULL) \{}
+\DoxyCodeLine{00516         int count = config\_setting\_length(materials);}
+\DoxyCodeLine{00517         int i,j;}
+\DoxyCodeLine{00518         int maxId = 0;}
+\DoxyCodeLine{00519         config\_setting\_t *material;}
+\DoxyCodeLine{00520         config\_setting\_t *subset;}
+\DoxyCodeLine{00521 }
+\DoxyCodeLine{00522         // find max ID of materials to allocate enough memory for material struct}
+\DoxyCodeLine{00523         for (i = 0; i < count; ++i) \{}
+\DoxyCodeLine{00524             material = config\_setting\_get\_elem(materials, i);}
+\DoxyCodeLine{00525             int ID;}
+\DoxyCodeLine{00526             config\_setting\_lookup\_int(material, "{}ID"{}, \&ID);}
+\DoxyCodeLine{00527             if (param.verbose) \{}
+\DoxyCodeLine{00528                 fprintf(stdout, "{}Found material ID: \%d\(\backslash\)n"{}, ID);}
+\DoxyCodeLine{00529             \}}
+\DoxyCodeLine{00530             maxId = max(ID, maxId);}
+\DoxyCodeLine{00531         \}}
+\DoxyCodeLine{00532 }
+\DoxyCodeLine{00533         // allocate struct oh god so ugly}
+\DoxyCodeLine{00534         // yesssss}
+\DoxyCodeLine{00535         int numberOfElements = maxId + 1;}
+\DoxyCodeLine{00536         numberOfMaterials = numberOfElements;}
+\DoxyCodeLine{00537         sml = (double*)calloc(numberOfElements,sizeof(double));}
+\DoxyCodeLine{00538         int *eos = (int*)calloc(numberOfElements,sizeof(int));}
+\DoxyCodeLine{00539         int *noi = (int*)calloc(numberOfElements,sizeof(int));}
+\DoxyCodeLine{00540         double *f\_sml\_min = (double *) calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00541         double *f\_sml\_max = (double *) calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00542         // seting some reasonable values for the factor of sml}
+\DoxyCodeLine{00543         for (i = 0; i < numberOfMaterials; i++) \{}
+\DoxyCodeLine{00544             f\_sml\_min[i] = 1.0;}
+\DoxyCodeLine{00545             f\_sml\_max[i] = 1.0;}
+\DoxyCodeLine{00546         \}}
+\DoxyCodeLine{00547         double *alpha = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00548         double *beta = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00549         double *polytropic\_K = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00550         double *polytropic\_gamma = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00551         double *n = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00552         double *nu = (double *) calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00553         double *eta = (double *) calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00554         double *zeta = (double *) calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00555         double *rho\_0 = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00556         double *rho\_limit = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00557         till\_rho\_0 = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00558         double *till\_A = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00559         double *till\_B = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00560         double *till\_E\_0 = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00561         double *till\_E\_iv = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00562         double *till\_E\_cv = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00563         double *till\_a = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00564         double *till\_b = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00565         double *till\_alpha = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00566         double *till\_beta = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00567         // begin of ANEOS allocations in host memory (global variables, defined in 'aneos.cu')}
+\DoxyCodeLine{00568         g\_eos\_is\_aneos = (int*)calloc(numberOfElements, sizeof(int));}
+\DoxyCodeLine{00569         g\_aneos\_tab\_file = (const char**)calloc(numberOfElements, sizeof(const char*));     // not necessary to allocate (and free) mem for individual strings -\/ this should be managed by libconfig}
+\DoxyCodeLine{00570         g\_aneos\_n\_rho = (int*)calloc(numberOfElements, sizeof(int));}
+\DoxyCodeLine{00571         g\_aneos\_n\_e = (int*)calloc(numberOfElements, sizeof(int));}
+\DoxyCodeLine{00572         g\_aneos\_rho\_0 = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00573         g\_aneos\_bulk\_cs = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00574         g\_aneos\_rho = (double**)calloc(numberOfElements, sizeof(double*));}
+\DoxyCodeLine{00575         g\_aneos\_e = (double**)calloc(numberOfElements, sizeof(double*));}
+\DoxyCodeLine{00576         g\_aneos\_p = (double***)calloc(numberOfElements, sizeof(double**));}
+\DoxyCodeLine{00577 \#if MORE\_ANEOS\_OUTPUT}
+\DoxyCodeLine{00578         g\_aneos\_T = (double***)calloc(numberOfElements, sizeof(double**));}
+\DoxyCodeLine{00579         g\_aneos\_cs = (double***)calloc(numberOfElements, sizeof(double**));}
+\DoxyCodeLine{00580         g\_aneos\_entropy = (double***)calloc(numberOfElements, sizeof(double**));}
+\DoxyCodeLine{00581         g\_aneos\_phase\_flag = (int***)calloc(numberOfElements, sizeof(int**));}
+\DoxyCodeLine{00582 \#endif}
+\DoxyCodeLine{00583         int n\_aneos\_mat = 0;}
+\DoxyCodeLine{00584         /* arrays to hold 'start indices' for all ANEOS materials and -\/1 if EOS != ANEOS (e.g. aneos\_rho\_id = [0,-\/1,g\_aneos\_n\_rho[0],-\/1,-\/1]}
+\DoxyCodeLine{00585         if materials no. 0 and 2 use ANEOS), necessary for resolving linearizations of multi-\/dim arrays on GPU */}
+\DoxyCodeLine{00586         int *aneos\_rho\_id = (int*)calloc(numberOfElements, sizeof(int));}
+\DoxyCodeLine{00587         int *aneos\_e\_id = (int*)calloc(numberOfElements, sizeof(int));}
+\DoxyCodeLine{00588         int *aneos\_matrix\_id = (int*)calloc(numberOfElements, sizeof(int));}
+\DoxyCodeLine{00589         for (i = 0; i < numberOfElements; i++)}
+\DoxyCodeLine{00590             aneos\_rho\_id[i] = aneos\_e\_id[i] = aneos\_matrix\_id[i] = -\/1;}
+\DoxyCodeLine{00591         /* variables to hold running indices for filling arrays holding 'start indices' */}
+\DoxyCodeLine{00592         int run\_aneos\_rho\_id = 0;}
+\DoxyCodeLine{00593         int run\_aneos\_e\_id = 0;}
+\DoxyCodeLine{00594         int run\_aneos\_matrix\_id = 0;}
+\DoxyCodeLine{00595         // end of ANEOS allocations in host memory}
+\DoxyCodeLine{00596         double *shear\_modulus = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00597         bulk\_modulus = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00598         double *yield\_stress = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00599         double *internal\_friction = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00600         double *internal\_friction\_damaged = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00601         double *cohesion = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00602         double *friction\_angle = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00603         double *friction\_angle\_damaged = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00604         double *alpha\_phi = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00605         double *cohesion\_coefficient = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00606 }
+\DoxyCodeLine{00607 \#if ARTIFICIAL\_STRESS}
+\DoxyCodeLine{00608         double *exponent\_tensor = (double*) calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00609         double *epsilon\_stress = (double*) calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00610         double *mean\_particle\_distance = (double*) calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00611 \#endif}
+\DoxyCodeLine{00612 }
+\DoxyCodeLine{00613 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00614         double *porjutzi\_p\_elastic = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00615         double *porjutzi\_p\_transition = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00616         double *porjutzi\_p\_compacted = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00617         double *porjutzi\_alpha\_0 = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00618         double *porjutzi\_alpha\_e = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00619         double *porjutzi\_alpha\_t = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00620         double *porjutzi\_n1 = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00621         double *porjutzi\_n2 = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00622                 cs\_porous = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00623                 double *cs\_solid = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00624         double max\_abs\_pressure\_change\_host = DBL\_MAX;}
+\DoxyCodeLine{00625                 int *crushcurve\_style = (int*)calloc(numberOfElements, sizeof(int));}
+\DoxyCodeLine{00626 \#endif}
+\DoxyCodeLine{00627 }
+\DoxyCodeLine{00628 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00629         double *porsirono\_K\_0 = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00630         double *porsirono\_rho\_0 = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00631         double *porsirono\_rho\_s = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00632         double *porsirono\_gamma\_K = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00633         double *porsirono\_alpha = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00634         double *porsirono\_pm = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00635         double *porsirono\_phimax = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00636         double *porsirono\_phi0 = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00637         double *porsirono\_delta = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00638 \#endif}
+\DoxyCodeLine{00639 }
+\DoxyCodeLine{00640 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00641         double *porepsilon\_kappa = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00642         double *porepsilon\_alpha\_0 = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00643         double *porepsilon\_epsilon\_e = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00644         double *porepsilon\_epsilon\_x = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00645         double *porepsilon\_epsilon\_c = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00646 \#endif}
+\DoxyCodeLine{00647 }
+\DoxyCodeLine{00648 \#if SOLID}
+\DoxyCodeLine{00649         double *young\_modulus = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00650 \#endif}
+\DoxyCodeLine{00651 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00652         double *jc\_y0 = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00653         double *jc\_B = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00654         double *jc\_n = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00655         double *jc\_m = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00656         double *jc\_edot0 = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00657         double *jc\_C = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00658         double *jc\_Tref = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00659         double *jc\_Tmelt = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00660         double *Cp = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00661         double *CV = (double*)calloc(numberOfElements, sizeof(double));}
+\DoxyCodeLine{00662 \#endif}
+\DoxyCodeLine{00663 }
+\DoxyCodeLine{00664         // fill struct}
+\DoxyCodeLine{00665         for (i = 0; i < count; ++i) \{}
+\DoxyCodeLine{00666             material = config\_setting\_get\_elem(materials, i);}
+\DoxyCodeLine{00667             int ID;}
+\DoxyCodeLine{00668             config\_setting\_lookup\_int(material, "{}ID"{}, \&ID);}
+\DoxyCodeLine{00669 }
+\DoxyCodeLine{00670             config\_setting\_lookup\_float(material, "{}sml"{}, \&sml[ID]);}
+\DoxyCodeLine{00671 \#if VARIABLE\_SML}
+\DoxyCodeLine{00672 \#if FIXED\_NOI}
+\DoxyCodeLine{00673             config\_setting\_lookup\_int(material, "{}interactions"{}, \&noi[ID]);}
+\DoxyCodeLine{00674 \#endif}
+\DoxyCodeLine{00675             // sml will not get smaller than factor\_sml\_min * sml}
+\DoxyCodeLine{00676             // and not get larger than factor\_sml\_max * sml}
+\DoxyCodeLine{00677             config\_setting\_lookup\_float(material, "{}factor\_sml\_min"{}, \&f\_sml\_min[ID]);}
+\DoxyCodeLine{00678             config\_setting\_lookup\_float(material, "{}factor\_sml\_max"{}, \&f\_sml\_max[ID]);}
+\DoxyCodeLine{00679 \#endif}
+\DoxyCodeLine{00680 }
+\DoxyCodeLine{00681 \#if ARTIFICIAL\_VISCOSITY}
+\DoxyCodeLine{00682             subset = config\_setting\_get\_member(material, "{}artificial\_viscosity"{});}
+\DoxyCodeLine{00683             config\_setting\_lookup\_float(subset, "{}alpha"{}, \&alpha[ID]);}
+\DoxyCodeLine{00684             config\_setting\_lookup\_float(subset, "{}beta"{}, \&beta[ID]);}
+\DoxyCodeLine{00685 \#endif}
+\DoxyCodeLine{00686 }
+\DoxyCodeLine{00687 \#if ARTIFICIAL\_STRESS}
+\DoxyCodeLine{00688             subset = config\_setting\_get\_member(material, "{}artificial\_stress"{});}
+\DoxyCodeLine{00689             config\_setting\_lookup\_float(subset, "{}exponent\_tensor"{}, \&exponent\_tensor[ID]);}
+\DoxyCodeLine{00690             config\_setting\_lookup\_float(subset, "{}epsilon\_stress"{}, \&epsilon\_stress[ID]);}
+\DoxyCodeLine{00691             config\_setting\_lookup\_float(subset, "{}mean\_particle\_distance"{}, \&mean\_particle\_distance[ID]);}
+\DoxyCodeLine{00692 \#endif // ARTIFICIAL\_STRESS}
+\DoxyCodeLine{00693 }
+\DoxyCodeLine{00694 \#if NAVIER\_STOKES}
+\DoxyCodeLine{00695             // params for Navier-\/Stokes}
+\DoxyCodeLine{00696             subset = config\_setting\_get\_member(material, "{}physical\_viscosity"{});}
+\DoxyCodeLine{00697             // note nu and eta depend via density}
+\DoxyCodeLine{00698             // nu = eta/rho}
+\DoxyCodeLine{00699             config\_setting\_lookup\_float(subset, "{}eta"{}, \&eta[ID]);}
+\DoxyCodeLine{00700             config\_setting\_lookup\_float(subset, "{}zeta"{}, \&zeta[ID]);}
+\DoxyCodeLine{00701             config\_setting\_lookup\_float(subset, "{}nu"{}, \&nu[ID]);}
+\DoxyCodeLine{00702 \#endif}
+\DoxyCodeLine{00703 }
+\DoxyCodeLine{00704             subset = config\_setting\_get\_member(material, "{}eos"{});}
+\DoxyCodeLine{00705             config\_setting\_lookup\_int(subset, "{}type"{}, \&eos[ID]);}
+\DoxyCodeLine{00706             config\_setting\_lookup\_float(subset, "{}polytropic\_K"{}, \&polytropic\_K[ID]);}
+\DoxyCodeLine{00707             config\_setting\_lookup\_float(subset, "{}polytropic\_gamma"{}, \&polytropic\_gamma[ID]);}
+\DoxyCodeLine{00708             config\_setting\_lookup\_float(subset, "{}bulk\_modulus"{}, \&bulk\_modulus[ID]);}
+\DoxyCodeLine{00709             config\_setting\_lookup\_float(subset, "{}shear\_modulus"{}, \&shear\_modulus[ID]);}
+\DoxyCodeLine{00710             config\_setting\_lookup\_float(subset, "{}yield\_stress"{}, \&yield\_stress[ID]);}
+\DoxyCodeLine{00711             config\_setting\_lookup\_float(subset, "{}rho\_0"{}, \&rho\_0[ID]);}
+\DoxyCodeLine{00712             config\_setting\_lookup\_float(subset, "{}till\_rho\_0"{}, \&till\_rho\_0[ID]);}
+\DoxyCodeLine{00713             config\_setting\_lookup\_float(subset, "{}till\_E\_0"{}, \&till\_E\_0[ID]);}
+\DoxyCodeLine{00714             config\_setting\_lookup\_float(subset, "{}till\_E\_iv"{}, \&till\_E\_iv[ID]);}
+\DoxyCodeLine{00715             config\_setting\_lookup\_float(subset, "{}till\_E\_cv"{}, \&till\_E\_cv[ID]);}
+\DoxyCodeLine{00716             config\_setting\_lookup\_float(subset, "{}till\_a"{}, \&till\_a[ID]);}
+\DoxyCodeLine{00717             config\_setting\_lookup\_float(subset, "{}till\_b"{}, \&till\_b[ID]);}
+\DoxyCodeLine{00718             // begin reading ANEOS data from material file to host memory}
+\DoxyCodeLine{00719             config\_setting\_lookup\_string(subset, "{}table\_path"{}, \&g\_aneos\_tab\_file[ID]);}
+\DoxyCodeLine{00720             config\_setting\_lookup\_int(subset, "{}n\_rho"{}, \&g\_aneos\_n\_rho[ID]);}
+\DoxyCodeLine{00721             config\_setting\_lookup\_int(subset, "{}n\_e"{}, \&g\_aneos\_n\_e[ID]);}
+\DoxyCodeLine{00722             config\_setting\_lookup\_float(subset, "{}aneos\_rho\_0"{}, \&g\_aneos\_rho\_0[ID]);}
+\DoxyCodeLine{00723             config\_setting\_lookup\_float(subset, "{}aneos\_bulk\_cs"{}, \&g\_aneos\_bulk\_cs[ID]);}
+\DoxyCodeLine{00724             // end reading ANEOS data from material file to host memory, begin reading ANEOS lookup table to host memory}
+\DoxyCodeLine{00725             if (eos[ID] == EOS\_TYPE\_ANEOS) \{}
+\DoxyCodeLine{00726                 g\_eos\_is\_aneos[ID] = TRUE;}
+\DoxyCodeLine{00727                 aneos\_rho\_id[ID] = run\_aneos\_rho\_id;}
+\DoxyCodeLine{00728                 run\_aneos\_rho\_id += g\_aneos\_n\_rho[ID];}
+\DoxyCodeLine{00729                 aneos\_e\_id[ID] = run\_aneos\_e\_id;}
+\DoxyCodeLine{00730                 run\_aneos\_e\_id += g\_aneos\_n\_e[ID];}
+\DoxyCodeLine{00731                 aneos\_matrix\_id[ID] = run\_aneos\_matrix\_id;}
+\DoxyCodeLine{00732                 run\_aneos\_matrix\_id += g\_aneos\_n\_rho[ID]*g\_aneos\_n\_e[ID];}
+\DoxyCodeLine{00733                 n\_aneos\_mat++;}
+\DoxyCodeLine{00734                 if ((g\_aneos\_rho[ID] = (double*)calloc(g\_aneos\_n\_rho[ID], sizeof(double))) == NULL)}
+\DoxyCodeLine{00735                     ERRORVAR("{}ERROR during memory allocation for ANEOS lookup table in '\%s'\(\backslash\)n"{}, g\_aneos\_tab\_file[ID])}
+\DoxyCodeLine{00736                 if ((g\_aneos\_e[ID] = (double*)calloc(g\_aneos\_n\_e[ID], sizeof(double))) == NULL)}
+\DoxyCodeLine{00737                     ERRORVAR("{}ERROR during memory allocation for ANEOS lookup table in '\%s'\(\backslash\)n"{}, g\_aneos\_tab\_file[ID])}
+\DoxyCodeLine{00738                 if ((g\_aneos\_p[ID] = (double**)calloc(g\_aneos\_n\_rho[ID], sizeof(double*))) == NULL)}
+\DoxyCodeLine{00739                     ERRORVAR("{}ERROR during memory allocation for ANEOS lookup table in '\%s'\(\backslash\)n"{}, g\_aneos\_tab\_file[ID])}
+\DoxyCodeLine{00740                 for (j=0; j<g\_aneos\_n\_rho[ID]; j++)}
+\DoxyCodeLine{00741                     if ((g\_aneos\_p[ID][j] = (double*)calloc(g\_aneos\_n\_e[ID], sizeof(double))) == NULL)}
+\DoxyCodeLine{00742                         ERRORVAR("{}ERROR during memory allocation for ANEOS lookup table in '\%s'\(\backslash\)n"{}, g\_aneos\_tab\_file[ID])}
+\DoxyCodeLine{00743 \#if MORE\_ANEOS\_OUTPUT}
+\DoxyCodeLine{00744                 if ((g\_aneos\_T[ID] = (double**)calloc(g\_aneos\_n\_rho[ID], sizeof(double*))) == NULL)}
+\DoxyCodeLine{00745                     ERRORVAR("{}ERROR during memory allocation for ANEOS lookup table in '\%s'\(\backslash\)n"{}, g\_aneos\_tab\_file[ID])}
+\DoxyCodeLine{00746                 for (j=0; j<g\_aneos\_n\_rho[ID]; j++)}
+\DoxyCodeLine{00747                     if ((g\_aneos\_T[ID][j] = (double*)calloc(g\_aneos\_n\_e[ID], sizeof(double))) == NULL)}
+\DoxyCodeLine{00748                         ERRORVAR("{}ERROR during memory allocation for ANEOS lookup table in '\%s'\(\backslash\)n"{}, g\_aneos\_tab\_file[ID])}
+\DoxyCodeLine{00749                 if ((g\_aneos\_cs[ID] = (double**)calloc(g\_aneos\_n\_rho[ID], sizeof(double*))) == NULL)}
+\DoxyCodeLine{00750                     ERRORVAR("{}ERROR during memory allocation for ANEOS lookup table in '\%s'\(\backslash\)n"{}, g\_aneos\_tab\_file[ID])}
+\DoxyCodeLine{00751                 for (j=0; j<g\_aneos\_n\_rho[ID]; j++)}
+\DoxyCodeLine{00752                     if ((g\_aneos\_cs[ID][j] = (double*)calloc(g\_aneos\_n\_e[ID], sizeof(double))) == NULL)}
+\DoxyCodeLine{00753                         ERRORVAR("{}ERROR during memory allocation for ANEOS lookup table in '\%s'\(\backslash\)n"{}, g\_aneos\_tab\_file[ID])}
+\DoxyCodeLine{00754                 if ((g\_aneos\_entropy[ID] = (double**)calloc(g\_aneos\_n\_rho[ID], sizeof(double*))) == NULL)}
+\DoxyCodeLine{00755                     ERRORVAR("{}ERROR during memory allocation for ANEOS lookup table in '\%s'\(\backslash\)n"{}, g\_aneos\_tab\_file[ID])}
+\DoxyCodeLine{00756                 for (j=0; j<g\_aneos\_n\_rho[ID]; j++)}
+\DoxyCodeLine{00757                     if ((g\_aneos\_entropy[ID][j] = (double*)calloc(g\_aneos\_n\_e[ID], sizeof(double))) == NULL)}
+\DoxyCodeLine{00758                         ERRORVAR("{}ERROR during memory allocation for ANEOS lookup table in '\%s'\(\backslash\)n"{}, g\_aneos\_tab\_file[ID])}
+\DoxyCodeLine{00759                 if ((g\_aneos\_phase\_flag[ID] = (int**)calloc(g\_aneos\_n\_rho[ID], sizeof(int*))) == NULL)}
+\DoxyCodeLine{00760                     ERRORVAR("{}ERROR during memory allocation for ANEOS lookup table in '\%s'\(\backslash\)n"{}, g\_aneos\_tab\_file[ID])}
+\DoxyCodeLine{00761                 for (j=0; j<g\_aneos\_n\_rho[ID]; j++)}
+\DoxyCodeLine{00762                     if ((g\_aneos\_phase\_flag[ID][j] = (int*)calloc(g\_aneos\_n\_e[ID], sizeof(int))) == NULL)}
+\DoxyCodeLine{00763                         ERRORVAR("{}ERROR during memory allocation for ANEOS lookup table in '\%s'\(\backslash\)n"{}, g\_aneos\_tab\_file[ID])}
+\DoxyCodeLine{00764 \#endif}
+\DoxyCodeLine{00765 \#if MORE\_ANEOS\_OUTPUT}
+\DoxyCodeLine{00766                 initialize\_aneos\_eos\_full(g\_aneos\_tab\_file[ID], g\_aneos\_n\_rho[ID], g\_aneos\_n\_e[ID], g\_aneos\_rho[ID], g\_aneos\_e[ID], g\_aneos\_p[ID], g\_aneos\_T[ID], g\_aneos\_cs[ID], g\_aneos\_entropy[ID], g\_aneos\_phase\_flag[ID]);}
+\DoxyCodeLine{00767 \#else}
+\DoxyCodeLine{00768                 initialize\_aneos\_eos\_basic(g\_aneos\_tab\_file[ID], g\_aneos\_n\_rho[ID], g\_aneos\_n\_e[ID], g\_aneos\_rho[ID], g\_aneos\_e[ID], g\_aneos\_p[ID]);}
+\DoxyCodeLine{00769 \#endif}
+\DoxyCodeLine{00770             \}}
+\DoxyCodeLine{00771             //end reading ANEOS lookup table to host memory}
+\DoxyCodeLine{00772 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00773             config\_setting\_lookup\_float(subset, "{}porjutzi\_p\_elastic"{}, \&porjutzi\_p\_elastic[ID]);}
+\DoxyCodeLine{00774             if (porjutzi\_p\_elastic[ID] < max\_abs\_pressure\_change\_host) \{}
+\DoxyCodeLine{00775                 max\_abs\_pressure\_change\_host = porjutzi\_p\_elastic[ID];}
+\DoxyCodeLine{00776             \}}
+\DoxyCodeLine{00777             config\_setting\_lookup\_float(subset, "{}porjutzi\_p\_transition"{}, \&porjutzi\_p\_transition[ID]);}
+\DoxyCodeLine{00778             config\_setting\_lookup\_float(subset, "{}porjutzi\_p\_compacted"{}, \&porjutzi\_p\_compacted[ID]);}
+\DoxyCodeLine{00779             config\_setting\_lookup\_float(subset, "{}porjutzi\_alpha\_0"{}, \&porjutzi\_alpha\_0[ID]);}
+\DoxyCodeLine{00780             config\_setting\_lookup\_float(subset, "{}porjutzi\_alpha\_e"{}, \&porjutzi\_alpha\_e[ID]);}
+\DoxyCodeLine{00781             config\_setting\_lookup\_float(subset, "{}porjutzi\_alpha\_t"{}, \&porjutzi\_alpha\_t[ID]);}
+\DoxyCodeLine{00782             config\_setting\_lookup\_float(subset, "{}porjutzi\_n1"{}, \&porjutzi\_n1[ID]);}
+\DoxyCodeLine{00783             config\_setting\_lookup\_float(subset, "{}porjutzi\_n2"{}, \&porjutzi\_n2[ID]);}
+\DoxyCodeLine{00784                         config\_setting\_lookup\_float(subset, "{}cs\_porous"{}, \&cs\_porous[ID]);}
+\DoxyCodeLine{00785                         cs\_solid[ID] = sqrt(bulk\_modulus[ID] / till\_rho\_0[ID] / porjutzi\_alpha\_0[ID]);}
+\DoxyCodeLine{00786                         config\_setting\_lookup\_int(subset, "{}crushcurve\_style"{}, \&crushcurve\_style[ID]);}
+\DoxyCodeLine{00787 \#endif}
+\DoxyCodeLine{00788 }
+\DoxyCodeLine{00789 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00790             config\_setting\_lookup\_float(subset, "{}porsirono\_K\_0"{}, \&porsirono\_K\_0[ID]);}
+\DoxyCodeLine{00791             config\_setting\_lookup\_float(subset, "{}porsirono\_rho\_0"{}, \&porsirono\_rho\_0[ID]);}
+\DoxyCodeLine{00792             config\_setting\_lookup\_float(subset, "{}porsirono\_rho\_s"{}, \&porsirono\_rho\_s[ID]);}
+\DoxyCodeLine{00793             config\_setting\_lookup\_float(subset, "{}porsirono\_gamma\_K"{}, \&porsirono\_gamma\_K[ID]);}
+\DoxyCodeLine{00794             config\_setting\_lookup\_float(subset, "{}porsirono\_alpha"{}, \&porsirono\_alpha[ID]);}
+\DoxyCodeLine{00795             config\_setting\_lookup\_float(subset, "{}porsirono\_pm"{}, \&porsirono\_pm[ID]);}
+\DoxyCodeLine{00796             config\_setting\_lookup\_float(subset, "{}porsirono\_phimax"{}, \&porsirono\_phimax[ID]);}
+\DoxyCodeLine{00797             config\_setting\_lookup\_float(subset, "{}porsirono\_phi0"{}, \&porsirono\_phi0[ID]);}
+\DoxyCodeLine{00798             config\_setting\_lookup\_float(subset, "{}porsirono\_delta"{}, \&porsirono\_delta[ID]);}
+\DoxyCodeLine{00799 \#endif}
+\DoxyCodeLine{00800 }
+\DoxyCodeLine{00801 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00802             config\_setting\_lookup\_float(subset, "{}porepsilon\_kappa"{}, \&porepsilon\_kappa[ID]);}
+\DoxyCodeLine{00803             config\_setting\_lookup\_float(subset, "{}porepsilon\_alpha\_0"{}, \&porepsilon\_alpha\_0[ID]);}
+\DoxyCodeLine{00804             config\_setting\_lookup\_float(subset, "{}porepsilon\_epsilon\_e"{}, \&porepsilon\_epsilon\_e[ID]);}
+\DoxyCodeLine{00805             config\_setting\_lookup\_float(subset, "{}porepsilon\_epsilon\_x"{}, \&porepsilon\_epsilon\_x[ID]);}
+\DoxyCodeLine{00806             config\_setting\_lookup\_float(subset, "{}porepsilon\_epsilon\_c"{}, \&porepsilon\_epsilon\_c[ID]);}
+\DoxyCodeLine{00807 \#endif}
+\DoxyCodeLine{00808 }
+\DoxyCodeLine{00809             config\_setting\_lookup\_float(subset, "{}till\_A"{}, \&till\_A[ID]);}
+\DoxyCodeLine{00810             config\_setting\_lookup\_float(subset, "{}till\_B"{}, \&till\_B[ID]);}
+\DoxyCodeLine{00811             config\_setting\_lookup\_float(subset, "{}till\_alpha"{}, \&till\_alpha[ID]);}
+\DoxyCodeLine{00812             config\_setting\_lookup\_float(subset, "{}till\_beta"{}, \&till\_beta[ID]);}
+\DoxyCodeLine{00813             config\_setting\_lookup\_float(subset, "{}rho\_limit"{}, \&rho\_limit[ID]);}
+\DoxyCodeLine{00814             config\_setting\_lookup\_float(subset, "{}n"{}, \&n[ID]);}
+\DoxyCodeLine{00815             config\_setting\_lookup\_float(subset, "{}cohesion"{}, \&cohesion[ID]);}
+\DoxyCodeLine{00816             config\_setting\_lookup\_float(subset, "{}friction\_angle"{}, \&friction\_angle[ID]);}
+\DoxyCodeLine{00817             config\_setting\_lookup\_float(subset, "{}friction\_angle\_damaged"{}, \&friction\_angle\_damaged[ID]);}
+\DoxyCodeLine{00818 \#if DIM == 2}
+\DoxyCodeLine{00819             alpha\_phi[ID] = tan(friction\_angle[ID]) / sqrt(9 + 12*tan(friction\_angle[ID])*tan(friction\_angle[ID]));}
+\DoxyCodeLine{00820             cohesion\_coefficient[ID] = 3*(cohesion[ID]) / sqrt(9 + 12*tan(friction\_angle[ID])*tan(friction\_angle[ID]));}
+\DoxyCodeLine{00821 \#else}
+\DoxyCodeLine{00822             alpha\_phi[ID] = 2*sin(friction\_angle[ID]) / (sqrt(3.)*(3-\/sin(friction\_angle[ID])));}
+\DoxyCodeLine{00823             cohesion\_coefficient[ID] = 6*(cohesion[ID]) * cos(friction\_angle[ID]) / (sqrt(3.)*(3-\/sin(friction\_angle[ID])));}
+\DoxyCodeLine{00824 \#endif}
+\DoxyCodeLine{00825             /* internal friction coefficient (normally \(\backslash\)mu) is tan of angle of internal friction */}
+\DoxyCodeLine{00826             internal\_friction[ID] = tan(friction\_angle[ID]);}
+\DoxyCodeLine{00827             internal\_friction\_damaged[ID] = tan(friction\_angle\_damaged[ID]);}
+\DoxyCodeLine{00828 }
+\DoxyCodeLine{00829 \#if SOLID}
+\DoxyCodeLine{00830             young\_modulus[ID] = 9.0*bulk\_modulus[ID]*shear\_modulus[ID]/(3.0*bulk\_modulus[ID]+shear\_modulus[ID]);}
+\DoxyCodeLine{00831 \#endif}
+\DoxyCodeLine{00832 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00833             config\_setting\_lookup\_float(subset, "{}jc\_y0"{}, \&jc\_y0[ID]);}
+\DoxyCodeLine{00834             config\_setting\_lookup\_float(subset, "{}jc\_B"{}, \&jc\_B[ID]);}
+\DoxyCodeLine{00835             config\_setting\_lookup\_float(subset, "{}jc\_n"{}, \&jc\_n[ID]);}
+\DoxyCodeLine{00836             config\_setting\_lookup\_float(subset, "{}jc\_m"{}, \&jc\_m[ID]);}
+\DoxyCodeLine{00837             config\_setting\_lookup\_float(subset, "{}jc\_edot0"{}, \&jc\_edot0[ID]);}
+\DoxyCodeLine{00838             config\_setting\_lookup\_float(subset, "{}jc\_C"{}, \&jc\_C[ID]);}
+\DoxyCodeLine{00839             config\_setting\_lookup\_float(subset, "{}jc\_Tref"{}, \&jc\_Tref[ID]);}
+\DoxyCodeLine{00840             config\_setting\_lookup\_float(subset, "{}jc\_Tmelt"{}, \&jc\_Tmelt[ID]);}
+\DoxyCodeLine{00841             config\_setting\_lookup\_float(subset, "{}Cp"{}, \&Cp[ID]);}
+\DoxyCodeLine{00842             config\_setting\_lookup\_float(subset, "{}CV"{}, \&CV[ID]);}
+\DoxyCodeLine{00843 \#endif}
+\DoxyCodeLine{00844 }
+\DoxyCodeLine{00845 \#if DENSITY\_FLOOR}
+\DoxyCodeLine{00846             switch (eos[ID]) \{}
+\DoxyCodeLine{00847                 case (EOS\_TYPE\_MURNAGHAN):}
+\DoxyCodeLine{00848                     tmp\_dens = rho\_0[ID];}
+\DoxyCodeLine{00849                     break;}
+\DoxyCodeLine{00850                 case (EOS\_TYPE\_JUTZI\_MURNAGHAN):}
+\DoxyCodeLine{00851                     tmp\_dens = rho\_0[ID];}
+\DoxyCodeLine{00852                     break;}
+\DoxyCodeLine{00853                 case (EOS\_TYPE\_TILLOTSON):}
+\DoxyCodeLine{00854                     tmp\_dens = till\_rho\_0[ID];}
+\DoxyCodeLine{00855                     break;}
+\DoxyCodeLine{00856                 case (EOS\_TYPE\_JUTZI):}
+\DoxyCodeLine{00857                     tmp\_dens = till\_rho\_0[ID];}
+\DoxyCodeLine{00858                     break;}
+\DoxyCodeLine{00859 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00860                 case (EOS\_TYPE\_SIRONO):}
+\DoxyCodeLine{00861                     tmp\_dens = porsirono\_rho\_s[ID];}
+\DoxyCodeLine{00862                     break;}
+\DoxyCodeLine{00863 \#endif}
+\DoxyCodeLine{00864                 case (EOS\_TYPE\_EPSILON):}
+\DoxyCodeLine{00865                     tmp\_dens = till\_rho\_0[ID];}
+\DoxyCodeLine{00866                     break;}
+\DoxyCodeLine{00867                 case (EOS\_TYPE\_ANEOS):}
+\DoxyCodeLine{00868                     tmp\_dens = g\_aneos\_rho\_0[ID];}
+\DoxyCodeLine{00869                     break;}
+\DoxyCodeLine{00870                 case (EOS\_TYPE\_VISCOUS\_REGOLITH):}
+\DoxyCodeLine{00871                     tmp\_dens = rho\_0[ID];}
+\DoxyCodeLine{00872                     break;}
+\DoxyCodeLine{00873                 case (EOS\_TYPE\_IDEAL\_GAS):}
+\DoxyCodeLine{00874                     tmp\_dens = IDEAL\_GAS\_REFERENCE\_RHO;}
+\DoxyCodeLine{00875                     break;}
+\DoxyCodeLine{00876                 case (EOS\_TYPE\_LOCALLY\_ISOTHERMAL\_GAS):}
+\DoxyCodeLine{00877                     tmp\_dens = IDEAL\_GAS\_REFERENCE\_RHO;}
+\DoxyCodeLine{00878                     break;}
+\DoxyCodeLine{00879                 case (EOS\_TYPE\_IGNORE):}
+\DoxyCodeLine{00880                     fprintf(stdout, "{}.oOo. Happily ignoring EOS\_TYPE\_IGNORE .oOo."{});}
+\DoxyCodeLine{00881                     break;}
+\DoxyCodeLine{00882                 default:}
+\DoxyCodeLine{00883                     fprintf(stderr, "{}Error: Cannot determine rho0 for material ID \%d with EOS\_TYPE \%d\(\backslash\)n"{},}
+\DoxyCodeLine{00884                                         ID, eos[ID]);}
+\DoxyCodeLine{00885                     exit(1);}
+\DoxyCodeLine{00886             \}}
+\DoxyCodeLine{00887             if (tmp\_dens < smallest\_rho) \{}
+\DoxyCodeLine{00888                 smallest\_rho = tmp\_dens;}
+\DoxyCodeLine{00889             \}}
+\DoxyCodeLine{00890 \#endif}
+\DoxyCodeLine{00891 }
+\DoxyCodeLine{00892         \}}
+\DoxyCodeLine{00893 }
+\DoxyCodeLine{00894 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00895         cudaVerify(cudaMalloc((void **)\&matporjutzi\_p\_elastic\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00896         cudaVerify(cudaMalloc((void **)\&matporjutzi\_p\_transition\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00897         cudaVerify(cudaMalloc((void **)\&matporjutzi\_p\_compacted\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00898         cudaVerify(cudaMalloc((void **)\&matporjutzi\_alpha\_0\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00899         cudaVerify(cudaMalloc((void **)\&matporjutzi\_alpha\_e\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00900         cudaVerify(cudaMalloc((void **)\&matporjutzi\_alpha\_t\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00901         cudaVerify(cudaMalloc((void **)\&matporjutzi\_n1\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00902         cudaVerify(cudaMalloc((void **)\&matporjutzi\_n2\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00903                 cudaVerify(cudaMalloc((void **)\&matcs\_porous\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00904                 cudaVerify(cudaMalloc((void **)\&matcs\_solid\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00905                 cudaVerify(cudaMalloc((void **)\&matcrushcurve\_style\_d, numberOfElements*sizeof(int)));}
+\DoxyCodeLine{00906 \#endif}
+\DoxyCodeLine{00907 \#if VARIABLE\_SML}
+\DoxyCodeLine{00908         cudaVerify(cudaMalloc((void **)\&mat\_f\_sml\_max\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00909         cudaVerify(cudaMalloc((void **)\&mat\_f\_sml\_min\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00910 \#endif}
+\DoxyCodeLine{00911 }
+\DoxyCodeLine{00912 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00913         cudaVerify(cudaMalloc((void **)\&matporsirono\_K\_0\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00914         cudaVerify(cudaMalloc((void **)\&matporsirono\_rho\_0\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00915         cudaVerify(cudaMalloc((void **)\&matporsirono\_rho\_s\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00916         cudaVerify(cudaMalloc((void **)\&matporsirono\_gamma\_K\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00917         cudaVerify(cudaMalloc((void **)\&matporsirono\_alpha\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00918         cudaVerify(cudaMalloc((void **)\&matporsirono\_pm\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00919         cudaVerify(cudaMalloc((void **)\&matporsirono\_phimax\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00920         cudaVerify(cudaMalloc((void **)\&matporsirono\_phi0\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00921         cudaVerify(cudaMalloc((void **)\&matporsirono\_delta\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00922 \#endif}
+\DoxyCodeLine{00923 }
+\DoxyCodeLine{00924 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00925         cudaVerify(cudaMalloc((void **)\&matporepsilon\_kappa\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00926         cudaVerify(cudaMalloc((void **)\&matporepsilon\_alpha\_0\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00927         cudaVerify(cudaMalloc((void **)\&matporepsilon\_epsilon\_e\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00928         cudaVerify(cudaMalloc((void **)\&matporepsilon\_epsilon\_x\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00929         cudaVerify(cudaMalloc((void **)\&matporepsilon\_epsilon\_c\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00930 \#endif}
+\DoxyCodeLine{00931 }
+\DoxyCodeLine{00932 \#if NAVIER\_STOKES}
+\DoxyCodeLine{00933         cudaVerify(cudaMalloc((void **)\&matnu\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00934         cudaVerify(cudaMalloc((void **)\&matzeta\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00935 \#endif}
+\DoxyCodeLine{00936 }
+\DoxyCodeLine{00937 \#if ARTIFICIAL\_STRESS}
+\DoxyCodeLine{00938         cudaVerify(cudaMalloc((void **)\&matexponent\_tensor\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00939         cudaVerify(cudaMalloc((void **)\&matepsilon\_stress\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00940         cudaVerify(cudaMalloc((void **)\&matmean\_particle\_distance\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00941 \#endif}
+\DoxyCodeLine{00942 }
+\DoxyCodeLine{00943         //begin of ANEOS allocations in (global) device memory (everything linearized)}
+\DoxyCodeLine{00944         cudaVerify(cudaMalloc((void **)\&aneos\_n\_rho\_d, numberOfElements*sizeof(int)));}
+\DoxyCodeLine{00945         cudaVerify(cudaMalloc((void **)\&aneos\_n\_e\_d, numberOfElements*sizeof(int)));}
+\DoxyCodeLine{00946         cudaVerify(cudaMalloc((void **)\&aneos\_bulk\_cs\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00947         cudaVerify(cudaMalloc((void **)\&aneos\_rho\_d, run\_aneos\_rho\_id*sizeof(double)));}
+\DoxyCodeLine{00948         cudaVerify(cudaMalloc((void **)\&aneos\_e\_d, run\_aneos\_e\_id*sizeof(double)));}
+\DoxyCodeLine{00949         cudaVerify(cudaMalloc((void **)\&aneos\_p\_d, run\_aneos\_matrix\_id*sizeof(double)));}
+\DoxyCodeLine{00950         cudaVerify(cudaMalloc((void **)\&aneos\_rho\_id\_d, numberOfElements*sizeof(int)));}
+\DoxyCodeLine{00951         cudaVerify(cudaMalloc((void **)\&aneos\_e\_id\_d, numberOfElements*sizeof(int)));}
+\DoxyCodeLine{00952         cudaVerify(cudaMalloc((void **)\&aneos\_matrix\_id\_d, numberOfElements*sizeof(int)));}
+\DoxyCodeLine{00953         //end of ANEOS allocations in (global) device memory}
+\DoxyCodeLine{00954         cudaVerify(cudaMalloc((void **)\&matSml\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00955         cudaVerify(cudaMalloc((void **)\&matnoi\_d, numberOfElements*sizeof(int)));}
+\DoxyCodeLine{00956         cudaVerify(cudaMalloc((void **)\&matEOS\_d, numberOfElements*sizeof(int)));}
+\DoxyCodeLine{00957         cudaVerify(cudaMalloc((void **)\&matPolytropicK\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00958         cudaVerify(cudaMalloc((void **)\&matPolytropicGamma\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00959         cudaVerify(cudaMalloc((void **)\&matAlpha\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00960         cudaVerify(cudaMalloc((void **)\&matBeta\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00961         cudaVerify(cudaMalloc((void **)\&matBulkmodulus\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00962         cudaVerify(cudaMalloc((void **)\&matShearmodulus\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00963         cudaVerify(cudaMalloc((void **)\&matYieldStress\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00964         cudaVerify(cudaMalloc((void **)\&matInternalFriction\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00965         cudaVerify(cudaMalloc((void **)\&matInternalFrictionDamaged\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00966         cudaVerify(cudaMalloc((void **)\&matRho0\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00967         cudaVerify(cudaMalloc((void **)\&matTillRho0\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00968         cudaVerify(cudaMalloc((void **)\&matTillE0\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00969         cudaVerify(cudaMalloc((void **)\&matTillEiv\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00970         cudaVerify(cudaMalloc((void **)\&matTillEcv\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00971         cudaVerify(cudaMalloc((void **)\&matTilla\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00972         cudaVerify(cudaMalloc((void **)\&matTillb\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00973         cudaVerify(cudaMalloc((void **)\&matTillA\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00974         cudaVerify(cudaMalloc((void **)\&matTillB\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00975         cudaVerify(cudaMalloc((void **)\&matTillAlpha\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00976         cudaVerify(cudaMalloc((void **)\&matTillBeta\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00977         cudaVerify(cudaMalloc((void **)\&matRhoLimit\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00978         cudaVerify(cudaMalloc((void **)\&matN\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00979         cudaVerify(cudaMalloc((void **)\&matCohesion\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00980         cudaVerify(cudaMalloc((void **)\&matFrictionAngle\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00981         cudaVerify(cudaMalloc((void **)\&matFrictionAngleDamaged\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00982         cudaVerify(cudaMalloc((void **)\&matAlphaPhi\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00983         cudaVerify(cudaMalloc((void **)\&matCohesionCoefficient\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00984 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00985         cudaVerify(cudaMalloc((void **)\&matjc\_y0\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00986         cudaVerify(cudaMalloc((void **)\&matjc\_B\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00987         cudaVerify(cudaMalloc((void **)\&matjc\_n\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00988         cudaVerify(cudaMalloc((void **)\&matjc\_m\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00989         cudaVerify(cudaMalloc((void **)\&matjc\_edot0\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00990         cudaVerify(cudaMalloc((void **)\&matjc\_C\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00991         cudaVerify(cudaMalloc((void **)\&matjc\_Tref\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00992         cudaVerify(cudaMalloc((void **)\&matjc\_Tmelt\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00993         cudaVerify(cudaMalloc((void **)\&matCp\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00994         cudaVerify(cudaMalloc((void **)\&matCV\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00995 \#endif}
+\DoxyCodeLine{00996 \#if SOLID}
+\DoxyCodeLine{00997         cudaVerify(cudaMalloc((void **)\&matYoungModulus\_d, numberOfElements*sizeof(double)));}
+\DoxyCodeLine{00998         cudaVerify(cudaMemcpy(matYoungModulus\_d, young\_modulus, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{00999         cudaVerify(cudaMemcpyToSymbol(matYoungModulus, \&matYoungModulus\_d, sizeof(void*)));}
+\DoxyCodeLine{01000 \#endif}
+\DoxyCodeLine{01001         cudaGetSymbolAddress((void **)\&pc\_pointer, scale\_height);}
+\DoxyCodeLine{01002         cudaMemcpy(pc\_pointer, \&scale\_height\_host, sizeof(double), cudaMemcpyHostToDevice);}
+\DoxyCodeLine{01003 }
+\DoxyCodeLine{01004         /* predictor corrector integration parameters are set in symbol memory */}
+\DoxyCodeLine{01005         cudaGetSymbolAddress((void **)\&pc\_pointer, Smin\_d);}
+\DoxyCodeLine{01006         cudaMemcpy(pc\_pointer, \&Smin, sizeof(double), cudaMemcpyHostToDevice);}
+\DoxyCodeLine{01007         cudaGetSymbolAddress((void **)\&pc\_pointer, emin\_d);}
+\DoxyCodeLine{01008         cudaMemcpy(pc\_pointer, \&emin, sizeof(double), cudaMemcpyHostToDevice);}
+\DoxyCodeLine{01009         cudaGetSymbolAddress((void **)\&pc\_pointer, rhomin\_d);}
+\DoxyCodeLine{01010         cudaMemcpy(pc\_pointer, \&rhomin, sizeof(double), cudaMemcpyHostToDevice);}
+\DoxyCodeLine{01011         cudaGetSymbolAddress((void **)\&pc\_pointer, damagemin\_d);}
+\DoxyCodeLine{01012         cudaMemcpy(pc\_pointer, \&damagemin, sizeof(double), cudaMemcpyHostToDevice);}
+\DoxyCodeLine{01013         cudaGetSymbolAddress((void **)\&pc\_pointer, alphamin\_d);}
+\DoxyCodeLine{01014         cudaMemcpy(pc\_pointer, \&alphamin, sizeof(double), cudaMemcpyHostToDevice);}
+\DoxyCodeLine{01015         cudaGetSymbolAddress((void **)\&pc\_pointer, betamin\_d);}
+\DoxyCodeLine{01016         cudaMemcpy(pc\_pointer, \&betamin, sizeof(double), cudaMemcpyHostToDevice);}
+\DoxyCodeLine{01017         cudaGetSymbolAddress((void **)\&pc\_pointer, alpha\_epspormin\_d);}
+\DoxyCodeLine{01018         cudaMemcpy(pc\_pointer, \&alpha\_epspormin, sizeof(double), cudaMemcpyHostToDevice);}
+\DoxyCodeLine{01019         cudaGetSymbolAddress((void **)\&pc\_pointer, epsilon\_vmin\_d);}
+\DoxyCodeLine{01020         cudaMemcpy(pc\_pointer, \&epsilon\_vmin, sizeof(double), cudaMemcpyHostToDevice);}
+\DoxyCodeLine{01021 }
+\DoxyCodeLine{01022 }
+\DoxyCodeLine{01023 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01024         cudaGetSymbolAddress((void **)\&pc\_pointer, max\_abs\_pressure\_change);}
+\DoxyCodeLine{01025         cudaMemcpy(pc\_pointer, \&max\_abs\_pressure\_change\_host, sizeof(double), cudaMemcpyHostToDevice);}
+\DoxyCodeLine{01026         if (param.verbose) \{}
+\DoxyCodeLine{01027             fprintf(stdout, "{}Setting maximum allowed pressure change to \%.17e \(\backslash\)n"{}, max\_abs\_pressure\_change\_host);}
+\DoxyCodeLine{01028         \}}
+\DoxyCodeLine{01029 \#endif}
+\DoxyCodeLine{01030 }
+\DoxyCodeLine{01031         cudaVerify(cudaMemcpy(matSml\_d, sml, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01032 \#if VARIABLE\_SML}
+\DoxyCodeLine{01033         cudaVerify(cudaMemcpy(mat\_f\_sml\_max\_d, f\_sml\_max , numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01034         cudaVerify(cudaMemcpy(mat\_f\_sml\_min\_d, f\_sml\_min , numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01035 \#endif}
+\DoxyCodeLine{01036         cudaVerify(cudaMemcpy(matnoi\_d, noi, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01037         cudaVerify(cudaMemcpy(matEOS\_d, eos, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01038         cudaVerify(cudaMemcpy(matPolytropicK\_d, polytropic\_K, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01039         cudaVerify(cudaMemcpy(matPolytropicGamma\_d, polytropic\_gamma, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01040         cudaVerify(cudaMemcpy(matAlpha\_d, alpha, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01041         cudaVerify(cudaMemcpy(matBeta\_d, beta, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01042         cudaVerify(cudaMemcpy(matBulkmodulus\_d, bulk\_modulus, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01043 \#if NAVIER\_STOKES}
+\DoxyCodeLine{01044         cudaVerify(cudaMemcpy(matnu\_d, nu, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01045         cudaVerify(cudaMemcpy(matzeta\_d, zeta, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01046 \#endif}
+\DoxyCodeLine{01047         cudaVerify(cudaMemcpy(matShearmodulus\_d, shear\_modulus, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01048         cudaVerify(cudaMemcpy(matYieldStress\_d, yield\_stress, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01049         cudaVerify(cudaMemcpy(matInternalFriction\_d, internal\_friction, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01050         cudaVerify(cudaMemcpy(matInternalFrictionDamaged\_d, internal\_friction\_damaged, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01051         cudaVerify(cudaMemcpy(matRho0\_d, rho\_0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01052         cudaVerify(cudaMemcpy(matTillRho0\_d, till\_rho\_0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01053         cudaVerify(cudaMemcpy(matTillE0\_d, till\_E\_0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01054         cudaVerify(cudaMemcpy(matTillEcv\_d, till\_E\_cv, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01055         cudaVerify(cudaMemcpy(matTillEiv\_d, till\_E\_iv, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01056         cudaVerify(cudaMemcpy(matTilla\_d, till\_a, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01057         cudaVerify(cudaMemcpy(matTillb\_d, till\_b, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01058         cudaVerify(cudaMemcpy(matTillA\_d, till\_A, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01059         cudaVerify(cudaMemcpy(matTillB\_d, till\_B, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01060         cudaVerify(cudaMemcpy(matTillAlpha\_d, till\_alpha, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01061         cudaVerify(cudaMemcpy(matTillBeta\_d, till\_beta, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01062         cudaVerify(cudaMemcpy(matRhoLimit\_d, rho\_limit, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01063         cudaVerify(cudaMemcpy(matN\_d, n, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01064         cudaVerify(cudaMemcpy(matCohesion\_d, cohesion, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01065         cudaVerify(cudaMemcpy(matFrictionAngle\_d, friction\_angle, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01066         cudaVerify(cudaMemcpy(matFrictionAngleDamaged\_d, friction\_angle\_damaged, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01067         cudaVerify(cudaMemcpy(matAlphaPhi\_d, alpha\_phi, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01068         cudaVerify(cudaMemcpy(matCohesionCoefficient\_d, cohesion\_coefficient, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01069         //begin copying ANEOS data from host to (global) device memory}
+\DoxyCodeLine{01070         cudaVerify(cudaMemcpy(aneos\_n\_rho\_d, g\_aneos\_n\_rho, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01071         cudaVerify(cudaMemcpy(aneos\_n\_e\_d, g\_aneos\_n\_e, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01072         cudaVerify(cudaMemcpy(aneos\_bulk\_cs\_d, g\_aneos\_bulk\_cs, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01073         for (i=0; i<numberOfMaterials; i++) \{}
+\DoxyCodeLine{01074             if (eos[i] == EOS\_TYPE\_ANEOS) \{}
+\DoxyCodeLine{01075                 cudaVerify(cudaMemcpy(aneos\_rho\_d+aneos\_rho\_id[i], g\_aneos\_rho[i], g\_aneos\_n\_rho[i]*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01076                 cudaVerify(cudaMemcpy(aneos\_e\_d+aneos\_e\_id[i], g\_aneos\_e[i], g\_aneos\_n\_e[i]*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01077                 for(j=0; j<g\_aneos\_n\_rho[i]; j++) \{}
+\DoxyCodeLine{01078                     cudaVerify(cudaMemcpy(aneos\_p\_d+aneos\_matrix\_id[i]+j*g\_aneos\_n\_e[i], g\_aneos\_p[i][j], g\_aneos\_n\_e[i]*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01079                 \}}
+\DoxyCodeLine{01080             \}}
+\DoxyCodeLine{01081         \}}
+\DoxyCodeLine{01082         cudaVerify(cudaMemcpy(aneos\_rho\_id\_d, aneos\_rho\_id, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01083         cudaVerify(cudaMemcpy(aneos\_e\_id\_d, aneos\_e\_id, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01084         cudaVerify(cudaMemcpy(aneos\_matrix\_id\_d, aneos\_matrix\_id, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01085         //end copying ANEOS data from host to (global) device memory, begin copying pointers to constant device memory}
+\DoxyCodeLine{01086         /* the '\_d' pointers are still in host memory and copied to (constant) device memory to be accessible from device code */}
+\DoxyCodeLine{01087         cudaVerify(cudaMemcpyToSymbol(aneos\_n\_rho\_c, \&aneos\_n\_rho\_d, sizeof(void*)));}
+\DoxyCodeLine{01088         cudaVerify(cudaMemcpyToSymbol(aneos\_n\_e\_c, \&aneos\_n\_e\_d, sizeof(void*)));}
+\DoxyCodeLine{01089         cudaVerify(cudaMemcpyToSymbol(aneos\_bulk\_cs\_c, \&aneos\_bulk\_cs\_d, sizeof(void*)));}
+\DoxyCodeLine{01090         cudaVerify(cudaMemcpyToSymbol(aneos\_rho\_c, \&aneos\_rho\_d, sizeof(void*)));}
+\DoxyCodeLine{01091         cudaVerify(cudaMemcpyToSymbol(aneos\_e\_c, \&aneos\_e\_d, sizeof(void*)));}
+\DoxyCodeLine{01092         cudaVerify(cudaMemcpyToSymbol(aneos\_p\_c, \&aneos\_p\_d, sizeof(void*)));}
+\DoxyCodeLine{01093         cudaVerify(cudaMemcpyToSymbol(aneos\_rho\_id\_c, \&aneos\_rho\_id\_d, sizeof(void*)));}
+\DoxyCodeLine{01094         cudaVerify(cudaMemcpyToSymbol(aneos\_e\_id\_c, \&aneos\_e\_id\_d, sizeof(void*)));}
+\DoxyCodeLine{01095         cudaVerify(cudaMemcpyToSymbol(aneos\_matrix\_id\_c, \&aneos\_matrix\_id\_d, sizeof(void*)));}
+\DoxyCodeLine{01096         //end copying pointers to constant device memory}
+\DoxyCodeLine{01097 \#if JC\_PLASTICITY}
+\DoxyCodeLine{01098         cudaVerify(cudaMemcpy(matjc\_y0\_d, jc\_y0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01099         cudaVerify(cudaMemcpy(matjc\_B\_d, jc\_B, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01100         cudaVerify(cudaMemcpy(matjc\_n\_d, jc\_n, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01101         cudaVerify(cudaMemcpy(matjc\_m\_d, jc\_m, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01102         cudaVerify(cudaMemcpy(matjc\_edot0\_d, jc\_edot0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01103         cudaVerify(cudaMemcpy(matjc\_C\_d, jc\_C, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01104         cudaVerify(cudaMemcpy(matjc\_Tref\_d, jc\_Tref, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01105         cudaVerify(cudaMemcpy(matjc\_Tmelt\_d, jc\_Tmelt, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01106         cudaVerify(cudaMemcpy(matCp\_d, Cp, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01107         cudaVerify(cudaMemcpy(matCV\_d, CV, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01108 \#endif}
+\DoxyCodeLine{01109 \#if DENSITY\_FLOOR}
+\DoxyCodeLine{01110         cudaGetSymbolAddress((void **)\&pc\_pointer, density\_floor\_d);}
+\DoxyCodeLine{01111         cudaVerify(cudaMemcpy(pc\_pointer, \&smallest\_rho, sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01112         fprintf(stdout, "{}Using density floor of 0.01 x \%g\(\backslash\)n"{}, smallest\_rho);}
+\DoxyCodeLine{01113 \#endif}
+\DoxyCodeLine{01114 }
+\DoxyCodeLine{01115         cudaVerify(cudaMemcpyToSymbol(matnu, \&matnu\_d, sizeof(void*)));}
+\DoxyCodeLine{01116         cudaVerify(cudaMemcpyToSymbol(matzeta, \&matzeta\_d, sizeof(void*)));}
+\DoxyCodeLine{01117 \#if ARTIFICIAL\_STRESS}
+\DoxyCodeLine{01118         cudaVerify(cudaMemcpy(matexponent\_tensor\_d, exponent\_tensor, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01119         cudaVerify(cudaMemcpy(matepsilon\_stress\_d, epsilon\_stress, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01120         cudaVerify(cudaMemcpy(matmean\_particle\_distance\_d, mean\_particle\_distance, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01121         cudaVerify(cudaMemcpyToSymbol(matexponent\_tensor, \&matexponent\_tensor\_d, sizeof(void*)));}
+\DoxyCodeLine{01122         cudaVerify(cudaMemcpyToSymbol(matepsilon\_stress, \&matepsilon\_stress\_d, sizeof(void*)));}
+\DoxyCodeLine{01123         cudaVerify(cudaMemcpyToSymbol(matmean\_particle\_distance, \&matmean\_particle\_distance\_d, sizeof(void*)));}
+\DoxyCodeLine{01124 \#endif // ARTIFICIAL\_STRESS}
+\DoxyCodeLine{01125 }
+\DoxyCodeLine{01126 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01127         cudaVerify(cudaMemcpy(matporjutzi\_p\_elastic\_d, porjutzi\_p\_elastic, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01128         cudaVerify(cudaMemcpy(matporjutzi\_p\_transition\_d, porjutzi\_p\_transition, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01129         cudaVerify(cudaMemcpy(matporjutzi\_p\_compacted\_d, porjutzi\_p\_compacted, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01130         cudaVerify(cudaMemcpy(matporjutzi\_alpha\_0\_d, porjutzi\_alpha\_0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01131         cudaVerify(cudaMemcpy(matporjutzi\_alpha\_e\_d, porjutzi\_alpha\_e, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01132         cudaVerify(cudaMemcpy(matporjutzi\_alpha\_t\_d, porjutzi\_alpha\_t, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01133         cudaVerify(cudaMemcpy(matporjutzi\_n1\_d, porjutzi\_n1, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01134         cudaVerify(cudaMemcpy(matporjutzi\_n2\_d, porjutzi\_n2, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01135                 cudaVerify(cudaMemcpy(matcs\_porous\_d, cs\_porous, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01136                 cudaVerify(cudaMemcpy(matcs\_solid\_d, cs\_solid, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01137                 cudaVerify(cudaMemcpy(matcrushcurve\_style\_d, crushcurve\_style, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01138         cudaVerify(cudaMemcpyToSymbol(matporjutzi\_p\_elastic, \&matporjutzi\_p\_elastic\_d, sizeof(void*)));}
+\DoxyCodeLine{01139         cudaVerify(cudaMemcpyToSymbol(matporjutzi\_p\_transition, \&matporjutzi\_p\_transition\_d, sizeof(void*)));}
+\DoxyCodeLine{01140         cudaVerify(cudaMemcpyToSymbol(matporjutzi\_p\_compacted, \&matporjutzi\_p\_compacted\_d, sizeof(void*)));}
+\DoxyCodeLine{01141         cudaVerify(cudaMemcpyToSymbol(matporjutzi\_alpha\_0, \&matporjutzi\_alpha\_0\_d, sizeof(void*)));}
+\DoxyCodeLine{01142         cudaVerify(cudaMemcpyToSymbol(matporjutzi\_alpha\_e, \&matporjutzi\_alpha\_e\_d, sizeof(void*)));}
+\DoxyCodeLine{01143         cudaVerify(cudaMemcpyToSymbol(matporjutzi\_alpha\_t, \&matporjutzi\_alpha\_t\_d, sizeof(void*)));}
+\DoxyCodeLine{01144         cudaVerify(cudaMemcpyToSymbol(matporjutzi\_n1, \&matporjutzi\_n1\_d, sizeof(void*)));}
+\DoxyCodeLine{01145         cudaVerify(cudaMemcpyToSymbol(matporjutzi\_n2, \&matporjutzi\_n2\_d, sizeof(void*)));}
+\DoxyCodeLine{01146                 cudaVerify(cudaMemcpyToSymbol(matcs\_porous, \&matcs\_porous\_d, sizeof(void*)));}
+\DoxyCodeLine{01147                 cudaVerify(cudaMemcpyToSymbol(matcs\_solid, \&matcs\_solid\_d, sizeof(void*)));}
+\DoxyCodeLine{01148                 cudaVerify(cudaMemcpyToSymbol(matcrushcurve\_style, \&matcrushcurve\_style\_d, sizeof(void*)));}
+\DoxyCodeLine{01149 \#endif}
+\DoxyCodeLine{01150 }
+\DoxyCodeLine{01151 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{01152         cudaVerify(cudaMemcpy(matporsirono\_K\_0\_d, porsirono\_K\_0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01153         cudaVerify(cudaMemcpy(matporsirono\_rho\_0\_d, porsirono\_rho\_0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01154         cudaVerify(cudaMemcpy(matporsirono\_rho\_s\_d, porsirono\_rho\_s, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01155         cudaVerify(cudaMemcpy(matporsirono\_gamma\_K\_d, porsirono\_gamma\_K, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01156         cudaVerify(cudaMemcpy(matporsirono\_alpha\_d, porsirono\_alpha, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01157         cudaVerify(cudaMemcpy(matporsirono\_pm\_d, porsirono\_pm, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01158         cudaVerify(cudaMemcpy(matporsirono\_phimax\_d, porsirono\_phimax, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01159         cudaVerify(cudaMemcpy(matporsirono\_phi0\_d, porsirono\_phi0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01160         cudaVerify(cudaMemcpy(matporsirono\_delta\_d, porsirono\_delta, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01161         cudaVerify(cudaMemcpyToSymbol(matporsirono\_K\_0, \&matporsirono\_K\_0\_d, sizeof(void*)));}
+\DoxyCodeLine{01162         cudaVerify(cudaMemcpyToSymbol(matporsirono\_rho\_0, \&matporsirono\_rho\_0\_d, sizeof(void*)));}
+\DoxyCodeLine{01163         cudaVerify(cudaMemcpyToSymbol(matporsirono\_rho\_s, \&matporsirono\_rho\_s\_d, sizeof(void*)));}
+\DoxyCodeLine{01164         cudaVerify(cudaMemcpyToSymbol(matporsirono\_gamma\_K, \&matporsirono\_gamma\_K\_d, sizeof(void*)));}
+\DoxyCodeLine{01165         cudaVerify(cudaMemcpyToSymbol(matporsirono\_alpha, \&matporsirono\_alpha\_d, sizeof(void*)));}
+\DoxyCodeLine{01166         cudaVerify(cudaMemcpyToSymbol(matporsirono\_pm, \&matporsirono\_pm\_d, sizeof(void*)));}
+\DoxyCodeLine{01167         cudaVerify(cudaMemcpyToSymbol(matporsirono\_phimax, \&matporsirono\_phimax\_d, sizeof(void*)));}
+\DoxyCodeLine{01168         cudaVerify(cudaMemcpyToSymbol(matporsirono\_phi0, \&matporsirono\_phi0\_d, sizeof(void*)));}
+\DoxyCodeLine{01169         cudaVerify(cudaMemcpyToSymbol(matporsirono\_delta, \&matporsirono\_delta\_d, sizeof(void*)));}
+\DoxyCodeLine{01170 \#endif}
+\DoxyCodeLine{01171 }
+\DoxyCodeLine{01172 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{01173         cudaVerify(cudaMemcpy(matporepsilon\_kappa\_d, porepsilon\_kappa, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01174         cudaVerify(cudaMemcpy(matporepsilon\_alpha\_0\_d, porepsilon\_alpha\_0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01175         cudaVerify(cudaMemcpy(matporepsilon\_epsilon\_e\_d, porepsilon\_epsilon\_e, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01176         cudaVerify(cudaMemcpy(matporepsilon\_epsilon\_x\_d, porepsilon\_epsilon\_x, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01177         cudaVerify(cudaMemcpy(matporepsilon\_epsilon\_c\_d, porepsilon\_epsilon\_c, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));}
+\DoxyCodeLine{01178         cudaVerify(cudaMemcpyToSymbol(matporepsilon\_kappa, \&matporepsilon\_kappa\_d, sizeof(void*)));}
+\DoxyCodeLine{01179         cudaVerify(cudaMemcpyToSymbol(matporepsilon\_alpha\_0, \&matporepsilon\_alpha\_0\_d, sizeof(void*)));}
+\DoxyCodeLine{01180         cudaVerify(cudaMemcpyToSymbol(matporepsilon\_epsilon\_e, \&matporepsilon\_epsilon\_e\_d, sizeof(void*)));}
+\DoxyCodeLine{01181         cudaVerify(cudaMemcpyToSymbol(matporepsilon\_epsilon\_x, \&matporepsilon\_epsilon\_x\_d, sizeof(void*)));}
+\DoxyCodeLine{01182         cudaVerify(cudaMemcpyToSymbol(matporepsilon\_epsilon\_c, \&matporepsilon\_epsilon\_c\_d, sizeof(void*)));}
+\DoxyCodeLine{01183 \#endif}
+\DoxyCodeLine{01184 }
+\DoxyCodeLine{01185         cudaVerify(cudaMemcpyToSymbol(matSml, \&matSml\_d, sizeof(void*)));}
+\DoxyCodeLine{01186 \#if VARIABLE\_SML}
+\DoxyCodeLine{01187         cudaVerify(cudaMemcpyToSymbol(mat\_f\_sml\_max, \&mat\_f\_sml\_max\_d, sizeof(void*)));}
+\DoxyCodeLine{01188         cudaVerify(cudaMemcpyToSymbol(mat\_f\_sml\_min, \&mat\_f\_sml\_min\_d, sizeof(void*)));}
+\DoxyCodeLine{01189 \#endif}
+\DoxyCodeLine{01190         cudaVerify(cudaMemcpyToSymbol(matnoi, \&matnoi\_d, sizeof(void*)));}
+\DoxyCodeLine{01191         cudaVerify(cudaMemcpyToSymbol(matEOS, \&matEOS\_d, sizeof(void*)));}
+\DoxyCodeLine{01192         cudaVerify(cudaMemcpyToSymbol(matPolytropicK, \&matPolytropicK\_d, sizeof(void*)));}
+\DoxyCodeLine{01193         cudaVerify(cudaMemcpyToSymbol(matPolytropicGamma, \&matPolytropicGamma\_d, sizeof(void*)));}
+\DoxyCodeLine{01194         cudaVerify(cudaMemcpyToSymbol(matAlpha, \&matAlpha\_d, sizeof(void*)));}
+\DoxyCodeLine{01195         cudaVerify(cudaMemcpyToSymbol(matBeta, \&matBeta\_d, sizeof(void*)));}
+\DoxyCodeLine{01196         cudaVerify(cudaMemcpyToSymbol(matBulkmodulus, \&matBulkmodulus\_d, sizeof(void*)));}
+\DoxyCodeLine{01197         cudaVerify(cudaMemcpyToSymbol(matShearmodulus, \&matShearmodulus\_d, sizeof(void*)));}
+\DoxyCodeLine{01198         cudaVerify(cudaMemcpyToSymbol(matYieldStress, \&matYieldStress\_d, sizeof(void*)));}
+\DoxyCodeLine{01199         cudaVerify(cudaMemcpyToSymbol(matInternalFriction, \&matInternalFriction\_d, sizeof(void*)));}
+\DoxyCodeLine{01200         cudaVerify(cudaMemcpyToSymbol(matInternalFrictionDamaged, \&matInternalFrictionDamaged\_d, sizeof(void*)));}
+\DoxyCodeLine{01201         cudaVerify(cudaMemcpyToSymbol(matRho0, \&matRho0\_d, sizeof(void*)));}
+\DoxyCodeLine{01202         cudaVerify(cudaMemcpyToSymbol(matTillRho0, \&matTillRho0\_d, sizeof(void*)));}
+\DoxyCodeLine{01203         cudaVerify(cudaMemcpyToSymbol(matTillE0, \&matTillE0\_d, sizeof(void*)));}
+\DoxyCodeLine{01204         cudaVerify(cudaMemcpyToSymbol(matTillEiv, \&matTillEiv\_d, sizeof(void*)));}
+\DoxyCodeLine{01205         cudaVerify(cudaMemcpyToSymbol(matTillEcv, \&matTillEcv\_d, sizeof(void*)));}
+\DoxyCodeLine{01206         cudaVerify(cudaMemcpyToSymbol(matTilla, \&matTilla\_d, sizeof(void*)));}
+\DoxyCodeLine{01207         cudaVerify(cudaMemcpyToSymbol(matTillb, \&matTillb\_d, sizeof(void*)));}
+\DoxyCodeLine{01208         cudaVerify(cudaMemcpyToSymbol(matTillA, \&matTillA\_d, sizeof(void*)));}
+\DoxyCodeLine{01209         cudaVerify(cudaMemcpyToSymbol(matTillB, \&matTillB\_d, sizeof(void*)));}
+\DoxyCodeLine{01210         cudaVerify(cudaMemcpyToSymbol(matTillAlpha, \&matTillAlpha\_d, sizeof(void*)));}
+\DoxyCodeLine{01211         cudaVerify(cudaMemcpyToSymbol(matTillBeta, \&matTillBeta\_d, sizeof(void*)));}
+\DoxyCodeLine{01212         cudaVerify(cudaMemcpyToSymbol(matRhoLimit, \&matRhoLimit\_d, sizeof(void*)));}
+\DoxyCodeLine{01213         cudaVerify(cudaMemcpyToSymbol(matN, \&matN\_d, sizeof(void*)));}
+\DoxyCodeLine{01214         cudaVerify(cudaMemcpyToSymbol(matCohesion, \&matCohesion\_d, sizeof(void*)));}
+\DoxyCodeLine{01215         cudaVerify(cudaMemcpyToSymbol(matFrictionAngle, \&matFrictionAngle\_d, sizeof(void*)));}
+\DoxyCodeLine{01216         cudaVerify(cudaMemcpyToSymbol(matFrictionAngleDamaged, \&matFrictionAngleDamaged\_d, sizeof(void*)));}
+\DoxyCodeLine{01217         cudaVerify(cudaMemcpyToSymbol(matAlphaPhi, \&matAlphaPhi\_d, sizeof(void*)));}
+\DoxyCodeLine{01218         cudaVerify(cudaMemcpyToSymbol(matCohesionCoefficient, \&matCohesionCoefficient\_d, sizeof(void*)));}
+\DoxyCodeLine{01219 \#if JC\_PLASTICITY}
+\DoxyCodeLine{01220         cudaVerify(cudaMemcpyToSymbol(matjc\_y0, \&matjc\_y0\_d, sizeof(void*)));}
+\DoxyCodeLine{01221         cudaVerify(cudaMemcpyToSymbol(matjc\_B, \&matjc\_B\_d, sizeof(void*)));}
+\DoxyCodeLine{01222         cudaVerify(cudaMemcpyToSymbol(matjc\_n, \&matjc\_n\_d, sizeof(void*)));}
+\DoxyCodeLine{01223         cudaVerify(cudaMemcpyToSymbol(matjc\_m, \&matjc\_m\_d, sizeof(void*)));}
+\DoxyCodeLine{01224         cudaVerify(cudaMemcpyToSymbol(matjc\_edot0, \&matjc\_edot0\_d, sizeof(void*)));}
+\DoxyCodeLine{01225         cudaVerify(cudaMemcpyToSymbol(matjc\_C, \&matjc\_C\_d, sizeof(void*)));}
+\DoxyCodeLine{01226         cudaVerify(cudaMemcpyToSymbol(matjc\_Tref, \&matjc\_Tref\_d, sizeof(void*)));}
+\DoxyCodeLine{01227         cudaVerify(cudaMemcpyToSymbol(matjc\_Tmelt, \&matjc\_Tmelt\_d, sizeof(void*)));}
+\DoxyCodeLine{01228         cudaVerify(cudaMemcpyToSymbol(matCp, \&matCp\_d, sizeof(void*)));}
+\DoxyCodeLine{01229         cudaVerify(cudaMemcpyToSymbol(matCV, \&matCV\_d, sizeof(void*)));}
+\DoxyCodeLine{01230 \#endif}
+\DoxyCodeLine{01231 }
+\DoxyCodeLine{01232         fprintf(stdout, "{}Using following values for sph\(\backslash\)n"{});}
+\DoxyCodeLine{01233         fprintf(stdout, "{}Material No \(\backslash\)t smoothing length or number of interactions \(\backslash\)t alpha \(\backslash\)t\(\backslash\)t beta\(\backslash\)n"{});}
+\DoxyCodeLine{01234         fprintf(stdout, "{}-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\(\backslash\)t-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\(\backslash\)t-\/-\/-\/-\/-\/-\/-\/\(\backslash\)t\(\backslash\)t-\/-\/-\/-\/-\/\(\backslash\)n"{});}
+\DoxyCodeLine{01235         for (i = 0; i < numberOfMaterials; i++) \{}
+\DoxyCodeLine{01236             fprintf(stdout, "{}  \%d \(\backslash\)t\(\backslash\)t \%e or \%d \(\backslash\)t\(\backslash\)t\(\backslash\)t\(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)n"{}, i, sml[i], noi[i], alpha[i], beta[i]);}
+\DoxyCodeLine{01237         \}}
+\DoxyCodeLine{01238 \#if VARIABLE\_SML}
+\DoxyCodeLine{01239         fprintf(stdout, "{}Material No \(\backslash\)t factor for maximum and minimum smoothing length and corresponding smoothing lengths\(\backslash\)n"{});}
+\DoxyCodeLine{01240         fprintf(stdout, "{}-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\(\backslash\)t-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\(\backslash\)t-\/-\/-\/-\/-\/-\/-\/\(\backslash\)t\(\backslash\)t-\/-\/-\/-\/-\/\(\backslash\)n"{});}
+\DoxyCodeLine{01241         for (i = 0; i < numberOfMaterials; i++) \{}
+\DoxyCodeLine{01242             fprintf(stdout, "{}  \%d \(\backslash\)t\(\backslash\)t factor\_min \%e -\/> minimum sml \%e \(\backslash\)t\(\backslash\)t factor\_max \%e -\/> maximun sml \%e \(\backslash\)n"{}, i, f\_sml\_min[i], f\_sml\_min[i]*sml[i], f\_sml\_max[i], f\_sml\_max[i]*sml[i]);}
+\DoxyCodeLine{01243         \}}
+\DoxyCodeLine{01244 }
+\DoxyCodeLine{01245 \#endif}
+\DoxyCodeLine{01246         /* some material checks */}
+\DoxyCodeLine{01247 \#if VON\_MISES\_PLASTICITY}
+\DoxyCodeLine{01248         fprintf(stdout, "{}Using following values for the plasticity model\(\backslash\)n"{});}
+\DoxyCodeLine{01249         fprintf(stdout, "{}Material No \(\backslash\)t yield\_stress \(\backslash\)t  cohesion \(\backslash\)t friction\_angle \(\backslash\)t friction\_angle\_damaged \(\backslash\)n"{});}
+\DoxyCodeLine{01250         fprintf(stdout, "{}-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\(\backslash\)t-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\(\backslash\)t-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\(\backslash\)t-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\(\backslash\)t-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\(\backslash\)n"{});}
+\DoxyCodeLine{01251         for (i = 0; i < numberOfMaterials; i++) \{}
+\DoxyCodeLine{01252             fprintf(stdout, "{}  \%d \(\backslash\)t\(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)n"{}, i, yield\_stress[i], cohesion[i], friction\_angle[i], friction\_angle\_damaged[i]);}
+\DoxyCodeLine{01253         \}}
+\DoxyCodeLine{01254 \#endif}
+\DoxyCodeLine{01255         fprintf(stdout, "{}Using following values for the equation of state\(\backslash\)n"{});}
+\DoxyCodeLine{01256         fprintf(stdout, "{}Material No \(\backslash\)t EoS\(\backslash\)n"{});}
+\DoxyCodeLine{01257         fprintf(stdout, "{}-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ \(\backslash\)t -\/-\/-\/ \(\backslash\)n"{});}
+\DoxyCodeLine{01258         char eos\_type[255];}
+\DoxyCodeLine{01259         for (i = 0; i < numberOfMaterials; i++) \{}
+\DoxyCodeLine{01260             fprintf(stdout, "{}  \%d \(\backslash\)t\(\backslash\)t"{}, i);}
+\DoxyCodeLine{01261             switch (eos[i]) \{}
+\DoxyCodeLine{01262                 case (EOS\_TYPE\_MURNAGHAN):}
+\DoxyCodeLine{01263                     strcpy(eos\_type, "{}Murnaghan"{});}
+\DoxyCodeLine{01264                     fprintf(stdout, "{} \%s\(\backslash\)n"{}, eos\_type);}
+\DoxyCodeLine{01265                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t EOS params:\(\backslash\)t K \(\backslash\)t\(\backslash\)t rho\_0 \(\backslash\)t\(\backslash\)t n \(\backslash\)t\(\backslash\)t rho\_limit\(\backslash\)n"{});}
+\DoxyCodeLine{01266                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t\(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e\(\backslash\)n"{}, bulk\_modulus[i], rho\_0[i], n[i], rho\_limit[i]);}
+\DoxyCodeLine{01267                     break;}
+\DoxyCodeLine{01268 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01269                 case (EOS\_TYPE\_JUTZI\_MURNAGHAN):}
+\DoxyCodeLine{01270                     strcpy(eos\_type, "{}Murnaghan with P-\/alpha model"{});}
+\DoxyCodeLine{01271                     fprintf(stdout, "{} \%s\(\backslash\)n"{}, eos\_type);}
+\DoxyCodeLine{01272                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t EOS params: \(\backslash\)t K \(\backslash\)t\(\backslash\)t rho\_0 \(\backslash\)t\(\backslash\)t n \(\backslash\)t\(\backslash\)t rho\_limit \(\backslash\)t\(\backslash\)t p\_e \(\backslash\)t\(\backslash\)t p\_t \(\backslash\)t\(\backslash\)t p\_c \(\backslash\)t\(\backslash\)t alpha\_0 \(\backslash\)t alpha\_e \(\backslash\)t alpha\_t \(\backslash\)t n1 \(\backslash\)t\(\backslash\)t n2 \(\backslash\)t\(\backslash\)t cs\_porous \(\backslash\)t\(\backslash\)t cs\_solid \(\backslash\)t\(\backslash\)t crushcurve\_style\(\backslash\)n"{});}
+\DoxyCodeLine{01273                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t\(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%d\(\backslash\)n"{}, bulk\_modulus[i], rho\_0[i], n[i], rho\_limit[i], porjutzi\_p\_elastic[i], porjutzi\_p\_transition[i], porjutzi\_p\_compacted[i], porjutzi\_alpha\_0[i], porjutzi\_alpha\_e[i], porjutzi\_alpha\_t[i], porjutzi\_n1[i], porjutzi\_n2[i], cs\_porous[i], cs\_solid[i], crushcurve\_style[i]);}
+\DoxyCodeLine{01274                     break;}
+\DoxyCodeLine{01275 \#endif}
+\DoxyCodeLine{01276                 case (EOS\_TYPE\_TILLOTSON):}
+\DoxyCodeLine{01277                     strcpy(eos\_type, "{}Tillotson"{});}
+\DoxyCodeLine{01278                     fprintf(stdout, "{} \%s\(\backslash\)n"{}, eos\_type);}
+\DoxyCodeLine{01279                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t EOS params:\(\backslash\)t till\_rho\_0 \(\backslash\)t till\_A \(\backslash\)t till\_B \(\backslash\)t till\_E\_0 \(\backslash\)t till\_E\_iv \(\backslash\)t till\_E\_cv \(\backslash\)t till\_a \(\backslash\)t till\_b \(\backslash\)t till\_alpha \(\backslash\)t till\_beta \(\backslash\)t rho\_limit\(\backslash\)n"{});}
+\DoxyCodeLine{01280                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t\(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e\(\backslash\)n"{}, till\_rho\_0[i], till\_A[i], till\_B[i], till\_E\_0[i], till\_E\_iv[i], till\_E\_cv[i], till\_a[i], till\_b[i], till\_alpha[i], till\_beta[i], rho\_limit[i]);}
+\DoxyCodeLine{01281                     break;}
+\DoxyCodeLine{01282 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01283                 case (EOS\_TYPE\_JUTZI):}
+\DoxyCodeLine{01284                     strcpy(eos\_type, "{}Tillotson with P-\/alpha model"{});}
+\DoxyCodeLine{01285                     fprintf(stdout, "{} \%s\(\backslash\)n"{}, eos\_type);}
+\DoxyCodeLine{01286                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t EOS params:\(\backslash\)n"{});}
+\DoxyCodeLine{01287                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t till\_rho\_0 \(\backslash\)t \%e \(\backslash\)n"{}, till\_rho\_0[i]);}
+\DoxyCodeLine{01288                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t till\_A \(\backslash\)t \%e \(\backslash\)n"{}, till\_A[i]);}
+\DoxyCodeLine{01289                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t till\_B \(\backslash\)t \%e \(\backslash\)n"{}, till\_B[i]);}
+\DoxyCodeLine{01290                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t till\_E\_0 \(\backslash\)t \%e \(\backslash\)n"{}, till\_E\_0[i]);}
+\DoxyCodeLine{01291                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t till\_E\_iv \(\backslash\)t \%e \(\backslash\)n"{}, till\_E\_iv[i]);}
+\DoxyCodeLine{01292                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t till\_E\_cv \(\backslash\)t \%e \(\backslash\)n"{}, till\_E\_cv[i]);}
+\DoxyCodeLine{01293                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t till\_a \(\backslash\)t \%e \(\backslash\)n"{}, till\_a[i]);}
+\DoxyCodeLine{01294                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t till\_b \(\backslash\)t \%e \(\backslash\)n"{}, till\_b[i]);}
+\DoxyCodeLine{01295                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t till\_alpha \(\backslash\)t \%e \(\backslash\)n"{}, till\_alpha[i]);}
+\DoxyCodeLine{01296                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t till\_beta \(\backslash\)t \%e \(\backslash\)n"{}, till\_beta[i]);}
+\DoxyCodeLine{01297                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t rho\_limit \(\backslash\)t \%e \(\backslash\)n"{}, rho\_limit[i]);}
+\DoxyCodeLine{01298                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t p\_e \(\backslash\)t\(\backslash\)t \%e \(\backslash\)n"{}, porjutzi\_p\_elastic[i]);}
+\DoxyCodeLine{01299                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t p\_t \(\backslash\)t\(\backslash\)t \%e \(\backslash\)n"{}, porjutzi\_p\_transition[i]);}
+\DoxyCodeLine{01300                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t p\_c \(\backslash\)t\(\backslash\)t \%e \(\backslash\)n"{}, porjutzi\_p\_compacted[i]);}
+\DoxyCodeLine{01301                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t alpha\_0 \(\backslash\)t \%e \(\backslash\)n"{}, porjutzi\_alpha\_0[i]);}
+\DoxyCodeLine{01302                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t alpha\_e \(\backslash\)t \%e \(\backslash\)n"{}, porjutzi\_alpha\_e[i]);}
+\DoxyCodeLine{01303                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t alpha\_t \(\backslash\)t \%e \(\backslash\)n"{}, porjutzi\_alpha\_t[i]);}
+\DoxyCodeLine{01304                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t n1 \(\backslash\)t\(\backslash\)t \%e \(\backslash\)n"{}, porjutzi\_n1[i]);}
+\DoxyCodeLine{01305                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t n2 \(\backslash\)t\(\backslash\)t \%e \(\backslash\)n"{}, porjutzi\_n2[i]);}
+\DoxyCodeLine{01306                                         fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t cs\_porous \(\backslash\)t \%e \(\backslash\)n"{}, cs\_porous[i]);}
+\DoxyCodeLine{01307                                         fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t cs\_solid \(\backslash\)t \%e \(\backslash\)n"{}, cs\_solid[i]);}
+\DoxyCodeLine{01308                                         fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t crushcurve\_style \(\backslash\)t \%d \(\backslash\)n"{}, crushcurve\_style[i]);}
+\DoxyCodeLine{01309                     break;}
+\DoxyCodeLine{01310 \#endif}
+\DoxyCodeLine{01311 }
+\DoxyCodeLine{01312 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{01313                 case (EOS\_TYPE\_SIRONO):}
+\DoxyCodeLine{01314                     strcpy(eos\_type, "{}Sirono Porosity"{});}
+\DoxyCodeLine{01315                     fprintf(stdout, "{} \%s\(\backslash\)n"{}, eos\_type);}
+\DoxyCodeLine{01316                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t EOS params:\(\backslash\)n"{});}
+\DoxyCodeLine{01317                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t K\_0 \(\backslash\)t \%e \(\backslash\)n"{}, porsirono\_K\_0[i]);}
+\DoxyCodeLine{01318                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t rho\_0 \(\backslash\)t \%e \(\backslash\)n"{}, porsirono\_rho\_0[i]);}
+\DoxyCodeLine{01319                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t rho\_s \(\backslash\)t \%e \(\backslash\)n"{}, porsirono\_rho\_s[i]);}
+\DoxyCodeLine{01320                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t gamma\_K \%e \(\backslash\)n"{}, porsirono\_gamma\_K[i]);}
+\DoxyCodeLine{01321                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t alpha \(\backslash\)t \%e \(\backslash\)n"{}, porsirono\_alpha[i]);}
+\DoxyCodeLine{01322                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t pm \(\backslash\)t \%e \(\backslash\)n"{}, porsirono\_pm[i]);}
+\DoxyCodeLine{01323                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t phimax  \%e \(\backslash\)n"{}, porsirono\_phimax[i]);}
+\DoxyCodeLine{01324                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t phi0 \(\backslash\)t \%e \(\backslash\)n"{}, porsirono\_phi0[i]);}
+\DoxyCodeLine{01325                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t delta \(\backslash\)t \%e \(\backslash\)n"{}, porsirono\_delta[i]);}
+\DoxyCodeLine{01326                     break;}
+\DoxyCodeLine{01327 \#endif}
+\DoxyCodeLine{01328 }
+\DoxyCodeLine{01329 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{01330                 case (EOS\_TYPE\_EPSILON):}
+\DoxyCodeLine{01331                     strcpy(eos\_type, "{}Tillotson EOS with Epsilon-\/Alpha Porosity"{});}
+\DoxyCodeLine{01332                     fprintf(stdout, "{} \%s\(\backslash\)n"{}, eos\_type);}
+\DoxyCodeLine{01333                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t EOS params:\(\backslash\)n"{});}
+\DoxyCodeLine{01334                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t kappa \(\backslash\)t \%e \(\backslash\)n"{}, porepsilon\_kappa[i]);}
+\DoxyCodeLine{01335                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t alpha\_0 \(\backslash\)t \%e \(\backslash\)n"{}, porepsilon\_alpha\_0[i]);}
+\DoxyCodeLine{01336                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t epsilon\_e \(\backslash\)t \%e \(\backslash\)n"{}, porepsilon\_epsilon\_e[i]);}
+\DoxyCodeLine{01337                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t epsilon\_x \(\backslash\)t \%e \(\backslash\)n"{}, porepsilon\_epsilon\_x[i]);}
+\DoxyCodeLine{01338                     fprintf(stdout, "{}\(\backslash\)t\(\backslash\)t\(\backslash\)t epsilon\_c \(\backslash\)t \%e \(\backslash\)n"{}, porepsilon\_epsilon\_c[i]);}
+\DoxyCodeLine{01339 \#endif}
+\DoxyCodeLine{01340 }
+\DoxyCodeLine{01341                 case (EOS\_TYPE\_ANEOS):}
+\DoxyCodeLine{01342                     strcpy(eos\_type, "{}ANEOS"{});}
+\DoxyCodeLine{01343                     fprintf(stdout, "{} \%s\(\backslash\)n"{}, eos\_type);}
+\DoxyCodeLine{01344                     break;}
+\DoxyCodeLine{01345                 case (EOS\_TYPE\_IDEAL\_GAS):}
+\DoxyCodeLine{01346                     strcpy(eos\_type, "{}ideal gas"{});}
+\DoxyCodeLine{01347                     fprintf(stdout, "{} \%s\(\backslash\)n"{}, eos\_type);}
+\DoxyCodeLine{01348                     break;}
+\DoxyCodeLine{01349                 case (EOS\_TYPE\_REGOLITH):}
+\DoxyCodeLine{01350                     strcpy(eos\_type, "{}soil model (Bui)"{});}
+\DoxyCodeLine{01351                     fprintf(stdout, "{} \%s\(\backslash\)n"{}, eos\_type);}
+\DoxyCodeLine{01352                     break;}
+\DoxyCodeLine{01353                 case (EOS\_TYPE\_IGNORE):}
+\DoxyCodeLine{01354                     strcpy(eos\_type, "{}none (ignored)"{});}
+\DoxyCodeLine{01355                     fprintf(stdout, "{} \%s\(\backslash\)n"{}, eos\_type);}
+\DoxyCodeLine{01356                     break;}
+\DoxyCodeLine{01357                 case (EOS\_TYPE\_ISOTHERMAL\_GAS):}
+\DoxyCodeLine{01358                     strcpy(eos\_type, "{}isothermal gas"{});}
+\DoxyCodeLine{01359                     fprintf(stdout, "{} \%s\(\backslash\)n"{}, eos\_type);}
+\DoxyCodeLine{01360                     break;}
+\DoxyCodeLine{01361                 case (EOS\_TYPE\_LOCALLY\_ISOTHERMAL\_GAS):}
+\DoxyCodeLine{01362                     strcpy(eos\_type, "{}locally isothermal gas"{});}
+\DoxyCodeLine{01363                     fprintf(stdout, "{} \%s\(\backslash\)n"{}, eos\_type);}
+\DoxyCodeLine{01364                     break;}
+\DoxyCodeLine{01365                 case (EOS\_TYPE\_POLYTROPIC\_GAS):}
+\DoxyCodeLine{01366                     strcpy(eos\_type, "{}polytropic gas"{});}
+\DoxyCodeLine{01367                     fprintf(stdout, "{} \%s\(\backslash\)n"{}, eos\_type);}
+\DoxyCodeLine{01368                     break;}
+\DoxyCodeLine{01369                 case (EOS\_TYPE\_VISCOUS\_REGOLITH):}
+\DoxyCodeLine{01370                     strcpy(eos\_type, "{}viscous regolith (experimental)"{});}
+\DoxyCodeLine{01371                     fprintf(stdout, "{} \%s\(\backslash\)n"{}, eos\_type);}
+\DoxyCodeLine{01372                     break;}
+\DoxyCodeLine{01373                 default:}
+\DoxyCodeLine{01374                     fprintf(stderr, "{}Error: Cannot determine rho0 for material ID \%d with EOS\_TYPE \%d\(\backslash\)n"{},}
+\DoxyCodeLine{01375                                         i, eos[i]);}
+\DoxyCodeLine{01376                     exit(1);}
+\DoxyCodeLine{01377             \}}
+\DoxyCodeLine{01378         \}}
+\DoxyCodeLine{01379 }
+\DoxyCodeLine{01380 \#if SOLID}
+\DoxyCodeLine{01381         fprintf(stdout, "{}Using following values for bulk and shear modulus\(\backslash\)n"{});}
+\DoxyCodeLine{01382         fprintf(stdout, "{}Material No \(\backslash\)t bulk modulus \(\backslash\)t shear modulus \(\backslash\)n"{});}
+\DoxyCodeLine{01383         fprintf(stdout, "{}-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ \(\backslash\)t -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ \(\backslash\)t -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ \(\backslash\)n"{});}
+\DoxyCodeLine{01384         for (i = 0; i < numberOfMaterials; i++) \{}
+\DoxyCodeLine{01385             fprintf(stdout, "{}  \%d \(\backslash\)t\(\backslash\)t \%e \(\backslash\)t \%e\(\backslash\)n"{}, i, bulk\_modulus[i], shear\_modulus[i]);}
+\DoxyCodeLine{01386         \}}
+\DoxyCodeLine{01387 \#endif}
+\DoxyCodeLine{01388 }
+\DoxyCodeLine{01389 }
+\DoxyCodeLine{01390 \#if NAVIER\_STOKES}
+\DoxyCodeLine{01391         fprintf(stdout, "{}Using following values for the physical viscosity\(\backslash\)n"{});}
+\DoxyCodeLine{01392         fprintf(stdout, "{}Material No \(\backslash\)t kinematic    \(\backslash\)t dynamic       \(\backslash\)t bulk       \(\backslash\)n"{});}
+\DoxyCodeLine{01393         fprintf(stdout, "{}-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ \(\backslash\)t -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ \(\backslash\)t -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ \(\backslash\)t -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/\(\backslash\)n"{});}
+\DoxyCodeLine{01394         for (i = 0; i < numberOfMaterials; i++) \{}
+\DoxyCodeLine{01395             fprintf(stdout, "{}  \%d \(\backslash\)t\(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)t \%e \(\backslash\)n"{}, i, nu[i], eta[i], zeta[i]);}
+\DoxyCodeLine{01396         \}}
+\DoxyCodeLine{01397 \#endif}
+\DoxyCodeLine{01398 }
+\DoxyCodeLine{01399 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{01400         fprintf(stdout, "{}Found \%d pointmasses in input mass file\(\backslash\)n"{}, numberOfPointmasses);}
+\DoxyCodeLine{01401         for (i = 0; i < numberOfPointmasses; i++) \{}
+\DoxyCodeLine{01402             fprintf(stdout, "{}no. \%d  x \%e "{}, i, pointmass\_host.x[i]);}
+\DoxyCodeLine{01403 \#if DIM > 1}
+\DoxyCodeLine{01404             fprintf(stdout, "{}y \%e "{}, pointmass\_host.y[i]);}
+\DoxyCodeLine{01405 \#if DIM > 2}
+\DoxyCodeLine{01406             fprintf(stdout, "{}z \%e "{}, pointmass\_host.z[i]);}
+\DoxyCodeLine{01407 \#endif}
+\DoxyCodeLine{01408 \#endif}
+\DoxyCodeLine{01409             fprintf(stdout, "{}vx \%e "{}, pointmass\_host.vx[i]);}
+\DoxyCodeLine{01410 \#if DIM > 1}
+\DoxyCodeLine{01411             fprintf(stdout, "{}vy \%e "{}, pointmass\_host.vy[i]);}
+\DoxyCodeLine{01412 \#if DIM > 2}
+\DoxyCodeLine{01413             fprintf(stdout, "{}vz \%e "{}, pointmass\_host.vz[i]);}
+\DoxyCodeLine{01414 \#endif}
+\DoxyCodeLine{01415 \#endif}
+\DoxyCodeLine{01416             fprintf(stdout, "{}mass \%e "{}, pointmass\_host.m[i]);}
+\DoxyCodeLine{01417             fprintf(stdout, "{}particles get no closer than \%e "{}, pointmass\_host.rmin[i]);}
+\DoxyCodeLine{01418             fprintf(stdout, "{}particles get no farther than \%e"{}, pointmass\_host.rmax[i]);}
+\DoxyCodeLine{01419             fprintf(stdout, "{}\(\backslash\)n"{});}
+\DoxyCodeLine{01420         \}}
+\DoxyCodeLine{01421 \#endif}
+\DoxyCodeLine{01422 \#if ARTIFICIAL\_STRESS}
+\DoxyCodeLine{01423         fprintf(stdout, "{}Using following parameters for artificial stress\(\backslash\)n"{});}
+\DoxyCodeLine{01424         fprintf(stdout, "{}Material No \(\backslash\)t exponent tensor \(\backslash\)t epsilon stress \(\backslash\)t mean particle distance \(\backslash\)n"{});}
+\DoxyCodeLine{01425         fprintf(stdout, "{}-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ \(\backslash\)t -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ \(\backslash\)t -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ \(\backslash\)t -\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/-\/ \(\backslash\)n"{});}
+\DoxyCodeLine{01426         for (i = 0; i < numberOfMaterials; i++) \{}
+\DoxyCodeLine{01427             fprintf(stdout, "{}  \%d \(\backslash\)t\(\backslash\)t \%e \(\backslash\)t\(\backslash\)t \%e \(\backslash\)t\(\backslash\)t \%e\(\backslash\)n"{}, i, exponent\_tensor[i], epsilon\_stress[i], mean\_particle\_distance[i]);}
+\DoxyCodeLine{01428         \}}
+\DoxyCodeLine{01429         free(exponent\_tensor);}
+\DoxyCodeLine{01430         free(epsilon\_stress);}
+\DoxyCodeLine{01431         free(mean\_particle\_distance);}
+\DoxyCodeLine{01432 \#endif // ARTIFICIAL\_STRESS}
+\DoxyCodeLine{01433 }
+\DoxyCodeLine{01434         free(nu);}
+\DoxyCodeLine{01435         free(eta);}
+\DoxyCodeLine{01436         free(zeta);}
+\DoxyCodeLine{01437 \#if VARIABLE\_SML}
+\DoxyCodeLine{01438         free(f\_sml\_max);}
+\DoxyCodeLine{01439         free(f\_sml\_min);}
+\DoxyCodeLine{01440 \#endif}
+\DoxyCodeLine{01441         // begin freeing some ANEOS memory on the host}
+\DoxyCodeLine{01442         free(aneos\_rho\_id);}
+\DoxyCodeLine{01443         free(aneos\_e\_id);}
+\DoxyCodeLine{01444         free(aneos\_matrix\_id);}
+\DoxyCodeLine{01445         //end freeing some ANEOS memory on the host}
+\DoxyCodeLine{01446         free(noi);}
+\DoxyCodeLine{01447         free(eos);}
+\DoxyCodeLine{01448         free(alpha);}
+\DoxyCodeLine{01449         free(beta);}
+\DoxyCodeLine{01450         free(polytropic\_K);}
+\DoxyCodeLine{01451         free(polytropic\_gamma);}
+\DoxyCodeLine{01452         free(n);}
+\DoxyCodeLine{01453         free(rho\_0);}
+\DoxyCodeLine{01454         free(rho\_limit);}
+\DoxyCodeLine{01455         free(till\_A);}
+\DoxyCodeLine{01456         free(till\_B);}
+\DoxyCodeLine{01457         free(till\_E\_0);}
+\DoxyCodeLine{01458         free(till\_E\_iv);}
+\DoxyCodeLine{01459         free(till\_a);}
+\DoxyCodeLine{01460         free(till\_b);}
+\DoxyCodeLine{01461         free(till\_alpha);}
+\DoxyCodeLine{01462         free(till\_beta);}
+\DoxyCodeLine{01463         free(shear\_modulus);}
+\DoxyCodeLine{01464         free(yield\_stress);}
+\DoxyCodeLine{01465         free(cohesion);}
+\DoxyCodeLine{01466         free(cohesion\_coefficient);}
+\DoxyCodeLine{01467         free(friction\_angle);}
+\DoxyCodeLine{01468         free(friction\_angle\_damaged);}
+\DoxyCodeLine{01469 \#if SOLID}
+\DoxyCodeLine{01470                 free(young\_modulus);}
+\DoxyCodeLine{01471 \#endif}
+\DoxyCodeLine{01472 }
+\DoxyCodeLine{01473 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01474         free(porjutzi\_p\_elastic);}
+\DoxyCodeLine{01475         free(porjutzi\_p\_transition);}
+\DoxyCodeLine{01476         free(porjutzi\_p\_compacted);}
+\DoxyCodeLine{01477         free(porjutzi\_alpha\_0);}
+\DoxyCodeLine{01478         free(porjutzi\_alpha\_e);}
+\DoxyCodeLine{01479         free(porjutzi\_alpha\_t);}
+\DoxyCodeLine{01480         free(porjutzi\_n1);}
+\DoxyCodeLine{01481         free(porjutzi\_n2);}
+\DoxyCodeLine{01482                 free(cs\_solid);}
+\DoxyCodeLine{01483                 free(crushcurve\_style);}
+\DoxyCodeLine{01484 \#endif}
+\DoxyCodeLine{01485 }
+\DoxyCodeLine{01486 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{01487         free(porsirono\_K\_0);}
+\DoxyCodeLine{01488         free(porsirono\_rho\_0);}
+\DoxyCodeLine{01489         free(porsirono\_rho\_s);}
+\DoxyCodeLine{01490         free(porsirono\_gamma\_K);}
+\DoxyCodeLine{01491         free(porsirono\_alpha);}
+\DoxyCodeLine{01492         free(porsirono\_pm);}
+\DoxyCodeLine{01493         free(porsirono\_phimax);}
+\DoxyCodeLine{01494         free(porsirono\_phi0);}
+\DoxyCodeLine{01495         free(porsirono\_delta);}
+\DoxyCodeLine{01496 \#endif}
+\DoxyCodeLine{01497 }
+\DoxyCodeLine{01498 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{01499         free(porepsilon\_kappa);}
+\DoxyCodeLine{01500         free(porepsilon\_alpha\_0);}
+\DoxyCodeLine{01501         free(porepsilon\_epsilon\_e);}
+\DoxyCodeLine{01502         free(porepsilon\_epsilon\_x);}
+\DoxyCodeLine{01503         free(porepsilon\_epsilon\_c);}
+\DoxyCodeLine{01504 \#endif}
+\DoxyCodeLine{01505 }
+\DoxyCodeLine{01506 \#if JC\_PLASTICITY}
+\DoxyCodeLine{01507         free(jc\_y0);}
+\DoxyCodeLine{01508         free(jc\_B);}
+\DoxyCodeLine{01509         free(jc\_n);}
+\DoxyCodeLine{01510         free(jc\_m);}
+\DoxyCodeLine{01511         free(jc\_edot0);}
+\DoxyCodeLine{01512         free(jc\_C);}
+\DoxyCodeLine{01513         free(jc\_Tref);}
+\DoxyCodeLine{01514         free(jc\_Tmelt);}
+\DoxyCodeLine{01515         free(Cp);}
+\DoxyCodeLine{01516         free(CV);}
+\DoxyCodeLine{01517 \#endif}
+\DoxyCodeLine{01518     \}}
+\DoxyCodeLine{01519 \}}
+\DoxyCodeLine{01520 }
+\DoxyCodeLine{01521 void cleanupMaterials()}
+\DoxyCodeLine{01522 \{}
+\DoxyCodeLine{01523     //begin freeing of ANEOS (global) device memory}
+\DoxyCodeLine{01524     cudaVerify(cudaFree(aneos\_n\_rho\_d));}
+\DoxyCodeLine{01525     cudaVerify(cudaFree(aneos\_n\_e\_d));}
+\DoxyCodeLine{01526     cudaVerify(cudaFree(aneos\_bulk\_cs\_d));}
+\DoxyCodeLine{01527     cudaVerify(cudaFree(aneos\_rho\_d));}
+\DoxyCodeLine{01528     cudaVerify(cudaFree(aneos\_e\_d));}
+\DoxyCodeLine{01529     cudaVerify(cudaFree(aneos\_p\_d));}
+\DoxyCodeLine{01530     cudaVerify(cudaFree(aneos\_rho\_id\_d));}
+\DoxyCodeLine{01531     cudaVerify(cudaFree(aneos\_e\_id\_d));}
+\DoxyCodeLine{01532     cudaVerify(cudaFree(aneos\_matrix\_id\_d));}
+\DoxyCodeLine{01533     //end freeing of ANEOS (global) device memory}
+\DoxyCodeLine{01534     cudaVerify(cudaFree(matSml\_d));}
+\DoxyCodeLine{01535     cudaVerify(cudaFree(matInternalFriction\_d));}
+\DoxyCodeLine{01536     cudaVerify(cudaFree(matInternalFrictionDamaged\_d));}
+\DoxyCodeLine{01537     cudaVerify(cudaFree(matYieldStress\_d));}
+\DoxyCodeLine{01538     cudaVerify(cudaFree(matnoi\_d));}
+\DoxyCodeLine{01539     cudaVerify(cudaFree(matEOS\_d));}
+\DoxyCodeLine{01540     cudaVerify(cudaFree(matPolytropicGamma\_d));}
+\DoxyCodeLine{01541     cudaVerify(cudaFree(matPolytropicK\_d));}
+\DoxyCodeLine{01542     cudaVerify(cudaFree(matAlpha\_d));}
+\DoxyCodeLine{01543     cudaVerify(cudaFree(matAlphaPhi\_d));}
+\DoxyCodeLine{01544     cudaVerify(cudaFree(matBeta\_d));}
+\DoxyCodeLine{01545     cudaVerify(cudaFree(matBulkmodulus\_d));}
+\DoxyCodeLine{01546     cudaVerify(cudaFree(matYoungModulus\_d));}
+\DoxyCodeLine{01547 \#if VARIABLE\_SML}
+\DoxyCodeLine{01548     cudaVerify(cudaFree(mat\_f\_sml\_max\_d));}
+\DoxyCodeLine{01549     cudaVerify(cudaFree(mat\_f\_sml\_min\_d));}
+\DoxyCodeLine{01550 \#endif}
+\DoxyCodeLine{01551     cudaVerify(cudaFree(matRho0\_d));}
+\DoxyCodeLine{01552     cudaVerify(cudaFree(matTillRho0\_d));}
+\DoxyCodeLine{01553     cudaVerify(cudaFree(matTilla\_d));}
+\DoxyCodeLine{01554     cudaVerify(cudaFree(matTillA\_d));}
+\DoxyCodeLine{01555     cudaVerify(cudaFree(matTillb\_d));}
+\DoxyCodeLine{01556     cudaVerify(cudaFree(matTillB\_d));}
+\DoxyCodeLine{01557     cudaVerify(cudaFree(matTillAlpha\_d));}
+\DoxyCodeLine{01558     cudaVerify(cudaFree(matTillBeta\_d));}
+\DoxyCodeLine{01559     cudaVerify(cudaFree(matTillE0\_d));}
+\DoxyCodeLine{01560     cudaVerify(cudaFree(matTillEcv\_d));}
+\DoxyCodeLine{01561     cudaVerify(cudaFree(matTillEiv\_d));}
+\DoxyCodeLine{01562     cudaVerify(cudaFree(matRhoLimit\_d));}
+\DoxyCodeLine{01563     cudaVerify(cudaFree(matShearmodulus\_d));}
+\DoxyCodeLine{01564     cudaVerify(cudaFree(matN\_d));}
+\DoxyCodeLine{01565     cudaVerify(cudaFree(matCohesion\_d));}
+\DoxyCodeLine{01566     cudaVerify(cudaFree(matCohesionCoefficient\_d));}
+\DoxyCodeLine{01567     cudaVerify(cudaFree(matFrictionAngle\_d));}
+\DoxyCodeLine{01568     cudaVerify(cudaFree(matFrictionAngleDamaged\_d));}
+\DoxyCodeLine{01569     cudaVerify(cudaFree(matporjutzi\_p\_elastic\_d));}
+\DoxyCodeLine{01570     cudaVerify(cudaFree(matporjutzi\_p\_transition\_d));}
+\DoxyCodeLine{01571     cudaVerify(cudaFree(matporjutzi\_p\_compacted\_d));}
+\DoxyCodeLine{01572     cudaVerify(cudaFree(matporjutzi\_alpha\_0\_d));}
+\DoxyCodeLine{01573     cudaVerify(cudaFree(matporjutzi\_alpha\_e\_d));}
+\DoxyCodeLine{01574     cudaVerify(cudaFree(matporjutzi\_alpha\_t\_d));}
+\DoxyCodeLine{01575     cudaVerify(cudaFree(matporjutzi\_n1\_d));}
+\DoxyCodeLine{01576     cudaVerify(cudaFree(matporjutzi\_n2\_d));}
+\DoxyCodeLine{01577         cudaVerify(cudaFree(matcs\_porous\_d));}
+\DoxyCodeLine{01578         cudaVerify(cudaFree(matcs\_solid\_d));}
+\DoxyCodeLine{01579         cudaVerify(cudaFree(matcrushcurve\_style\_d));}
+\DoxyCodeLine{01580     cudaVerify(cudaFree(matporsirono\_K\_0\_d));}
+\DoxyCodeLine{01581     cudaVerify(cudaFree(matporsirono\_rho\_0\_d));}
+\DoxyCodeLine{01582     cudaVerify(cudaFree(matporsirono\_rho\_s\_d));}
+\DoxyCodeLine{01583     cudaVerify(cudaFree(matporsirono\_gamma\_K\_d));}
+\DoxyCodeLine{01584     cudaVerify(cudaFree(matporsirono\_alpha\_d));}
+\DoxyCodeLine{01585     cudaVerify(cudaFree(matporsirono\_pm\_d));}
+\DoxyCodeLine{01586     cudaVerify(cudaFree(matporsirono\_phimax\_d));}
+\DoxyCodeLine{01587     cudaVerify(cudaFree(matporsirono\_phi0\_d));}
+\DoxyCodeLine{01588     cudaVerify(cudaFree(matporsirono\_delta\_d));}
+\DoxyCodeLine{01589     cudaVerify(cudaFree(matporepsilon\_kappa\_d));}
+\DoxyCodeLine{01590     cudaVerify(cudaFree(matporepsilon\_alpha\_0\_d));}
+\DoxyCodeLine{01591     cudaVerify(cudaFree(matporepsilon\_epsilon\_e\_d));}
+\DoxyCodeLine{01592     cudaVerify(cudaFree(matporepsilon\_epsilon\_x\_d));}
+\DoxyCodeLine{01593     cudaVerify(cudaFree(matporepsilon\_epsilon\_c\_d));}
+\DoxyCodeLine{01594     cudaVerify(cudaFree(matjc\_y0\_d));}
+\DoxyCodeLine{01595     cudaVerify(cudaFree(matjc\_B\_d));}
+\DoxyCodeLine{01596     cudaVerify(cudaFree(matjc\_n\_d));}
+\DoxyCodeLine{01597     cudaVerify(cudaFree(matjc\_m\_d));}
+\DoxyCodeLine{01598     cudaVerify(cudaFree(matjc\_edot0\_d));}
+\DoxyCodeLine{01599     cudaVerify(cudaFree(matjc\_C\_d));}
+\DoxyCodeLine{01600     cudaVerify(cudaFree(matjc\_Tref\_d));}
+\DoxyCodeLine{01601     cudaVerify(cudaFree(matjc\_Tmelt\_d));}
+\DoxyCodeLine{01602     cudaVerify(cudaFree(matCp\_d));}
+\DoxyCodeLine{01603     cudaVerify(cudaFree(matCV\_d));}
+\DoxyCodeLine{01604     free(sml);}
+\DoxyCodeLine{01605     free(bulk\_modulus);}
+\DoxyCodeLine{01606     free(cs\_porous);}
+\DoxyCodeLine{01607     free(till\_rho\_0);}
+\DoxyCodeLine{01608 \}}
+\DoxyCodeLine{01609 }
+\DoxyCodeLine{01610 }
+\DoxyCodeLine{01611 /* just do it */}
+\DoxyCodeLine{01612 void timeIntegration()}
+\DoxyCodeLine{01613 \{}
+\DoxyCodeLine{01614     initIntegration();}
+\DoxyCodeLine{01615     integrator();}
+\DoxyCodeLine{01616     endIntegration();}
+\DoxyCodeLine{01617 \}}
+
+\end{DoxyCode}

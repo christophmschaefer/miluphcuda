@@ -1,0 +1,107 @@
+\hypertarget{density_8cu_source}{}\doxysection{density.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 \#include "{}density.h"{}}
+\DoxyCodeLine{00025 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00026 \#include "{}timeintegration.h"{}}
+\DoxyCodeLine{00027 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00028 \#include "{}pressure.h"{}}
+\DoxyCodeLine{00029 }
+\DoxyCodeLine{00030 }
+\DoxyCodeLine{00031 extern \_\_device\_\_ SPH\_kernel kernel;}
+\DoxyCodeLine{00032 extern \_\_device\_\_ SPH\_kernel wendlandc2\_p;}
+\DoxyCodeLine{00033 }
+\DoxyCodeLine{00034 }
+\DoxyCodeLine{00035 \_\_global\_\_ void calculateDensity(int *interactions) \{}
+\DoxyCodeLine{00036     int i;}
+\DoxyCodeLine{00037     int j;}
+\DoxyCodeLine{00038     int inc;}
+\DoxyCodeLine{00039     int ip;}
+\DoxyCodeLine{00040     int d;}
+\DoxyCodeLine{00041     double W;}
+\DoxyCodeLine{00042     double dx[DIM];}
+\DoxyCodeLine{00043     double dWdx[DIM];}
+\DoxyCodeLine{00044     double dWdr;}
+\DoxyCodeLine{00045     double rho;}
+\DoxyCodeLine{00046     double sml;}
+\DoxyCodeLine{00047 }
+\DoxyCodeLine{00048     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00049     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00050         if (EOS\_TYPE\_IGNORE == matEOS[p\_rhs.materialId[i]] || p\_rhs.materialId[i] == EOS\_TYPE\_IGNORE) \{}
+\DoxyCodeLine{00051                 continue;}
+\DoxyCodeLine{00052         \}}
+\DoxyCodeLine{00053         sml = p.h[i];}
+\DoxyCodeLine{00054 \#if 0}
+\DoxyCodeLine{00055 \#if (DIM == 2)}
+\DoxyCodeLine{00056         rho = 40.0/(7.0*M\_PI*sml*sml) * p.m[i];}
+\DoxyCodeLine{00057 \#elif (DIM == 3)}
+\DoxyCodeLine{00058         rho = 8.0/(M\_PI*sml*sml*sml) * p.m[i];}
+\DoxyCodeLine{00059 \#elif (DIM == 1)}
+\DoxyCodeLine{00060         rho = 4.0/(3.0*sml) * p.m[i];}
+\DoxyCodeLine{00061 \#endif}
+\DoxyCodeLine{00062 \#endif}
+\DoxyCodeLine{00063 }
+\DoxyCodeLine{00064         // self density is m\_i W\_ii}
+\DoxyCodeLine{00065         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00066             dx[d] = 0;}
+\DoxyCodeLine{00067         \}}
+\DoxyCodeLine{00068         kernel(\&W, dWdx, \&dWdr, dx, sml);}
+\DoxyCodeLine{00069         rho = p.m[i] * W;}
+\DoxyCodeLine{00070 }
+\DoxyCodeLine{00071 // correction factors for Wendland CX kernels}
+\DoxyCodeLine{00072         if (kernel == wendlandc2\_p) \{}
+\DoxyCodeLine{00073             // these values are for 3D from Dehnen and Aly 2012. aiaiaiaiaiai}
+\DoxyCodeLine{00074             rho -\/= rho*0.0294*powf((double) p.noi[i], -\/0.977);}
+\DoxyCodeLine{00075         \}}
+\DoxyCodeLine{00076 }
+\DoxyCodeLine{00077 }
+\DoxyCodeLine{00078         // sph sum for particle i}
+\DoxyCodeLine{00079         for (j = 0; j < p.noi[i]; j++) \{}
+\DoxyCodeLine{00080             ip = interactions[i * MAX\_NUM\_INTERACTIONS + j];}
+\DoxyCodeLine{00081             if (EOS\_TYPE\_IGNORE == matEOS[p\_rhs.materialId[ip]] || p\_rhs.materialId[ip] == EOS\_TYPE\_IGNORE) \{}
+\DoxyCodeLine{00082                 continue;}
+\DoxyCodeLine{00083             \}}
+\DoxyCodeLine{00084 \#if (VARIABLE\_SML || INTEGRATE\_SML || DEAL\_WITH\_TOO\_MANY\_INTERACTIONS)}
+\DoxyCodeLine{00085             sml = 0.5*(p.h[i] + p.h[ip]);}
+\DoxyCodeLine{00086 \#endif}
+\DoxyCodeLine{00087 }
+\DoxyCodeLine{00088             dx[0] = p.x[i] -\/ p.x[ip];}
+\DoxyCodeLine{00089 \#if DIM > 1}
+\DoxyCodeLine{00090             dx[1] = p.y[i] -\/ p.y[ip];}
+\DoxyCodeLine{00091 \#if DIM > 2}
+\DoxyCodeLine{00092             dx[2] = p.z[i] -\/ p.z[ip];}
+\DoxyCodeLine{00093 \#endif}
+\DoxyCodeLine{00094 \#endif}
+\DoxyCodeLine{00095             kernel(\&W, dWdx, \&dWdr, dx, sml);}
+\DoxyCodeLine{00096             // contribution of interaction}
+\DoxyCodeLine{00097             rho += p.m[ip] * W;}
+\DoxyCodeLine{00098         \}}
+\DoxyCodeLine{00099         // write to global memory}
+\DoxyCodeLine{00100         p.rho[i] = rho;}
+\DoxyCodeLine{00101     \}}
+\DoxyCodeLine{00102 \}}
+
+\end{DoxyCode}

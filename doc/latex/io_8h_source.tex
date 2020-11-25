@@ -1,0 +1,41 @@
+\hypertarget{io_8h_source}{}\doxysection{io.\+h}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 }
+\DoxyCodeLine{00024 \textcolor{preprocessor}{\#ifndef \_IO\_H}}
+\DoxyCodeLine{00025 \textcolor{preprocessor}{\#define \_IO\_H}}
+\DoxyCodeLine{00026 }
+\DoxyCodeLine{00027 \textcolor{preprocessor}{\#include <stdio.h>}}
+\DoxyCodeLine{00028 \textcolor{preprocessor}{\#include <unistd.h>}}
+\DoxyCodeLine{00029 \textcolor{preprocessor}{\#include <libconfig.h>}}
+\DoxyCodeLine{00030 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{miluph_8h}{miluph.h}}"{}}}
+\DoxyCodeLine{00031 }
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00032}\mbox{\hyperlink{struct_file}{00032}} \textcolor{keyword}{typedef} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_file}{File}} \{}
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00033}\mbox{\hyperlink{struct_file_a348deeccd6613402baa45359b275ea52}{00033}}         \textcolor{keywordtype}{char}    \mbox{\hyperlink{struct_file_a348deeccd6613402baa45359b275ea52}{name}}[256];}
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00034}\mbox{\hyperlink{struct_file_a83f214b7ffa5a30c512396174b039323}{00034}}         FILE    *\mbox{\hyperlink{struct_file_a83f214b7ffa5a30c512396174b039323}{data}};}
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00035}\mbox{\hyperlink{io_8h_a35addb8715fe28f18f6cf3b6a7f7a1b4}{00035}} \} \mbox{\hyperlink{io_8h_a35addb8715fe28f18f6cf3b6a7f7a1b4}{File}};}
+\DoxyCodeLine{00036 }
+\DoxyCodeLine{00037 \textcolor{keyword}{extern} \mbox{\hyperlink{struct_file}{File}} \mbox{\hyperlink{io_8h_a1a0b313619c4109bb31c365d33b84b90}{inputFile}};}
+\DoxyCodeLine{00038 }
+\DoxyCodeLine{00039 \textcolor{keyword}{extern} \textcolor{keywordtype}{int} \mbox{\hyperlink{io_8h_ac2177f153962a874cf3d53742eb227e0}{currentDiskIO}};}
+\DoxyCodeLine{00040 }
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00041}\mbox{\hyperlink{io_8h_a5ec360b371f7ac6d5f2cbba38ba5fdd1}{00041}} \textcolor{keyword}{extern} \textcolor{keywordtype}{void} \mbox{\hyperlink{io_8h_a5ec360b371f7ac6d5f2cbba38ba5fdd1}{loadConfigFromFile}}(\textcolor{keywordtype}{char} *configFile);}
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00042}\mbox{\hyperlink{io_8h_af4180e83b791f21f9663f2017fa159ca}{00042}} \textcolor{keyword}{extern} \textcolor{keywordtype}{void} \mbox{\hyperlink{io_8h_af4180e83b791f21f9663f2017fa159ca}{transferMaterialsToGPU}}();}
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00043}\mbox{\hyperlink{io_8h_a36e1bd004d77e5bfd809373a3bdcbaa1}{00043}} \textcolor{keyword}{extern} \textcolor{keywordtype}{void} \mbox{\hyperlink{io_8h_a36e1bd004d77e5bfd809373a3bdcbaa1}{write\_tree\_to\_file}}(\mbox{\hyperlink{struct_file}{File}} file);}
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00044}\mbox{\hyperlink{io_8h_a07ed6f675c3146b0fddf941b31f7615a}{00044}} \textcolor{keyword}{extern} \textcolor{keywordtype}{void} \mbox{\hyperlink{io_8h_a07ed6f675c3146b0fddf941b31f7615a}{write\_particles\_to\_file}}(\mbox{\hyperlink{struct_file}{File}} file);}
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00045}\mbox{\hyperlink{io_8h_ace12b259be57c81c83b0cb51acc2a9be}{00045}} \textcolor{keyword}{extern} \textcolor{keywordtype}{void} \mbox{\hyperlink{io_8h_ace12b259be57c81c83b0cb51acc2a9be}{read\_particles\_from\_file}}(\mbox{\hyperlink{struct_file}{File}} \mbox{\hyperlink{io_8h_a1a0b313619c4109bb31c365d33b84b90}{inputFile}});}
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00046}\mbox{\hyperlink{io_8h_af467bf4a377d412a9d822824757615b1}{00046}} \textcolor{keyword}{extern} \textcolor{keywordtype}{void} *\mbox{\hyperlink{io_8h_af467bf4a377d412a9d822824757615b1}{write\_timestep}}(\textcolor{keywordtype}{void} *argument);}
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00047}\mbox{\hyperlink{io_8h_a0ded60bcaf7c4f7d1a333657947e0213}{00047}} \textcolor{keyword}{extern} \textcolor{keywordtype}{void} \mbox{\hyperlink{io_8h_a0ded60bcaf7c4f7d1a333657947e0213}{write\_performance}}(\textcolor{keywordtype}{float} *time);}
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00048}\mbox{\hyperlink{io_8h_aa2816e51a2a9737be6ade00f28d8412b}{00048}} \textcolor{keyword}{extern} \textcolor{keywordtype}{void} \mbox{\hyperlink{io_8h_aa2816e51a2a9737be6ade00f28d8412b}{clear\_performance\_file}}();}
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00049}\mbox{\hyperlink{io_8h_aa07a6c422a89a8dca138a979ce31db99}{00049}} \textcolor{keyword}{extern} \textcolor{keywordtype}{void} \mbox{\hyperlink{io_8h_aa07a6c422a89a8dca138a979ce31db99}{write\_fragments\_file}}();}
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00050}\mbox{\hyperlink{io_8h_a8c1d6a36e6868d7d9cf3cf2f4fcdc553}{00050}} \textcolor{keyword}{extern} \textcolor{keywordtype}{void} \mbox{\hyperlink{io_8h_a8c1d6a36e6868d7d9cf3cf2f4fcdc553}{init\_values}}();}
+\DoxyCodeLine{00051 }
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00052}\mbox{\hyperlink{io_8h_a00eed732ff15367664201d10fed171ba}{00052}} \textcolor{keywordtype}{void} \mbox{\hyperlink{io_8h_a00eed732ff15367664201d10fed171ba}{set\_integration\_parameters}}();}
+\DoxyCodeLine{00053 }
+\DoxyCodeLine{\Hypertarget{io_8h_source_l00054}\mbox{\hyperlink{io_8h_aeb07186d62049f2b5568dedb0264bdd2}{00054}} \textcolor{keywordtype}{void} \mbox{\hyperlink{io_8h_aeb07186d62049f2b5568dedb0264bdd2}{copyToHostAndWriteToFile}}(\textcolor{keywordtype}{int} timestep, \textcolor{keywordtype}{int} lastTimestep);}
+\DoxyCodeLine{00055 }
+\DoxyCodeLine{00056 }
+\DoxyCodeLine{00057 }
+\DoxyCodeLine{00058 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* IO\_H\_ */}\textcolor{preprocessor}{}}
+
+\end{DoxyCode}

@@ -61,7 +61,13 @@ enum EquationOfStates {
     EOS_TYPE_LOCALLY_ISOTHERMAL_GAS = 12
 };
 
-
+/**
+ * @brief calculate pressure function
+ *
+ * this will be an awesome documentation
+ *
+ * @return void
+ */
 __global__ void calculatePressure(void);
 
 #endif

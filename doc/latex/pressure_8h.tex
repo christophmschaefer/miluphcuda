@@ -1,0 +1,176 @@
+\hypertarget{pressure_8h}{}\doxysection{pressure.\+h File Reference}
+\label{pressure_8h}\index{pressure.h@{pressure.h}}
+{\ttfamily \#include \char`\"{}timeintegration.\+h\char`\"{}}\newline
+Include dependency graph for pressure.\+h\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{pressure_8h__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6c}{Equation\+Of\+States}} \{ \newline
+\mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca44f285863d20ce9aac5e81298e497ff1}{E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+G\+N\+O\+RE}} = -\/1, 
+\mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caff17993e00b44a893c5aa827f4d8b54c}{E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+P\+O\+L\+Y\+T\+R\+O\+P\+I\+C\+\_\+\+G\+AS}} = 0, 
+\mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca118d6f358d76756291d3e8e7a4e4d846}{E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+U\+R\+N\+A\+G\+H\+AN}} = 1, 
+\mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caa4bc012661e6a0e61453f121490dc877}{E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+T\+I\+L\+L\+O\+T\+S\+ON}} = 2, 
+\newline
+\mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca91836d27e4a5f1c4e02931e04e12ab57}{E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+S\+O\+T\+H\+E\+R\+M\+A\+L\+\_\+\+G\+AS}} = 3, 
+\mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca1d24356d9cf504adb169d6d2d19be4c4}{E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+R\+E\+G\+O\+L\+I\+TH}} = 4, 
+\mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6cafb4a48b88da8e592a6c33f0719b11043}{E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+J\+U\+T\+ZI}} = 5, 
+\mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6cabdb5a647eb160fb997b5bb67634c12bd}{E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+J\+U\+T\+Z\+I\+\_\+\+M\+U\+R\+N\+A\+G\+H\+AN}} = 6, 
+\newline
+\mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caa74700cb522aebd8bab3e1801e28e640}{E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+A\+N\+E\+OS}} = 7, 
+\mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca0bd5ccc68d17281bd3ad5dbc0b641922}{E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+V\+I\+S\+C\+O\+U\+S\+\_\+\+R\+E\+G\+O\+L\+I\+TH}} = 8, 
+\mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca702d27dfbcdb45b468403a544448b14c}{E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+D\+E\+A\+L\+\_\+\+G\+AS}} = 9, 
+\mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caf617258af40bc5ddf2a57ac75841af86}{E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+S\+I\+R\+O\+NO}} = 10, 
+\newline
+\mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca1ea345a5d0ef09b5e620d851900d54a9}{E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+E\+P\+S\+I\+L\+ON}} = 11, 
+\mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca2603e214a79450f54ff467b62ee8c14c}{E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+L\+O\+C\+A\+L\+L\+Y\+\_\+\+I\+S\+O\+T\+H\+E\+R\+M\+A\+L\+\_\+\+G\+AS}} = 12
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{pressure_8h_a6cbd2b881e1cb8827d9bba1a54f0aa44}{calculate\+Pressure}} (void)
+\begin{DoxyCompactList}\small\item\em calculate pressure function \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6c}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6c}} 
+\index{pressure.h@{pressure.h}!EquationOfStates@{EquationOfStates}}
+\index{EquationOfStates@{EquationOfStates}!pressure.h@{pressure.h}}
+\doxysubsubsection{\texorpdfstring{EquationOfStates}{EquationOfStates}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6c}{Equation\+Of\+States}}}
+
+\begin{DoxyAuthor}{Author}
+Christoph Schaefer \href{mailto:cm.schaefer@gmail.com}{\texttt{ cm.\+schaefer@gmail.\+com}}
+\end{DoxyAuthor}
+\hypertarget{xsph_8h_LICENSE}{}\doxysubsection{L\+I\+C\+E\+N\+SE}\label{xsph_8h_LICENSE}
+Copyright (c) 2019 Christoph Schaefer
+
+This file is part of miluphcuda.
+
+miluphcuda is free software\+: you can redistribute it and/or modify it under the terms of the G\+NU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+miluphcuda is distributed in the hope that it will be useful, but W\+I\+T\+H\+O\+UT A\+NY W\+A\+R\+R\+A\+N\+TY; without even the implied warranty of M\+E\+R\+C\+H\+A\+N\+T\+A\+B\+I\+L\+I\+TY or F\+I\+T\+N\+E\+SS F\+OR A P\+A\+R\+T\+I\+C\+U\+L\+AR P\+U\+R\+P\+O\+SE. See the G\+NU General Public License for more details.
+
+You should have received a copy of the G\+NU General Public License along with miluphcuda. If not, see \href{http://www.gnu.org/licenses/}{\texttt{ http\+://www.\+gnu.\+org/licenses/}}. \begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EOS\_TYPE\_IGNORE@{EOS\_TYPE\_IGNORE}!pressure.h@{pressure.h}}\index{pressure.h@{pressure.h}!EOS\_TYPE\_IGNORE@{EOS\_TYPE\_IGNORE}}}\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca44f285863d20ce9aac5e81298e497ff1}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca44f285863d20ce9aac5e81298e497ff1}} 
+E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+G\+N\+O\+RE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EOS\_TYPE\_POLYTROPIC\_GAS@{EOS\_TYPE\_POLYTROPIC\_GAS}!pressure.h@{pressure.h}}\index{pressure.h@{pressure.h}!EOS\_TYPE\_POLYTROPIC\_GAS@{EOS\_TYPE\_POLYTROPIC\_GAS}}}\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caff17993e00b44a893c5aa827f4d8b54c}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caff17993e00b44a893c5aa827f4d8b54c}} 
+E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+P\+O\+L\+Y\+T\+R\+O\+P\+I\+C\+\_\+\+G\+AS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EOS\_TYPE\_MURNAGHAN@{EOS\_TYPE\_MURNAGHAN}!pressure.h@{pressure.h}}\index{pressure.h@{pressure.h}!EOS\_TYPE\_MURNAGHAN@{EOS\_TYPE\_MURNAGHAN}}}\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca118d6f358d76756291d3e8e7a4e4d846}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca118d6f358d76756291d3e8e7a4e4d846}} 
+E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+M\+U\+R\+N\+A\+G\+H\+AN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EOS\_TYPE\_TILLOTSON@{EOS\_TYPE\_TILLOTSON}!pressure.h@{pressure.h}}\index{pressure.h@{pressure.h}!EOS\_TYPE\_TILLOTSON@{EOS\_TYPE\_TILLOTSON}}}\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caa4bc012661e6a0e61453f121490dc877}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caa4bc012661e6a0e61453f121490dc877}} 
+E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+T\+I\+L\+L\+O\+T\+S\+ON&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EOS\_TYPE\_ISOTHERMAL\_GAS@{EOS\_TYPE\_ISOTHERMAL\_GAS}!pressure.h@{pressure.h}}\index{pressure.h@{pressure.h}!EOS\_TYPE\_ISOTHERMAL\_GAS@{EOS\_TYPE\_ISOTHERMAL\_GAS}}}\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca91836d27e4a5f1c4e02931e04e12ab57}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca91836d27e4a5f1c4e02931e04e12ab57}} 
+E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+S\+O\+T\+H\+E\+R\+M\+A\+L\+\_\+\+G\+AS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EOS\_TYPE\_REGOLITH@{EOS\_TYPE\_REGOLITH}!pressure.h@{pressure.h}}\index{pressure.h@{pressure.h}!EOS\_TYPE\_REGOLITH@{EOS\_TYPE\_REGOLITH}}}\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca1d24356d9cf504adb169d6d2d19be4c4}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca1d24356d9cf504adb169d6d2d19be4c4}} 
+E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+R\+E\+G\+O\+L\+I\+TH&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EOS\_TYPE\_JUTZI@{EOS\_TYPE\_JUTZI}!pressure.h@{pressure.h}}\index{pressure.h@{pressure.h}!EOS\_TYPE\_JUTZI@{EOS\_TYPE\_JUTZI}}}\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6cafb4a48b88da8e592a6c33f0719b11043}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6cafb4a48b88da8e592a6c33f0719b11043}} 
+E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+J\+U\+T\+ZI&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EOS\_TYPE\_JUTZI\_MURNAGHAN@{EOS\_TYPE\_JUTZI\_MURNAGHAN}!pressure.h@{pressure.h}}\index{pressure.h@{pressure.h}!EOS\_TYPE\_JUTZI\_MURNAGHAN@{EOS\_TYPE\_JUTZI\_MURNAGHAN}}}\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6cabdb5a647eb160fb997b5bb67634c12bd}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6cabdb5a647eb160fb997b5bb67634c12bd}} 
+E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+J\+U\+T\+Z\+I\+\_\+\+M\+U\+R\+N\+A\+G\+H\+AN&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EOS\_TYPE\_ANEOS@{EOS\_TYPE\_ANEOS}!pressure.h@{pressure.h}}\index{pressure.h@{pressure.h}!EOS\_TYPE\_ANEOS@{EOS\_TYPE\_ANEOS}}}\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caa74700cb522aebd8bab3e1801e28e640}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caa74700cb522aebd8bab3e1801e28e640}} 
+E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+A\+N\+E\+OS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EOS\_TYPE\_VISCOUS\_REGOLITH@{EOS\_TYPE\_VISCOUS\_REGOLITH}!pressure.h@{pressure.h}}\index{pressure.h@{pressure.h}!EOS\_TYPE\_VISCOUS\_REGOLITH@{EOS\_TYPE\_VISCOUS\_REGOLITH}}}\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca0bd5ccc68d17281bd3ad5dbc0b641922}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca0bd5ccc68d17281bd3ad5dbc0b641922}} 
+E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+V\+I\+S\+C\+O\+U\+S\+\_\+\+R\+E\+G\+O\+L\+I\+TH&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EOS\_TYPE\_IDEAL\_GAS@{EOS\_TYPE\_IDEAL\_GAS}!pressure.h@{pressure.h}}\index{pressure.h@{pressure.h}!EOS\_TYPE\_IDEAL\_GAS@{EOS\_TYPE\_IDEAL\_GAS}}}\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca702d27dfbcdb45b468403a544448b14c}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca702d27dfbcdb45b468403a544448b14c}} 
+E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+I\+D\+E\+A\+L\+\_\+\+G\+AS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EOS\_TYPE\_SIRONO@{EOS\_TYPE\_SIRONO}!pressure.h@{pressure.h}}\index{pressure.h@{pressure.h}!EOS\_TYPE\_SIRONO@{EOS\_TYPE\_SIRONO}}}\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caf617258af40bc5ddf2a57ac75841af86}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caf617258af40bc5ddf2a57ac75841af86}} 
+E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+S\+I\+R\+O\+NO&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EOS\_TYPE\_EPSILON@{EOS\_TYPE\_EPSILON}!pressure.h@{pressure.h}}\index{pressure.h@{pressure.h}!EOS\_TYPE\_EPSILON@{EOS\_TYPE\_EPSILON}}}\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca1ea345a5d0ef09b5e620d851900d54a9}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca1ea345a5d0ef09b5e620d851900d54a9}} 
+E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+E\+P\+S\+I\+L\+ON&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EOS\_TYPE\_LOCALLY\_ISOTHERMAL\_GAS@{EOS\_TYPE\_LOCALLY\_ISOTHERMAL\_GAS}!pressure.h@{pressure.h}}\index{pressure.h@{pressure.h}!EOS\_TYPE\_LOCALLY\_ISOTHERMAL\_GAS@{EOS\_TYPE\_LOCALLY\_ISOTHERMAL\_GAS}}}\mbox{\Hypertarget{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca2603e214a79450f54ff467b62ee8c14c}\label{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca2603e214a79450f54ff467b62ee8c14c}} 
+E\+O\+S\+\_\+\+T\+Y\+P\+E\+\_\+\+L\+O\+C\+A\+L\+L\+Y\+\_\+\+I\+S\+O\+T\+H\+E\+R\+M\+A\+L\+\_\+\+G\+AS&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line \mbox{\hyperlink{pressure_8h_source_l00030}{30}} of file \mbox{\hyperlink{pressure_8h_source}{pressure.\+h}}.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00030                       \{}
+\DoxyCodeLine{00031     \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca44f285863d20ce9aac5e81298e497ff1}{EOS\_TYPE\_IGNORE}} = -\/1,}
+\DoxyCodeLine{00032 \textcolor{comment}{// polytropic EOS for gas, needs polytropic\_K and polytropic\_gamma in material.cfg file}}
+\DoxyCodeLine{00033     \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caff17993e00b44a893c5aa827f4d8b54c}{EOS\_TYPE\_POLYTROPIC\_GAS}} = 0,}
+\DoxyCodeLine{00034 \textcolor{comment}{// Murnaghan EOS for solid bodies, see Melosh "{}Impact Cratering"{} for reference}}
+\DoxyCodeLine{00035 \textcolor{comment}{// needs bulk\_modulus, rho\_0 and n in material.cfg}}
+\DoxyCodeLine{00036     \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca118d6f358d76756291d3e8e7a4e4d846}{EOS\_TYPE\_MURNAGHAN}} = 1,}
+\DoxyCodeLine{00037 \textcolor{comment}{// Tillotson EOS for solid bodies, see Melosh "{}Impact Cratering"{} for reference}}
+\DoxyCodeLine{00038 \textcolor{comment}{// needs alot of parameters in material.cfg:}}
+\DoxyCodeLine{00039 \textcolor{comment}{// yield\_stress till\_rho\_0 till\_A till\_B till\_E\_0 till\_E\_iv till\_E\_cv till\_a till\_b till\_alpha till\_beta}}
+\DoxyCodeLine{00040 \textcolor{comment}{// bulk modulus and shear modulus are needed to calculate the sound speed and the crack growth speed}}
+\DoxyCodeLine{00041     \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caa4bc012661e6a0e61453f121490dc877}{EOS\_TYPE\_TILLOTSON}} = 2,}
+\DoxyCodeLine{00042 \textcolor{comment}{// this is pure molecular hydrogen at 10 K}}
+\DoxyCodeLine{00043     \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca91836d27e4a5f1c4e02931e04e12ab57}{EOS\_TYPE\_ISOTHERMAL\_GAS}} = 3,}
+\DoxyCodeLine{00044 \textcolor{comment}{// The Bui et al. 2008 soil model}}
+\DoxyCodeLine{00045     \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca1d24356d9cf504adb169d6d2d19be4c4}{EOS\_TYPE\_REGOLITH}} = 4,}
+\DoxyCodeLine{00046 \textcolor{comment}{// Tillotson EOS with p-\/alpha model by Jutzi et al.}}
+\DoxyCodeLine{00047     \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6cafb4a48b88da8e592a6c33f0719b11043}{EOS\_TYPE\_JUTZI}} = 5,}
+\DoxyCodeLine{00048 \textcolor{comment}{// Murnaghan EOS with p-\/alpha model by Jutzi et al.}}
+\DoxyCodeLine{00049     \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6cabdb5a647eb160fb997b5bb67634c12bd}{EOS\_TYPE\_JUTZI\_MURNAGHAN}} = 6,}
+\DoxyCodeLine{00050 \textcolor{comment}{// ANEOS}}
+\DoxyCodeLine{00051     \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caa74700cb522aebd8bab3e1801e28e640}{EOS\_TYPE\_ANEOS}} = 7,}
+\DoxyCodeLine{00052 \textcolor{comment}{// describe regolith as a viscous material -\/> EXPERIMENTAL DO NOT USE}}
+\DoxyCodeLine{00053     \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca0bd5ccc68d17281bd3ad5dbc0b641922}{EOS\_TYPE\_VISCOUS\_REGOLITH}} = 8,}
+\DoxyCodeLine{00054 \textcolor{comment}{// ideal gas equation, set polytropic\_gamma in material.cfg}}
+\DoxyCodeLine{00055     \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca702d27dfbcdb45b468403a544448b14c}{EOS\_TYPE\_IDEAL\_GAS}} = 9,}
+\DoxyCodeLine{00056 \textcolor{comment}{// Sirono EOS modifed by Geretshauser in 2009/10}}
+\DoxyCodeLine{00057     \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6caf617258af40bc5ddf2a57ac75841af86}{EOS\_TYPE\_SIRONO}} = 10,}
+\DoxyCodeLine{00058 \textcolor{comment}{// Tillotson EOS with espilon-\/alpha model by Wuennemann Collins ..}}
+\DoxyCodeLine{00059     \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca1ea345a5d0ef09b5e620d851900d54a9}{EOS\_TYPE\_EPSILON}} = 11,}
+\DoxyCodeLine{00060 \textcolor{comment}{// locally isothermal gas: p = c\_s**2 \(\backslash\)times rho}}
+\DoxyCodeLine{00061     \mbox{\hyperlink{pressure_8h_a5a8162808ef47c46eaf46274eab03e6ca2603e214a79450f54ff467b62ee8c14c}{EOS\_TYPE\_LOCALLY\_ISOTHERMAL\_GAS}} = 12}
+\DoxyCodeLine{00062 \};}
+
+\end{DoxyCode}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{pressure_8h_a6cbd2b881e1cb8827d9bba1a54f0aa44}\label{pressure_8h_a6cbd2b881e1cb8827d9bba1a54f0aa44}} 
+\index{pressure.h@{pressure.h}!calculatePressure@{calculatePressure}}
+\index{calculatePressure@{calculatePressure}!pressure.h@{pressure.h}}
+\doxysubsubsection{\texorpdfstring{calculatePressure()}{calculatePressure()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void calculate\+Pressure (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+
+
+calculate pressure function 
+
+this will be an awesome documentation
+
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}

@@ -1,0 +1,60 @@
+\hypertarget{viscosity_8h}{}\doxysection{viscosity.\+h File Reference}
+\label{viscosity_8h}\index{viscosity.h@{viscosity.h}}
+{\ttfamily \#include \char`\"{}timeintegration.\+h\char`\"{}}\newline
+Include dependency graph for viscosity.\+h\+:\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{viscosity_8h__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{viscosity_8h_a2bfa27ba72d5dedf75a624cd871a0346}{betaviscosity}} (int $\ast$\mbox{\hyperlink{miluph_8h_a6452a9acca23effecb6f5a6e0cd332ec}{interactions}})
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{viscosity_8h_a753caadd06df4fc17c916cbb55029193}{calculate\+\_\+shear\+\_\+stress\+\_\+tensor}} (int $\ast$\mbox{\hyperlink{miluph_8h_a6452a9acca23effecb6f5a6e0cd332ec}{interactions}})
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ int \mbox{\hyperlink{viscosity_8h_a09dfbb5ef3cf13f091a4850f1c6e512e}{sign}} (double x)
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ void \mbox{\hyperlink{viscosity_8h_a2281abce50ff1f2abed346bd1ac2c264}{multiply}} (double mat1\mbox{[}$\,$\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}, double mat2\mbox{[}$\,$\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}, double res\mbox{[}$\,$\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{viscosity_8h_a2bfa27ba72d5dedf75a624cd871a0346}\label{viscosity_8h_a2bfa27ba72d5dedf75a624cd871a0346}} 
+\index{viscosity.h@{viscosity.h}!betaviscosity@{betaviscosity}}
+\index{betaviscosity@{betaviscosity}!viscosity.h@{viscosity.h}}
+\doxysubsubsection{\texorpdfstring{betaviscosity()}{betaviscosity()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void betaviscosity (\begin{DoxyParamCaption}\item[{int $\ast$}]{interactions }\end{DoxyParamCaption})}
+
+\begin{DoxyAuthor}{Author}
+Christoph Schaefer \href{mailto:cm.schaefer@gmail.com}{\texttt{ cm.\+schaefer@gmail.\+com}}
+\end{DoxyAuthor}
+\hypertarget{xsph_8h_LICENSE}{}\doxysubsection{L\+I\+C\+E\+N\+SE}\label{xsph_8h_LICENSE}
+Copyright (c) 2019 Christoph Schaefer
+
+This file is part of miluphcuda.
+
+miluphcuda is free software\+: you can redistribute it and/or modify it under the terms of the G\+NU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+miluphcuda is distributed in the hope that it will be useful, but W\+I\+T\+H\+O\+UT A\+NY W\+A\+R\+R\+A\+N\+TY; without even the implied warranty of M\+E\+R\+C\+H\+A\+N\+T\+A\+B\+I\+L\+I\+TY or F\+I\+T\+N\+E\+SS F\+OR A P\+A\+R\+T\+I\+C\+U\+L\+AR P\+U\+R\+P\+O\+SE. See the G\+NU General Public License for more details.
+
+You should have received a copy of the G\+NU General Public License along with miluphcuda. If not, see \href{http://www.gnu.org/licenses/}{\texttt{ http\+://www.\+gnu.\+org/licenses/}}. \mbox{\Hypertarget{viscosity_8h_a753caadd06df4fc17c916cbb55029193}\label{viscosity_8h_a753caadd06df4fc17c916cbb55029193}} 
+\index{viscosity.h@{viscosity.h}!calculate\_shear\_stress\_tensor@{calculate\_shear\_stress\_tensor}}
+\index{calculate\_shear\_stress\_tensor@{calculate\_shear\_stress\_tensor}!viscosity.h@{viscosity.h}}
+\doxysubsubsection{\texorpdfstring{calculate\_shear\_stress\_tensor()}{calculate\_shear\_stress\_tensor()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void calculate\+\_\+shear\+\_\+stress\+\_\+tensor (\begin{DoxyParamCaption}\item[{int $\ast$}]{interactions }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{viscosity_8h_a2281abce50ff1f2abed346bd1ac2c264}\label{viscosity_8h_a2281abce50ff1f2abed346bd1ac2c264}} 
+\index{viscosity.h@{viscosity.h}!multiply@{multiply}}
+\index{multiply@{multiply}!viscosity.h@{viscosity.h}}
+\doxysubsubsection{\texorpdfstring{multiply()}{multiply()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ void multiply (\begin{DoxyParamCaption}\item[{double}]{mat1\mbox{[}$\,$\mbox{]}\mbox{[}\+D\+I\+M\mbox{]},  }\item[{double}]{mat2\mbox{[}$\,$\mbox{]}\mbox{[}\+D\+I\+M\mbox{]},  }\item[{double}]{res\mbox{[}$\,$\mbox{]}\mbox{[}\+D\+I\+M\mbox{]} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{viscosity_8h_a09dfbb5ef3cf13f091a4850f1c6e512e}\label{viscosity_8h_a09dfbb5ef3cf13f091a4850f1c6e512e}} 
+\index{viscosity.h@{viscosity.h}!sign@{sign}}
+\index{sign@{sign}!viscosity.h@{viscosity.h}}
+\doxysubsubsection{\texorpdfstring{sign()}{sign()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ int sign (\begin{DoxyParamCaption}\item[{double}]{x }\end{DoxyParamCaption})}
+

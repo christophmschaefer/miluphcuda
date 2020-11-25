@@ -1,0 +1,60 @@
+\hypertarget{checks_8h_source}{}\doxysection{checks.\+h}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 }
+\DoxyCodeLine{00023 \textcolor{preprocessor}{\#ifndef \_CHECKS\_H}}
+\DoxyCodeLine{00024 \textcolor{preprocessor}{\#define \_CHECKS\_H}}
+\DoxyCodeLine{00025 \textcolor{preprocessor}{\#if MOHR\_COULOMB\_PLASTICITY \&\& DRUCKER\_PRAGER\_PLASTICITY}}
+\DoxyCodeLine{00026 \textcolor{preprocessor}{\#error choose only one of the three available plastic flow rules}}
+\DoxyCodeLine{00027 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00028 \textcolor{preprocessor}{\#if MOHR\_COULOMB\_PLASTICITY \&\& COLLINS\_PRESSURE\_DEPENDENT\_YIELD\_STRENGTH}}
+\DoxyCodeLine{00029 \textcolor{preprocessor}{\#error choose only one of the three available plastic flow rules}}
+\DoxyCodeLine{00030 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00031 \textcolor{preprocessor}{\#if DRUCKER\_PRAGER\_PLASTICITY \&\& COLLINS\_PRESSURE\_DEPENDENT\_YIELD\_STRENGTH}}
+\DoxyCodeLine{00032 \textcolor{preprocessor}{\#error choose only one of the three available plastic flow rules}}
+\DoxyCodeLine{00033 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00034 }
+\DoxyCodeLine{00035 \textcolor{preprocessor}{\#if USE\_BSPLINE\_KERNEL \&\& USE\_WENDLAND\_KERNEL}}
+\DoxyCodeLine{00036 \textcolor{preprocessor}{\#error specifiy only one kernel}}
+\DoxyCodeLine{00037 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00038 }
+\DoxyCodeLine{00039 \textcolor{preprocessor}{\#if VISCOUS\_REGOLITH \&\& !SOLID}}
+\DoxyCodeLine{00040 \textcolor{preprocessor}{\#error turn SOLID on when using VISCOUS\_REGOLITH}}
+\DoxyCodeLine{00041 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00042 }
+\DoxyCodeLine{00043 \textcolor{preprocessor}{\#if VON\_MISES\_PLASTICITY \&\& !SOLID}}
+\DoxyCodeLine{00044 \textcolor{preprocessor}{\#error turn SOLID on when using VON\_MISES\_PLASTICITY}}
+\DoxyCodeLine{00045 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00046 }
+\DoxyCodeLine{00047 \textcolor{preprocessor}{\#if JC\_PLASTICITY \&\& !SOLID}}
+\DoxyCodeLine{00048 \textcolor{preprocessor}{\#error turn SOLID on when using JC\_PLASTICITY}}
+\DoxyCodeLine{00049 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00050 }
+\DoxyCodeLine{00051 \textcolor{preprocessor}{\#if FRAGMENTATION \&\& !SOLID}}
+\DoxyCodeLine{00052 \textcolor{preprocessor}{\#error turn SOLID on when using FRAGMENTATION}}
+\DoxyCodeLine{00053 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00054 }
+\DoxyCodeLine{00055 }
+\DoxyCodeLine{00056 \textcolor{preprocessor}{\#if SYMMETRIC\_STRESSTENSOR \&\& !SOLID}}
+\DoxyCodeLine{00057 \textcolor{preprocessor}{\#error turn SOLID on when using SYMMETRIC\_STRESSTENSOR}}
+\DoxyCodeLine{00058 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00059 }
+\DoxyCodeLine{00060 \textcolor{preprocessor}{\#if COHESION\_FOR\_DAMAGED\_MATERIAL \&\& !FRAGMENTATION}}
+\DoxyCodeLine{00061 \textcolor{preprocessor}{\# error turn on FRAGMENTATION when using COHESION\_FOR\_DAMAGED\_MATERIAL}}
+\DoxyCodeLine{00062 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00063 }
+\DoxyCodeLine{00064 }
+\DoxyCodeLine{00065 \textcolor{preprocessor}{\#if ARTIFICIAL\_STRESS \&\& !SOLID}}
+\DoxyCodeLine{00066 \textcolor{preprocessor}{\# error turn off ARTIFICIAL\_STRESS when running pure hydro}}
+\DoxyCodeLine{00067 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00068 }
+\DoxyCodeLine{00069 \textcolor{preprocessor}{\#if VARIABLE\_SML}}
+\DoxyCodeLine{00070 \textcolor{preprocessor}{\# if FIXED\_NOI \&\& INTEGRATE\_SML}}
+\DoxyCodeLine{00071 \textcolor{preprocessor}{\#  error use VARIABLE\_SML only with FIXED\_NOI or INTEGRATE\_SML}}
+\DoxyCodeLine{00072 \textcolor{preprocessor}{\# endif}}
+\DoxyCodeLine{00073 \textcolor{preprocessor}{\#endif}}
+\DoxyCodeLine{00074 }
+\DoxyCodeLine{00075 }
+\DoxyCodeLine{00076 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

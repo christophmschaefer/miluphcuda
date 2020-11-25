@@ -1,0 +1,65 @@
+\hypertarget{velocity_8cu_source}{}\doxysection{velocity.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 \#include "{}velocity.h"{}}
+\DoxyCodeLine{00024 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00025 \#include "{}timeintegration.h"{}}
+\DoxyCodeLine{00026 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00027 \#include "{}pressure.h"{}}
+\DoxyCodeLine{00028 }
+\DoxyCodeLine{00029 }
+\DoxyCodeLine{00030 \_\_global\_\_ void setlocationchanges(int *interactions) }
+\DoxyCodeLine{00031 \{}
+\DoxyCodeLine{00032 }
+\DoxyCodeLine{00033     register int i, inc;}
+\DoxyCodeLine{00034     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00035     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00036         if (EOS\_TYPE\_IGNORE == matEOS[p\_rhs.materialId[i]] || p\_rhs.materialId[i] == EOS\_TYPE\_IGNORE) \{}
+\DoxyCodeLine{00037                 continue;}
+\DoxyCodeLine{00038         \}}
+\DoxyCodeLine{00039         p.dxdt[i] = p.vx[i];}
+\DoxyCodeLine{00040 \#if DIM > 1}
+\DoxyCodeLine{00041         p.dydt[i] = p.vy[i];}
+\DoxyCodeLine{00042 \#endif}
+\DoxyCodeLine{00043 \#if XSPH}
+\DoxyCodeLine{00044         p.dxdt[i] += 0.5 * p.xsphvx[i];}
+\DoxyCodeLine{00045 \#if DIM > 1}
+\DoxyCodeLine{00046         p.dydt[i] += 0.5 * p.xsphvy[i];}
+\DoxyCodeLine{00047 \#endif}
+\DoxyCodeLine{00048 \#endif}
+\DoxyCodeLine{00049 \#if DIM == 3}
+\DoxyCodeLine{00050         p.dzdt[i] = p.vz[i];}
+\DoxyCodeLine{00051 \#if XSPH}
+\DoxyCodeLine{00052         p.dzdt[i] += 0.5 * p.xsphvz[i];}
+\DoxyCodeLine{00053 \#endif}
+\DoxyCodeLine{00054 \#endif}
+\DoxyCodeLine{00055     \}}
+\DoxyCodeLine{00056 \}}
+\DoxyCodeLine{00057 }
+\DoxyCodeLine{00058 }
+\DoxyCodeLine{00059 }
+\DoxyCodeLine{00060 }
+
+\end{DoxyCode}

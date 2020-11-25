@@ -1,0 +1,1068 @@
+\hypertarget{tree_8cu_source}{}\doxysection{tree.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com and Thomas I. Maindl}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 \#include "{}tree.h"{}}
+\DoxyCodeLine{00025 \#include "{}timeintegration.h"{}}
+\DoxyCodeLine{00026 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00027 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00028 \#include "{}pressure.h"{}}
+\DoxyCodeLine{00029 }
+\DoxyCodeLine{00030 }
+\DoxyCodeLine{00031 // lucky number 3}
+\DoxyCodeLine{00032 \#define MAX\_VARIABLE\_SML\_ITERATIONS 2}
+\DoxyCodeLine{00033 }
+\DoxyCodeLine{00034 }
+\DoxyCodeLine{00035 extern \_\_device\_\_ double dt;}
+\DoxyCodeLine{00036 extern \_\_device\_\_ volatile double radius;}
+\DoxyCodeLine{00037 extern \_\_device\_\_ volatile int maxNodeIndex;}
+\DoxyCodeLine{00038 extern \_\_device\_\_ int blockCount;}
+\DoxyCodeLine{00039 extern \_\_device\_\_ double minx, maxx;}
+\DoxyCodeLine{00040 extern \_\_device\_\_ double miny, maxy;}
+\DoxyCodeLine{00041 \#if DIM == 3}
+\DoxyCodeLine{00042 extern \_\_device\_\_ double minz, maxz;}
+\DoxyCodeLine{00043 \#endif}
+\DoxyCodeLine{00044 extern \_\_device\_\_ int treeMaxDepth;}
+\DoxyCodeLine{00045 extern \_\_device\_\_ int movingparticles;}
+\DoxyCodeLine{00046 extern \_\_device\_\_ int reset\_movingparticles;}
+\DoxyCodeLine{00047 extern \_\_constant\_\_ volatile int *childList;}
+\DoxyCodeLine{00048 }
+\DoxyCodeLine{00049 }
+\DoxyCodeLine{00050 }
+\DoxyCodeLine{00051 \_\_device\_\_ int childListIndex(int nodeIndex, int childNumber) \{}
+\DoxyCodeLine{00052     return (nodeIndex -\/ numParticles) * numChildren + childNumber;}
+\DoxyCodeLine{00053 \}}
+\DoxyCodeLine{00054 }
+\DoxyCodeLine{00055 }
+\DoxyCodeLine{00056 \_\_global\_\_ void setEmptyMassForInnerNodes(void) \{}
+\DoxyCodeLine{00057     int k;}
+\DoxyCodeLine{00058     for(k = maxNodeIndex + (threadIdx.x + blockIdx.x * blockDim.x); k < numNodes; k += blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00059         p.m[k] = EMPTY;}
+\DoxyCodeLine{00060     \}}
+\DoxyCodeLine{00061 \}}
+\DoxyCodeLine{00062 }
+\DoxyCodeLine{00063 }
+\DoxyCodeLine{00064 }
+\DoxyCodeLine{00065 }
+\DoxyCodeLine{00066 \_\_global\_\_ void buildTree()}
+\DoxyCodeLine{00067 \{}
+\DoxyCodeLine{00068         register int inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00069         register int i = threadIdx.x + blockIdx.x * blockDim.x;}
+\DoxyCodeLine{00070         register int k;}
+\DoxyCodeLine{00071         register int childIndex, child;}
+\DoxyCodeLine{00072         register int lockedIndex;}
+\DoxyCodeLine{00073         register double x;}
+\DoxyCodeLine{00074 \#if DIM > 1}
+\DoxyCodeLine{00075     register double y;}
+\DoxyCodeLine{00076 \#endif}
+\DoxyCodeLine{00077         register double r;}
+\DoxyCodeLine{00078         register double dx;}
+\DoxyCodeLine{00079 \#if DIM > 1}
+\DoxyCodeLine{00080     register double dy;}
+\DoxyCodeLine{00081 \#endif}
+\DoxyCodeLine{00082         register double rootRadius = radius;}
+\DoxyCodeLine{00083         register double rootX = p.x[numNodes-\/1];}
+\DoxyCodeLine{00084 \#if DIM > 1}
+\DoxyCodeLine{00085         register double rootY = p.y[numNodes-\/1];}
+\DoxyCodeLine{00086 \#endif}
+\DoxyCodeLine{00087     register int depth = 0;}
+\DoxyCodeLine{00088         register int isNewParticle = TRUE;}
+\DoxyCodeLine{00089         register int currentNodeIndex;}
+\DoxyCodeLine{00090         register int newNodeIndex;}
+\DoxyCodeLine{00091         register int subtreeNodeIndex;}
+\DoxyCodeLine{00092 \#if DIM == 3}
+\DoxyCodeLine{00093         register double z;}
+\DoxyCodeLine{00094         register double dz;}
+\DoxyCodeLine{00095         register double rootZ = p.z[numNodes-\/1];}
+\DoxyCodeLine{00096 \#endif}
+\DoxyCodeLine{00097 }
+\DoxyCodeLine{00098     volatile double *px, *pm;}
+\DoxyCodeLine{00099 \#if DIM > 1}
+\DoxyCodeLine{00100     volatile double *py;}
+\DoxyCodeLine{00101 \#if DIM == 3}
+\DoxyCodeLine{00102     volatile double *pz;}
+\DoxyCodeLine{00103 \#endif}
+\DoxyCodeLine{00104 \#endif}
+\DoxyCodeLine{00105 }
+\DoxyCodeLine{00106     px  = p.x;}
+\DoxyCodeLine{00107     pm = p.m;}
+\DoxyCodeLine{00108 \#if DIM > 1}
+\DoxyCodeLine{00109     py = p.y;}
+\DoxyCodeLine{00110 \#if DIM == 3}
+\DoxyCodeLine{00111     pz = p.z;}
+\DoxyCodeLine{00112 \#endif}
+\DoxyCodeLine{00113 \#endif}
+\DoxyCodeLine{00114 }
+\DoxyCodeLine{00115         while (i < numParticles) \{}
+\DoxyCodeLine{00116         depth = 0;}
+\DoxyCodeLine{00117 }
+\DoxyCodeLine{00118                 if (isNewParticle) \{}
+\DoxyCodeLine{00119                         isNewParticle = FALSE;}
+\DoxyCodeLine{00120                         // cache particle data}
+\DoxyCodeLine{00121                         x = px[i];}
+\DoxyCodeLine{00122             p.ax[i] = 0.0;}
+\DoxyCodeLine{00123 \#if DIM > 1}
+\DoxyCodeLine{00124                         y = py[i];}
+\DoxyCodeLine{00125             p.ay[i] = 0.0;}
+\DoxyCodeLine{00126 \#if DIM == 3}
+\DoxyCodeLine{00127                         z = pz[i];}
+\DoxyCodeLine{00128             p.az[i] = 0.0;}
+\DoxyCodeLine{00129 \#endif}
+\DoxyCodeLine{00130 \#endif}
+\DoxyCodeLine{00131 }
+\DoxyCodeLine{00132                         // start at root}
+\DoxyCodeLine{00133                         currentNodeIndex = numNodes-\/1;}
+\DoxyCodeLine{00134                         r = rootRadius;}
+\DoxyCodeLine{00135                         childIndex = 0;}
+\DoxyCodeLine{00136                         if (x > rootX) childIndex = 1;}
+\DoxyCodeLine{00137 \#if DIM > 1}
+\DoxyCodeLine{00138                         if (y > rootY) childIndex += 2;}
+\DoxyCodeLine{00139 \#if DIM == 3}
+\DoxyCodeLine{00140                         if (z > rootZ) childIndex += 4;}
+\DoxyCodeLine{00141 \#endif}
+\DoxyCodeLine{00142 \#endif}
+\DoxyCodeLine{00143                 \}}
+\DoxyCodeLine{00144 }
+\DoxyCodeLine{00145                 // follow path to leaf}
+\DoxyCodeLine{00146                 child = childList[childListIndex(currentNodeIndex, childIndex)];}
+\DoxyCodeLine{00147         /* leaves are 0 ... numParticles */}
+\DoxyCodeLine{00148                 while (child >= numParticles) \{}
+\DoxyCodeLine{00149                         currentNodeIndex = child;}
+\DoxyCodeLine{00150             depth++;}
+\DoxyCodeLine{00151                         r *= 0.5;}
+\DoxyCodeLine{00152                         // which child?}
+\DoxyCodeLine{00153                         childIndex = 0;}
+\DoxyCodeLine{00154                         if (x > px[currentNodeIndex]) childIndex = 1;}
+\DoxyCodeLine{00155 \#if DIM > 1}
+\DoxyCodeLine{00156                         if (y > py[currentNodeIndex]) childIndex += 2;}
+\DoxyCodeLine{00157 \#if DIM > 2}
+\DoxyCodeLine{00158                         if (z > pz[currentNodeIndex]) childIndex += 4;}
+\DoxyCodeLine{00159 \#endif}
+\DoxyCodeLine{00160 \#endif}
+\DoxyCodeLine{00161                         child = childList[childListIndex(currentNodeIndex, childIndex)];}
+\DoxyCodeLine{00162         \}}
+\DoxyCodeLine{00163 }
+\DoxyCodeLine{00164                 // we want to insert the current particle i into currentNodeIndex's child at position childIndex}
+\DoxyCodeLine{00165                 // where child is now empty, locked or a particle}
+\DoxyCodeLine{00166                 // if empty -\/> simply insert, if particle -\/> create new subtree}
+\DoxyCodeLine{00167                 if (child != LOCKED) \{}
+\DoxyCodeLine{00168                         // the position where we want to place the particle gets locked}
+\DoxyCodeLine{00169                         lockedIndex = childListIndex(currentNodeIndex, childIndex);}
+\DoxyCodeLine{00170                         // atomic compare and save: compare if child is still the current value of childlist at the index lockedIndex, if so, lock it}
+\DoxyCodeLine{00171                         // atomicCAS returns the old value of child}
+\DoxyCodeLine{00172                         if (child == atomicCAS((int *) \&childList[lockedIndex], child, LOCKED)) \{}
+\DoxyCodeLine{00173                                 // if the destination is empty, insert particle}
+\DoxyCodeLine{00174                                 if (child == EMPTY) \{}
+\DoxyCodeLine{00175                                         // insert the particle into this leaf}
+\DoxyCodeLine{00176                                         childList[lockedIndex] = i;}
+\DoxyCodeLine{00177                                 \} else \{}
+\DoxyCodeLine{00178                                         // there is already a particle, create new inner node}
+\DoxyCodeLine{00179                                         subtreeNodeIndex = -\/1;}
+\DoxyCodeLine{00180                                         do \{}
+\DoxyCodeLine{00181                                                 // get the next free nodeIndex}
+\DoxyCodeLine{00182                                                 newNodeIndex = atomicSub((int * ) \&maxNodeIndex, 1) -\/ 1;}
+\DoxyCodeLine{00183 }
+\DoxyCodeLine{00184                                                 // throw error if there aren't enough node indices available}
+\DoxyCodeLine{00185                                                 if (newNodeIndex <= numParticles) \{}
+\DoxyCodeLine{00186                                                         printf("{}(thread \%d): error! not enough nodes. newNodeIndex \%d, maxNodeIndex \%d, numParticles: \%d\(\backslash\)n"{}, threadIdx.x, newNodeIndex, maxNodeIndex, numParticles);}
+\DoxyCodeLine{00187                                                 \}}
+\DoxyCodeLine{00188 }
+\DoxyCodeLine{00189                                                 // the first available free nodeIndex will be the subtree node}
+\DoxyCodeLine{00190                                                 subtreeNodeIndex = max(subtreeNodeIndex, newNodeIndex);}
+\DoxyCodeLine{00191 }
+\DoxyCodeLine{00192                                                 dx = (childIndex \& 1) * r;}
+\DoxyCodeLine{00193 \#if DIM > 1}
+\DoxyCodeLine{00194                                                 dy = ((childIndex >> 1) \& 1) * r;}
+\DoxyCodeLine{00195 \#if DIM == 3}
+\DoxyCodeLine{00196                                                 dz = ((childIndex >> 2) \& 1) * r;}
+\DoxyCodeLine{00197 \#endif}
+\DoxyCodeLine{00198 \#endif}
+\DoxyCodeLine{00199                         depth++;}
+\DoxyCodeLine{00200                                                 r *= 0.5;}
+\DoxyCodeLine{00201 }
+\DoxyCodeLine{00202                                                 // we save the radius here, so we can use it during neighboursearch. we have to set it to EMPTY after the neighboursearch}
+\DoxyCodeLine{00203                                                 pm[newNodeIndex] = r;}
+\DoxyCodeLine{00204                                                 dx = px[newNodeIndex] = px[currentNodeIndex] -\/ r + dx;}
+\DoxyCodeLine{00205 \#if DIM > 1}
+\DoxyCodeLine{00206                                                 dy = py[newNodeIndex] = py[currentNodeIndex] -\/ r + dy;}
+\DoxyCodeLine{00207 \#if DIM == 3}
+\DoxyCodeLine{00208                                                 dz = pz[newNodeIndex] = pz[currentNodeIndex] -\/ r + dz;}
+\DoxyCodeLine{00209 \#endif}
+\DoxyCodeLine{00210 \#endif}
+\DoxyCodeLine{00211 }
+\DoxyCodeLine{00212                                                 for (k = 0; k < numChildren; k++) \{}
+\DoxyCodeLine{00213                                                         childList[childListIndex(newNodeIndex, k)] = EMPTY;}
+\DoxyCodeLine{00214                                                 \}}
+\DoxyCodeLine{00215 }
+\DoxyCodeLine{00216                                                 if (subtreeNodeIndex != newNodeIndex) \{}
+\DoxyCodeLine{00217                                                         // this condition is true when the two particles are so close to each other, that they are}
+\DoxyCodeLine{00218                                                         // again put into the same node, so we have to create another new inner node.}
+\DoxyCodeLine{00219                                                         // in this case, currentNodeIndex is the previous newNodeIndex}
+\DoxyCodeLine{00220                                                         // and childIndex is the place where the particle i belongs to, relative to the previous newNodeIndex}
+\DoxyCodeLine{00221                                                         childList[childListIndex(currentNodeIndex, childIndex)] = newNodeIndex;}
+\DoxyCodeLine{00222                                                 \}}
+\DoxyCodeLine{00223 }
+\DoxyCodeLine{00224                                                 childIndex = 0;}
+\DoxyCodeLine{00225                                                 if (px[child] > dx) childIndex = 1;}
+\DoxyCodeLine{00226 \#if DIM > 1}
+\DoxyCodeLine{00227                                                 if (py[child] > dy) childIndex += 2;}
+\DoxyCodeLine{00228 \#if DIM == 3}
+\DoxyCodeLine{00229                                                 if (pz[child] > dz) childIndex += 4;}
+\DoxyCodeLine{00230 \#endif}
+\DoxyCodeLine{00231 \#endif}
+\DoxyCodeLine{00232                                                 childList[childListIndex(newNodeIndex, childIndex)] = child;}
+\DoxyCodeLine{00233 }
+\DoxyCodeLine{00234                                                 // compare positions of particle i to the new node}
+\DoxyCodeLine{00235                                                 currentNodeIndex = newNodeIndex;}
+\DoxyCodeLine{00236                                                 childIndex = 0;}
+\DoxyCodeLine{00237                                                 if (x > dx) childIndex = 1;}
+\DoxyCodeLine{00238 \#if DIM > 1}
+\DoxyCodeLine{00239                                                 if (y > dy) childIndex += 2;}
+\DoxyCodeLine{00240 \#if DIM == 3}
+\DoxyCodeLine{00241                                                 if (z > dz) childIndex += 4;}
+\DoxyCodeLine{00242 \#endif}
+\DoxyCodeLine{00243 \#endif}
+\DoxyCodeLine{00244                                                 child = childList[childListIndex(currentNodeIndex, childIndex)];}
+\DoxyCodeLine{00245                                                 // continue creating new nodes (with half radius each) until the other particle is not in the same spot in the tree}
+\DoxyCodeLine{00246                                         \} while (child >= 0);}
+\DoxyCodeLine{00247                                         childList[childListIndex(currentNodeIndex, childIndex)] = i;}
+\DoxyCodeLine{00248                                         \_\_threadfence();}
+\DoxyCodeLine{00249                                         //\_\_threadfence() is used to halt the current thread until all previous writes to shared and global memory are visible}
+\DoxyCodeLine{00250                                         // by other threads. It does not halt nor affect the position of other threads though!}
+\DoxyCodeLine{00251                                         childList[lockedIndex] = subtreeNodeIndex;}
+\DoxyCodeLine{00252                                 \}}
+\DoxyCodeLine{00253                 p.depth[i] = depth;}
+\DoxyCodeLine{00254                                 // continue with next particle}
+\DoxyCodeLine{00255                                 i += inc;}
+\DoxyCodeLine{00256                                 isNewParticle = TRUE;}
+\DoxyCodeLine{00257                         \}}
+\DoxyCodeLine{00258                 \}}
+\DoxyCodeLine{00259                 \_\_syncthreads(); // child was locked, wait for other threads to unlock}
+\DoxyCodeLine{00260         \}}
+\DoxyCodeLine{00261 \}}
+\DoxyCodeLine{00262 }
+\DoxyCodeLine{00263 }
+\DoxyCodeLine{00264 }
+\DoxyCodeLine{00265 /* get the maximum tree depth */}
+\DoxyCodeLine{00266 \_\_global\_\_ void getTreeDepth(int *treeDepthPerBlock)}
+\DoxyCodeLine{00267 \{}
+\DoxyCodeLine{00268         register int i, j, k, m;}
+\DoxyCodeLine{00269         \_\_shared\_\_ volatile int sharedtreeDepth[NUM\_THREADS\_TREEDEPTH];}
+\DoxyCodeLine{00270 }
+\DoxyCodeLine{00271     blockCount = 0;}
+\DoxyCodeLine{00272     int localtreeDepth = 0;}
+\DoxyCodeLine{00273         for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00274         localtreeDepth =  max(localtreeDepth, p.depth[i]);}
+\DoxyCodeLine{00275     \}}
+\DoxyCodeLine{00276 }
+\DoxyCodeLine{00277     i = threadIdx.x;}
+\DoxyCodeLine{00278     sharedtreeDepth[i] = localtreeDepth;}
+\DoxyCodeLine{00279     for (j = NUM\_THREADS\_TREEDEPTH / 2; j > 0; j /= 2) \{}
+\DoxyCodeLine{00280         \_\_syncthreads();}
+\DoxyCodeLine{00281         if (i < j) \{}
+\DoxyCodeLine{00282             k = i+j;}
+\DoxyCodeLine{00283             sharedtreeDepth[i] = localtreeDepth = max(localtreeDepth, sharedtreeDepth[k]);}
+\DoxyCodeLine{00284         \}}
+\DoxyCodeLine{00285     \}}
+\DoxyCodeLine{00286 }
+\DoxyCodeLine{00287     // write block result to global memory}
+\DoxyCodeLine{00288     if (i == 0) \{}
+\DoxyCodeLine{00289         k = blockIdx.x;}
+\DoxyCodeLine{00290         treeDepthPerBlock[k] = localtreeDepth;}
+\DoxyCodeLine{00291         m = gridDim.x-\/1;}
+\DoxyCodeLine{00292         \_\_threadfence();}
+\DoxyCodeLine{00293         if (m == atomicInc((unsigned int *) \&blockCount, m)) \{}
+\DoxyCodeLine{00294             for (j = 0; j <= m; j++) \{}
+\DoxyCodeLine{00295                 localtreeDepth = max(localtreeDepth, treeDepthPerBlock[j]);}
+\DoxyCodeLine{00296             \}}
+\DoxyCodeLine{00297             blockCount = 0;}
+\DoxyCodeLine{00298         \}}
+\DoxyCodeLine{00299         treeMaxDepth = localtreeDepth;}
+\DoxyCodeLine{00300     \}}
+\DoxyCodeLine{00301 }
+\DoxyCodeLine{00302 \}}
+\DoxyCodeLine{00303 }
+\DoxyCodeLine{00304 /* give an estimate how many particles will leave their leaves */}
+\DoxyCodeLine{00305 \_\_global\_\_ void measureTreeChange(int * movingparticlesPerBlock)}
+\DoxyCodeLine{00306 \{}
+\DoxyCodeLine{00307         register int i, j, k, m;}
+\DoxyCodeLine{00308         \_\_shared\_\_ volatile int sharedmovingparticles[NUM\_THREADS\_TREECHANGE];}
+\DoxyCodeLine{00309     double nodesize = 0;}
+\DoxyCodeLine{00310     double distance = 0;}
+\DoxyCodeLine{00311 }
+\DoxyCodeLine{00312     blockCount = 0;}
+\DoxyCodeLine{00313 }
+\DoxyCodeLine{00314     int localmovingparticles = 0;}
+\DoxyCodeLine{00315     int localdepth = 0;}
+\DoxyCodeLine{00316 }
+\DoxyCodeLine{00317         for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00318         localdepth = p.depth[i];}
+\DoxyCodeLine{00319         nodesize = pow(0.5, localdepth) * radius;}
+\DoxyCodeLine{00320 }
+\DoxyCodeLine{00321 // algorithm: determine if particle has moved more than 10\% of cellsize of its original cell}
+\DoxyCodeLine{00322         if (reset\_movingparticles) \{}
+\DoxyCodeLine{00323             p\_rhs.g\_x[i] = p.x[i];}
+\DoxyCodeLine{00324             p\_rhs.g\_local\_cellsize[i] = nodesize*nodesize;}
+\DoxyCodeLine{00325 \#if DIM > 1}
+\DoxyCodeLine{00326             p\_rhs.g\_y[i] = p.y[i];}
+\DoxyCodeLine{00327 \#if DIM > 2}
+\DoxyCodeLine{00328             p\_rhs.g\_z[i] = p.z[i];}
+\DoxyCodeLine{00329 \#endif}
+\DoxyCodeLine{00330 \#endif}
+\DoxyCodeLine{00331             distance = 0;}
+\DoxyCodeLine{00332         \} else \{}
+\DoxyCodeLine{00333             distance = (p.x[i] -\/ p\_rhs.g\_x[i])*(p.x[i] -\/ p\_rhs.g\_x[i]);}
+\DoxyCodeLine{00334 \#if DIM > 1}
+\DoxyCodeLine{00335             distance += (p.y[i] -\/ p\_rhs.g\_y[i])*(p.y[i] -\/ p\_rhs.g\_y[i]);}
+\DoxyCodeLine{00336 \#if DIM > 2}
+\DoxyCodeLine{00337             distance += (p.z[i] -\/ p\_rhs.g\_z[i])*(p.z[i] -\/ p\_rhs.g\_z[i]);}
+\DoxyCodeLine{00338 \#endif}
+\DoxyCodeLine{00339 \#endif}
+\DoxyCodeLine{00340         \}}
+\DoxyCodeLine{00341         if (distance > p\_rhs.g\_local\_cellsize[i]) \{}
+\DoxyCodeLine{00342             localmovingparticles++;}
+\DoxyCodeLine{00343         \}}
+\DoxyCodeLine{00344     \}}
+\DoxyCodeLine{00345     i = threadIdx.x;}
+\DoxyCodeLine{00346     sharedmovingparticles[i] = localmovingparticles;}
+\DoxyCodeLine{00347 }
+\DoxyCodeLine{00348     for (j = NUM\_THREADS\_TREECHANGE / 2; j > 0; j /= 2) \{}
+\DoxyCodeLine{00349         \_\_syncthreads();}
+\DoxyCodeLine{00350         if (i < j) \{}
+\DoxyCodeLine{00351             k = i+j;}
+\DoxyCodeLine{00352             sharedmovingparticles[i] += sharedmovingparticles[k];}
+\DoxyCodeLine{00353         \}}
+\DoxyCodeLine{00354     \}}
+\DoxyCodeLine{00355 }
+\DoxyCodeLine{00356     // write block result to global memory}
+\DoxyCodeLine{00357     if (i == 0) \{}
+\DoxyCodeLine{00358         localmovingparticles = 0;}
+\DoxyCodeLine{00359         k = blockIdx.x;}
+\DoxyCodeLine{00360         movingparticlesPerBlock[k] = sharedmovingparticles[i];}
+\DoxyCodeLine{00361         m = gridDim.x -\/ 1;}
+\DoxyCodeLine{00362         \_\_threadfence();}
+\DoxyCodeLine{00363         if ((m == atomicInc((unsigned int *) \&blockCount, m))) \{}
+\DoxyCodeLine{00364             /* last block, add all up */}
+\DoxyCodeLine{00365             for (j = 0; j <= m; j++) \{}
+\DoxyCodeLine{00366                 localmovingparticles += movingparticlesPerBlock[j];}
+\DoxyCodeLine{00367             \}}
+\DoxyCodeLine{00368             blockCount = 0;}
+\DoxyCodeLine{00369         \}}
+\DoxyCodeLine{00370         movingparticles = localmovingparticles;}
+\DoxyCodeLine{00371     \}}
+\DoxyCodeLine{00372 }
+\DoxyCodeLine{00373 \}}
+\DoxyCodeLine{00374 }
+\DoxyCodeLine{00375 }
+\DoxyCodeLine{00376 \_\_global\_\_ void calculateCentersOfMass()}
+\DoxyCodeLine{00377 \{}
+\DoxyCodeLine{00378         register int i, k, child, missing;}
+\DoxyCodeLine{00379         register double m, cm, px;}
+\DoxyCodeLine{00380 \#if DIM > 1}
+\DoxyCodeLine{00381     register double py;}
+\DoxyCodeLine{00382 \#endif}
+\DoxyCodeLine{00383 \#if DIM == 3}
+\DoxyCodeLine{00384         register double pz;}
+\DoxyCodeLine{00385 \#endif}
+\DoxyCodeLine{00386 \#if DIM == 3}
+\DoxyCodeLine{00387         \_\_shared\_\_ volatile int sharedChildList[NUM\_THREADS\_CALC\_CENTER\_OF\_MASS * 8];}
+\DoxyCodeLine{00388 \#elif DIM == 2}
+\DoxyCodeLine{00389         \_\_shared\_\_ volatile int sharedChildList[NUM\_THREADS\_CALC\_CENTER\_OF\_MASS * 4];}
+\DoxyCodeLine{00390 \#elif DIM == 1}
+\DoxyCodeLine{00391         \_\_shared\_\_ volatile int sharedChildList[NUM\_THREADS\_CALC\_CENTER\_OF\_MASS * 2];}
+\DoxyCodeLine{00392 \#endif}
+\DoxyCodeLine{00393 }
+\DoxyCodeLine{00394         k = maxNodeIndex + (threadIdx.x + blockIdx.x * blockDim.x);}
+\DoxyCodeLine{00395 }
+\DoxyCodeLine{00396         missing = 0;}
+\DoxyCodeLine{00397         while (k < numNodes) \{}
+\DoxyCodeLine{00398                 if (missing == 0) \{}
+\DoxyCodeLine{00399                         // new cell, so initialize}
+\DoxyCodeLine{00400                         cm = 0.0;}
+\DoxyCodeLine{00401                         px = 0.0;}
+\DoxyCodeLine{00402 \#if DIM > 1}
+\DoxyCodeLine{00403                         py = 0.0;}
+\DoxyCodeLine{00404 \#if DIM == 3}
+\DoxyCodeLine{00405                         pz = 0.0;}
+\DoxyCodeLine{00406 \#endif}
+\DoxyCodeLine{00407 \#endif}
+\DoxyCodeLine{00408                         for (i = 0; i < numChildren; i++) \{}
+\DoxyCodeLine{00409                                 child = childList[childListIndex(k, i)];}
+\DoxyCodeLine{00410                                 if (child != EMPTY) \{}
+\DoxyCodeLine{00411                                         sharedChildList[missing * NUM\_THREADS\_CALC\_CENTER\_OF\_MASS + threadIdx.x] = child; // cache missing children}
+\DoxyCodeLine{00412                                         m = p.m[child];}
+\DoxyCodeLine{00413                                         missing++;}
+\DoxyCodeLine{00414                                         if (m >= 0.0) \{}
+\DoxyCodeLine{00415                                                 // child is ready}
+\DoxyCodeLine{00416                                                 missing-\/-\/;}
+\DoxyCodeLine{00417                                                 // add child's contribution}
+\DoxyCodeLine{00418                                                 cm += m;}
+\DoxyCodeLine{00419                                                 px += p.x[child] * m;}
+\DoxyCodeLine{00420 \#if DIM > 1}
+\DoxyCodeLine{00421                                                 py += p.y[child] * m;}
+\DoxyCodeLine{00422 \#if DIM == 3}
+\DoxyCodeLine{00423                                                 pz += p.z[child] * m;}
+\DoxyCodeLine{00424 \#endif}
+\DoxyCodeLine{00425 \#endif}
+\DoxyCodeLine{00426                                         \}}
+\DoxyCodeLine{00427                                 \}}
+\DoxyCodeLine{00428                         \}}
+\DoxyCodeLine{00429                 \}}
+\DoxyCodeLine{00430 }
+\DoxyCodeLine{00431                 if (missing != 0) \{}
+\DoxyCodeLine{00432                         do \{}
+\DoxyCodeLine{00433                                 // poll missing child}
+\DoxyCodeLine{00434                                 child = sharedChildList[(missing -\/ 1) * NUM\_THREADS\_CALC\_CENTER\_OF\_MASS + threadIdx.x];}
+\DoxyCodeLine{00435                                 m = p.m[child];}
+\DoxyCodeLine{00436                                 if (m >= 0.0) \{}
+\DoxyCodeLine{00437                                         // child is now ready}
+\DoxyCodeLine{00438                                         missing-\/-\/;}
+\DoxyCodeLine{00439                                         // add child's contribution}
+\DoxyCodeLine{00440                                         cm += m;}
+\DoxyCodeLine{00441                                         px += p.x[child] * m;}
+\DoxyCodeLine{00442 \#if DIM > 1}
+\DoxyCodeLine{00443                                         py += p.y[child] * m;}
+\DoxyCodeLine{00444 \#if DIM == 3}
+\DoxyCodeLine{00445                                         pz += p.z[child] * m;}
+\DoxyCodeLine{00446 \#endif}
+\DoxyCodeLine{00447 \#endif}
+\DoxyCodeLine{00448                                 \}}
+\DoxyCodeLine{00449                                 // repeat until we are done or child is not ready}
+\DoxyCodeLine{00450                         \} while ((m >= 0.0) \&\& (missing != 0));}
+\DoxyCodeLine{00451                 \}}
+\DoxyCodeLine{00452 }
+\DoxyCodeLine{00453                 if (missing == 0) \{}
+\DoxyCodeLine{00454                         // all children are ready, so store computed information}
+\DoxyCodeLine{00455                         m = 1.0 / cm;}
+\DoxyCodeLine{00456                         p.x[k] = px * m;}
+\DoxyCodeLine{00457 \#if DIM > 1}
+\DoxyCodeLine{00458                         p.y[k] = py * m;}
+\DoxyCodeLine{00459 \#if DIM == 3}
+\DoxyCodeLine{00460                         p.z[k] = pz * m;}
+\DoxyCodeLine{00461 \#endif}
+\DoxyCodeLine{00462 \#endif}
+\DoxyCodeLine{00463                         \_\_threadfence();  // make sure data are visible before setting mass}
+\DoxyCodeLine{00464                         p.m[k] = cm;}
+\DoxyCodeLine{00465                         k += blockDim.x * gridDim.x;  // move on to next cell}
+\DoxyCodeLine{00466                 \}}
+\DoxyCodeLine{00467         \}}
+\DoxyCodeLine{00468 \}}
+\DoxyCodeLine{00469 }
+\DoxyCodeLine{00470 /* checks interaction list for symmetry */}
+\DoxyCodeLine{00471 /*}
+\DoxyCodeLine{00472    removes particle j from particle i's interaction list if particle i is not in}
+\DoxyCodeLine{00473    particles j's interaction list}
+\DoxyCodeLine{00474 }
+\DoxyCodeLine{00475 }
+\DoxyCodeLine{00476    awfully slow, not used for the time being}
+\DoxyCodeLine{00477 */}
+\DoxyCodeLine{00478 \_\_global\_\_ void symmetrizeInteractions(int *interactions)}
+\DoxyCodeLine{00479 \{}
+\DoxyCodeLine{00480         int i, inc, indexP, j;}
+\DoxyCodeLine{00481         int noi;}
+\DoxyCodeLine{00482     int found;}
+\DoxyCodeLine{00483     int k;}
+\DoxyCodeLine{00484     int nod;}
+\DoxyCodeLine{00485 }
+\DoxyCodeLine{00486     int di[MAX\_NUM\_INTERACTIONS] = \{0, \};}
+\DoxyCodeLine{00487 }
+\DoxyCodeLine{00488 }
+\DoxyCodeLine{00489         inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00490     /* loop over all particles */}
+\DoxyCodeLine{00491         for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00492         nod = 0;}
+\DoxyCodeLine{00493         /* check the interaction list of particle i */}
+\DoxyCodeLine{00494         noi = p.noi[i];}
+\DoxyCodeLine{00495         for (j = 0; j < noi; j++) \{}
+\DoxyCodeLine{00496             /* index of interaction partner */}
+\DoxyCodeLine{00497             indexP = interactions[i * MAX\_NUM\_INTERACTIONS + j];}
+\DoxyCodeLine{00498             /* check if i is in interaction list of indexP */}
+\DoxyCodeLine{00499             found = FALSE;}
+\DoxyCodeLine{00500             /* loop over all interactions of interaction partner */}
+\DoxyCodeLine{00501             for (k = 0; k < p.noi[indexP]; k++) \{}
+\DoxyCodeLine{00502                 if (interactions[indexP * MAX\_NUM\_INTERACTIONS + k] == i) \{}
+\DoxyCodeLine{00503                     found = TRUE;}
+\DoxyCodeLine{00504                     break;}
+\DoxyCodeLine{00505                 \}}
+\DoxyCodeLine{00506             \}}
+\DoxyCodeLine{00507             /* if i was not found in interactions of indexP, delete indexP from interaction list of i */}
+\DoxyCodeLine{00508             if (!found) \{}
+\DoxyCodeLine{00509                 /*  remember index, that we want to delete */}
+\DoxyCodeLine{00510                 di[nod++] = j;}
+\DoxyCodeLine{00511             \}}
+\DoxyCodeLine{00512         \}}
+\DoxyCodeLine{00513         /* remove deleted partners from interaction list */}
+\DoxyCodeLine{00514         for (k = 0; k < nod; k++) \{}
+\DoxyCodeLine{00515             interactions[i*MAX\_NUM\_INTERACTIONS+di[k]] = interactions[i*MAX\_NUM\_INTERACTIONS+noi-\/-\/];}
+\DoxyCodeLine{00516         \}}
+\DoxyCodeLine{00517         p.noi[i] = noi;}
+\DoxyCodeLine{00518     \} /* for loop over all particles */}
+\DoxyCodeLine{00519 }
+\DoxyCodeLine{00520 \}}
+\DoxyCodeLine{00521 }
+\DoxyCodeLine{00522 }
+\DoxyCodeLine{00523 \#if VARIABLE\_SML \&\& FIXED\_NOI}
+\DoxyCodeLine{00524 /* search interaction partners with variable smoothing length */}
+\DoxyCodeLine{00525 \_\_global\_\_ void knnNeighbourSearch(int *interactions)}
+\DoxyCodeLine{00526 \{}
+\DoxyCodeLine{00527         register int i, inc, nodeIndex, depth, childNumber, child;}
+\DoxyCodeLine{00528         register double x, y, interactionDistance, dx, dy, r, d;}
+\DoxyCodeLine{00529         register int currentNodeIndex[MAXDEPTH];}
+\DoxyCodeLine{00530         register int currentChildNumber[MAXDEPTH];}
+\DoxyCodeLine{00531         register int numberOfInteractions;}
+\DoxyCodeLine{00532 \#if DIM == 3}
+\DoxyCodeLine{00533         register double z, dz;}
+\DoxyCodeLine{00534 \#endif}
+\DoxyCodeLine{00535         inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00536     /* loop over all particles */}
+\DoxyCodeLine{00537         for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00538                 x = p.x[i];}
+\DoxyCodeLine{00539                 y = p.y[i];}
+\DoxyCodeLine{00540 \#if DIM == 3}
+\DoxyCodeLine{00541                 z = p.z[i];}
+\DoxyCodeLine{00542 \#endif}
+\DoxyCodeLine{00543 }
+\DoxyCodeLine{00544         volatile int found = FALSE;}
+\DoxyCodeLine{00545         register int nit = -\/1;}
+\DoxyCodeLine{00546 }
+\DoxyCodeLine{00547             double htmp, htmpold; }
+\DoxyCodeLine{00548         volatile double htmpj;}
+\DoxyCodeLine{00549 }
+\DoxyCodeLine{00550         htmp = p.h[i];}
+\DoxyCodeLine{00551 }
+\DoxyCodeLine{00552         /* look for nice sml */}
+\DoxyCodeLine{00553         while (!found) \{}
+\DoxyCodeLine{00554             numberOfInteractions = 0;}
+\DoxyCodeLine{00555             nit++;}
+\DoxyCodeLine{00556                     depth = 0;}
+\DoxyCodeLine{00557                     currentNodeIndex[depth] = numNodes -\/ 1;}
+\DoxyCodeLine{00558                     currentChildNumber[depth] = 0;}
+\DoxyCodeLine{00559                     numberOfInteractions = 0;}
+\DoxyCodeLine{00560                     r = radius * 0.5; // because we start with root children}
+\DoxyCodeLine{00561                     interactionDistance = (r + htmp);}
+\DoxyCodeLine{00562                 do \{}
+\DoxyCodeLine{00563 }
+\DoxyCodeLine{00564                         childNumber = currentChildNumber[depth];}
+\DoxyCodeLine{00565                         nodeIndex = currentNodeIndex[depth];}
+\DoxyCodeLine{00566 }
+\DoxyCodeLine{00567                             while (childNumber < numChildren) \{}
+\DoxyCodeLine{00568                                     child = childList[childListIndex(nodeIndex, childNumber)];}
+\DoxyCodeLine{00569                                     childNumber++;}
+\DoxyCodeLine{00570                                     if (child != EMPTY \&\& child != i) \{}
+\DoxyCodeLine{00571                                             dx = x -\/ p.x[child];}
+\DoxyCodeLine{00572                                             dy = y -\/ p.y[child];}
+\DoxyCodeLine{00573 \#if DIM == 3}
+\DoxyCodeLine{00574                                             dz = z -\/ p.z[child];}
+\DoxyCodeLine{00575 \#endif}
+\DoxyCodeLine{00576                                             if (child < numParticles) \{}
+\DoxyCodeLine{00577                                                     d = dx*dx + dy*dy;}
+\DoxyCodeLine{00578 \#if DIM == 3}
+\DoxyCodeLine{00579                                                     d += dz*dz;}
+\DoxyCodeLine{00580 \#endif}
+\DoxyCodeLine{00581                             htmpj = p.h[child];}
+\DoxyCodeLine{00582 }
+\DoxyCodeLine{00583                                                     if (d < htmp*htmp \&\& d < htmpj*htmpj) \{}
+\DoxyCodeLine{00584                                                             numberOfInteractions++;}
+\DoxyCodeLine{00585                                                     \}}
+\DoxyCodeLine{00586                                             \} else if (fabs(dx) < interactionDistance \&\& fabs(dy) < interactionDistance}
+\DoxyCodeLine{00587 \#if DIM == 3}
+\DoxyCodeLine{00588                                                                 \&\& fabs(dz) < interactionDistance}
+\DoxyCodeLine{00589 \#endif}
+\DoxyCodeLine{00590                                             ) \{}
+\DoxyCodeLine{00591                                                 // put child on stack}
+\DoxyCodeLine{00592                                                     currentChildNumber[depth] = childNumber;}
+\DoxyCodeLine{00593                                                     currentNodeIndex[depth] = nodeIndex;}
+\DoxyCodeLine{00594                                                     depth++;}
+\DoxyCodeLine{00595                                                     r *= 0.5;}
+\DoxyCodeLine{00596                                                     interactionDistance = (r + htmp);}
+\DoxyCodeLine{00597                                                 if (depth >= MAXDEPTH) \{}
+\DoxyCodeLine{00598                                                         printf("{}wtf, maxdepth reached!"{});}
+\DoxyCodeLine{00599                                 assert(depth < MAXDEPTH);}
+\DoxyCodeLine{00600                                                     \}}
+\DoxyCodeLine{00601                                                     childNumber = 0;}
+\DoxyCodeLine{00602                                                     nodeIndex = child;}
+\DoxyCodeLine{00603                                             \}}
+\DoxyCodeLine{00604                                     \}}
+\DoxyCodeLine{00605                             \}}
+\DoxyCodeLine{00606                             depth-\/-\/;}
+\DoxyCodeLine{00607                             r *= 2.0;}
+\DoxyCodeLine{00608                             interactionDistance = (r + htmp);}
+\DoxyCodeLine{00609                     \} while (depth >= 0);}
+\DoxyCodeLine{00610 }
+\DoxyCodeLine{00611             htmpold = htmp;}
+\DoxyCodeLine{00612 //            printf("{}\%d \%d \%e\(\backslash\)n"{}, i, numberOfInteractions, htmp);}
+\DoxyCodeLine{00613             /* stop if we have the desired number of interaction partners \(\backslash\)pm 10 */}
+\DoxyCodeLine{00614             //if ((nit > MAX\_VARIABLE\_SML\_ITERATIONS || numberOfInteractions == matnoi[p\_rhs.materialId[i]] ) \&\& numberOfInteractions < MAX\_NUM\_INTERACTIONS) \{}
+\DoxyCodeLine{00615             if ((nit > MAX\_VARIABLE\_SML\_ITERATIONS || abs(numberOfInteractions -\/ matnoi[p\_rhs.materialId[i]]) < 10 ) \&\& numberOfInteractions < MAX\_NUM\_INTERACTIONS) \{}
+\DoxyCodeLine{00616                 found = TRUE;}
+\DoxyCodeLine{00617                 p.h[i] = htmp;}
+\DoxyCodeLine{00618             \} else if (numberOfInteractions >= MAX\_NUM\_INTERACTIONS) \{}
+\DoxyCodeLine{00619                 htmpold = htmp;}
+\DoxyCodeLine{00620                 if (numberOfInteractions < 1)}
+\DoxyCodeLine{00621                     numberOfInteractions = 1;}
+\DoxyCodeLine{00622                 htmp *= 0.5 *  ( 1.0 + pow( (double) matnoi[p\_rhs.materialId[i]]/ (double) numberOfInteractions, 1./DIM));}
+\DoxyCodeLine{00623             \} else \{}
+\DoxyCodeLine{00624                 /* lower or raise htmp accordingly */}
+\DoxyCodeLine{00625                 //numberOfInteractions = numberOfInteractions > 0 ? numberOfInteractions : 1;}
+\DoxyCodeLine{00626                 if (numberOfInteractions < 1)}
+\DoxyCodeLine{00627                     numberOfInteractions = 1;}
+\DoxyCodeLine{00628 }
+\DoxyCodeLine{00629                 htmpold = htmp;}
+\DoxyCodeLine{00630                 htmp *= 0.5 *  ( 1.0 + pow( (double) matnoi[p\_rhs.materialId[i]]/ (double) numberOfInteractions, 1./DIM));}
+\DoxyCodeLine{00631             \}}
+\DoxyCodeLine{00632 \#if DEBUG}
+\DoxyCodeLine{00633             if (htmp < 1e-\/20) \{}
+\DoxyCodeLine{00634                 printf("{}+++ particle: \%d it: \%d htmp: \%e htmpold: \%e wanted: \%d current: \%d mId: \%d \(\backslash\)n"{}, i, nit,}
+\DoxyCodeLine{00635                         htmp, htmpold, matnoi[p\_rhs.materialId[i]], numberOfInteractions, p\_rhs.materialId[i]);}
+\DoxyCodeLine{00636             \}}
+\DoxyCodeLine{00637 \#endif}
+\DoxyCodeLine{00638 }
+\DoxyCodeLine{00639         \}}
+\DoxyCodeLine{00640     \}}
+\DoxyCodeLine{00641 }
+\DoxyCodeLine{00642 \}}
+\DoxyCodeLine{00643 }
+\DoxyCodeLine{00644 \#endif}
+\DoxyCodeLine{00645 }
+\DoxyCodeLine{00646 }
+\DoxyCodeLine{00647 /* search interaction partners for each particle */}
+\DoxyCodeLine{00648 /* the smoothing length is changed if MAX\_NUM\_INTERACTIONS is reached */}
+\DoxyCodeLine{00649 \_\_global\_\_ void nearNeighbourSearch\_modify\_sml(int *interactions)}
+\DoxyCodeLine{00650 \{}
+\DoxyCodeLine{00651         register int i, inc, nodeIndex, depth, childNumber, child;}
+\DoxyCodeLine{00652         register double x, interactionDistance, dx, r, d;}
+\DoxyCodeLine{00653 \#if DIM > 1}
+\DoxyCodeLine{00654     register double y, dy;}
+\DoxyCodeLine{00655 \#endif}
+\DoxyCodeLine{00656         register int currentNodeIndex[MAXDEPTH];}
+\DoxyCodeLine{00657         register int currentChildNumber[MAXDEPTH];}
+\DoxyCodeLine{00658         register int numberOfInteractions;}
+\DoxyCodeLine{00659 \#if DIM == 3}
+\DoxyCodeLine{00660         register double z, dz;}
+\DoxyCodeLine{00661 \#endif}
+\DoxyCodeLine{00662         inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00663 }
+\DoxyCodeLine{00664     register int interactions\_OK = 0;}
+\DoxyCodeLine{00665 }
+\DoxyCodeLine{00666         for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00667                 x = p.x[i];}
+\DoxyCodeLine{00668 \#if DIM > 1}
+\DoxyCodeLine{00669                 y = p.y[i];}
+\DoxyCodeLine{00670 \#if DIM == 3}
+\DoxyCodeLine{00671                 z = p.z[i];}
+\DoxyCodeLine{00672 \#endif}
+\DoxyCodeLine{00673 \#endif}
+\DoxyCodeLine{00674             double sml; /* smoothing length of particle */}
+\DoxyCodeLine{00675         volatile double smlj; /* smoothing length of potential interaction partner */}
+\DoxyCodeLine{00676 }
+\DoxyCodeLine{00677 }
+\DoxyCodeLine{00678 }
+\DoxyCodeLine{00679 start\_interaction\_search\_for\_particle:}
+\DoxyCodeLine{00680                 // start at root}
+\DoxyCodeLine{00681                 depth = 0;}
+\DoxyCodeLine{00682                 currentNodeIndex[depth] = numNodes -\/ 1;}
+\DoxyCodeLine{00683                 currentChildNumber[depth] = 0;}
+\DoxyCodeLine{00684                 numberOfInteractions = 0;}
+\DoxyCodeLine{00685                 r = radius * 0.5; // because we start with root children}
+\DoxyCodeLine{00686         sml = p.h[i];}
+\DoxyCodeLine{00687                 interactionDistance = (r + sml);}
+\DoxyCodeLine{00688         // flag for numberOfInteractions < MAX\_NUM\_INTERACTIONS}
+\DoxyCodeLine{00689         interactions\_OK = 0;}
+\DoxyCodeLine{00690 }
+\DoxyCodeLine{00691                 do \{}
+\DoxyCodeLine{00692                         childNumber = currentChildNumber[depth];}
+\DoxyCodeLine{00693                         nodeIndex = currentNodeIndex[depth];}
+\DoxyCodeLine{00694                         while (childNumber < numChildren) \{}
+\DoxyCodeLine{00695                                 child = childList[childListIndex(nodeIndex, childNumber)];}
+\DoxyCodeLine{00696                                 childNumber++;}
+\DoxyCodeLine{00697                                 if (child != EMPTY \&\& child != i) \{}
+\DoxyCodeLine{00698                                         dx = x -\/ p.x[child];}
+\DoxyCodeLine{00699 \#if DIM > 1}
+\DoxyCodeLine{00700                                         dy = y -\/ p.y[child];}
+\DoxyCodeLine{00701 \#if DIM == 3}
+\DoxyCodeLine{00702                                         dz = z -\/ p.z[child];}
+\DoxyCodeLine{00703 \#endif}
+\DoxyCodeLine{00704 \#endif}
+\DoxyCodeLine{00705                                         if (child < numParticles) \{}
+\DoxyCodeLine{00706                                                 d = dx*dx;}
+\DoxyCodeLine{00707 \#if DIM > 1}
+\DoxyCodeLine{00708                         d += dy*dy;}
+\DoxyCodeLine{00709 \#if DIM == 3}
+\DoxyCodeLine{00710                                                 d += dz*dz;}
+\DoxyCodeLine{00711 \#endif}
+\DoxyCodeLine{00712 \#endif}
+\DoxyCodeLine{00713 }
+\DoxyCodeLine{00714                         smlj = p.h[child];}
+\DoxyCodeLine{00715 }
+\DoxyCodeLine{00716                                                 //if (d < sml*sml) \{}
+\DoxyCodeLine{00717                         // make sure, all interactions are symmetric}
+\DoxyCodeLine{00718                                                 if (d < sml*sml \&\& d < smlj*smlj) \{}
+\DoxyCodeLine{00719                             // check if we are still safe with the current numberOfInteractions}
+\DoxyCodeLine{00720                             if (numberOfInteractions < MAX\_NUM\_INTERACTIONS) \{}
+\DoxyCodeLine{00721                                                             interactions[i * MAX\_NUM\_INTERACTIONS + numberOfInteractions] = child;}
+\DoxyCodeLine{00722                             \}}
+\DoxyCodeLine{00723                                                         numberOfInteractions++;}
+\DoxyCodeLine{00724                         \}}
+\DoxyCodeLine{00725                                         \} else if (fabs(dx) < interactionDistance}
+\DoxyCodeLine{00726 \#if DIM > 1}
+\DoxyCodeLine{00727                             \&\& fabs(dy) < interactionDistance}
+\DoxyCodeLine{00728 \#if DIM == 3}
+\DoxyCodeLine{00729                                                         \&\& fabs(dz) < interactionDistance}
+\DoxyCodeLine{00730 \#endif}
+\DoxyCodeLine{00731 \#endif}
+\DoxyCodeLine{00732                                         ) \{}
+\DoxyCodeLine{00733                                                 // put child on stack}
+\DoxyCodeLine{00734                                                 currentChildNumber[depth] = childNumber;}
+\DoxyCodeLine{00735                                                 currentNodeIndex[depth] = nodeIndex;}
+\DoxyCodeLine{00736                                                 depth++;}
+\DoxyCodeLine{00737                                                 r *= 0.5;}
+\DoxyCodeLine{00738                                                 interactionDistance = (r + sml);}
+\DoxyCodeLine{00739                                                 if (depth >= MAXDEPTH) \{}
+\DoxyCodeLine{00740                                                         printf("{}wtf, maxdepth reached!"{});}
+\DoxyCodeLine{00741                             assert(depth < MAXDEPTH);}
+\DoxyCodeLine{00742                                                 \}}
+\DoxyCodeLine{00743                                                 childNumber = 0;}
+\DoxyCodeLine{00744                                                 nodeIndex = child;}
+\DoxyCodeLine{00745                                         \}}
+\DoxyCodeLine{00746                                 \}}
+\DoxyCodeLine{00747                         \}}
+\DoxyCodeLine{00748 }
+\DoxyCodeLine{00749                         depth-\/-\/;}
+\DoxyCodeLine{00750                         r *= 2.0;}
+\DoxyCodeLine{00751                         interactionDistance = (r + sml);}
+\DoxyCodeLine{00752                 \} while (depth >= 0);}
+\DoxyCodeLine{00753 }
+\DoxyCodeLine{00754                 if (numberOfInteractions >= MAX\_NUM\_INTERACTIONS) \{}
+\DoxyCodeLine{00755             // now, we lower the sml according to the dimension and the ratio}
+\DoxyCodeLine{00756             sml = pow((double) MAX\_NUM\_INTERACTIONS/(double) numberOfInteractions, 1./DIM) * p.h[i];}
+\DoxyCodeLine{00757             // and remove another 10\%}
+\DoxyCodeLine{00758             if (threadIdx.x == 0)}
+\DoxyCodeLine{00759                 printf("{}WARNING: Maximum number of interactions exceeded: \%d / \%d, lower sml from \%.16f to \%.16f\(\backslash\)n"{}, numberOfInteractions, MAX\_NUM\_INTERACTIONS, p.h[i], 0.8*sml);}
+\DoxyCodeLine{00760             p.h[i] = 0.8*sml;}
+\DoxyCodeLine{00761             // do this search for particle i again}
+\DoxyCodeLine{00762             goto start\_interaction\_search\_for\_particle;}
+\DoxyCodeLine{00763                 \}}
+\DoxyCodeLine{00764                 p.noi[i] = numberOfInteractions;}
+\DoxyCodeLine{00765         \}}
+\DoxyCodeLine{00766 \}}
+\DoxyCodeLine{00767 }
+\DoxyCodeLine{00768 }
+\DoxyCodeLine{00769 }
+\DoxyCodeLine{00770 }
+\DoxyCodeLine{00771 }
+\DoxyCodeLine{00772 /* search interaction partners for each particle */}
+\DoxyCodeLine{00773 \_\_global\_\_ void nearNeighbourSearch(int *interactions)}
+\DoxyCodeLine{00774 \{}
+\DoxyCodeLine{00775         register int i, inc, nodeIndex, depth, childNumber, child;}
+\DoxyCodeLine{00776         register double x, interactionDistance, dx, r, d;}
+\DoxyCodeLine{00777 \#if DIM > 1}
+\DoxyCodeLine{00778     register double y, dy;}
+\DoxyCodeLine{00779 \#endif}
+\DoxyCodeLine{00780         register int currentNodeIndex[MAXDEPTH];}
+\DoxyCodeLine{00781         register int currentChildNumber[MAXDEPTH];}
+\DoxyCodeLine{00782         register int numberOfInteractions;}
+\DoxyCodeLine{00783 \#if DIM == 3}
+\DoxyCodeLine{00784         register double z, dz;}
+\DoxyCodeLine{00785 \#endif}
+\DoxyCodeLine{00786         inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00787         for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00788                 x = p.x[i];}
+\DoxyCodeLine{00789 \#if DIM > 1}
+\DoxyCodeLine{00790                 y = p.y[i];}
+\DoxyCodeLine{00791 \#if DIM == 3}
+\DoxyCodeLine{00792                 z = p.z[i];}
+\DoxyCodeLine{00793 \#endif}
+\DoxyCodeLine{00794 \#endif}
+\DoxyCodeLine{00795             double sml; /* smoothing length of particle */}
+\DoxyCodeLine{00796         double smlj; /* smoothing length of potential interaction partner */}
+\DoxyCodeLine{00797                 // start at root}
+\DoxyCodeLine{00798                 depth = 0;}
+\DoxyCodeLine{00799                 currentNodeIndex[depth] = numNodes -\/ 1;}
+\DoxyCodeLine{00800                 currentChildNumber[depth] = 0;}
+\DoxyCodeLine{00801                 numberOfInteractions = 0;}
+\DoxyCodeLine{00802                 r = radius * 0.5; // because we start with root children}
+\DoxyCodeLine{00803         sml = p.h[i];}
+\DoxyCodeLine{00804                 interactionDistance = (r + sml);}
+\DoxyCodeLine{00805 }
+\DoxyCodeLine{00806                 do \{}
+\DoxyCodeLine{00807 }
+\DoxyCodeLine{00808                         childNumber = currentChildNumber[depth];}
+\DoxyCodeLine{00809                         nodeIndex = currentNodeIndex[depth];}
+\DoxyCodeLine{00810 }
+\DoxyCodeLine{00811                         while (childNumber < numChildren) \{}
+\DoxyCodeLine{00812                                 child = childList[childListIndex(nodeIndex, childNumber)];}
+\DoxyCodeLine{00813                                 childNumber++;}
+\DoxyCodeLine{00814                                 if (child != EMPTY \&\& child != i) \{}
+\DoxyCodeLine{00815                                         dx = x -\/ p.x[child];}
+\DoxyCodeLine{00816 \#if DIM > 1}
+\DoxyCodeLine{00817                                         dy = y -\/ p.y[child];}
+\DoxyCodeLine{00818 \#if DIM == 3}
+\DoxyCodeLine{00819                                         dz = z -\/ p.z[child];}
+\DoxyCodeLine{00820 \#endif}
+\DoxyCodeLine{00821 \#endif}
+\DoxyCodeLine{00822 }
+\DoxyCodeLine{00823 }
+\DoxyCodeLine{00824                                         if (child < numParticles) \{}
+\DoxyCodeLine{00825                         if (p\_rhs.materialId[child] == EOS\_TYPE\_IGNORE) \{}
+\DoxyCodeLine{00826                             continue;}
+\DoxyCodeLine{00827                         \}}
+\DoxyCodeLine{00828                                                 d = dx*dx;}
+\DoxyCodeLine{00829 \#if DIM > 1}
+\DoxyCodeLine{00830                         d += dy*dy;}
+\DoxyCodeLine{00831 \#if DIM == 3}
+\DoxyCodeLine{00832                                                 d += dz*dz;}
+\DoxyCodeLine{00833 \#endif}
+\DoxyCodeLine{00834 \#endif}
+\DoxyCodeLine{00835 }
+\DoxyCodeLine{00836                         smlj = p.h[child];}
+\DoxyCodeLine{00837 }
+\DoxyCodeLine{00838                                                 if (d < sml*sml \&\& d < smlj*smlj) \{}
+\DoxyCodeLine{00839                                                         interactions[i * MAX\_NUM\_INTERACTIONS + numberOfInteractions] = child;}
+\DoxyCodeLine{00840                                                         numberOfInteractions++;}
+\DoxyCodeLine{00841 \#if TOO\_MANY\_INTERACTIONS\_KILL\_PARTICLE}
+\DoxyCodeLine{00842                             if (numberOfInteractions >= MAX\_NUM\_INTERACTIONS) \{}
+\DoxyCodeLine{00843                                 printf("{}setting the smoothing length for particle \%d to 0!\(\backslash\)n"{}, i);}
+\DoxyCodeLine{00844                                 p.h[i] = 0.0;}
+\DoxyCodeLine{00845                                 p.noi[i] = 0;}
+\DoxyCodeLine{00846                                 sml = 0.0;}
+\DoxyCodeLine{00847                                 interactionDistance = 0.0;}
+\DoxyCodeLine{00848                                 p\_rhs.materialId[i] = EOS\_TYPE\_IGNORE;}
+\DoxyCodeLine{00849                                 // continue with next particle by setting depth to -\/1}
+\DoxyCodeLine{00850                                 // cms 2018-\/01-\/19}
+\DoxyCodeLine{00851                                 depth = -\/1;}
+\DoxyCodeLine{00852                                 break;}
+\DoxyCodeLine{00853                             \}}
+\DoxyCodeLine{00854 \#endif}
+\DoxyCodeLine{00855                                                 \}}
+\DoxyCodeLine{00856                                         \} else if (fabs(dx) < interactionDistance}
+\DoxyCodeLine{00857 \#if DIM > 1}
+\DoxyCodeLine{00858                             \&\& fabs(dy) < interactionDistance}
+\DoxyCodeLine{00859 \#if DIM == 3}
+\DoxyCodeLine{00860                                                         \&\& fabs(dz) < interactionDistance}
+\DoxyCodeLine{00861 \#endif}
+\DoxyCodeLine{00862 \#endif}
+\DoxyCodeLine{00863                                         ) \{}
+\DoxyCodeLine{00864                                                 // put child on stack}
+\DoxyCodeLine{00865                                                 currentChildNumber[depth] = childNumber;}
+\DoxyCodeLine{00866                                                 currentNodeIndex[depth] = nodeIndex;}
+\DoxyCodeLine{00867                                                 depth++;}
+\DoxyCodeLine{00868                                                 r *= 0.5;}
+\DoxyCodeLine{00869                                                 interactionDistance = (r + sml);}
+\DoxyCodeLine{00870                                                 if (depth >= MAXDEPTH) \{}
+\DoxyCodeLine{00871                                                         printf("{}wtf, maxdepth reached!"{});}
+\DoxyCodeLine{00872                             assert(depth < MAXDEPTH);}
+\DoxyCodeLine{00873                                                 \}}
+\DoxyCodeLine{00874                                                 childNumber = 0;}
+\DoxyCodeLine{00875                                                 nodeIndex = child;}
+\DoxyCodeLine{00876                                         \}}
+\DoxyCodeLine{00877                                 \}}
+\DoxyCodeLine{00878                         \}}
+\DoxyCodeLine{00879 }
+\DoxyCodeLine{00880                         depth-\/-\/;}
+\DoxyCodeLine{00881                         r *= 2.0;}
+\DoxyCodeLine{00882                         interactionDistance = (r + sml);}
+\DoxyCodeLine{00883                 \} while (depth >= 0);}
+\DoxyCodeLine{00884 }
+\DoxyCodeLine{00885                 if (numberOfInteractions >= MAX\_NUM\_INTERACTIONS) \{}
+\DoxyCodeLine{00886                         //printf("{}ERROR: Maximum number of interactions exceeded: \%d / \%d\(\backslash\)n"{}, numberOfInteractions, MAX\_NUM\_INTERACTIONS);}
+\DoxyCodeLine{00887 \#if !TOO\_MANY\_INTERACTIONS\_KILL\_PARTICLE}
+\DoxyCodeLine{00888             assert(numberOfInteractions < MAX\_NUM\_INTERACTIONS);}
+\DoxyCodeLine{00889 \#endif}
+\DoxyCodeLine{00890             /*}
+\DoxyCodeLine{00891                         for (child = 0; child < MAX\_NUM\_INTERACTIONS; child++) \{}
+\DoxyCodeLine{00892                                 printf("{}(thread \%d): \%d -\/ \%d\(\backslash\)n"{}, threadIdx.x, i, interactions[i*MAX\_NUM\_INTERACTIONS+child]);}
+\DoxyCodeLine{00893                         \} */}
+\DoxyCodeLine{00894                 \}}
+\DoxyCodeLine{00895                 p.noi[i] = numberOfInteractions;}
+\DoxyCodeLine{00896         \}}
+\DoxyCodeLine{00897 \}}
+\DoxyCodeLine{00898 }
+\DoxyCodeLine{00899 \#if VARIABLE\_SML}
+\DoxyCodeLine{00900 // checks if the smoothing length is too large or too small}
+\DoxyCodeLine{00901 \_\_global\_\_ void check\_sml\_boundary(void)}
+\DoxyCodeLine{00902 \{}
+\DoxyCodeLine{00903     int i, inc;}
+\DoxyCodeLine{00904     int matId, d, e;}
+\DoxyCodeLine{00905     double smlmin, smlmax;}
+\DoxyCodeLine{00906     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00907     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00908         matId = p\_rhs.materialId[i];}
+\DoxyCodeLine{00909         smlmin = matSml[matId] * mat\_f\_sml\_min[matId];}
+\DoxyCodeLine{00910         smlmax = matSml[matId] * mat\_f\_sml\_max[matId];}
+\DoxyCodeLine{00911         if (p.h[i] < smlmin) \{}
+\DoxyCodeLine{00912             p.h[i] = smlmin;}
+\DoxyCodeLine{00913 \#if INTEGRATE\_SML}
+\DoxyCodeLine{00914             p.dhdt[i] = 0.0;}
+\DoxyCodeLine{00915 \#endif}
+\DoxyCodeLine{00916         \} else if (p.h[i] > smlmax) \{}
+\DoxyCodeLine{00917             p.h[i] = smlmax;}
+\DoxyCodeLine{00918 \#if INTEGRATE\_SML}
+\DoxyCodeLine{00919             p.dhdt[i] = 0.0;}
+\DoxyCodeLine{00920 \#endif}
+\DoxyCodeLine{00921         \}}
+\DoxyCodeLine{00922     \}}
+\DoxyCodeLine{00923 \}}
+\DoxyCodeLine{00924 \#endif}
+\DoxyCodeLine{00925 }
+\DoxyCodeLine{00926 \_\_global\_\_ void computationalDomain(}
+\DoxyCodeLine{00927                 double *minxPerBlock, double *maxxPerBlock}
+\DoxyCodeLine{00928 \#if DIM > 1}
+\DoxyCodeLine{00929                 , double *minyPerBlock, double *maxyPerBlock}
+\DoxyCodeLine{00930 \#endif}
+\DoxyCodeLine{00931 \#if DIM == 3}
+\DoxyCodeLine{00932                 , double *minzPerBlock, double *maxzPerBlock}
+\DoxyCodeLine{00933 \#endif}
+\DoxyCodeLine{00934                 ) \{}
+\DoxyCodeLine{00935         register int i, j, k, m;}
+\DoxyCodeLine{00936         \_\_shared\_\_ volatile double sharedMinX[NUM\_THREADS\_COMPUTATIONAL\_DOMAIN];}
+\DoxyCodeLine{00937         \_\_shared\_\_ volatile double sharedMaxX[NUM\_THREADS\_COMPUTATIONAL\_DOMAIN];}
+\DoxyCodeLine{00938 \#if DIM > 1}
+\DoxyCodeLine{00939         \_\_shared\_\_ volatile double sharedMinY[NUM\_THREADS\_COMPUTATIONAL\_DOMAIN];}
+\DoxyCodeLine{00940         \_\_shared\_\_ volatile double sharedMaxY[NUM\_THREADS\_COMPUTATIONAL\_DOMAIN];}
+\DoxyCodeLine{00941     register double localMinY, localMaxY;}
+\DoxyCodeLine{00942 \#endif}
+\DoxyCodeLine{00943         register double localMinX, localMaxX;}
+\DoxyCodeLine{00944 \#if DIM == 3}
+\DoxyCodeLine{00945         \_\_shared\_\_ volatile double sharedMinZ[NUM\_THREADS\_COMPUTATIONAL\_DOMAIN];}
+\DoxyCodeLine{00946         \_\_shared\_\_ volatile double sharedMaxZ[NUM\_THREADS\_COMPUTATIONAL\_DOMAIN];}
+\DoxyCodeLine{00947         register double localMinZ, localMaxZ;}
+\DoxyCodeLine{00948 \#endif}
+\DoxyCodeLine{00949         // init with valid data}
+\DoxyCodeLine{00950         localMinX = p.x[0];}
+\DoxyCodeLine{00951         localMaxX = p.x[0];}
+\DoxyCodeLine{00952 \#if DIM > 1}
+\DoxyCodeLine{00953         localMinY = p.y[0];}
+\DoxyCodeLine{00954         localMaxY = p.y[0];}
+\DoxyCodeLine{00955 \#if DIM == 3}
+\DoxyCodeLine{00956         localMinZ = p.z[0];}
+\DoxyCodeLine{00957         localMaxZ = p.z[0];}
+\DoxyCodeLine{00958 \#endif}
+\DoxyCodeLine{00959 \#endif}
+\DoxyCodeLine{00960         for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00961                 // find minimum and maximum coordinates}
+\DoxyCodeLine{00962                 localMinX = min(localMinX, p.x[i]);}
+\DoxyCodeLine{00963                 localMaxX = max(localMaxX, p.x[i]);}
+\DoxyCodeLine{00964 \#if DIM > 1}
+\DoxyCodeLine{00965                 localMinY = min(localMinY, p.y[i]);}
+\DoxyCodeLine{00966                 localMaxY = max(localMaxY, p.y[i]);}
+\DoxyCodeLine{00967 \#if DIM == 3}
+\DoxyCodeLine{00968                 localMinZ = min(localMinZ, p.z[i]);}
+\DoxyCodeLine{00969                 localMaxZ = max(localMaxZ, p.z[i]);}
+\DoxyCodeLine{00970 \#endif}
+\DoxyCodeLine{00971 \#endif}
+\DoxyCodeLine{00972         \}}
+\DoxyCodeLine{00973         i = threadIdx.x;}
+\DoxyCodeLine{00974         sharedMinX[i] = localMinX;}
+\DoxyCodeLine{00975         sharedMaxX[i] = localMaxX;}
+\DoxyCodeLine{00976 \#if DIM > 1}
+\DoxyCodeLine{00977         sharedMinY[i] = localMinY;}
+\DoxyCodeLine{00978         sharedMaxY[i] = localMaxY;}
+\DoxyCodeLine{00979 \#if DIM == 3}
+\DoxyCodeLine{00980         sharedMinZ[i] = localMinZ;}
+\DoxyCodeLine{00981         sharedMaxZ[i] = localMaxZ;}
+\DoxyCodeLine{00982 \#endif}
+\DoxyCodeLine{00983 \#endif}
+\DoxyCodeLine{00984         // reduction}
+\DoxyCodeLine{00985         for (j = NUM\_THREADS\_COMPUTATIONAL\_DOMAIN / 2; j > 0; j /= 2) \{}
+\DoxyCodeLine{00986                 \_\_syncthreads();}
+\DoxyCodeLine{00987                 if (i < j) \{}
+\DoxyCodeLine{00988                         k = i + j;}
+\DoxyCodeLine{00989                         sharedMinX[i] = localMinX = min(localMinX, sharedMinX[k]);}
+\DoxyCodeLine{00990                         sharedMaxX[i] = localMaxX = max(localMaxX, sharedMaxX[k]);}
+\DoxyCodeLine{00991 \#if DIM > 1}
+\DoxyCodeLine{00992                         sharedMinY[i] = localMinY = min(localMinY, sharedMinY[k]);}
+\DoxyCodeLine{00993                         sharedMaxY[i] = localMaxY = max(localMaxY, sharedMaxY[k]);}
+\DoxyCodeLine{00994 \#if DIM == 3}
+\DoxyCodeLine{00995                         sharedMinZ[i] = localMinZ = min(localMinZ, sharedMinZ[k]);}
+\DoxyCodeLine{00996                         sharedMaxZ[i] = localMaxZ = max(localMaxZ, sharedMaxZ[k]);}
+\DoxyCodeLine{00997 \#endif}
+\DoxyCodeLine{00998 \#endif}
+\DoxyCodeLine{00999                 \}}
+\DoxyCodeLine{01000         \}}
+\DoxyCodeLine{01001         // first thread writes block result to global memory}
+\DoxyCodeLine{01002         if (i == 0) \{}
+\DoxyCodeLine{01003                 k = blockIdx.x;}
+\DoxyCodeLine{01004                 minxPerBlock[k] = localMinX;}
+\DoxyCodeLine{01005                 maxxPerBlock[k] = localMaxX;}
+\DoxyCodeLine{01006 \#if DIM > 1}
+\DoxyCodeLine{01007                 minyPerBlock[k] = localMinY;}
+\DoxyCodeLine{01008                 maxyPerBlock[k] = localMaxY;}
+\DoxyCodeLine{01009 \#if DIM == 3}
+\DoxyCodeLine{01010                 minzPerBlock[k] = localMinZ;}
+\DoxyCodeLine{01011                 maxzPerBlock[k] = localMaxZ;}
+\DoxyCodeLine{01012 \#endif}
+\DoxyCodeLine{01013 \#endif}
+\DoxyCodeLine{01014                 m = gridDim.x -\/ 1;}
+\DoxyCodeLine{01015                 if (m == atomicInc((unsigned int *)\&blockCount, m)) \{}
+\DoxyCodeLine{01016                         // last block, so combine all block results}
+\DoxyCodeLine{01017                         for (j = 0; j <= m; j++) \{}
+\DoxyCodeLine{01018                                 localMinX = min(localMinX, minxPerBlock[j]);}
+\DoxyCodeLine{01019                                 localMaxX = max(localMaxX, maxxPerBlock[j]);}
+\DoxyCodeLine{01020 \#if DIM > 1}
+\DoxyCodeLine{01021                                 localMinY = min(localMinY, minyPerBlock[j]);}
+\DoxyCodeLine{01022                                 localMaxY = max(localMaxY, maxyPerBlock[j]);}
+\DoxyCodeLine{01023 \#if DIM == 3}
+\DoxyCodeLine{01024                                 localMinZ = min(localMinZ, minzPerBlock[j]);}
+\DoxyCodeLine{01025                                 localMaxZ = max(localMaxZ, maxzPerBlock[j]);}
+\DoxyCodeLine{01026 \#endif}
+\DoxyCodeLine{01027 \#endif}
+\DoxyCodeLine{01028                         \}}
+\DoxyCodeLine{01029                         minx = localMinX;}
+\DoxyCodeLine{01030                         maxx = localMaxX;}
+\DoxyCodeLine{01031 \#if DIM > 1}
+\DoxyCodeLine{01032                         miny = localMinY;}
+\DoxyCodeLine{01033                         maxy = localMaxY;}
+\DoxyCodeLine{01034 \#if DIM == 3}
+\DoxyCodeLine{01035                         minz = localMinZ;}
+\DoxyCodeLine{01036                         maxz = localMaxZ;}
+\DoxyCodeLine{01037 \#endif}
+\DoxyCodeLine{01038 \#endif}
+\DoxyCodeLine{01039                         // create root node}
+\DoxyCodeLine{01040                         k = numNodes -\/ 1;}
+\DoxyCodeLine{01041                         radius = localMaxX -\/ localMinX;}
+\DoxyCodeLine{01042 \#if DIM > 1}
+\DoxyCodeLine{01043                         radius = max(localMaxX -\/ localMinX, localMaxY -\/ localMinY);}
+\DoxyCodeLine{01044 \#if DIM == 3}
+\DoxyCodeLine{01045                         radius = max(radius, localMaxZ -\/ localMinZ);}
+\DoxyCodeLine{01046 \#endif}
+\DoxyCodeLine{01047 \#endif}
+\DoxyCodeLine{01048                         radius *= 0.5;}
+\DoxyCodeLine{01049                         p.x[k] = 0.5 * (localMaxX + localMinX);}
+\DoxyCodeLine{01050 \#if DIM > 1}
+\DoxyCodeLine{01051                         p.y[k] = 0.5 * (localMaxY + localMinY);}
+\DoxyCodeLine{01052 \#if DIM == 3}
+\DoxyCodeLine{01053                         p.z[k] = 0.5 * (localMaxZ + localMinZ);}
+\DoxyCodeLine{01054 \#endif}
+\DoxyCodeLine{01055 \#endif}
+\DoxyCodeLine{01056                         p.m[k] = EMPTY;}
+\DoxyCodeLine{01057                         for (i = 0; i < numChildren; i++) childList[childListIndex(k, i)] = EMPTY;}
+\DoxyCodeLine{01058                         maxNodeIndex = k;}
+\DoxyCodeLine{01059                         // reset block count}
+\DoxyCodeLine{01060                         blockCount = 0;}
+\DoxyCodeLine{01061                 \}}
+\DoxyCodeLine{01062         \}}
+\DoxyCodeLine{01063 \}}
+
+\end{DoxyCode}

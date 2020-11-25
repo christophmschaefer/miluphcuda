@@ -1,0 +1,686 @@
+\hypertarget{rhs_8cu_source}{}\doxysection{rhs.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com and Thomas I. Maindl}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 \#include "{}timeintegration.h"{}}
+\DoxyCodeLine{00025 \#include "{}rhs.h"{}}
+\DoxyCodeLine{00026 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00027 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00028 \#include "{}tree.h"{}}
+\DoxyCodeLine{00029 \#include "{}boundary.h"{}}
+\DoxyCodeLine{00030 \#include "{}density.h"{}}
+\DoxyCodeLine{00031 \#include "{}plasticity.h"{}}
+\DoxyCodeLine{00032 \#include "{}porosity.h"{}}
+\DoxyCodeLine{00033 \#include "{}pressure.h"{}}
+\DoxyCodeLine{00034 \#include "{}soundspeed.h"{}}
+\DoxyCodeLine{00035 \#include "{}gravity.h"{}}
+\DoxyCodeLine{00036 \#include "{}xsph.h"{}}
+\DoxyCodeLine{00037 \#include "{}internal\_forces.h"{}}
+\DoxyCodeLine{00038 \#include "{}velocity.h"{}}
+\DoxyCodeLine{00039 \#include "{}little\_helpers.h"{}}
+\DoxyCodeLine{00040 \#include "{}viscosity.h"{}}
+\DoxyCodeLine{00041 \#include "{}artificial\_stress.h"{}}
+\DoxyCodeLine{00042 \#include "{}stress.h"{}}
+\DoxyCodeLine{00043 }
+\DoxyCodeLine{00044 extern int flag\_force\_gravity\_calc;}
+\DoxyCodeLine{00045 extern int gravity\_index;}
+\DoxyCodeLine{00046 extern \_\_device\_\_ int movingparticles;}
+\DoxyCodeLine{00047 extern \_\_device\_\_ int reset\_movingparticles;}
+\DoxyCodeLine{00048 }
+\DoxyCodeLine{00049 }
+\DoxyCodeLine{00050 extern \_\_device\_\_ volatile int maxNodeIndex;}
+\DoxyCodeLine{00051 extern \_\_device\_\_ int treeMaxDepth;}
+\DoxyCodeLine{00052 }
+\DoxyCodeLine{00053 // tree computational domain}
+\DoxyCodeLine{00054 extern double *minxPerBlock, *maxxPerBlock;}
+\DoxyCodeLine{00055 extern \_\_device\_\_ double minx, maxx;}
+\DoxyCodeLine{00056 \#if DIM > 1}
+\DoxyCodeLine{00057 extern double *minyPerBlock, *maxyPerBlock;}
+\DoxyCodeLine{00058 extern \_\_device\_\_ double miny, maxy;}
+\DoxyCodeLine{00059 \#endif}
+\DoxyCodeLine{00060 \#if DIM == 3}
+\DoxyCodeLine{00061 extern double *minzPerBlock, *maxzPerBlock;}
+\DoxyCodeLine{00062 extern \_\_device\_\_ double minz, maxz;}
+\DoxyCodeLine{00063 \#endif}
+\DoxyCodeLine{00064 }
+\DoxyCodeLine{00065 extern volatile int terminate\_flag;}
+\DoxyCodeLine{00066 }
+\DoxyCodeLine{00067 // zero all derivatives}
+\DoxyCodeLine{00068 \_\_global\_\_ void zero\_all\_derivatives()}
+\DoxyCodeLine{00069 \{}
+\DoxyCodeLine{00070     register int i, inc;}
+\DoxyCodeLine{00071     register int dd;}
+\DoxyCodeLine{00072     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00073     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00074         p.ax[i] = 0.0;}
+\DoxyCodeLine{00075 \#if DIM > 1}
+\DoxyCodeLine{00076         p.ay[i] = 0.0;}
+\DoxyCodeLine{00077 \#if DIM > 2}
+\DoxyCodeLine{00078         p.az[i] = 0.0;}
+\DoxyCodeLine{00079 \#endif}
+\DoxyCodeLine{00080 \#endif}
+\DoxyCodeLine{00081 \#if INTEGRATE\_SML}
+\DoxyCodeLine{00082         p.dhdt[i] = 0.0;}
+\DoxyCodeLine{00083 \#endif}
+\DoxyCodeLine{00084 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00085         p.drhodt[i] = 0.0;}
+\DoxyCodeLine{00086 \#endif}
+\DoxyCodeLine{00087 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00088         p.dedt[i] = 0.0;}
+\DoxyCodeLine{00089 \#endif}
+\DoxyCodeLine{00090 \#if SOLID}
+\DoxyCodeLine{00091         for (dd = 0; dd < DIM*DIM; dd++) \{}
+\DoxyCodeLine{00092             p.dSdt[i*DIM*DIM+dd] = 0.0;}
+\DoxyCodeLine{00093         \}}
+\DoxyCodeLine{00094 \#endif}
+\DoxyCodeLine{00095 \#if FRAGMENTATION}
+\DoxyCodeLine{00096         p.dddt[i] = 0.0;}
+\DoxyCodeLine{00097 \#endif}
+\DoxyCodeLine{00098 }
+\DoxyCodeLine{00099     \}}
+\DoxyCodeLine{00100 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00101     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i += inc) \{}
+\DoxyCodeLine{00102         pointmass.ax[i] = 0.0;}
+\DoxyCodeLine{00103 \#if DIM > 1}
+\DoxyCodeLine{00104         pointmass.ay[i] = 0.0;}
+\DoxyCodeLine{00105 \#if DIM > 2}
+\DoxyCodeLine{00106         pointmass.az[i] = 0.0;}
+\DoxyCodeLine{00107 \#endif}
+\DoxyCodeLine{00108 \#endif}
+\DoxyCodeLine{00109     \}}
+\DoxyCodeLine{00110 \#endif // GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00111 \}}
+\DoxyCodeLine{00112 }
+\DoxyCodeLine{00113 }
+\DoxyCodeLine{00114 /* determine all derivatives */}
+\DoxyCodeLine{00115 void rightHandSide()}
+\DoxyCodeLine{00116 \{}
+\DoxyCodeLine{00117     cudaEvent\_t start, stop;}
+\DoxyCodeLine{00118     float time[MAX\_NUMBER\_PROFILED\_KERNELS];}
+\DoxyCodeLine{00119     float totalTime = 0;}
+\DoxyCodeLine{00120     double radiusmax, radiusmin;}
+\DoxyCodeLine{00121     int timerCounter = 0;}
+\DoxyCodeLine{00122     int *treeDepthPerBlock;}
+\DoxyCodeLine{00123     int *movingparticlesPerBlock;}
+\DoxyCodeLine{00124     int maxtreedepth\_host = 0;}
+\DoxyCodeLine{00125     int movingparticles\_host = 0;}
+\DoxyCodeLine{00126 }
+\DoxyCodeLine{00127 }
+\DoxyCodeLine{00128 \#if USE\_SIGNAL\_HANDLER}
+\DoxyCodeLine{00129     if (terminate\_flag) \{}
+\DoxyCodeLine{00130         copyToHostAndWriteToFile(-\/2, -\/2);}
+\DoxyCodeLine{00131     \}}
+\DoxyCodeLine{00132 \#endif}
+\DoxyCodeLine{00133 }
+\DoxyCodeLine{00134     cudaEventCreate(\&start);}
+\DoxyCodeLine{00135     cudaEventCreate(\&stop);}
+\DoxyCodeLine{00136 }
+\DoxyCodeLine{00137     cudaVerify(cudaMemset(childListd, EMPTY, memorySizeForChildren));}
+\DoxyCodeLine{00138     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00139 }
+\DoxyCodeLine{00140 }
+\DoxyCodeLine{00141     if (param.verbose) fprintf(stdout, "{}rhs call\(\backslash\)n"{});}
+\DoxyCodeLine{00142 }
+\DoxyCodeLine{00143     // zero all accelerations}
+\DoxyCodeLine{00144     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00145     cudaVerifyKernel((zero\_all\_derivatives<<<numberOfMultiprocessors, NUM\_THREADS\_256>>>()));}
+\DoxyCodeLine{00146     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00147     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00148     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00149     if (param.verbose) printf("{}duration zeroing all: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00150 }
+\DoxyCodeLine{00151     // check if boundary conditions are violated}
+\DoxyCodeLine{00152     cudaVerifyKernel((BoundaryConditionsBeforeRHS<<<16 * numberOfMultiprocessors, NUM\_THREADS\_BOUNDARY\_CONDITIONS>>>(interactions)));}
+\DoxyCodeLine{00153 }
+\DoxyCodeLine{00154     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00155 \#if GHOST\_BOUNDARIES}
+\DoxyCodeLine{00156     /*}
+\DoxyCodeLine{00157        the location of the ghost boundary particles are set. The quantities for the ghost particles will}
+\DoxyCodeLine{00158        be set later on as soon as we know the quantities for the real particles (density, pressure...)}
+\DoxyCodeLine{00159      */}
+\DoxyCodeLine{00160     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00161     cudaVerifyKernel((insertGhostParticles<<<4 * numberOfMultiprocessors, NUM\_THREADS\_BOUNDARY\_CONDITIONS>>>()));}
+\DoxyCodeLine{00162     //cudaVerifyKernel((insertGhostParticles<<<1, 1>>>()));}
+\DoxyCodeLine{00163     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00164     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00165     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00166     if (param.verbose) printf("{}duration inserting ghost particles: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00167     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00168 \#endif}
+\DoxyCodeLine{00169 }
+\DoxyCodeLine{00170     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00171 }
+\DoxyCodeLine{00172     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00173     cudaVerifyKernel((computationalDomain<<<numberOfMultiprocessors, NUM\_THREADS\_COMPUTATIONAL\_DOMAIN>>>(}
+\DoxyCodeLine{00174                     minxPerBlock, maxxPerBlock}
+\DoxyCodeLine{00175 \#if DIM > 1}
+\DoxyCodeLine{00176                     , minyPerBlock, maxyPerBlock}
+\DoxyCodeLine{00177 \#endif}
+\DoxyCodeLine{00178 \#if DIM == 3}
+\DoxyCodeLine{00179                     , minzPerBlock, maxzPerBlock}
+\DoxyCodeLine{00180 \#endif}
+\DoxyCodeLine{00181                     )));}
+\DoxyCodeLine{00182     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00183     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00184     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00185     if (param.verbose) printf("{}duration comp domain: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00186     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00187     if (param.verbose || param.decouplegravity) \{}
+\DoxyCodeLine{00188         double xmin, xmax;}
+\DoxyCodeLine{00189 \#if DIM > 1}
+\DoxyCodeLine{00190         double ymin, ymax;}
+\DoxyCodeLine{00191 \#endif}
+\DoxyCodeLine{00192 \#if DIM == 3}
+\DoxyCodeLine{00193         double zmin, zmax;}
+\DoxyCodeLine{00194 \#endif}
+\DoxyCodeLine{00195         cudaMemcpyFromSymbol(\&xmin, minx, sizeof(double));}
+\DoxyCodeLine{00196         cudaMemcpyFromSymbol(\&xmax, maxx, sizeof(double));}
+\DoxyCodeLine{00197 \#if DIM > 1}
+\DoxyCodeLine{00198         cudaMemcpyFromSymbol(\&ymin, miny, sizeof(double));}
+\DoxyCodeLine{00199         cudaMemcpyFromSymbol(\&ymax, maxy, sizeof(double));}
+\DoxyCodeLine{00200 \#endif}
+\DoxyCodeLine{00201 \#if DIM == 3}
+\DoxyCodeLine{00202         cudaMemcpyFromSymbol(\&zmin, minz, sizeof(double));}
+\DoxyCodeLine{00203         cudaMemcpyFromSymbol(\&zmax, maxz, sizeof(double));}
+\DoxyCodeLine{00204 \#endif}
+\DoxyCodeLine{00205         radiusmax = xmax -\/ xmin;}
+\DoxyCodeLine{00206 \#if DIM > 1}
+\DoxyCodeLine{00207         radiusmax = max(radiusmax, ymax-\/ymin);}
+\DoxyCodeLine{00208 \#endif}
+\DoxyCodeLine{00209         if (param.verbose) \{}
+\DoxyCodeLine{00210             printf("{}computational domain: x [\%e, \%e]"{}, xmin, xmax);}
+\DoxyCodeLine{00211 \#if DIM > 1}
+\DoxyCodeLine{00212             printf("{}, y [\%e, \%e]"{}, ymin, ymax);}
+\DoxyCodeLine{00213 \#endif}
+\DoxyCodeLine{00214 \#if DIM == 3}
+\DoxyCodeLine{00215             printf("{}, z [\%e, \%e]"{}, zmin, zmax);}
+\DoxyCodeLine{00216             radiusmax = max(radiusmax, zmax-\/zmin);}
+\DoxyCodeLine{00217 \#endif}
+\DoxyCodeLine{00218             printf("{}\(\backslash\)n"{});}
+\DoxyCodeLine{00219         \}}
+\DoxyCodeLine{00220     \}}
+\DoxyCodeLine{00221 }
+\DoxyCodeLine{00222     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00223 }
+\DoxyCodeLine{00224     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00225     cudaVerifyKernel((buildTree<<<numberOfMultiprocessors, NUM\_THREADS\_BUILD\_TREE>>>()));}
+\DoxyCodeLine{00226     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00227     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00228     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00229     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00230     cudaMemcpyFromSymbol(\&maxNodeIndex\_host, maxNodeIndex, sizeof(int));}
+\DoxyCodeLine{00231     if (param.verbose) fprintf(stdout, "{}build tree duration: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00232     if (param.verbose) fprintf(stdout, "{}number of inner nodes: \%d\(\backslash\)n"{}, (numberOfNodes -\/ maxNodeIndex\_host));}
+\DoxyCodeLine{00233     if (param.verbose) fprintf(stdout, "{}number of used inner nodes / number of allocated nodes: \%.7f \%\%\(\backslash\)n"{}, 100.0 * (float)(numberOfNodes -\/ maxNodeIndex\_host) / (float)(numberOfNodes -\/ numberOfParticles));}
+\DoxyCodeLine{00234 }
+\DoxyCodeLine{00235 }
+\DoxyCodeLine{00236     // get maximum depth of tree}
+\DoxyCodeLine{00237     if (param.decouplegravity) \{}
+\DoxyCodeLine{00238         cudaVerify(cudaMalloc((void**)\&treeDepthPerBlock, sizeof(int)*numberOfMultiprocessors));}
+\DoxyCodeLine{00239         if (param.verbose) fprintf(stdout, "{}Determing depth of tree\(\backslash\)n"{});}
+\DoxyCodeLine{00240         cudaVerifyKernel((getTreeDepth<<<numberOfMultiprocessors, NUM\_THREADS\_TREEDEPTH>>>(treeDepthPerBlock)));}
+\DoxyCodeLine{00241         cudaMemcpyFromSymbol(\&maxtreedepth\_host, treeMaxDepth, sizeof(int));}
+\DoxyCodeLine{00242         if (param.verbose) fprintf(stdout, "{}Maximum depth of tree is: \%d\(\backslash\)n"{}, maxtreedepth\_host);}
+\DoxyCodeLine{00243         radiusmin = radiusmax * pow(0.5, maxtreedepth\_host-\/1);}
+\DoxyCodeLine{00244         if (param.verbose) fprintf(stdout, "{}Largest node length: \%g \(\backslash\)t smallest node length: \%g\(\backslash\)n"{}, radiusmax, radiusmin);}
+\DoxyCodeLine{00245         cudaVerify(cudaFree(treeDepthPerBlock));}
+\DoxyCodeLine{00246     \}}
+\DoxyCodeLine{00247 }
+\DoxyCodeLine{00248 }
+\DoxyCodeLine{00249     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00250     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00251 }
+\DoxyCodeLine{00252     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00253 }
+\DoxyCodeLine{00254 }
+\DoxyCodeLine{00255 \#if VARIABLE\_SML \&\& !READ\_INITIAL\_SML\_FROM\_PARTICLE\_FILE}
+\DoxyCodeLine{00256     // boundary conditions for the smoothing lengths}
+\DoxyCodeLine{00257     if (param.verbose) printf("{}calling check\_sml\_boundary\(\backslash\)n"{});}
+\DoxyCodeLine{00258     cudaVerifyKernel((check\_sml\_boundary<<<numberOfMultiprocessors * 4, NUM\_THREADS\_NEIGHBOURSEARCH>>>()));}
+\DoxyCodeLine{00259     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00260 \#endif}
+\DoxyCodeLine{00261 }
+\DoxyCodeLine{00262 \#if VARIABLE\_SML \&\& FIXED\_NOI}
+\DoxyCodeLine{00263     // call only for the fixed number of interactions case}
+\DoxyCodeLine{00264     // if INTEGRATE\_SML is set, the sml is integrated and we only need to symmetrize the interactions}
+\DoxyCodeLine{00265     // later on}
+\DoxyCodeLine{00266     if (param.verbose) printf("{}calling knnNeighbourSearch\(\backslash\)n"{});}
+\DoxyCodeLine{00267     cudaVerifyKernel((knnNeighbourSearch<<<numberOfMultiprocessors * 4, NUM\_THREADS\_NEIGHBOURSEARCH>>>(}
+\DoxyCodeLine{00268                     interactions)));}
+\DoxyCodeLine{00269     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00270 \#endif}
+\DoxyCodeLine{00271 }
+\DoxyCodeLine{00272 \#if DEAL\_WITH\_TOO\_MANY\_INTERACTIONS // make sure that a particle does not get more than MAX\_NUM\_INTERACTIONS}
+\DoxyCodeLine{00273     if (param.verbose) printf("{}calling nearNeighbourSearch\_modify\_sml\(\backslash\)n"{});}
+\DoxyCodeLine{00274     cudaVerifyKernel((nearNeighbourSearch\_modify\_sml<<<numberOfMultiprocessors * 4, NUM\_THREADS\_NEIGHBOURSEARCH>>>(}
+\DoxyCodeLine{00275                     interactions)));}
+\DoxyCodeLine{00276 \#else // risk a termination if MAX\_NUM\_INTERACTIONS is reached for one particle}
+\DoxyCodeLine{00277     if (param.verbose) printf("{}calling nearNeighbourSearch\(\backslash\)n"{});}
+\DoxyCodeLine{00278     cudaVerifyKernel((nearNeighbourSearch<<<numberOfMultiprocessors * 4, NUM\_THREADS\_NEIGHBOURSEARCH>>>(}
+\DoxyCodeLine{00279                     interactions)));}
+\DoxyCodeLine{00280 \#endif}
+\DoxyCodeLine{00281 }
+\DoxyCodeLine{00282 }
+\DoxyCodeLine{00283     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00284     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00285     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00286     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00287     if (param.verbose) printf("{}duration neighboursearch: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00288     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00289     cudaVerifyKernel((setEmptyMassForInnerNodes<<<numberOfMultiprocessors * 4, NUM\_THREADS\_512>>>()));}
+\DoxyCodeLine{00290     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00291     // TODO: only if debug}
+\DoxyCodeLine{00292 \#if 0}
+\DoxyCodeLine{00293     cudaMemcpy(p\_host.noi, p\_device.noi, memorySizeForInteractions, cudaMemcpyDeviceToHost);}
+\DoxyCodeLine{00294     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00295     int i;}
+\DoxyCodeLine{00296     int maxNumInteractions = 0;}
+\DoxyCodeLine{00297     for (i = 0; i < numberOfParticles; i++) \{}
+\DoxyCodeLine{00298         maxNumInteractions = max(maxNumInteractions, p\_host.noi[i]);}
+\DoxyCodeLine{00299         if (maxNumInteractions > MAX\_NUM\_INTERACTIONS) \{}
+\DoxyCodeLine{00300             fprintf(stderr, "{}max num interactions exceeded by particle \%d\(\backslash\)n"{}, i);}
+\DoxyCodeLine{00301             exit(1);}
+\DoxyCodeLine{00302         \}}
+\DoxyCodeLine{00303     \}}
+\DoxyCodeLine{00304     printf("{}maximum number of interactions: \%d\(\backslash\)n"{}, maxNumInteractions);}
+\DoxyCodeLine{00305 \#endif}
+\DoxyCodeLine{00306 }
+\DoxyCodeLine{00307     time[timerCounter] = 0;}
+\DoxyCodeLine{00308 \#if !INTEGRATE\_DENSITY}
+\DoxyCodeLine{00309     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00310     cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM\_THREADS\_DENSITY>>>(}
+\DoxyCodeLine{00311                     interactions)));}
+\DoxyCodeLine{00312     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00313     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00314     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00315     if (param.verbose) printf("{}duration density: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00316 \#endif}
+\DoxyCodeLine{00317     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00318 }
+\DoxyCodeLine{00319     time[timerCounter] = 0;}
+\DoxyCodeLine{00320     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00321     cudaVerifyKernel((calculateSoundSpeed<<<numberOfMultiprocessors * 4, NUM\_THREADS\_PRESSURE>>>()));}
+\DoxyCodeLine{00322     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00323     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00324     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00325     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00326     if (param.verbose) printf("{}duration soundspeed: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00327     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00328 }
+\DoxyCodeLine{00329 \#if (NAVIER\_STOKES || BALSARA\_SWITCH || INVISCID\_SPH)}
+\DoxyCodeLine{00330     time[timerCounter] = 0;}
+\DoxyCodeLine{00331     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00332     cudaVerifyKernel((CalcDivvandCurlv<<<numberOfMultiprocessors * 4, NUM\_THREADS\_128>>>(}
+\DoxyCodeLine{00333                     interactions)));}
+\DoxyCodeLine{00334     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00335     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00336     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00337     if (param.verbose) printf("{}duration div v and curl v: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00338     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00339 \#endif}
+\DoxyCodeLine{00340 }
+\DoxyCodeLine{00341 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00342     time[timerCounter] = 0;}
+\DoxyCodeLine{00343     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00344     cudaVerifyKernel((calculateCompressiveStrength<<<numberOfMultiprocessors * 4, NUM\_THREADS\_PRESSURE>>>()));}
+\DoxyCodeLine{00345     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00346     cudaVerifyKernel((calculateTensileStrength<<<numberOfMultiprocessors * 4, NUM\_THREADS\_PRESSURE>>>()));}
+\DoxyCodeLine{00347     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00348     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00349     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00350     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00351     if (param.verbose) printf("{}duration compressive, tensile and shear strength: \%.2f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00352     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00353     time[timerCounter] = 0;}
+\DoxyCodeLine{00354 \#endif}
+\DoxyCodeLine{00355 }
+\DoxyCodeLine{00356 \#if (SOLID \&\& PURE\_REGOLITH)}
+\DoxyCodeLine{00357     time[timerCounter] = 0;}
+\DoxyCodeLine{00358     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00359     cudaVerifyKernel((plasticity<<<numberOfMultiprocessors * 4, NUM\_THREADS\_PRESSURE>>>()));}
+\DoxyCodeLine{00360     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00361     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00362     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00363     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00364     if (param.verbose) printf("{}duration plasticity: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00365     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00366 \#endif}
+\DoxyCodeLine{00367 }
+\DoxyCodeLine{00368     time[timerCounter] = 0;}
+\DoxyCodeLine{00369     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00370     cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM\_THREADS\_PRESSURE>>>()));}
+\DoxyCodeLine{00371     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00372     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00373     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00374     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00375     if (param.verbose) printf("{}duration pressure: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00376     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00377 /*  function is not in porosity.cu anymore but in timeintecration.cu internal forces}
+\DoxyCodeLine{00378 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00379     cudaVerifyKernel((calculateDistensionChange<<<numberOfMultiprocessors * 4, NUM\_THREADS\_PALPHA\_POROSITY>>>()));}
+\DoxyCodeLine{00380     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00381 \#endif}
+\DoxyCodeLine{00382 */}
+\DoxyCodeLine{00383 }
+\DoxyCodeLine{00384     time[timerCounter] = 0;}
+\DoxyCodeLine{00385     if (param.selfgravity) \{}
+\DoxyCodeLine{00386         cudaEventRecord(start, 0);}
+\DoxyCodeLine{00387         cudaVerifyKernel((calculateCentersOfMass<<<1, NUM\_THREADS\_CALC\_CENTER\_OF\_MASS>>>()));}
+\DoxyCodeLine{00388         cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00389         cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00390         cudaEventSynchronize(stop);}
+\DoxyCodeLine{00391         cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00392         if (param.verbose) \{}
+\DoxyCodeLine{00393             printf("{}duration calc center of mass: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00394         \}}
+\DoxyCodeLine{00395     \}}
+\DoxyCodeLine{00396     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00397 }
+\DoxyCodeLine{00398 \#if INVISCID\_SPH}
+\DoxyCodeLine{00399     time[timerCounter] = 0;}
+\DoxyCodeLine{00400     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00401     cudaVerifyKernel((betaviscosity<<<numberOfMultiprocessors * 4, NUM\_THREADS\_128>>>(}
+\DoxyCodeLine{00402                     interactions)));}
+\DoxyCodeLine{00403     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00404     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00405     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00406     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00407     if (param.verbose) printf("{}duration betaviscosity: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00408     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00409 \#endif}
+\DoxyCodeLine{00410 }
+\DoxyCodeLine{00411 }
+\DoxyCodeLine{00412 \#if (SYMMETRIC\_STRESSTENSOR || FRAGMENTATION || VON\_MISES\_PLASTICITY || JC\_PLASTICITY)}
+\DoxyCodeLine{00413     time[timerCounter] = 0;}
+\DoxyCodeLine{00414     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00415     cudaVerifyKernel((symmetrizeStress<<<4 * numberOfMultiprocessors, NUM\_THREADS\_512>>>()));}
+\DoxyCodeLine{00416     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00417     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00418     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00419     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00420     if (param.verbose) printf("{}duration symmetrize stress tensor: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00421     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00422 \#endif}
+\DoxyCodeLine{00423 }
+\DoxyCodeLine{00424 \#if VON\_MISES\_PLASTICITY}
+\DoxyCodeLine{00425     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00426     time[timerCounter] = 0;}
+\DoxyCodeLine{00427     cudaVerifyKernel((vonMisesPlasticity<<<numberOfMultiprocessors * 4, NUM\_THREADS\_512>>>()));}
+\DoxyCodeLine{00428     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00429     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00430     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00431     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00432     if (param.verbose) printf("{}duration von mises: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00433     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00434     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00435 \#endif}
+\DoxyCodeLine{00436 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00437     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00438     time[timerCounter] = 0;}
+\DoxyCodeLine{00439     cudaVerifyKernel((JohnsonCookPlasticity<<<numberOfMultiprocessors * 4, NUM\_THREADS\_512>>>()));}
+\DoxyCodeLine{00440     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00441     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00442     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00443     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00444     if (param.verbose) printf("{}duration johnson-\/cook: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00445     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00446 \#endif}
+\DoxyCodeLine{00447 \#if FRAGMENTATION}
+\DoxyCodeLine{00448     time[timerCounter] = 0;}
+\DoxyCodeLine{00449     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00450     cudaVerifyKernel((damageLimit<<<numberOfMultiprocessors*4, NUM\_THREADS\_512>>>()));}
+\DoxyCodeLine{00451     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00452     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00453     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00454     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00455     if (param.verbose) printf("{}duration damage limit: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00456     fflush(stdout);}
+\DoxyCodeLine{00457     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00458 \#endif}
+\DoxyCodeLine{00459 \#if TENSORIAL\_CORRECTION}
+\DoxyCodeLine{00460     time[timerCounter] = 0;}
+\DoxyCodeLine{00461     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00462     cudaVerifyKernel((tensorialCorrection<<<numberOfMultiprocessors*4, NUM\_THREADS\_256>>>( interactions)));}
+\DoxyCodeLine{00463     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00464     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00465     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00466     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00467     if (param.verbose) printf("{}duration tensorial correction: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00468     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00469     //cudaVerifyKernel((printTensorialCorrectionMatrix<<<1,1>>>( interactions)));}
+\DoxyCodeLine{00470 \#endif}
+\DoxyCodeLine{00471 \#if VISCOUS\_REGOLITH}
+\DoxyCodeLine{00472     time[timerCounter] = 0;}
+\DoxyCodeLine{00473     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00474     cudaVerifyKernel((calculatedeviatoricStress<<<numberOfMultiprocessors*4, NUM\_THREADS\_256>>>( interactions)));}
+\DoxyCodeLine{00475     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00476     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00477     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00478     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00479     if (param.verbose) printf("{}duration viscous regolith : \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00480     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00481 \#endif}
+\DoxyCodeLine{00482 }
+\DoxyCodeLine{00483 \#if XSPH}
+\DoxyCodeLine{00484     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00485     cudaVerifyKernel((calculateXSPHchanges<<<4 * numberOfMultiprocessors, NUM\_THREADS\_512>>>(interactions)));}
+\DoxyCodeLine{00486 \#endif /*XSPH */}
+\DoxyCodeLine{00487 }
+\DoxyCodeLine{00488 }
+\DoxyCodeLine{00489 \#if GHOST\_BOUNDARIES}
+\DoxyCodeLine{00490     /*}
+\DoxyCodeLine{00491        the location of the ghost boundary particles are set. The quantities for the ghost particles will}
+\DoxyCodeLine{00492        be set later on as soon as we know the quantities for the real particles (density, pressure...)}
+\DoxyCodeLine{00493      */}
+\DoxyCodeLine{00494     time[timerCounter] = 0;}
+\DoxyCodeLine{00495     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00496     cudaVerifyKernel((setQuantitiesGhostParticles<<<numberOfMultiprocessors, NUM\_THREADS\_BOUNDARY\_CONDITIONS>>>()));}
+\DoxyCodeLine{00497     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00498     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00499     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00500     if (param.verbose) printf("{}duration quantities ghost particles: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00501     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00502 \#endif}
+\DoxyCodeLine{00503 }
+\DoxyCodeLine{00504 \#if DEBUG}
+\DoxyCodeLine{00505     if (param.verbose) fprintf(stdout, "{}checking correlation matrix\(\backslash\)n"{});}
+\DoxyCodeLine{00506     fflush(stdout);}
+\DoxyCodeLine{00507     cudaVerifyKernel((checkNaNs<<<numberOfMultiprocessors, NUM\_THREADS\_128>>>(interactions)));}
+\DoxyCodeLine{00508     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00509     if (param.verbose) fprintf(stdout, "{}starting internalForces\(\backslash\)n"{});}
+\DoxyCodeLine{00510     fflush(stdout);}
+\DoxyCodeLine{00511 \#endif}
+\DoxyCodeLine{00512 }
+\DoxyCodeLine{00513 }
+\DoxyCodeLine{00514 \#if SOLID}
+\DoxyCodeLine{00515     time[timerCounter] = 0;}
+\DoxyCodeLine{00516     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00517     cudaVerifyKernel((set\_stress\_tensor<<<numberOfMultiprocessors, NUM\_THREADS\_256>>>()));}
+\DoxyCodeLine{00518     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00519     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00520     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00521     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00522     if (param.verbose) printf("{}duration set stress tensor: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00523     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00524 \#endif}
+\DoxyCodeLine{00525 }
+\DoxyCodeLine{00526 }
+\DoxyCodeLine{00527 \#if NAVIER\_STOKES}
+\DoxyCodeLine{00528     time[timerCounter] = 0;}
+\DoxyCodeLine{00529     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00530     cudaVerifyKernel((calculate\_shear\_stress\_tensor<<<numberOfMultiprocessors, NUM\_THREADS\_256>>>(interactions)));}
+\DoxyCodeLine{00531     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00532     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00533     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00534     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00535     if (param.verbose) printf("{}duration calculation shear stress tensor: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00536     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00537 \#endif}
+\DoxyCodeLine{00538 }
+\DoxyCodeLine{00539 }
+\DoxyCodeLine{00540 \#if ARTIFICIAL\_STRESS}
+\DoxyCodeLine{00541     time[timerCounter] = 0;}
+\DoxyCodeLine{00542     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00543     cudaVerifyKernel((compute\_artificial\_stress<<<numberOfMultiprocessors, NUM\_THREADS\_256>>>(interactions)));}
+\DoxyCodeLine{00544     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00545     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00546     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00547     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00548     if (param.verbose) printf("{}duration artificial\_stress: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00549     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00550 \#endif}
+\DoxyCodeLine{00551 }
+\DoxyCodeLine{00552     // the main loop, where all accelerations are calculated}
+\DoxyCodeLine{00553     time[timerCounter] = 0;}
+\DoxyCodeLine{00554     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00555     cudaVerifyKernel((internalForces<<<numberOfMultiprocessors, NUM\_THREADS\_128>>>(interactions)));}
+\DoxyCodeLine{00556     //cudaVerifyKernel((internalForces<<<1, 1 >>>(interactions)));}
+\DoxyCodeLine{00557     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00558     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00559     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00560     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00561     if (param.verbose) printf("{}duration internal forces: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00562     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00563 }
+\DoxyCodeLine{00564 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00565     // interaction with the point masses}
+\DoxyCodeLine{00566     time[timerCounter] = 0;}
+\DoxyCodeLine{00567     cudaEventRecord(start, 0);}
+\DoxyCodeLine{00568     cudaVerifyKernel((gravitation\_from\_point\_masses<<<numberOfMultiprocessors, NUM\_THREADS\_128>>>()));}
+\DoxyCodeLine{00569     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00570     cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00571     cudaEventSynchronize(stop);}
+\DoxyCodeLine{00572     cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00573     if (param.verbose) printf("{}duration gravitation from point masses: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00574     totalTime += time[timerCounter++];}
+\DoxyCodeLine{00575 \#endif}
+\DoxyCodeLine{00576 }
+\DoxyCodeLine{00577 \#if DEBUG}
+\DoxyCodeLine{00578     if (param.verbose) fprintf(stdout, "{}checking for nans after internal\_forces\(\backslash\)n"{});}
+\DoxyCodeLine{00579     fflush(stdout);}
+\DoxyCodeLine{00580     cudaVerifyKernel((checkNaNs<<<numberOfMultiprocessors, NUM\_THREADS\_128>>>(interactions)));}
+\DoxyCodeLine{00581     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00582     if (param.verbose) fprintf(stdout, "{}starting internalForces\(\backslash\)n"{});}
+\DoxyCodeLine{00583     fflush(stdout);}
+\DoxyCodeLine{00584 \#endif}
+\DoxyCodeLine{00585 }
+\DoxyCodeLine{00586 \#if GHOST\_BOUNDARIES}
+\DoxyCodeLine{00587     cudaVerifyKernel((removeGhostParticles<<<1,1>>>()));}
+\DoxyCodeLine{00588     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00589 \#endif}
+\DoxyCodeLine{00590 }
+\DoxyCodeLine{00591 }
+\DoxyCodeLine{00592     /* check if we need the nbody-\/tree stuff has to be re-\/organised or}
+\DoxyCodeLine{00593        if we could use the node masses and positions of last time step */}
+\DoxyCodeLine{00594 }
+\DoxyCodeLine{00595     if (param.selfgravity \&\& param.decouplegravity) \{}
+\DoxyCodeLine{00596         time[timerCounter] = 0;}
+\DoxyCodeLine{00597         cudaEventRecord(start, 0);}
+\DoxyCodeLine{00598         if (gravity\_index\%10 == 0) \{}
+\DoxyCodeLine{00599             flag\_force\_gravity\_calc = 1;}
+\DoxyCodeLine{00600         \}}
+\DoxyCodeLine{00601         /* alloc mem */}
+\DoxyCodeLine{00602         cudaVerify(cudaMalloc((void**)\&movingparticlesPerBlock, sizeof(int)*numberOfMultiprocessors));}
+\DoxyCodeLine{00603         /* determine how many particles will change their node */}
+\DoxyCodeLine{00604         cudaVerifyKernel(((measureTreeChange<<<numberOfMultiprocessors, NUM\_THREADS\_TREECHANGE>>>(movingparticlesPerBlock))));}
+\DoxyCodeLine{00605         /* get number of changing particles */}
+\DoxyCodeLine{00606         cudaMemcpyFromSymbol(\&movingparticles\_host, movingparticles, sizeof(int));}
+\DoxyCodeLine{00607         double changefraction = movingparticles\_host*1.0/numberOfParticles;}
+\DoxyCodeLine{00608         if (param.verbose) \{}
+\DoxyCodeLine{00609             fprintf(stdout, "{}\%d particles change their nodes, this is a fraction of \%g \%\% \(\backslash\)n"{}, movingparticles\_host, changefraction*1e2);}
+\DoxyCodeLine{00610             fprintf(stdout, "{}currently allowed maximum fraction is 0.1 \%\%.\(\backslash\)n"{});}
+\DoxyCodeLine{00611         \}}
+\DoxyCodeLine{00612         if (changefraction > 1e-\/3) \{}
+\DoxyCodeLine{00613             flag\_force\_gravity\_calc = 1;}
+\DoxyCodeLine{00614             cudaMemcpyToSymbol(reset\_movingparticles, \&flag\_force\_gravity\_calc, sizeof(int));}
+\DoxyCodeLine{00615         \}}
+\DoxyCodeLine{00616         /* free mem */}
+\DoxyCodeLine{00617         cudaVerify(cudaFree(movingparticlesPerBlock));}
+\DoxyCodeLine{00618         if (param.verbose) printf("{}duration tree changes: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00619         totalTime += time[timerCounter++];}
+\DoxyCodeLine{00620     \}}
+\DoxyCodeLine{00621 }
+\DoxyCodeLine{00622     /* self-\/gravitation using TREE */}
+\DoxyCodeLine{00623     time[timerCounter] = 0;}
+\DoxyCodeLine{00624     if (param.selfgravity) \{}
+\DoxyCodeLine{00625         cudaEventRecord(start, 0);}
+\DoxyCodeLine{00626         if (!param.decouplegravity)}
+\DoxyCodeLine{00627             flag\_force\_gravity\_calc = 1;}
+\DoxyCodeLine{00628         if (flag\_force\_gravity\_calc) \{}
+\DoxyCodeLine{00629             if (param.verbose) fprintf(stdout, "{}Calculating accelerations using new tree.\(\backslash\)n"{});}
+\DoxyCodeLine{00630             cudaVerifyKernel((selfgravity<<<16*numberOfMultiprocessors, NUM\_THREADS\_SELFGRAVITY>>>()));}
+\DoxyCodeLine{00631             flag\_force\_gravity\_calc = 0;}
+\DoxyCodeLine{00632             cudaMemcpyToSymbol(reset\_movingparticles, \&flag\_force\_gravity\_calc, sizeof(int));}
+\DoxyCodeLine{00633         \} else \{}
+\DoxyCodeLine{00634             if (param.verbose) printf("{}Skipping calculation of self\_gravity, using values from last timestep.\(\backslash\)n"{});}
+\DoxyCodeLine{00635             cudaVerifyKernel((addoldselfgravity<<<16*numberOfMultiprocessors, NUM\_THREADS\_SELFGRAVITY>>>()));}
+\DoxyCodeLine{00636         \}}
+\DoxyCodeLine{00637         cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00638         cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00639         cudaEventSynchronize(stop);}
+\DoxyCodeLine{00640         gravity\_index++;}
+\DoxyCodeLine{00641         cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00642         if (param.verbose)}
+\DoxyCodeLine{00643             printf("{}duration selfgravity: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00644     \}}
+\DoxyCodeLine{00645 }
+\DoxyCodeLine{00646     /* self gravitation using particle-\/particle forces */}
+\DoxyCodeLine{00647     if (param.directselfgravity) \{}
+\DoxyCodeLine{00648         if (param.verbose) fprintf(stdout, "{}Calculating accelerations using n**2 algorithm.\(\backslash\)n"{});}
+\DoxyCodeLine{00649         cudaVerifyKernel((direct\_selfgravity<<<numberOfMultiprocessors, NUM\_THREADS\_SELFGRAVITY>>>()));}
+\DoxyCodeLine{00650         cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00651         cudaEventRecord(stop, 0);}
+\DoxyCodeLine{00652         cudaEventSynchronize(stop);}
+\DoxyCodeLine{00653         cudaEventElapsedTime(\&time[timerCounter], start, stop);}
+\DoxyCodeLine{00654         if (param.verbose)}
+\DoxyCodeLine{00655             printf("{}duration selfgravity: \%.7f ms\(\backslash\)n"{}, time[timerCounter]);}
+\DoxyCodeLine{00656     \}}
+\DoxyCodeLine{00657 }
+\DoxyCodeLine{00658 }
+\DoxyCodeLine{00659     totalTime += time[timerCounter];}
+\DoxyCodeLine{00660 }
+\DoxyCodeLine{00661     /* set any special particle values */}
+\DoxyCodeLine{00662     cudaVerifyKernel((BoundaryConditionsAfterRHS<<<16 * numberOfMultiprocessors, NUM\_THREADS\_BOUNDARY\_CONDITIONS>>>(interactions)));}
+\DoxyCodeLine{00663 }
+\DoxyCodeLine{00664     // set dx/dt = v or dx/dt = v + dxsph/dt}
+\DoxyCodeLine{00665     cudaVerifyKernel((setlocationchanges<<<4 * numberOfMultiprocessors, NUM\_THREADS\_512>>>(interactions)));}
+\DoxyCodeLine{00666 }
+\DoxyCodeLine{00667 }
+\DoxyCodeLine{00668 \#if VARIABLE\_SML \&\& !READ\_INITIAL\_SML\_FROM\_PARTICLE\_FILE}
+\DoxyCodeLine{00669     // boundary conditions for the smoothing lengths}
+\DoxyCodeLine{00670     if (param.verbose) printf("{}calling check\_sml\_boundary\(\backslash\)n"{});}
+\DoxyCodeLine{00671     cudaVerifyKernel((check\_sml\_boundary<<<numberOfMultiprocessors * 4, NUM\_THREADS\_NEIGHBOURSEARCH>>>()));}
+\DoxyCodeLine{00672     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00673 \#endif}
+\DoxyCodeLine{00674 }
+\DoxyCodeLine{00675     if (param.verbose) fprintf(stdout, "{}total duration right hand side: \%.7f ms\(\backslash\)n"{}, totalTime);}
+\DoxyCodeLine{00676 }
+\DoxyCodeLine{00677     if (param.performanceTest) \{}
+\DoxyCodeLine{00678         write\_performance(time);}
+\DoxyCodeLine{00679     \}}
+\DoxyCodeLine{00680 }
+\DoxyCodeLine{00681 \}}
+
+\end{DoxyCode}

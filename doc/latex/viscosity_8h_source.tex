@@ -1,0 +1,23 @@
+\hypertarget{viscosity_8h_source}{}\doxysection{viscosity.\+h}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 }
+\DoxyCodeLine{00025 \textcolor{preprocessor}{\#ifndef \_INVISCIDSPH\_H}}
+\DoxyCodeLine{00026 \textcolor{preprocessor}{\#define \_INVISCIDSPH\_H}}
+\DoxyCodeLine{00027 }
+\DoxyCodeLine{00028 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{timeintegration_8h}{timeintegration.h}}"{}}}
+\DoxyCodeLine{00029 }
+\DoxyCodeLine{00030 }
+\DoxyCodeLine{\Hypertarget{viscosity_8h_source_l00031}\mbox{\hyperlink{viscosity_8h_a2bfa27ba72d5dedf75a624cd871a0346}{00031}} \_\_global\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{viscosity_8h_a2bfa27ba72d5dedf75a624cd871a0346}{betaviscosity}}(\textcolor{keywordtype}{int} *\mbox{\hyperlink{miluph_8h_a6452a9acca23effecb6f5a6e0cd332ec}{interactions}});}
+\DoxyCodeLine{00032 }
+\DoxyCodeLine{\Hypertarget{viscosity_8h_source_l00033}\mbox{\hyperlink{viscosity_8h_a753caadd06df4fc17c916cbb55029193}{00033}} \_\_global\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{viscosity_8h_a753caadd06df4fc17c916cbb55029193}{calculate\_shear\_stress\_tensor}}(\textcolor{keywordtype}{int} *\mbox{\hyperlink{miluph_8h_a6452a9acca23effecb6f5a6e0cd332ec}{interactions}});}
+\DoxyCodeLine{00034 }
+\DoxyCodeLine{00035 }
+\DoxyCodeLine{\Hypertarget{viscosity_8h_source_l00036}\mbox{\hyperlink{viscosity_8h_a09dfbb5ef3cf13f091a4850f1c6e512e}{00036}} \_\_device\_\_ \textcolor{keywordtype}{int} \mbox{\hyperlink{viscosity_8h_a09dfbb5ef3cf13f091a4850f1c6e512e}{sign}}(\textcolor{keywordtype}{double} x);}
+\DoxyCodeLine{\Hypertarget{viscosity_8h_source_l00037}\mbox{\hyperlink{viscosity_8h_a2281abce50ff1f2abed346bd1ac2c264}{00037}} \_\_device\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{viscosity_8h_a2281abce50ff1f2abed346bd1ac2c264}{multiply}}(\textcolor{keywordtype}{double} mat1[][\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} mat2[][\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}], \textcolor{keywordtype}{double} res[][\mbox{\hyperlink{parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{DIM}}]);}
+\DoxyCodeLine{00038 }
+\DoxyCodeLine{00039 }
+\DoxyCodeLine{00040 }
+\DoxyCodeLine{00041 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}
