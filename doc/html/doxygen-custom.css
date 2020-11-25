@@ -214,17 +214,16 @@ h4 a:hover, a:active, h5 a:hover, a:active, h6 a:hover, a:active {
 }
 
 #banner div.logo {
-	/*background: url('https://upload.wikimedia.org/wikipedia/de/9/9c/UniversitaetTuebingen_WortBildMarke.png') no-repeat scroll 0 0 transparent;*/
-	background: url('https://astrotourismwa.com.au/wp-content/uploads/2018/12/Milky-Way-Galaxy-1080x675.jpg');
-	background-repeat: repeat;
-	background-size: auto auto;
+	background: url('https://upload.wikimedia.org/wikipedia/de/9/9c/UniversitaetTuebingen_WortBildMarke.png') no-repeat scroll 0 0 transparent;
+	/*background-repeat: no-repeat;*/
+	background-size: auto 80%;
 	/*min-width: 19em;
 	max-width: 7000em;
 	height: 100%;
 	width: 100%;
 	margin: 0 auto;*/
 	height: 100%;
-	margin: 0 0;
+	margin: 0 80px;
 
 }
 
