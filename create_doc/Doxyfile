@@ -16,7 +16,7 @@
 
 
 @INCLUDE               = create_doc/doxyfile.inc
-USE_MDFILE_AS_MAINPAGE = README.md
+USE_MDFILE_AS_MAINPAGE = doc/Mainpage.md
 
 
 # This tag specifies the encoding used for all characters in the config file
