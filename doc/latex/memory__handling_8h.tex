@@ -1,0 +1,133 @@
+\hypertarget{memory__handling_8h}{}\doxysection{memory\+\_\+handling.\+h File Reference}
+\label{memory__handling_8h}\index{memory\_handling.h@{memory\_handling.h}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{memory__handling_8h_ae9bfe8253c19cec99b9895c85986bb03}{init\+\_\+allocate\+\_\+memory}} (void)
+\item 
+int \mbox{\hyperlink{memory__handling_8h_a24ca277df28204b5dba6aa2c76d1bf96}{copy\+\_\+particle\+\_\+data\+\_\+to\+\_\+device}} (void)
+\item 
+int \mbox{\hyperlink{memory__handling_8h_a4c3363fe57048781b499bdffe1e69c62}{free\+\_\+memory}} (void)
+\item 
+int \mbox{\hyperlink{memory__handling_8h_a89f9ee0c63abeda4a36788eeb53e43ed}{copy\+\_\+particles\+\_\+variables\+\_\+device\+\_\+to\+\_\+device}} (struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$, struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$)
+\item 
+int \mbox{\hyperlink{memory__handling_8h_a44b9642da9f880f59da315069cb0ff49}{copy\+\_\+pointmass\+\_\+variables\+\_\+device\+\_\+to\+\_\+device}} (struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$, struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$)
+\item 
+int \mbox{\hyperlink{memory__handling_8h_a1796effb068926841343b7790eb59992}{copy\+\_\+particles\+\_\+derivatives\+\_\+device\+\_\+to\+\_\+device}} (struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$, struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$)
+\item 
+int \mbox{\hyperlink{memory__handling_8h_ac7e112851998403efaa9dcd83b276afc}{copy\+\_\+pointmass\+\_\+derivatives\+\_\+device\+\_\+to\+\_\+device}} (struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$, struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$)
+\item 
+int \mbox{\hyperlink{memory__handling_8h_a67c629bd086c792c7a86e29011bb5d4b}{copy\+\_\+particles\+\_\+immutables\+\_\+device\+\_\+to\+\_\+device}} (struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$, struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$)
+\item 
+int \mbox{\hyperlink{memory__handling_8h_a9ae32fc3fbfe3661d7e4f5a10817389e}{copy\+\_\+pointmass\+\_\+immutables\+\_\+device\+\_\+to\+\_\+device}} (struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$, struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$)
+\item 
+int \mbox{\hyperlink{memory__handling_8h_ac14d3df360ed2d084081cdb2cad150c1}{copy\+\_\+gravitational\+\_\+accels\+\_\+device\+\_\+to\+\_\+device}} (struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$, struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$)
+\item 
+int \mbox{\hyperlink{memory__handling_8h_a43a691a35765864a1a93e4a7775304de}{allocate\+\_\+particles\+\_\+memory}} (struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$, int allocate\+\_\+immutables)
+\item 
+int \mbox{\hyperlink{memory__handling_8h_a502615c74d28b06559e55ed5b60fd056}{allocate\+\_\+pointmass\+\_\+memory}} (struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$, int allocate\+\_\+immutables)
+\item 
+int \mbox{\hyperlink{memory__handling_8h_a98fbaf562494aa93c5d40c2cee9debd0}{free\+\_\+particles\+\_\+memory}} (struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$, int free\+\_\+immutables)
+\item 
+int \mbox{\hyperlink{memory__handling_8h_a0abef4d2a89c5ef4bd8b897076bbb0b6}{free\+\_\+pointmass\+\_\+memory}} (struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$, int free\+\_\+immutables)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{memory__handling_8h_a43a691a35765864a1a93e4a7775304de}\label{memory__handling_8h_a43a691a35765864a1a93e4a7775304de}} 
+\index{memory\_handling.h@{memory\_handling.h}!allocate\_particles\_memory@{allocate\_particles\_memory}}
+\index{allocate\_particles\_memory@{allocate\_particles\_memory}!memory\_handling.h@{memory\_handling.h}}
+\doxysubsubsection{\texorpdfstring{allocate\_particles\_memory()}{allocate\_particles\_memory()}}
+{\footnotesize\ttfamily int allocate\+\_\+particles\+\_\+memory (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$}]{,  }\item[{int}]{allocate\+\_\+immutables }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{memory__handling_8h_a502615c74d28b06559e55ed5b60fd056}\label{memory__handling_8h_a502615c74d28b06559e55ed5b60fd056}} 
+\index{memory\_handling.h@{memory\_handling.h}!allocate\_pointmass\_memory@{allocate\_pointmass\_memory}}
+\index{allocate\_pointmass\_memory@{allocate\_pointmass\_memory}!memory\_handling.h@{memory\_handling.h}}
+\doxysubsubsection{\texorpdfstring{allocate\_pointmass\_memory()}{allocate\_pointmass\_memory()}}
+{\footnotesize\ttfamily int allocate\+\_\+pointmass\+\_\+memory (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$}]{,  }\item[{int}]{allocate\+\_\+immutables }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{memory__handling_8h_ac14d3df360ed2d084081cdb2cad150c1}\label{memory__handling_8h_ac14d3df360ed2d084081cdb2cad150c1}} 
+\index{memory\_handling.h@{memory\_handling.h}!copy\_gravitational\_accels\_device\_to\_device@{copy\_gravitational\_accels\_device\_to\_device}}
+\index{copy\_gravitational\_accels\_device\_to\_device@{copy\_gravitational\_accels\_device\_to\_device}!memory\_handling.h@{memory\_handling.h}}
+\doxysubsubsection{\texorpdfstring{copy\_gravitational\_accels\_device\_to\_device()}{copy\_gravitational\_accels\_device\_to\_device()}}
+{\footnotesize\ttfamily int copy\+\_\+gravitational\+\_\+accels\+\_\+device\+\_\+to\+\_\+device (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$}]{,  }\item[{struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{memory__handling_8h_a24ca277df28204b5dba6aa2c76d1bf96}\label{memory__handling_8h_a24ca277df28204b5dba6aa2c76d1bf96}} 
+\index{memory\_handling.h@{memory\_handling.h}!copy\_particle\_data\_to\_device@{copy\_particle\_data\_to\_device}}
+\index{copy\_particle\_data\_to\_device@{copy\_particle\_data\_to\_device}!memory\_handling.h@{memory\_handling.h}}
+\doxysubsubsection{\texorpdfstring{copy\_particle\_data\_to\_device()}{copy\_particle\_data\_to\_device()}}
+{\footnotesize\ttfamily int copy\+\_\+particle\+\_\+data\+\_\+to\+\_\+device (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{memory__handling_8h_a1796effb068926841343b7790eb59992}\label{memory__handling_8h_a1796effb068926841343b7790eb59992}} 
+\index{memory\_handling.h@{memory\_handling.h}!copy\_particles\_derivatives\_device\_to\_device@{copy\_particles\_derivatives\_device\_to\_device}}
+\index{copy\_particles\_derivatives\_device\_to\_device@{copy\_particles\_derivatives\_device\_to\_device}!memory\_handling.h@{memory\_handling.h}}
+\doxysubsubsection{\texorpdfstring{copy\_particles\_derivatives\_device\_to\_device()}{copy\_particles\_derivatives\_device\_to\_device()}}
+{\footnotesize\ttfamily int copy\+\_\+particles\+\_\+derivatives\+\_\+device\+\_\+to\+\_\+device (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$}]{,  }\item[{struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{memory__handling_8h_a67c629bd086c792c7a86e29011bb5d4b}\label{memory__handling_8h_a67c629bd086c792c7a86e29011bb5d4b}} 
+\index{memory\_handling.h@{memory\_handling.h}!copy\_particles\_immutables\_device\_to\_device@{copy\_particles\_immutables\_device\_to\_device}}
+\index{copy\_particles\_immutables\_device\_to\_device@{copy\_particles\_immutables\_device\_to\_device}!memory\_handling.h@{memory\_handling.h}}
+\doxysubsubsection{\texorpdfstring{copy\_particles\_immutables\_device\_to\_device()}{copy\_particles\_immutables\_device\_to\_device()}}
+{\footnotesize\ttfamily int copy\+\_\+particles\+\_\+immutables\+\_\+device\+\_\+to\+\_\+device (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$}]{,  }\item[{struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{memory__handling_8h_a89f9ee0c63abeda4a36788eeb53e43ed}\label{memory__handling_8h_a89f9ee0c63abeda4a36788eeb53e43ed}} 
+\index{memory\_handling.h@{memory\_handling.h}!copy\_particles\_variables\_device\_to\_device@{copy\_particles\_variables\_device\_to\_device}}
+\index{copy\_particles\_variables\_device\_to\_device@{copy\_particles\_variables\_device\_to\_device}!memory\_handling.h@{memory\_handling.h}}
+\doxysubsubsection{\texorpdfstring{copy\_particles\_variables\_device\_to\_device()}{copy\_particles\_variables\_device\_to\_device()}}
+{\footnotesize\ttfamily int copy\+\_\+particles\+\_\+variables\+\_\+device\+\_\+to\+\_\+device (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$}]{,  }\item[{struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{memory__handling_8h_ac7e112851998403efaa9dcd83b276afc}\label{memory__handling_8h_ac7e112851998403efaa9dcd83b276afc}} 
+\index{memory\_handling.h@{memory\_handling.h}!copy\_pointmass\_derivatives\_device\_to\_device@{copy\_pointmass\_derivatives\_device\_to\_device}}
+\index{copy\_pointmass\_derivatives\_device\_to\_device@{copy\_pointmass\_derivatives\_device\_to\_device}!memory\_handling.h@{memory\_handling.h}}
+\doxysubsubsection{\texorpdfstring{copy\_pointmass\_derivatives\_device\_to\_device()}{copy\_pointmass\_derivatives\_device\_to\_device()}}
+{\footnotesize\ttfamily int copy\+\_\+pointmass\+\_\+derivatives\+\_\+device\+\_\+to\+\_\+device (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$}]{,  }\item[{struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{memory__handling_8h_a9ae32fc3fbfe3661d7e4f5a10817389e}\label{memory__handling_8h_a9ae32fc3fbfe3661d7e4f5a10817389e}} 
+\index{memory\_handling.h@{memory\_handling.h}!copy\_pointmass\_immutables\_device\_to\_device@{copy\_pointmass\_immutables\_device\_to\_device}}
+\index{copy\_pointmass\_immutables\_device\_to\_device@{copy\_pointmass\_immutables\_device\_to\_device}!memory\_handling.h@{memory\_handling.h}}
+\doxysubsubsection{\texorpdfstring{copy\_pointmass\_immutables\_device\_to\_device()}{copy\_pointmass\_immutables\_device\_to\_device()}}
+{\footnotesize\ttfamily int copy\+\_\+pointmass\+\_\+immutables\+\_\+device\+\_\+to\+\_\+device (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$}]{,  }\item[{struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{memory__handling_8h_a44b9642da9f880f59da315069cb0ff49}\label{memory__handling_8h_a44b9642da9f880f59da315069cb0ff49}} 
+\index{memory\_handling.h@{memory\_handling.h}!copy\_pointmass\_variables\_device\_to\_device@{copy\_pointmass\_variables\_device\_to\_device}}
+\index{copy\_pointmass\_variables\_device\_to\_device@{copy\_pointmass\_variables\_device\_to\_device}!memory\_handling.h@{memory\_handling.h}}
+\doxysubsubsection{\texorpdfstring{copy\_pointmass\_variables\_device\_to\_device()}{copy\_pointmass\_variables\_device\_to\_device()}}
+{\footnotesize\ttfamily int copy\+\_\+pointmass\+\_\+variables\+\_\+device\+\_\+to\+\_\+device (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$}]{,  }\item[{struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{memory__handling_8h_a4c3363fe57048781b499bdffe1e69c62}\label{memory__handling_8h_a4c3363fe57048781b499bdffe1e69c62}} 
+\index{memory\_handling.h@{memory\_handling.h}!free\_memory@{free\_memory}}
+\index{free\_memory@{free\_memory}!memory\_handling.h@{memory\_handling.h}}
+\doxysubsubsection{\texorpdfstring{free\_memory()}{free\_memory()}}
+{\footnotesize\ttfamily int free\+\_\+memory (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{memory__handling_8h_a98fbaf562494aa93c5d40c2cee9debd0}\label{memory__handling_8h_a98fbaf562494aa93c5d40c2cee9debd0}} 
+\index{memory\_handling.h@{memory\_handling.h}!free\_particles\_memory@{free\_particles\_memory}}
+\index{free\_particles\_memory@{free\_particles\_memory}!memory\_handling.h@{memory\_handling.h}}
+\doxysubsubsection{\texorpdfstring{free\_particles\_memory()}{free\_particles\_memory()}}
+{\footnotesize\ttfamily int free\+\_\+particles\+\_\+memory (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_particle}{Particle}} $\ast$}]{,  }\item[{int}]{free\+\_\+immutables }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{memory__handling_8h_a0abef4d2a89c5ef4bd8b897076bbb0b6}\label{memory__handling_8h_a0abef4d2a89c5ef4bd8b897076bbb0b6}} 
+\index{memory\_handling.h@{memory\_handling.h}!free\_pointmass\_memory@{free\_pointmass\_memory}}
+\index{free\_pointmass\_memory@{free\_pointmass\_memory}!memory\_handling.h@{memory\_handling.h}}
+\doxysubsubsection{\texorpdfstring{free\_pointmass\_memory()}{free\_pointmass\_memory()}}
+{\footnotesize\ttfamily int free\+\_\+pointmass\+\_\+memory (\begin{DoxyParamCaption}\item[{struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} $\ast$}]{,  }\item[{int}]{free\+\_\+immutables }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{memory__handling_8h_ae9bfe8253c19cec99b9895c85986bb03}\label{memory__handling_8h_ae9bfe8253c19cec99b9895c85986bb03}} 
+\index{memory\_handling.h@{memory\_handling.h}!init\_allocate\_memory@{init\_allocate\_memory}}
+\index{init\_allocate\_memory@{init\_allocate\_memory}!memory\_handling.h@{memory\_handling.h}}
+\doxysubsubsection{\texorpdfstring{init\_allocate\_memory()}{init\_allocate\_memory()}}
+{\footnotesize\ttfamily int init\+\_\+allocate\+\_\+memory (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\begin{DoxyAuthor}{Author}
+Christoph Schaefer \href{mailto:cm.schaefer@gmail.com}{\texttt{ cm.\+schaefer@gmail.\+com}}
+\end{DoxyAuthor}
+\hypertarget{xsph_8h_LICENSE}{}\doxysubsection{L\+I\+C\+E\+N\+SE}\label{xsph_8h_LICENSE}
+Copyright (c) 2019 Christoph Schaefer
+
+This file is part of miluphcuda.
+
+miluphcuda is free software\+: you can redistribute it and/or modify it under the terms of the G\+NU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+miluphcuda is distributed in the hope that it will be useful, but W\+I\+T\+H\+O\+UT A\+NY W\+A\+R\+R\+A\+N\+TY; without even the implied warranty of M\+E\+R\+C\+H\+A\+N\+T\+A\+B\+I\+L\+I\+TY or F\+I\+T\+N\+E\+SS F\+OR A P\+A\+R\+T\+I\+C\+U\+L\+AR P\+U\+R\+P\+O\+SE. See the G\+NU General Public License for more details.
+
+You should have received a copy of the G\+NU General Public License along with miluphcuda. If not, see \href{http://www.gnu.org/licenses/}{\texttt{ http\+://www.\+gnu.\+org/licenses/}}. 

@@ -1,0 +1,95 @@
+\hypertarget{rk2adaptive_8h}{}\doxysection{rk2adaptive.\+h File Reference}
+\label{rk2adaptive_8h}\index{rk2adaptive.h@{rk2adaptive.h}}
+{\ttfamily \#include \char`\"{}miluph.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}timeintegration.\+h\char`\"{}}\newline
+Include dependency graph for rk2adaptive.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{rk2adaptive_8h__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{rk2adaptive_8h_a8d37d229e9c2b5972c19177be715137b}{rk2\+Adaptive}} ()
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{rk2adaptive_8h_a5308c46b1c3eed7da718f29da03233b5}{limit\+Timestep}} (double $\ast$forces\+Per\+Block, double $\ast$courant\+Per\+Block)
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{rk2adaptive_8h_a8da31361d8a77da93d058fa8c48e704e}{check\+Error}} (double $\ast$max\+Pos\+Abs\+Error\+Per\+Block, double $\ast$max\+Vel\+Abs\+Error\+Per\+Block, double $\ast$max\+Density\+Abs\+Error\+Per\+Block)
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{rk2adaptive_8h_a59fa6fb2b980eb0a3939339f8ef758f3}{damage\+Max\+Time\+Step}} (double $\ast$max\+Damage\+Time\+Step\+Per\+Block)
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{rk2adaptive_8h_a7ed61b702995d95eba762edca2a045c6}{alpha\+Max\+Time\+Step}} (double $\ast$maxalpha\+Diff\+Per\+Block)
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{rk2adaptive_8h_ae845fa1a6860cd81b051bf8efa13d2ae}{integrate\+First\+Step}} (void)
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{rk2adaptive_8h_a7fc5e6003a94d1b86a72334ff19a14ab}{integrate\+Second\+Step}} (void)
+\item 
+\+\_\+\+\_\+global\+\_\+\+\_\+ void \mbox{\hyperlink{rk2adaptive_8h_a6927b6b75fda2ade3605df5545a20c54}{integrate\+Third\+Step}} (void)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{rk2adaptive_8h_a7ed61b702995d95eba762edca2a045c6}\label{rk2adaptive_8h_a7ed61b702995d95eba762edca2a045c6}} 
+\index{rk2adaptive.h@{rk2adaptive.h}!alphaMaxTimeStep@{alphaMaxTimeStep}}
+\index{alphaMaxTimeStep@{alphaMaxTimeStep}!rk2adaptive.h@{rk2adaptive.h}}
+\doxysubsubsection{\texorpdfstring{alphaMaxTimeStep()}{alphaMaxTimeStep()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void alpha\+Max\+Time\+Step (\begin{DoxyParamCaption}\item[{double $\ast$}]{maxalpha\+Diff\+Per\+Block }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{rk2adaptive_8h_a8da31361d8a77da93d058fa8c48e704e}\label{rk2adaptive_8h_a8da31361d8a77da93d058fa8c48e704e}} 
+\index{rk2adaptive.h@{rk2adaptive.h}!checkError@{checkError}}
+\index{checkError@{checkError}!rk2adaptive.h@{rk2adaptive.h}}
+\doxysubsubsection{\texorpdfstring{checkError()}{checkError()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void check\+Error (\begin{DoxyParamCaption}\item[{double $\ast$}]{max\+Pos\+Abs\+Error\+Per\+Block,  }\item[{double $\ast$}]{max\+Vel\+Abs\+Error\+Per\+Block,  }\item[{double $\ast$}]{max\+Density\+Abs\+Error\+Per\+Block }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{rk2adaptive_8h_a59fa6fb2b980eb0a3939339f8ef758f3}\label{rk2adaptive_8h_a59fa6fb2b980eb0a3939339f8ef758f3}} 
+\index{rk2adaptive.h@{rk2adaptive.h}!damageMaxTimeStep@{damageMaxTimeStep}}
+\index{damageMaxTimeStep@{damageMaxTimeStep}!rk2adaptive.h@{rk2adaptive.h}}
+\doxysubsubsection{\texorpdfstring{damageMaxTimeStep()}{damageMaxTimeStep()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void damage\+Max\+Time\+Step (\begin{DoxyParamCaption}\item[{double $\ast$}]{max\+Damage\+Time\+Step\+Per\+Block }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{rk2adaptive_8h_ae845fa1a6860cd81b051bf8efa13d2ae}\label{rk2adaptive_8h_ae845fa1a6860cd81b051bf8efa13d2ae}} 
+\index{rk2adaptive.h@{rk2adaptive.h}!integrateFirstStep@{integrateFirstStep}}
+\index{integrateFirstStep@{integrateFirstStep}!rk2adaptive.h@{rk2adaptive.h}}
+\doxysubsubsection{\texorpdfstring{integrateFirstStep()}{integrateFirstStep()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void integrate\+First\+Step (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{rk2adaptive_8h_a7fc5e6003a94d1b86a72334ff19a14ab}\label{rk2adaptive_8h_a7fc5e6003a94d1b86a72334ff19a14ab}} 
+\index{rk2adaptive.h@{rk2adaptive.h}!integrateSecondStep@{integrateSecondStep}}
+\index{integrateSecondStep@{integrateSecondStep}!rk2adaptive.h@{rk2adaptive.h}}
+\doxysubsubsection{\texorpdfstring{integrateSecondStep()}{integrateSecondStep()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void integrate\+Second\+Step (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{rk2adaptive_8h_a6927b6b75fda2ade3605df5545a20c54}\label{rk2adaptive_8h_a6927b6b75fda2ade3605df5545a20c54}} 
+\index{rk2adaptive.h@{rk2adaptive.h}!integrateThirdStep@{integrateThirdStep}}
+\index{integrateThirdStep@{integrateThirdStep}!rk2adaptive.h@{rk2adaptive.h}}
+\doxysubsubsection{\texorpdfstring{integrateThirdStep()}{integrateThirdStep()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void integrate\+Third\+Step (\begin{DoxyParamCaption}\item[{void}]{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{rk2adaptive_8h_a5308c46b1c3eed7da718f29da03233b5}\label{rk2adaptive_8h_a5308c46b1c3eed7da718f29da03233b5}} 
+\index{rk2adaptive.h@{rk2adaptive.h}!limitTimestep@{limitTimestep}}
+\index{limitTimestep@{limitTimestep}!rk2adaptive.h@{rk2adaptive.h}}
+\doxysubsubsection{\texorpdfstring{limitTimestep()}{limitTimestep()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+global\+\_\+\+\_\+ void limit\+Timestep (\begin{DoxyParamCaption}\item[{double $\ast$}]{forces\+Per\+Block,  }\item[{double $\ast$}]{courant\+Per\+Block }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{rk2adaptive_8h_a8d37d229e9c2b5972c19177be715137b}\label{rk2adaptive_8h_a8d37d229e9c2b5972c19177be715137b}} 
+\index{rk2adaptive.h@{rk2adaptive.h}!rk2Adaptive@{rk2Adaptive}}
+\index{rk2Adaptive@{rk2Adaptive}!rk2adaptive.h@{rk2adaptive.h}}
+\doxysubsubsection{\texorpdfstring{rk2Adaptive()}{rk2Adaptive()}}
+{\footnotesize\ttfamily void rk2\+Adaptive (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\begin{DoxyAuthor}{Author}
+Christoph Schaefer \href{mailto:cm.schaefer@gmail.com}{\texttt{ cm.\+schaefer@gmail.\+com}}
+\end{DoxyAuthor}
+\hypertarget{xsph_8h_LICENSE}{}\doxysubsection{L\+I\+C\+E\+N\+SE}\label{xsph_8h_LICENSE}
+Copyright (c) 2019 Christoph Schaefer
+
+This file is part of miluphcuda.
+
+miluphcuda is free software\+: you can redistribute it and/or modify it under the terms of the G\+NU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+miluphcuda is distributed in the hope that it will be useful, but W\+I\+T\+H\+O\+UT A\+NY W\+A\+R\+R\+A\+N\+TY; without even the implied warranty of M\+E\+R\+C\+H\+A\+N\+T\+A\+B\+I\+L\+I\+TY or F\+I\+T\+N\+E\+SS F\+OR A P\+A\+R\+T\+I\+C\+U\+L\+AR P\+U\+R\+P\+O\+SE. See the G\+NU General Public License for more details.
+
+You should have received a copy of the G\+NU General Public License along with miluphcuda. If not, see \href{http://www.gnu.org/licenses/}{\texttt{ http\+://www.\+gnu.\+org/licenses/}}. 

@@ -1,0 +1,137 @@
+\hypertarget{soundspeed_8cu_source}{}\doxysection{soundspeed.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00025 \#include "{}soundspeed.h"{}}
+\DoxyCodeLine{00026 \#include "{}pressure.h"{}}
+\DoxyCodeLine{00027 }
+\DoxyCodeLine{00028 }
+\DoxyCodeLine{00029 \_\_global\_\_ void calculateSoundSpeed()}
+\DoxyCodeLine{00030 \{}
+\DoxyCodeLine{00031     register int i, inc, matId;}
+\DoxyCodeLine{00032     int d;}
+\DoxyCodeLine{00033     int j;}
+\DoxyCodeLine{00034     double m\_com;}
+\DoxyCodeLine{00035 }
+\DoxyCodeLine{00036     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00037     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00038         matId = p\_rhs.materialId[i];}
+\DoxyCodeLine{00039         if (EOS\_TYPE\_POLYTROPIC\_GAS == matEOS[matId]) \{}
+\DoxyCodeLine{00040             p.cs[i] = sqrt(matPolytropicK[matId] * pow(p.rho[i], matPolytropicGamma[matId]-\/1.0));}
+\DoxyCodeLine{00041         \} else if (EOS\_TYPE\_LOCALLY\_ISOTHERMAL\_GAS == matEOS[matId]) \{}
+\DoxyCodeLine{00042             // p = vkep \(\backslash\)times scale\_height}
+\DoxyCodeLine{00043             double distance = 0.0;}
+\DoxyCodeLine{00044             distance = p.x[i] * p.x[i];}
+\DoxyCodeLine{00045 \#if DIM > 1}
+\DoxyCodeLine{00046             distance += p.y[i]*p.y[i];}
+\DoxyCodeLine{00047 \#if DIM > 2}
+\DoxyCodeLine{00048             distance += p.z[i]*p.z[i];}
+\DoxyCodeLine{00049 \#endif}
+\DoxyCodeLine{00050 \#endif}
+\DoxyCodeLine{00051             distance = sqrt(distance);}
+\DoxyCodeLine{00052             m\_com = 0;}
+\DoxyCodeLine{00053             for (j = 0; j < numPointmasses; j++) \{}
+\DoxyCodeLine{00054                 m\_com += pointmass.m[j];}
+\DoxyCodeLine{00055             \}}
+\DoxyCodeLine{00056 }
+\DoxyCodeLine{00057             double vkep = sqrt(C\_GRAVITY\_SI * m\_com/distance);}
+\DoxyCodeLine{00058             p.cs[i] = vkep * scale\_height;}
+\DoxyCodeLine{00059         \} else if (EOS\_TYPE\_IDEAL\_GAS == matEOS[matId]) \{}
+\DoxyCodeLine{00060             p.cs[i] = sqrt(matPolytropicGamma[matId] * p.p[i] / p.rho[i]);}
+\DoxyCodeLine{00061         \} else if (EOS\_TYPE\_JUTZI == matEOS[matId] || EOS\_TYPE\_JUTZI\_MURNAGHAN == matEOS[matId]) \{}
+\DoxyCodeLine{00062 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00063             //p.cs[i] = sqrt(matBulkmodulus[matId]/matTillRho0[matId]);}
+\DoxyCodeLine{00064 //            if (p.alpha\_jutzi[i] > 1.0 \&\& abs(p.dalphadp[i]) > 0) \{}
+\DoxyCodeLine{00065 //                if (abs(p.delpdelrho[i]) > 0.0 || abs(p.delpdele[i]) > 0.0) \{}
+\DoxyCodeLine{00066 //                    p.cs[i] = sqrt((p.alpha\_jutzi[i] * p.delpdelrho[i] + p.delpdele[i] * p.p[i] / (p.rho[i] * p.rho[i]))}
+\DoxyCodeLine{00067 //                                / (p.alpha\_jutzi[i] + p.dalphadp[i] * (p.p[i] -\/ p.rho[i] * p.delpdelrho[i])));}
+\DoxyCodeLine{00068 //                \}}
+\DoxyCodeLine{00069 //            \}}
+\DoxyCodeLine{00070 //            if (!isnan(p.cs[i])) \{}
+\DoxyCodeLine{00071 //                p\_rhs.cs\_old[i] = p.cs[i];}
+\DoxyCodeLine{00072 //            \} else \{}
+\DoxyCodeLine{00073 //                p.cs[i] = p\_rhs.cs\_old[i];}
+\DoxyCodeLine{00074 //            \}}
+\DoxyCodeLine{00075 //\#if 0}
+\DoxyCodeLine{00076                         /* switched from jutzis implementation of the soundspeed to a linear soundspeed from cs\_porous with alpha=alpha0 to cs\_solid with alpha=1 (also done in iSale) */}
+\DoxyCodeLine{00077                         p.cs[i] = matcs\_solid[matId] + (matcs\_porous[matId] -\/ matcs\_solid[matId]) * (p.alpha\_jutzi[i] -\/ 1.0) / (matporjutzi\_alpha\_0[matId] -\/ 1.0);}
+\DoxyCodeLine{00078 \#if DEBUG}
+\DoxyCodeLine{00079             if (isnan(p.cs[i])) \{}
+\DoxyCodeLine{00080                 printf("{}i \%d alpha\_jutzi \%e delpdelrho \%e delpdele \%e dalphadp \%e p \%e rho \%e\(\backslash\)n"{}, i, p.alpha\_jutzi[i], p.delpdelrho[i], p.delpdele[i], p.dalphadp[i], p.p[i], p.rho[i]);}
+\DoxyCodeLine{00081                         assert(0);}
+\DoxyCodeLine{00082               \}}
+\DoxyCodeLine{00083 //\#endif}
+\DoxyCodeLine{00084 \#endif}
+\DoxyCodeLine{00085 }
+\DoxyCodeLine{00086 \#endif}
+\DoxyCodeLine{00087 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00088         \} else if (EOS\_TYPE\_SIRONO == matEOS[matId]) \{}
+\DoxyCodeLine{00089             if (p.flag\_plastic[i] > 0)}
+\DoxyCodeLine{00090                 p.cs[i] = sqrt(p.compressive\_strength[i] / p.rho[i]);}
+\DoxyCodeLine{00091             else}
+\DoxyCodeLine{00092                 p.cs[i] = sqrt(p.K[i] / p.rho\_0prime[i]);}
+\DoxyCodeLine{00093 \#endif}
+\DoxyCodeLine{00094 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00095         /* Improvements to epsilon-\/alpha model by Collins et al 2010 */}
+\DoxyCodeLine{00096         \} else if (EOS\_TYPE\_EPSILON == matEOS[matId]) \{}
+\DoxyCodeLine{00097             double c\_s0 = sqrt(matBulkmodulus[matId]/matTillRho0[matId]);}
+\DoxyCodeLine{00098             double c\_p0 = sqrt(matBulkmodulus[matId]/(matTillRho0[matId] / matporepsilon\_alpha\_0[matId]));}
+\DoxyCodeLine{00099             p.cs[i] = c\_s0 + (p.alpha\_epspor[i] -\/ 1.0) / (matporepsilon\_alpha\_0[matId] -\/ 1.0) * (c\_p0 -\/ c\_s0);}
+\DoxyCodeLine{00100 \#endif}
+\DoxyCodeLine{00101         \}}
+\DoxyCodeLine{00102         // other material types have a constant soundspeed which is calculated in initializeSoundspeed}
+\DoxyCodeLine{00103     \}}
+\DoxyCodeLine{00104 \}}
+\DoxyCodeLine{00105 }
+\DoxyCodeLine{00106 }
+\DoxyCodeLine{00107 }
+\DoxyCodeLine{00108 \_\_global\_\_ void initializeSoundspeed()}
+\DoxyCodeLine{00109 \{}
+\DoxyCodeLine{00110     register int i, inc, matId;}
+\DoxyCodeLine{00111     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00112     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00113         matId = p\_rhs.materialId[i];}
+\DoxyCodeLine{00114         if (EOS\_TYPE\_POLYTROPIC\_GAS == matEOS[matId]) \{}
+\DoxyCodeLine{00115             p.cs[i] = 0.0; // for gas this will be calculated each step by kernel calculateSoundSpeed}
+\DoxyCodeLine{00116         \} else if (EOS\_TYPE\_ISOTHERMAL\_GAS == matEOS[matId]) \{}
+\DoxyCodeLine{00117             /* this is pure molecular hydrogen at 10 K */}
+\DoxyCodeLine{00118             p.cs[i] = 203;}
+\DoxyCodeLine{00119         \} else if (EOS\_TYPE\_TILLOTSON == matEOS[matId]) \{}
+\DoxyCodeLine{00120             p.cs[i] = sqrt(matBulkmodulus[matId]/matTillRho0[matId]);}
+\DoxyCodeLine{00121         \} else if (EOS\_TYPE\_ANEOS == matEOS[matId]) \{}
+\DoxyCodeLine{00122             p.cs[i] = aneos\_bulk\_cs\_c[matId];}
+\DoxyCodeLine{00123         \} else if (EOS\_TYPE\_MURNAGHAN == matEOS[matId]) \{}
+\DoxyCodeLine{00124             p.cs[i] = sqrt(matBulkmodulus[matId]/matRho0[matId]);}
+\DoxyCodeLine{00125         \} else if (EOS\_TYPE\_REGOLITH == matEOS[matId]) \{}
+\DoxyCodeLine{00126             //sound speed in soil is typically between 450 and 600 m/s according to Ha H. Bui 2008}
+\DoxyCodeLine{00127             p.cs[i] = 500.0;}
+\DoxyCodeLine{00128 //        \} else if (EOS\_TYPE\_EPSILON == matEOS[matId]) \{}
+\DoxyCodeLine{00129 //            p.cs[i] = sqrt(matBulkmodulus[matId]/matTillRho0[matId]);}
+\DoxyCodeLine{00130         \}}
+\DoxyCodeLine{00131     \}}
+\DoxyCodeLine{00132 \}}
+
+\end{DoxyCode}

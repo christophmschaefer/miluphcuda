@@ -1,0 +1,521 @@
+\hypertarget{kernel_8cu_source}{}\doxysection{kernel.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 \#include "{}kernel.h"{}}
+\DoxyCodeLine{00025 \#include "{}timeintegration.h"{}}
+\DoxyCodeLine{00026 \#include "{}tree.h"{}}
+\DoxyCodeLine{00027 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00028 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00029 \#include "{}linalg.h"{}}
+\DoxyCodeLine{00030 \#include "{}pressure.h"{}}
+\DoxyCodeLine{00031 }
+\DoxyCodeLine{00032 // for interaction partners less than this value, the tensorial correction matrix}
+\DoxyCodeLine{00033 // will be set to the identity matrix (-\/> disabling the correction factors)}
+\DoxyCodeLine{00034 \#define MIN\_NUMBER\_OF\_INTERACTIONS\_FOR\_TENSORIAL\_CORRECTION\_TO\_WORK 8}
+\DoxyCodeLine{00035 }
+\DoxyCodeLine{00036 }
+\DoxyCodeLine{00037 }
+\DoxyCodeLine{00038 // pointers for the kernel function}
+\DoxyCodeLine{00039 \_\_device\_\_ SPH\_kernel kernel;}
+\DoxyCodeLine{00040 \_\_device\_\_ SPH\_kernel wendlandc2\_p = wendlandc2;}
+\DoxyCodeLine{00041 \_\_device\_\_ SPH\_kernel wendlandc4\_p = wendlandc4;}
+\DoxyCodeLine{00042 \_\_device\_\_ SPH\_kernel wendlandc6\_p = wendlandc6;}
+\DoxyCodeLine{00043 \_\_device\_\_ SPH\_kernel cubic\_spline\_p = cubic\_spline;}
+\DoxyCodeLine{00044 \_\_device\_\_ SPH\_kernel quartic\_spline\_p = quartic\_spline;}
+\DoxyCodeLine{00045 \_\_device\_\_ SPH\_kernel spiky\_p = spiky;}
+\DoxyCodeLine{00046 }
+\DoxyCodeLine{00047 }
+\DoxyCodeLine{00048 }
+\DoxyCodeLine{00049 // spiky kernel taken from Desbrun \& Cani 1996}
+\DoxyCodeLine{00050 \_\_device\_\_ void spiky(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double sml)}
+\DoxyCodeLine{00051 \{}
+\DoxyCodeLine{00052     int d;}
+\DoxyCodeLine{00053     double r;}
+\DoxyCodeLine{00054     double q;}
+\DoxyCodeLine{00055 }
+\DoxyCodeLine{00056     r = 0;}
+\DoxyCodeLine{00057     for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00058         r += dx[d]*dx[d];}
+\DoxyCodeLine{00059         dWdx[d] = 0;}
+\DoxyCodeLine{00060     \}}
+\DoxyCodeLine{00061     r = sqrt(r);}
+\DoxyCodeLine{00062     *dWdr = 0;}
+\DoxyCodeLine{00063     *W = 0;}
+\DoxyCodeLine{00064     q = r/sml;}
+\DoxyCodeLine{00065 }
+\DoxyCodeLine{00066 \#if DIM == 1}
+\DoxyCodeLine{00067     printf("{}Error, this kernel can only be used with DIM == 2,3\(\backslash\)n"{});}
+\DoxyCodeLine{00068     assert(0);}
+\DoxyCodeLine{00069 \#endif}
+\DoxyCodeLine{00070 }
+\DoxyCodeLine{00071 \#if DIM == 2}
+\DoxyCodeLine{00072     if (q > 1) \{}
+\DoxyCodeLine{00073         *W = 0;}
+\DoxyCodeLine{00074     \} else if (q >= 0.0) \{}
+\DoxyCodeLine{00075         *W = 10./(M\_PI*sml*sml)*(1-\/q)*(1-\/q)*(1-\/q);}
+\DoxyCodeLine{00076         *dWdr = -\/30./(M\_PI*sml*sml*sml)*(1-\/q)*(1-\/q);}
+\DoxyCodeLine{00077     \}}
+\DoxyCodeLine{00078 \#elif DIM == 3}
+\DoxyCodeLine{00079     if (q > 1) \{}
+\DoxyCodeLine{00080         *W = 0;}
+\DoxyCodeLine{00081     \} else if (q >= 0.0) \{}
+\DoxyCodeLine{00082         *W = 15./(M\_PI*sml*sml*sml)*(1-\/q)*(1-\/q)*(1-\/q);}
+\DoxyCodeLine{00083         *dWdr = -\/45/(M\_PI*sml*sml*sml*sml)*(1-\/q)*(1-\/q);}
+\DoxyCodeLine{00084     \}}
+\DoxyCodeLine{00085 \#endif}
+\DoxyCodeLine{00086 }
+\DoxyCodeLine{00087     for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00088         dWdx[d] = *dWdr/r * dx[d];}
+\DoxyCodeLine{00089     \}}
+\DoxyCodeLine{00090 \}}
+\DoxyCodeLine{00091 }
+\DoxyCodeLine{00092 }
+\DoxyCodeLine{00093 }
+\DoxyCodeLine{00094 // *THE* cubic bspline}
+\DoxyCodeLine{00095 \_\_device\_\_ void cubic\_spline(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double sml)}
+\DoxyCodeLine{00096 \{}
+\DoxyCodeLine{00097     int d;}
+\DoxyCodeLine{00098     double r;}
+\DoxyCodeLine{00099     double q;}
+\DoxyCodeLine{00100     double f;}
+\DoxyCodeLine{00101 }
+\DoxyCodeLine{00102     r = 0;}
+\DoxyCodeLine{00103     for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00104         r += dx[d]*dx[d];}
+\DoxyCodeLine{00105         dWdx[d] = 0;}
+\DoxyCodeLine{00106     \}}
+\DoxyCodeLine{00107     r = sqrt(r);}
+\DoxyCodeLine{00108     *dWdr = 0;}
+\DoxyCodeLine{00109     *W = 0;}
+\DoxyCodeLine{00110     q = r/sml;}
+\DoxyCodeLine{00111 }
+\DoxyCodeLine{00112     f = 4./3. * 1./sml;}
+\DoxyCodeLine{00113 \#if DIM > 1}
+\DoxyCodeLine{00114     f = 40./(7*M\_PI) * 1./(sml*sml);}
+\DoxyCodeLine{00115 \#if DIM > 2}
+\DoxyCodeLine{00116     f = 8./M\_PI * 1./(sml*sml*sml);}
+\DoxyCodeLine{00117 \#endif}
+\DoxyCodeLine{00118 \#endif}
+\DoxyCodeLine{00119 }
+\DoxyCodeLine{00120     if (q > 1) \{}
+\DoxyCodeLine{00121         *W = 0;}
+\DoxyCodeLine{00122         *dWdr = 0.0;}
+\DoxyCodeLine{00123         printf("{}This should never happen, actually.\(\backslash\)n"{});}
+\DoxyCodeLine{00124     \} else if (q > 0.5) \{}
+\DoxyCodeLine{00125         *W = 2.*f * (1.-\/q)*(1.-\/q)*(1-\/q);}
+\DoxyCodeLine{00126         *dWdr = -\/6.*f*1./sml * (1.-\/q)*(1.-\/q);}
+\DoxyCodeLine{00127     \} else if (q <= 0.5) \{}
+\DoxyCodeLine{00128         *W = f * (6.*q*q*q -\/ 6.*q*q + 1.);}
+\DoxyCodeLine{00129         *dWdr = 6.*f/sml * (3*q*q -\/ 2*q);}
+\DoxyCodeLine{00130     \}}
+\DoxyCodeLine{00131     for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00132         dWdx[d] = *dWdr/r * dx[d];}
+\DoxyCodeLine{00133     \}}
+\DoxyCodeLine{00134 \}}
+\DoxyCodeLine{00135 }
+\DoxyCodeLine{00136 // quartic spline from Dehnen \& Aly 2012}
+\DoxyCodeLine{00137 \_\_device\_\_ void quartic\_spline(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double sml)}
+\DoxyCodeLine{00138 \{}
+\DoxyCodeLine{00139     int d;}
+\DoxyCodeLine{00140     double r;}
+\DoxyCodeLine{00141     double f;}
+\DoxyCodeLine{00142     double q;}
+\DoxyCodeLine{00143 }
+\DoxyCodeLine{00144     r = 0;}
+\DoxyCodeLine{00145     for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00146         r += dx[d]*dx[d];}
+\DoxyCodeLine{00147         dWdx[d] = 0;}
+\DoxyCodeLine{00148     \}}
+\DoxyCodeLine{00149     r = sqrt(r);}
+\DoxyCodeLine{00150     *dWdr = 0;}
+\DoxyCodeLine{00151     *W = 0;}
+\DoxyCodeLine{00152     q = r/sml;}
+\DoxyCodeLine{00153 }
+\DoxyCodeLine{00154     f = 3125./768. * 1/sml;}
+\DoxyCodeLine{00155 \#if DIM > 1}
+\DoxyCodeLine{00156     f = 46875./(2398.*M\_PI) * 1./(sml*sml);}
+\DoxyCodeLine{00157 \#if DIM > 2}
+\DoxyCodeLine{00158     f = 15625./(512.*M\_PI) * 1./(sml*sml*sml);}
+\DoxyCodeLine{00159 \#endif}
+\DoxyCodeLine{00160 \#endif}
+\DoxyCodeLine{00161 }
+\DoxyCodeLine{00162     if (r > sml) \{}
+\DoxyCodeLine{00163         *W = 0;}
+\DoxyCodeLine{00164     \} else \{}
+\DoxyCodeLine{00165         *W = f*( (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q) -\/ 5*(3./5.-\/q)*(3./5.-\/q)*(3./5.-\/q)*(3./5.-\/q)}
+\DoxyCodeLine{00166                 + 10.0*(1./5.-\/q)*(1./5.-\/q)*(1./5.-\/q)*(1./5.-\/q) ) * (q < 1);}
+\DoxyCodeLine{00167         *dWdr = f/sml*( -\/40.*(1./5.-\/q)*(1./5.-\/q)*(1./5.-\/q)+20*(3./5.-\/q)*(3./5.-\/q)*(3./5.-\/q)}
+\DoxyCodeLine{00168                 -\/ 4*(1-\/q)*(1-\/q)*(1-\/q) ) * (q < 1);}
+\DoxyCodeLine{00169         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00170             dWdx[d] = *dWdr/r * dx[d];}
+\DoxyCodeLine{00171         \}}
+\DoxyCodeLine{00172     \}}
+\DoxyCodeLine{00173 \}}
+\DoxyCodeLine{00174 }
+\DoxyCodeLine{00175 }
+\DoxyCodeLine{00176 // Wendland C2 from Dehnen \& Aly 2012}
+\DoxyCodeLine{00177 \_\_device\_\_ void wendlandc2(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double sml)}
+\DoxyCodeLine{00178 \{}
+\DoxyCodeLine{00179     int d;}
+\DoxyCodeLine{00180     double r;}
+\DoxyCodeLine{00181     double q;}
+\DoxyCodeLine{00182 }
+\DoxyCodeLine{00183     r = 0;}
+\DoxyCodeLine{00184     for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00185         r += dx[d]*dx[d];}
+\DoxyCodeLine{00186         dWdx[d] = 0;}
+\DoxyCodeLine{00187     \}}
+\DoxyCodeLine{00188     r = sqrt(r);}
+\DoxyCodeLine{00189     *dWdr = 0;}
+\DoxyCodeLine{00190     *W = 0;}
+\DoxyCodeLine{00191 }
+\DoxyCodeLine{00192     if (r > sml) \{}
+\DoxyCodeLine{00193         *W = 0;}
+\DoxyCodeLine{00194     \} else \{}
+\DoxyCodeLine{00195         q = r/sml;}
+\DoxyCodeLine{00196 \#if (DIM == 2)}
+\DoxyCodeLine{00197         *W = 7./(M\_PI*sml*sml) * (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)  *(1+4*q) * (q < 1);}
+\DoxyCodeLine{00198         *dWdr = -\/140./(M\_PI*sml*sml*sml) * q * (1-\/q)*(1-\/q)*(1-\/q) * (q < 1);}
+\DoxyCodeLine{00199 \#elif (DIM == 3)}
+\DoxyCodeLine{00200         *W = 21./(2*M\_PI*sml*sml*sml) * (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)  *(1+4*q) * (q < 1);}
+\DoxyCodeLine{00201         *dWdr = -\/210./(M\_PI*sml*sml*sml*sml) * q * (1-\/q)*(1-\/q)*(1-\/q) * (q < 1);}
+\DoxyCodeLine{00202 \#elif (DIM == 1)}
+\DoxyCodeLine{00203         *W = 5./(4.*sml) * (1-\/q)*(1-\/q)*(1-\/q)*(1+3*q) * (q < 1);}
+\DoxyCodeLine{00204         *dWdr = -\/15/(sml*sml) * q * (1-\/q)*(1-\/q) * (q < 1);}
+\DoxyCodeLine{00205 \#endif}
+\DoxyCodeLine{00206         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00207             dWdx[d] = *dWdr/r * dx[d];}
+\DoxyCodeLine{00208         \}}
+\DoxyCodeLine{00209     \}}
+\DoxyCodeLine{00210 \}}
+\DoxyCodeLine{00211 }
+\DoxyCodeLine{00212 // Wendland C4 from Dehnen \& Aly 2012}
+\DoxyCodeLine{00213 \_\_device\_\_ void wendlandc4(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double sml)}
+\DoxyCodeLine{00214 \{}
+\DoxyCodeLine{00215     int d;}
+\DoxyCodeLine{00216     double r;}
+\DoxyCodeLine{00217     double q;}
+\DoxyCodeLine{00218 }
+\DoxyCodeLine{00219     r = 0;}
+\DoxyCodeLine{00220     for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00221         r += dx[d]*dx[d];}
+\DoxyCodeLine{00222         dWdx[d] = 0;}
+\DoxyCodeLine{00223     \}}
+\DoxyCodeLine{00224     r = sqrt(r);}
+\DoxyCodeLine{00225     *dWdr = 0;}
+\DoxyCodeLine{00226     *W = 0;}
+\DoxyCodeLine{00227 }
+\DoxyCodeLine{00228     if (r > sml) \{}
+\DoxyCodeLine{00229         *W = 0;}
+\DoxyCodeLine{00230     \} else \{}
+\DoxyCodeLine{00231         q = r/sml;}
+\DoxyCodeLine{00232 \#if (DIM == 2)}
+\DoxyCodeLine{00233         *W = 9./(M\_PI*sml*sml) * (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q) * (1.+6*q+35./3.*q*q) * (q < 1);}
+\DoxyCodeLine{00234         *dWdr = -\/54./(M\_PI*sml*sml*sml) * (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q) * (1.-\/35.*q*q+105.*q*q*q) * (q< 1);}
+\DoxyCodeLine{00235 \#elif (DIM == 3)}
+\DoxyCodeLine{00236         *W = 495./(32.*M\_PI*sml*sml*sml) * (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q) * (1.+6.*q+35./3.*q*q) * (q < 1);}
+\DoxyCodeLine{00237         *dWdr = -\/1485./(16.*M\_PI*sml*sml*sml*sml) * (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q) * (1.-\/35.*q*q+105.*q*q*q) * (q< 1);}
+\DoxyCodeLine{00238 \#elif (DIM == 1)}
+\DoxyCodeLine{00239         *W = 3./(2.*sml) * (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q) * (1+5*q+8*q*q) * (q < 1);}
+\DoxyCodeLine{00240         *dWdr = -\/21./(sml*sml) * q * (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q) * (1+4*q) * (q < 1);}
+\DoxyCodeLine{00241 \#endif}
+\DoxyCodeLine{00242         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00243             dWdx[d] = *dWdr/r * dx[d];}
+\DoxyCodeLine{00244         \}}
+\DoxyCodeLine{00245     \}}
+\DoxyCodeLine{00246 \}}
+\DoxyCodeLine{00247 }
+\DoxyCodeLine{00248 }
+\DoxyCodeLine{00249 // Wendland C6 from Dehnen \& Aly 2012}
+\DoxyCodeLine{00250 \_\_device\_\_ void wendlandc6(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double sml)}
+\DoxyCodeLine{00251 \{}
+\DoxyCodeLine{00252     int d;}
+\DoxyCodeLine{00253     double r;}
+\DoxyCodeLine{00254     double q;}
+\DoxyCodeLine{00255 }
+\DoxyCodeLine{00256     r = 0;}
+\DoxyCodeLine{00257     for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00258         r += dx[d]*dx[d];}
+\DoxyCodeLine{00259         dWdx[d] = 0;}
+\DoxyCodeLine{00260     \}}
+\DoxyCodeLine{00261     r = sqrt(r);}
+\DoxyCodeLine{00262     *dWdr = 0;}
+\DoxyCodeLine{00263     *W = 0;}
+\DoxyCodeLine{00264 }
+\DoxyCodeLine{00265     if (r > sml) \{}
+\DoxyCodeLine{00266         *W = 0;}
+\DoxyCodeLine{00267     \} else \{}
+\DoxyCodeLine{00268         q = r/sml;}
+\DoxyCodeLine{00269 \#if (DIM == 2)}
+\DoxyCodeLine{00270         *W =  78./(7.*M\_PI*sml*sml) * (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q) * (1.+8.*q+25.*q*q+32*q*q*q) * (q < 1);}
+\DoxyCodeLine{00271 }
+\DoxyCodeLine{00272         *dWdr = -\/1716./(7.*M\_PI*sml*sml*sml) * q * (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q) * (1.+7*q+16*q*q) * (q < 1);}
+\DoxyCodeLine{00273 \#elif (DIM == 3)}
+\DoxyCodeLine{00274         *W = 1365./(64.*M\_PI*sml*sml*sml) * (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q) * (1.+8.*q+25.*q*q+32*q*q*q) * (q < 1);}
+\DoxyCodeLine{00275         *dWdr = -\/15015./(32.*M\_PI*sml*sml*sml*sml) * q * (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q) *}
+\DoxyCodeLine{00276             (1.+7*q+16*q*q) * (q < 1);}
+\DoxyCodeLine{00277 \#elif (DIM == 1)}
+\DoxyCodeLine{00278         *W = 55./(32.*sml) * (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q) * (1+7*q+19*q*q+21*q*q*q) * (q < 1);}
+\DoxyCodeLine{00279         *dWdr = -\/165./(16*sml*sml) * q * (1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q)*(1-\/q) * (3+18*q+35*q*q) * (q < 1);}
+\DoxyCodeLine{00280 \#endif}
+\DoxyCodeLine{00281         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00282             dWdx[d] = *dWdr/r * dx[d];}
+\DoxyCodeLine{00283         \}}
+\DoxyCodeLine{00284     \}}
+\DoxyCodeLine{00285 \}}
+\DoxyCodeLine{00286 }
+\DoxyCodeLine{00287 }
+\DoxyCodeLine{00288 }
+\DoxyCodeLine{00289 \#if ARTIFICIAL\_STRESS}
+\DoxyCodeLine{00290 // prepares particles for the tensile instability fix}
+\DoxyCodeLine{00291 // see monaghan jcp 159 (2000)}
+\DoxyCodeLine{00292 \_\_device\_\_ double fixTensileInstability(int a, int b)}
+\DoxyCodeLine{00293 \{}
+\DoxyCodeLine{00294     int d;}
+\DoxyCodeLine{00295     double hbar;}
+\DoxyCodeLine{00296     double dx[DIM];}
+\DoxyCodeLine{00297     double W;}
+\DoxyCodeLine{00298     double W2;}
+\DoxyCodeLine{00299     double dWdr;}
+\DoxyCodeLine{00300     double dWdx[DIM];}
+\DoxyCodeLine{00301 }
+\DoxyCodeLine{00302     W = 0;}
+\DoxyCodeLine{00303     W2 = 0;}
+\DoxyCodeLine{00304     dWdr = 0;}
+\DoxyCodeLine{00305     for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00306         dx[d] = 0.0;}
+\DoxyCodeLine{00307         dWdx[d] = 0;}
+\DoxyCodeLine{00308     \}}
+\DoxyCodeLine{00309     dx[0] = p.x[a] -\/ p.x[b];}
+\DoxyCodeLine{00310 \#if DIM > 1}
+\DoxyCodeLine{00311     dx[1] = p.y[a] -\/ p.y[b];}
+\DoxyCodeLine{00312 \#if DIM > 2}
+\DoxyCodeLine{00313     dx[2] = p.z[a] -\/ p.z[b];}
+\DoxyCodeLine{00314 \#endif}
+\DoxyCodeLine{00315 \#endif}
+\DoxyCodeLine{00316 }
+\DoxyCodeLine{00317     hbar = 0.5 * (p.h[a] + p.h[b]);}
+\DoxyCodeLine{00318     // calculate kernel for r and particle\_distance}
+\DoxyCodeLine{00319     //kernel(distance, hbar);}
+\DoxyCodeLine{00320     kernel(\&W, dWdx, \&dWdr, dx, hbar);}
+\DoxyCodeLine{00321     dx[0] = matmean\_particle\_distance[p\_rhs.materialId[a]];}
+\DoxyCodeLine{00322     for (d = 1; d < DIM; d++) \{}
+\DoxyCodeLine{00323         dx[d] = 0;}
+\DoxyCodeLine{00324     \}}
+\DoxyCodeLine{00325     kernel(\&W2, dWdx, \&dWdr, dx, hbar);}
+\DoxyCodeLine{00326     //printf("{}++++++++++++++ \%.17lf\(\backslash\)n"{}, W/W2);}
+\DoxyCodeLine{00327     return W/W2;}
+\DoxyCodeLine{00328 \}}
+\DoxyCodeLine{00329 \#endif // ARTIFICIAL\_STRESS}
+\DoxyCodeLine{00330 }
+\DoxyCodeLine{00331 }
+\DoxyCodeLine{00332 \#if (NAVIER\_STOKES || BALSARA\_SWITCH || INVISCID\_SPH || INTEGRATE\_ENERGY)}
+\DoxyCodeLine{00333 \_\_global\_\_ void CalcDivvandCurlv(int *interactions)}
+\DoxyCodeLine{00334 \{}
+\DoxyCodeLine{00335     int i, inc, j, k, m, d;}
+\DoxyCodeLine{00336     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00337     /* absolute values of div v and curl v */}
+\DoxyCodeLine{00338     double divv;}
+\DoxyCodeLine{00339     double curlv[DIM];}
+\DoxyCodeLine{00340     double W, dWdr;}
+\DoxyCodeLine{00341     double dWdx[DIM], dx[DIM];}
+\DoxyCodeLine{00342     double sml;}
+\DoxyCodeLine{00343     double vi[DIM], vj[DIM];}
+\DoxyCodeLine{00344     double r;}
+\DoxyCodeLine{00345     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00346         if (EOS\_TYPE\_IGNORE == matEOS[p\_rhs.materialId[i]] || p\_rhs.materialId[i] == EOS\_TYPE\_IGNORE) \{}
+\DoxyCodeLine{00347                continue;}
+\DoxyCodeLine{00348         \}}
+\DoxyCodeLine{00349         k = p.noi[i];}
+\DoxyCodeLine{00350         divv = 0;}
+\DoxyCodeLine{00351         for (m = 0; m < DIM; m++) \{}
+\DoxyCodeLine{00352             curlv[m] = 0;}
+\DoxyCodeLine{00353             dWdx[m] = 0;}
+\DoxyCodeLine{00354         \}}
+\DoxyCodeLine{00355         sml = p.h[i];}
+\DoxyCodeLine{00356         /* interaction partner loop */}
+\DoxyCodeLine{00357         for (m = 0; m < k; m++) \{}
+\DoxyCodeLine{00358             j = interactions[i*MAX\_NUM\_INTERACTIONS+m];}
+\DoxyCodeLine{00359             /* get the kernel values */}
+\DoxyCodeLine{00360 \#if VARIABLE\_SML}
+\DoxyCodeLine{00361             sml = 0.5 *(p.h[i] + p.h[j]);}
+\DoxyCodeLine{00362 \#endif}
+\DoxyCodeLine{00363             dx[0] = p.x[i] -\/ p.x[j];}
+\DoxyCodeLine{00364 \#if DIM > 1}
+\DoxyCodeLine{00365             dx[1] = p.y[i] -\/ p.y[j];}
+\DoxyCodeLine{00366 \#if DIM > 2}
+\DoxyCodeLine{00367             dx[2] = p.z[i] -\/ p.z[j];}
+\DoxyCodeLine{00368 \#endif}
+\DoxyCodeLine{00369 \#endif}
+\DoxyCodeLine{00370             kernel(\&W, dWdx, \&dWdr, dx, sml);}
+\DoxyCodeLine{00371 }
+\DoxyCodeLine{00372             vi[0] = p.vx[i];}
+\DoxyCodeLine{00373             vj[0] = p.vx[j];}
+\DoxyCodeLine{00374 \#if DIM > 1}
+\DoxyCodeLine{00375             vi[1] = p.vy[i];}
+\DoxyCodeLine{00376             vj[1] = p.vy[j];}
+\DoxyCodeLine{00377 \#if DIM > 2}
+\DoxyCodeLine{00378             vi[2] = p.vz[i];}
+\DoxyCodeLine{00379             vj[2] = p.vz[j];}
+\DoxyCodeLine{00380 \#endif}
+\DoxyCodeLine{00381 \#endif}
+\DoxyCodeLine{00382             r = 0;}
+\DoxyCodeLine{00383             for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00384                 r += dx[d]*dx[d];}
+\DoxyCodeLine{00385             \}}
+\DoxyCodeLine{00386             r = sqrt(r);}
+\DoxyCodeLine{00387             /* divv */}
+\DoxyCodeLine{00388             for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00389                 divv += p.m[j]/p.rho[i] * (vj[d] -\/ vi[d]) * dWdx[d];}
+\DoxyCodeLine{00390             \}}
+\DoxyCodeLine{00391             /* curlv */}
+\DoxyCodeLine{00392 \#if (DIM == 1 \&\& BALSARA\_SWITCH)}
+\DoxyCodeLine{00393 \#error unset BALSARA SWITCH in 1D}
+\DoxyCodeLine{00394 \#elif DIM == 2}
+\DoxyCodeLine{00395             // only one component in 2D}
+\DoxyCodeLine{00396             curlv[0] += p.m[j]/p.rho[i] * ((vi[0] -\/ vj[0]) * dWdx[1]}
+\DoxyCodeLine{00397                         -\/ (vi[1] -\/ vj[1]) * dWdx[0]);}
+\DoxyCodeLine{00398             curlv[1] = 0;}
+\DoxyCodeLine{00399 \#elif DIM == 3}
+\DoxyCodeLine{00400             curlv[0] += p.m[j]/p.rho[i] * ((vi[1] -\/ vj[1]) * dWdx[2]}
+\DoxyCodeLine{00401                         -\/ (vi[2] -\/ vj[2]) * dWdx[1]);}
+\DoxyCodeLine{00402             curlv[1] += p.m[j]/p.rho[i] * ((vi[2] -\/ vj[2]) * dWdx[0]}
+\DoxyCodeLine{00403                         -\/ (vi[0] -\/ vj[0]) * dWdx[2]);}
+\DoxyCodeLine{00404             curlv[2] += p.m[j]/p.rho[i] * ((vi[0] -\/ vj[0]) * dWdx[1]}
+\DoxyCodeLine{00405                         -\/ (vi[1] -\/ vj[1]) * dWdx[0]);}
+\DoxyCodeLine{00406 \#endif}
+\DoxyCodeLine{00407         \}}
+\DoxyCodeLine{00408         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00409             p\_rhs.curlv[i*DIM+d] = curlv[d];}
+\DoxyCodeLine{00410         \}}
+\DoxyCodeLine{00411             p\_rhs.divv[i] = divv;}
+\DoxyCodeLine{00412     \}}
+\DoxyCodeLine{00413 \}}
+\DoxyCodeLine{00414 \#endif //  (NAVIER\_STOKES || BALSARA\_SWITCH || INVISCID\_SPH)}
+\DoxyCodeLine{00415 }
+\DoxyCodeLine{00416 // this adds zeroth order consistency but needs one more loop over all neighbours}
+\DoxyCodeLine{00417 \#define SHEPARD\_CORRECTION 0}
+\DoxyCodeLine{00418 }
+\DoxyCodeLine{00419 \#if TENSORIAL\_CORRECTION}
+\DoxyCodeLine{00420 \_\_global\_\_ void tensorialCorrection(int *interactions)}
+\DoxyCodeLine{00421 \{}
+\DoxyCodeLine{00422     register int i, inc, j, k, m;}
+\DoxyCodeLine{00423     register int d, dd;}
+\DoxyCodeLine{00424     int rv = 0;}
+\DoxyCodeLine{00425     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00426     register double r, dr[DIM], h, dWdr, tmp, f1, f2;}
+\DoxyCodeLine{00427     double W, dWdx[DIM];}
+\DoxyCodeLine{00428     double wend\_f, wend\_sml, q, distance;}
+\DoxyCodeLine{00429     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00430         register double corrmatrix[DIM*DIM];}
+\DoxyCodeLine{00431         register double matrix[DIM*DIM];}
+\DoxyCodeLine{00432         for(d = 0; d < DIM*DIM; d++) \{}
+\DoxyCodeLine{00433             corrmatrix[d] = 0;}
+\DoxyCodeLine{00434             matrix[d] = 0;}
+\DoxyCodeLine{00435         \}}
+\DoxyCodeLine{00436         if (EOS\_TYPE\_IGNORE == matEOS[p\_rhs.materialId[i]] || p\_rhs.materialId[i] == EOS\_TYPE\_IGNORE) \{}
+\DoxyCodeLine{00437                continue;}
+\DoxyCodeLine{00438         \}}
+\DoxyCodeLine{00439 }
+\DoxyCodeLine{00440         double shepard\_correction = 0;}
+\DoxyCodeLine{00441         k = p.noi[i];}
+\DoxyCodeLine{00442 \#if SHEPARD\_CORRECTION}
+\DoxyCodeLine{00443         for (m = 0; m < k; m++) \{}
+\DoxyCodeLine{00444             j = interactions[i*MAX\_NUM\_INTERACTIONS+m];}
+\DoxyCodeLine{00445             if (EOS\_TYPE\_IGNORE == matEOS[p\_rhs.materialId[j]] || p\_rhs.materialId[j] == EOS\_TYPE\_IGNORE) \{}
+\DoxyCodeLine{00446                 continue;}
+\DoxyCodeLine{00447             \}}
+\DoxyCodeLine{00448             dr[0] = p.x[i] -\/ p.x[j];}
+\DoxyCodeLine{00449 \#if DIM > 1}
+\DoxyCodeLine{00450             dr[1] = p.y[i] -\/ p.y[j];}
+\DoxyCodeLine{00451 \#if DIM == 3}
+\DoxyCodeLine{00452             dr[2] = p.z[i] -\/ p.z[j];}
+\DoxyCodeLine{00453             r = sqrt(dr[0]*dr[0]+dr[1]*dr[1]+dr[2]*dr[2]);}
+\DoxyCodeLine{00454 \#elif DIM == 2}
+\DoxyCodeLine{00455             r = sqrt(dr[0]*dr[0]+dr[1]*dr[1]);}
+\DoxyCodeLine{00456 \#endif}
+\DoxyCodeLine{00457 \#endif}
+\DoxyCodeLine{00458             h = 0.5*(p.h[i] + p.h[j]);}
+\DoxyCodeLine{00459 }
+\DoxyCodeLine{00460 }
+\DoxyCodeLine{00461             kernel(\&W, dWdx, \&dWdr, dr, h);}
+\DoxyCodeLine{00462             shepard\_correction += p.m[j]/p.rho[j]*W;}
+\DoxyCodeLine{00463         \}}
+\DoxyCodeLine{00464 \#endif}
+\DoxyCodeLine{00465 }
+\DoxyCodeLine{00466         // loop over all interaction partner}
+\DoxyCodeLine{00467         for (m = 0; m < k; m++) \{}
+\DoxyCodeLine{00468             j = interactions[i*MAX\_NUM\_INTERACTIONS+m];}
+\DoxyCodeLine{00469             if (EOS\_TYPE\_IGNORE == matEOS[p\_rhs.materialId[j]] || p\_rhs.materialId[j] == EOS\_TYPE\_IGNORE) \{}
+\DoxyCodeLine{00470                 continue;}
+\DoxyCodeLine{00471             \}}
+\DoxyCodeLine{00472             dr[0] = p.x[i] -\/ p.x[j];}
+\DoxyCodeLine{00473 \#if DIM > 1}
+\DoxyCodeLine{00474             dr[1] = p.y[i] -\/ p.y[j];}
+\DoxyCodeLine{00475 \#if DIM == 3}
+\DoxyCodeLine{00476             dr[2] = p.z[i] -\/ p.z[j];}
+\DoxyCodeLine{00477             r = sqrt(dr[0]*dr[0]+dr[1]*dr[1]+dr[2]*dr[2]);}
+\DoxyCodeLine{00478 \#elif DIM == 2}
+\DoxyCodeLine{00479             r = sqrt(dr[0]*dr[0]+dr[1]*dr[1]);}
+\DoxyCodeLine{00480 \#endif}
+\DoxyCodeLine{00481 \#endif}
+\DoxyCodeLine{00482             h = 0.5*(p.h[i] + p.h[j]);}
+\DoxyCodeLine{00483 }
+\DoxyCodeLine{00484 }
+\DoxyCodeLine{00485             kernel(\&W, dWdx, \&dWdr, dr, h);}
+\DoxyCodeLine{00486             tmp = p.m[j] / p.rho[j] * dWdr/r;}
+\DoxyCodeLine{00487 \#if SHEPARD\_CORRECTION}
+\DoxyCodeLine{00488             if (shepard\_correction > 0) \{}
+\DoxyCodeLine{00489                 tmp /= shepard\_correction;}
+\DoxyCodeLine{00490             \}}
+\DoxyCodeLine{00491 \#endif}
+\DoxyCodeLine{00492             //p\_rhs.tensorialCorrectiondWdrr[i*MAX\_NUM\_INTERACTIONS+m] = dWdrr;}
+\DoxyCodeLine{00493             for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00494                 for (dd = 0; dd < DIM; dd++) \{}
+\DoxyCodeLine{00495                     corrmatrix[d*DIM+dd] -\/= tmp * dr[d] * dr[dd];}
+\DoxyCodeLine{00496                 \}}
+\DoxyCodeLine{00497             \}}
+\DoxyCodeLine{00498         \} // end loop over interaction partners}
+\DoxyCodeLine{00499 }
+\DoxyCodeLine{00500         rv = invertMatrix(corrmatrix, matrix);}
+\DoxyCodeLine{00501         // if something went wrong during inversion, use identity matrix}
+\DoxyCodeLine{00502         if (rv < 0 || k < MIN\_NUMBER\_OF\_INTERACTIONS\_FOR\_TENSORIAL\_CORRECTION\_TO\_WORK) \{}
+\DoxyCodeLine{00503             for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00504                 for (dd = 0; dd < DIM; dd++) \{}
+\DoxyCodeLine{00505                     matrix[d*DIM+dd] = 0.0;}
+\DoxyCodeLine{00506                     if (d == dd)}
+\DoxyCodeLine{00507                         matrix[d*DIM+dd] = 1.0;}
+\DoxyCodeLine{00508                 \}}
+\DoxyCodeLine{00509             \}}
+\DoxyCodeLine{00510         \}}
+\DoxyCodeLine{00511         for (d = 0; d < DIM*DIM; d++) \{}
+\DoxyCodeLine{00512             p\_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d] = matrix[d];}
+\DoxyCodeLine{00513         \}}
+\DoxyCodeLine{00514     \}}
+\DoxyCodeLine{00515 \}}
+\DoxyCodeLine{00516 \#endif}
+
+\end{DoxyCode}

@@ -1,0 +1,43 @@
+\hypertarget{rk2adaptive_8h_source}{}\doxysection{rk2adaptive.\+h}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 }
+\DoxyCodeLine{00025 \textcolor{preprocessor}{\#ifndef \_RK2ADAPTIVE\_H}}
+\DoxyCodeLine{00026 \textcolor{preprocessor}{\#define \_RK2ADAPTIVE\_H}}
+\DoxyCodeLine{00027 }
+\DoxyCodeLine{00028 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{miluph_8h}{miluph.h}}"{}}}
+\DoxyCodeLine{00029 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{timeintegration_8h}{timeintegration.h}}"{}}}
+\DoxyCodeLine{00030 }
+\DoxyCodeLine{00031 }
+\DoxyCodeLine{\Hypertarget{rk2adaptive_8h_source_l00032}\mbox{\hyperlink{rk2adaptive_8h_a8d37d229e9c2b5972c19177be715137b}{00032}} \textcolor{keywordtype}{void} \mbox{\hyperlink{rk2adaptive_8h_a8d37d229e9c2b5972c19177be715137b}{rk2Adaptive}}();}
+\DoxyCodeLine{00033 }
+\DoxyCodeLine{00034 }
+\DoxyCodeLine{\Hypertarget{rk2adaptive_8h_source_l00035}\mbox{\hyperlink{rk2adaptive_8h_a5308c46b1c3eed7da718f29da03233b5}{00035}} \_\_global\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{rk2adaptive_8h_a5308c46b1c3eed7da718f29da03233b5}{limitTimestep}}(\textcolor{keywordtype}{double} *forcesPerBlock, \textcolor{keywordtype}{double} *courantPerBlock);}
+\DoxyCodeLine{00036 }
+\DoxyCodeLine{\Hypertarget{rk2adaptive_8h_source_l00037}\mbox{\hyperlink{rk2adaptive_8h_a8da31361d8a77da93d058fa8c48e704e}{00037}} \_\_global\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{rk2adaptive_8h_a8da31361d8a77da93d058fa8c48e704e}{checkError}}(}
+\DoxyCodeLine{00038                 \textcolor{keywordtype}{double} *maxPosAbsErrorPerBlock, \textcolor{keywordtype}{double} *maxVelAbsErrorPerBlock}
+\DoxyCodeLine{00039 \#\textcolor{keywordflow}{if} \mbox{\hyperlink{parameter_8h_a23a8396515412900c7a0ac5899efe984}{INTEGRATE\_DENSITY}}}
+\DoxyCodeLine{00040                 , \textcolor{keywordtype}{double} *maxDensityAbsErrorPerBlock}
+\DoxyCodeLine{00041 \#endif}
+\DoxyCodeLine{00042 \#\textcolor{keywordflow}{if} \mbox{\hyperlink{parameter_8h_aef31c618487f04f7fbfb716e4c13545b}{INTEGRATE\_ENERGY}}}
+\DoxyCodeLine{00043                 , \textcolor{keywordtype}{double} *maxEnergyAbsErrorPerBlock}
+\DoxyCodeLine{00044 \#endif}
+\DoxyCodeLine{00045 \#\textcolor{keywordflow}{if} \mbox{\hyperlink{parameter_8h_ae40edb8e9ac4ed9e625cb81767ed9e9c}{PALPHA\_POROSITY}}}
+\DoxyCodeLine{00046         , \textcolor{keywordtype}{double} *maxPressureAbsChangePerBlock}
+\DoxyCodeLine{00047 \#endif}
+\DoxyCodeLine{00048 );}
+\DoxyCodeLine{00049 }
+\DoxyCodeLine{\Hypertarget{rk2adaptive_8h_source_l00050}\mbox{\hyperlink{rk2adaptive_8h_a59fa6fb2b980eb0a3939339f8ef758f3}{00050}} \_\_global\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{rk2adaptive_8h_a59fa6fb2b980eb0a3939339f8ef758f3}{damageMaxTimeStep}}(\textcolor{keywordtype}{double} *maxDamageTimeStepPerBlock);}
+\DoxyCodeLine{\Hypertarget{rk2adaptive_8h_source_l00051}\mbox{\hyperlink{rk2adaptive_8h_a7ed61b702995d95eba762edca2a045c6}{00051}} \_\_global\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{rk2adaptive_8h_a7ed61b702995d95eba762edca2a045c6}{alphaMaxTimeStep}}(\textcolor{keywordtype}{double} *maxalphaDiffPerBlock);}
+\DoxyCodeLine{00052 }
+\DoxyCodeLine{\Hypertarget{rk2adaptive_8h_source_l00053}\mbox{\hyperlink{rk2adaptive_8h_ae845fa1a6860cd81b051bf8efa13d2ae}{00053}} \_\_global\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{rk2adaptive_8h_ae845fa1a6860cd81b051bf8efa13d2ae}{integrateFirstStep}}(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{\Hypertarget{rk2adaptive_8h_source_l00054}\mbox{\hyperlink{rk2adaptive_8h_a7fc5e6003a94d1b86a72334ff19a14ab}{00054}} \_\_global\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{rk2adaptive_8h_a7fc5e6003a94d1b86a72334ff19a14ab}{integrateSecondStep}}(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{\Hypertarget{rk2adaptive_8h_source_l00055}\mbox{\hyperlink{rk2adaptive_8h_a6927b6b75fda2ade3605df5545a20c54}{00055}} \_\_global\_\_ \textcolor{keywordtype}{void} \mbox{\hyperlink{rk2adaptive_8h_a6927b6b75fda2ade3605df5545a20c54}{integrateThirdStep}}(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{00056 }
+\DoxyCodeLine{00057 }
+\DoxyCodeLine{00058 }
+\DoxyCodeLine{00059 }
+\DoxyCodeLine{00060 }
+\DoxyCodeLine{00061 \textcolor{preprocessor}{\#endif}}
+
+\end{DoxyCode}

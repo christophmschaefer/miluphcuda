@@ -1,0 +1,168 @@
+\hypertarget{device__tools_8cu_source}{}\doxysection{device\+\_\+tools.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Daniel Thun and Christoph Schaefer}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 \#include <stdio.h>}
+\DoxyCodeLine{00024 \#include "{}device\_tools.h"{}}
+\DoxyCodeLine{00025 }
+\DoxyCodeLine{00026 }
+\DoxyCodeLine{00027 /* }
+\DoxyCodeLine{00028         device informations}
+\DoxyCodeLine{00029         authors: Daniel Thun and Christoph Schaefer}
+\DoxyCodeLine{00030         mainly taken from cuda samples}
+\DoxyCodeLine{00031 */}
+\DoxyCodeLine{00032 }
+\DoxyCodeLine{00033 }
+\DoxyCodeLine{00034 }
+\DoxyCodeLine{00035 /* ********************************************************************* */}
+\DoxyCodeLine{00036 inline int \_ConvertSMVer2Cores(int major, int minor)}
+\DoxyCodeLine{00037 /*!}
+\DoxyCodeLine{00038  *  Helper function to calculate the number of CUDA core.}
+\DoxyCodeLine{00039  *  Taken from cuda\_samples/common/inc/helper\_cuda.h}
+\DoxyCodeLine{00040  *********************************************************************** */}
+\DoxyCodeLine{00041 \{}
+\DoxyCodeLine{00042     /* Defines for GPU Architecture types (using the SM version to determine the \# of cores per SM */}
+\DoxyCodeLine{00043     typedef struct}
+\DoxyCodeLine{00044     \{}
+\DoxyCodeLine{00045         int SM; /* 0xMm (hexidecimal notation), M = SM Major version, and m = SM minor version */}
+\DoxyCodeLine{00046         int Cores;}
+\DoxyCodeLine{00047     \} sSMtoCores;}
+\DoxyCodeLine{00048 }
+\DoxyCodeLine{00049     sSMtoCores nGpuArchCoresPerSM[] =}
+\DoxyCodeLine{00050     \{}
+\DoxyCodeLine{00051         \{ 0x10,  8 \}, /* Tesla Generation (SM 1.0) G80 class */}
+\DoxyCodeLine{00052         \{ 0x11,  8 \}, /* Tesla Generation (SM 1.1) G8x class */}
+\DoxyCodeLine{00053         \{ 0x12,  8 \}, /* Tesla Generation (SM 1.2) G9x class */}
+\DoxyCodeLine{00054         \{ 0x13,  8 \}, /* Tesla Generation (SM 1.3) GT200 class */}
+\DoxyCodeLine{00055         \{ 0x20, 32 \}, /* Fermi Generation (SM 2.0) GF100 class */}
+\DoxyCodeLine{00056         \{ 0x21, 48 \}, /* Fermi Generation (SM 2.1) GF10x class */}
+\DoxyCodeLine{00057         \{ 0x30, 192\}, /* Kepler Generation (SM 3.0) GK10x class */}
+\DoxyCodeLine{00058         \{ 0x32, 192\}, /* Kepler Generation (SM 3.2) GK10x class */}
+\DoxyCodeLine{00059         \{ 0x35, 192\}, /* Kepler Generation (SM 3.5) GK11x class */}
+\DoxyCodeLine{00060         \{ 0x37, 192\}, /* Kepler Generation (SM 3.7) GK21x class */}
+\DoxyCodeLine{00061         \{ 0x50, 128\}, /* Maxwell Generation (SM 5.0) GM10x class */}
+\DoxyCodeLine{00062         \{   -\/1, -\/1 \}}
+\DoxyCodeLine{00063     \};}
+\DoxyCodeLine{00064 }
+\DoxyCodeLine{00065     int index = 0;}
+\DoxyCodeLine{00066 }
+\DoxyCodeLine{00067     while (nGpuArchCoresPerSM[index].SM != -\/1)}
+\DoxyCodeLine{00068     \{}
+\DoxyCodeLine{00069         if (nGpuArchCoresPerSM[index].SM == ((major << 4) + minor))}
+\DoxyCodeLine{00070         \{}
+\DoxyCodeLine{00071             return nGpuArchCoresPerSM[index].Cores;}
+\DoxyCodeLine{00072         \}}
+\DoxyCodeLine{00073 }
+\DoxyCodeLine{00074         index++;}
+\DoxyCodeLine{00075     \}}
+\DoxyCodeLine{00076 }
+\DoxyCodeLine{00077     /* If we don't find the values, we default use the previous one to run properly */}
+\DoxyCodeLine{00078     printf("{}MapSMtoCores for SM \%d.\%d is undefined.  Default to use \%d Cores/SM\(\backslash\)n"{}, major, minor, nGpuArchCoresPerSM[index-\/1].Cores);}
+\DoxyCodeLine{00079     return nGpuArchCoresPerSM[index-\/1].Cores;}
+\DoxyCodeLine{00080 \}}
+\DoxyCodeLine{00081 }
+\DoxyCodeLine{00082 }
+\DoxyCodeLine{00083 /* ********************************************************************* */}
+\DoxyCodeLine{00084 void printfDeviceInformation(void)}
+\DoxyCodeLine{00085 /*!}
+\DoxyCodeLine{00086  *  printfs some basic information about detected CUDA devices. }
+\DoxyCodeLine{00087  *  Taken from cuda samples/1\_Utilities/deviceQuery}
+\DoxyCodeLine{00088  *  }
+\DoxyCodeLine{00089  *********************************************************************** */}
+\DoxyCodeLine{00090 \{}
+\DoxyCodeLine{00091 int i, device\_count, driverVersion = 0, runtimeVersion = 0;}
+\DoxyCodeLine{00092 struct cudaDeviceProp prop;}
+\DoxyCodeLine{00093 }
+\DoxyCodeLine{00094 cudaGetDeviceCount(\&device\_count);}
+\DoxyCodeLine{00095 }
+\DoxyCodeLine{00096     if (device\_count == 0)}
+\DoxyCodeLine{00097     \{}
+\DoxyCodeLine{00098         printf("{}\(\backslash\)n> No device(s) that support CUDA found!\(\backslash\)n"{});}
+\DoxyCodeLine{00099         exit(1);}
+\DoxyCodeLine{00100     \}}
+\DoxyCodeLine{00101 }
+\DoxyCodeLine{00102     for (i = 0; i < device\_count; i++)}
+\DoxyCodeLine{00103     \{   }
+\DoxyCodeLine{00104       //  cudaSetDevice(i);}
+\DoxyCodeLine{00105         cudaGetDeviceProperties(\&prop, i);}
+\DoxyCodeLine{00106         cudaDriverGetVersion(\&driverVersion);}
+\DoxyCodeLine{00107         cudaRuntimeGetVersion(\&runtimeVersion);}
+\DoxyCodeLine{00108 }
+\DoxyCodeLine{00109         printf("{}\(\backslash\)n> General Information for Device \%d -\/-\/ \%s\(\backslash\)n\(\backslash\)n"{}, i, prop.name);}
+\DoxyCodeLine{00110         printf("{}  CUDA Driver Version:                           \%d.\%d\(\backslash\)n"{}, driverVersion/1000, (driverVersion\%100)/10);}
+\DoxyCodeLine{00111         printf("{}  CUDA Runtime Version:                          \%d.\%d\(\backslash\)n"{}, runtimeVersion/1000,}
+\DoxyCodeLine{00112 (runtimeVersion\%100)/10);}
+\DoxyCodeLine{00113         printf("{}  Compute capability:                            \%d.\%d\(\backslash\)n\(\backslash\)n"{}, prop.major, prop.minor);}
+\DoxyCodeLine{00114 }
+\DoxyCodeLine{00115 }
+\DoxyCodeLine{00116         printf("{}  Multiprocessors:                               \%d\(\backslash\)n"{}, prop.multiProcessorCount);}
+\DoxyCodeLine{00117         printf("{}  CUDA Cores / Multiprocessor:                   \%d\(\backslash\)n"{}, \_ConvertSMVer2Cores(prop.major, prop.minor));}
+\DoxyCodeLine{00118         printf("{}  Total amount of CUDA Cores:                    \%d\(\backslash\)n"{}, \_ConvertSMVer2Cores(prop.major,}
+\DoxyCodeLine{00119 prop.minor)*prop.multiProcessorCount);}
+\DoxyCodeLine{00120         printf("{}  GPU clock rate:                                \%0.f MHz\(\backslash\)n\(\backslash\)n"{}, prop.clockRate * 1e-\/3f);}
+\DoxyCodeLine{00121 }
+\DoxyCodeLine{00122         \#if CUDART\_VERSION >= 5000}
+\DoxyCodeLine{00123         /* This is supported in CUDA 5.0 (runtime API device properties) */}
+\DoxyCodeLine{00124         printf("{}  Memory Clock rate:                             \%.0f Mhz\(\backslash\)n"{}, prop.memoryClockRate * 1e-\/3f);}
+\DoxyCodeLine{00125         printf("{}  Memory Bus Width:                              \%d-\/bit\(\backslash\)n"{},   prop.memoryBusWidth);}
+\DoxyCodeLine{00126 }
+\DoxyCodeLine{00127         if (prop.l2CacheSize)}
+\DoxyCodeLine{00128         \{}
+\DoxyCodeLine{00129             printf("{}  L2 Cache Size:                                 \%d bytes\(\backslash\)n\(\backslash\)n"{}, prop.l2CacheSize);}
+\DoxyCodeLine{00130         \}}
+\DoxyCodeLine{00131         \#endif}
+\DoxyCodeLine{00132 }
+\DoxyCodeLine{00133         printf("{}  Total amount of global memory:                 \%.0f MBytes\(\backslash\)n"{}, (float)prop.totalGlobalMem/1048576.0f);}
+\DoxyCodeLine{00134         printf("{}  Total amount of constant memory:               \%lu bytes\(\backslash\)n"{}, prop.totalConstMem);}
+\DoxyCodeLine{00135         printf("{}  Total amount of shared memory per block:       \%lu bytes\(\backslash\)n"{}, prop.sharedMemPerBlock);}
+\DoxyCodeLine{00136 }
+\DoxyCodeLine{00137         /* if prop.major >= 3 set shared memory bank size to 8 byte */}
+\DoxyCodeLine{00138         if (prop.major >= 3)}
+\DoxyCodeLine{00139         \{}
+\DoxyCodeLine{00140             cudaDeviceSetSharedMemConfig(cudaSharedMemBankSizeEightByte);}
+\DoxyCodeLine{00141             printf("{}  Shared memory bank size                        \%d bytes\(\backslash\)n"{}, 8);}
+\DoxyCodeLine{00142         \}}
+\DoxyCodeLine{00143         else}
+\DoxyCodeLine{00144         \{}
+\DoxyCodeLine{00145             printf("{}  Shared memory bank size                        \%d bytes\(\backslash\)n"{}, 4);}
+\DoxyCodeLine{00146         \}}
+\DoxyCodeLine{00147 }
+\DoxyCodeLine{00148         printf("{}  Total number of registers available per block: \%d\(\backslash\)n"{}, prop.regsPerBlock);}
+\DoxyCodeLine{00149         printf("{}  Warp size:                                     \%d\(\backslash\)n\(\backslash\)n"{}, prop.warpSize);}
+\DoxyCodeLine{00150 }
+\DoxyCodeLine{00151         printf("{}  Maximum number of threads per multiprocessor:  \%d\(\backslash\)n"{}, prop.maxThreadsPerMultiProcessor);}
+\DoxyCodeLine{00152         printf("{}  Maximum number of threads per block:           \%d\(\backslash\)n"{}, prop.maxThreadsPerBlock);}
+\DoxyCodeLine{00153         printf("{}  Max dimension size of a thread block (x,y,z): (\%d, \%d, \%d)\(\backslash\)n"{}, prop.maxThreadsDim[0],}
+\DoxyCodeLine{00154 prop.maxThreadsDim[1], prop.maxThreadsDim[2]);}
+\DoxyCodeLine{00155         printf("{}  Max dimension size of a grid size    (x,y,z): (\%d, \%d, \%d)\(\backslash\)n\(\backslash\)n"{}, prop.maxGridSize[0],}
+\DoxyCodeLine{00156 prop.maxGridSize[1], prop.maxGridSize[2]);}
+\DoxyCodeLine{00157 }
+\DoxyCodeLine{00158         printf("{}  Run time limit on kernels:                     \%s\(\backslash\)n"{}, prop.kernelExecTimeoutEnabled ? "{}Yes"{} : "{}No"{});}
+\DoxyCodeLine{00159         printf("{}  Integrated GPU sharing Host Memory:            \%s\(\backslash\)n"{}, prop.integrated ? "{}Yes"{} : "{}No"{});}
+\DoxyCodeLine{00160         printf("{}  Support host page-\/locked memory mapping:       \%s\(\backslash\)n"{}, prop.canMapHostMemory ? "{}Yes"{} : "{}No"{});}
+\DoxyCodeLine{00161         printf("{}  Device has ECC support:                        \%s\(\backslash\)n\(\backslash\)n"{}, prop.ECCEnabled ? "{}Enabled"{} : "{}Disabled"{});}
+\DoxyCodeLine{00162     \}}
+\DoxyCodeLine{00163 \}}
+
+\end{DoxyCode}

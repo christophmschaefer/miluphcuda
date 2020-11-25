@@ -1,0 +1,1355 @@
+\hypertarget{rk2adaptive_8cu_source}{}\doxysection{rk2adaptive.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com and Thomas I. Maindl}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 \#include "{}rk2adaptive.h"{}}
+\DoxyCodeLine{00025 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00026 \#include "{}timeintegration.h"{}}
+\DoxyCodeLine{00027 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00028 \#include "{}memory\_handling.h"{}}
+\DoxyCodeLine{00029 \#include "{}rhs.h"{}}
+\DoxyCodeLine{00030 \#include "{}pressure.h"{}}
+\DoxyCodeLine{00031 \#include "{}boundary.h"{}}
+\DoxyCodeLine{00032 }
+\DoxyCodeLine{00033 }
+\DoxyCodeLine{00034 extern \_\_device\_\_ double endTimeD, currentTimeD;}
+\DoxyCodeLine{00035 extern \_\_device\_\_ double substep\_currentTimeD;}
+\DoxyCodeLine{00036 extern \_\_device\_\_ double dt;}
+\DoxyCodeLine{00037 extern \_\_device\_\_ double dtmax;}
+\DoxyCodeLine{00038 extern \_\_device\_\_ int isRelaxed;}
+\DoxyCodeLine{00039 extern \_\_device\_\_ int blockCount;}
+\DoxyCodeLine{00040 extern \_\_device\_\_ int errorSmallEnough;}
+\DoxyCodeLine{00041 extern \_\_device\_\_ double dtNewErrorCheck;}
+\DoxyCodeLine{00042 extern \_\_device\_\_ double dtNewAlphaCheck;}
+\DoxyCodeLine{00043 extern \_\_device\_\_ double maxPosAbsError;}
+\DoxyCodeLine{00044 }
+\DoxyCodeLine{00045 }
+\DoxyCodeLine{00046 extern \_\_constant\_\_ double b21;}
+\DoxyCodeLine{00047 extern \_\_constant\_\_ double b31;}
+\DoxyCodeLine{00048 extern \_\_constant\_\_ double b32;}
+\DoxyCodeLine{00049 extern \_\_constant\_\_ double c1;}
+\DoxyCodeLine{00050 extern \_\_constant\_\_ double c2;}
+\DoxyCodeLine{00051 extern \_\_constant\_\_ double c3;}
+\DoxyCodeLine{00052 extern \_\_device\_\_ double maxVelAbsError;}
+\DoxyCodeLine{00053 extern \_\_device\_\_ double maxDensityAbsError;}
+\DoxyCodeLine{00054 extern \_\_device\_\_ double maxEnergyAbsError;}
+\DoxyCodeLine{00055 extern \_\_device\_\_ double maxPressureAbsChange;}
+\DoxyCodeLine{00056 extern \_\_device\_\_ double maxDamageTimeStep;}
+\DoxyCodeLine{00057 extern \_\_device\_\_ double maxalphaDiff;}
+\DoxyCodeLine{00058 extern \_\_constant\_\_ double safety;}
+\DoxyCodeLine{00059 }
+\DoxyCodeLine{00060 \_\_constant\_\_ \_\_device\_\_ double rk\_epsrel\_d;}
+\DoxyCodeLine{00061 }
+\DoxyCodeLine{00062 extern double L\_ini;}
+\DoxyCodeLine{00063 }
+\DoxyCodeLine{00064 \_\_global\_\_ void limitTimestep(double *forcesPerBlock , double *courantPerBlock)}
+\DoxyCodeLine{00065 \{}
+\DoxyCodeLine{00066     \_\_shared\_\_ double sharedForces[NUM\_THREADS\_LIMITTIMESTEP];}
+\DoxyCodeLine{00067     \_\_shared\_\_ double sharedCourant[NUM\_THREADS\_LIMITTIMESTEP];}
+\DoxyCodeLine{00068     int i, j, k, m;}
+\DoxyCodeLine{00069     double forces = 1e100, courant = 1e100;}
+\DoxyCodeLine{00070     double temp;}
+\DoxyCodeLine{00071     double sml;}
+\DoxyCodeLine{00072     double ax;}
+\DoxyCodeLine{00073 \#if DIM > 1}
+\DoxyCodeLine{00074     double ay;}
+\DoxyCodeLine{00075 \#endif}
+\DoxyCodeLine{00076 \#if DIM == 3}
+\DoxyCodeLine{00077     double az;}
+\DoxyCodeLine{00078 \#endif}
+\DoxyCodeLine{00079     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00080         ax = p.ax[i];}
+\DoxyCodeLine{00081 \#if DIM > 1}
+\DoxyCodeLine{00082         ay = p.ay[i];}
+\DoxyCodeLine{00083 \#endif}
+\DoxyCodeLine{00084 \#if DIM == 3}
+\DoxyCodeLine{00085         az = p.az[i];}
+\DoxyCodeLine{00086 \#endif}
+\DoxyCodeLine{00087         temp = ax*ax;}
+\DoxyCodeLine{00088 \#if DIM > 1}
+\DoxyCodeLine{00089         temp += ay*ay;}
+\DoxyCodeLine{00090 \#endif}
+\DoxyCodeLine{00091 \#if DIM == 3}
+\DoxyCodeLine{00092          temp += az*az;}
+\DoxyCodeLine{00093 \#endif}
+\DoxyCodeLine{00094         sml = p.h[i];}
+\DoxyCodeLine{00095         if (temp > 0) \{}
+\DoxyCodeLine{00096             temp = sqrt(sml / sqrt(temp));}
+\DoxyCodeLine{00097             forces = min(forces, temp);}
+\DoxyCodeLine{00098         \}}
+\DoxyCodeLine{00099         temp = sml / p.cs[i];}
+\DoxyCodeLine{00100         courant = min(courant, temp);}
+\DoxyCodeLine{00101     \}}
+\DoxyCodeLine{00102     i = threadIdx.x;}
+\DoxyCodeLine{00103     sharedForces[i] = forces;}
+\DoxyCodeLine{00104     sharedCourant[i] = courant;}
+\DoxyCodeLine{00105     for (j = NUM\_THREADS\_LIMITTIMESTEP / 2; j > 0; j /= 2) \{}
+\DoxyCodeLine{00106         \_\_syncthreads();}
+\DoxyCodeLine{00107         if (i < j) \{}
+\DoxyCodeLine{00108             k = i + j;}
+\DoxyCodeLine{00109             sharedForces[i] = forces = min(forces, sharedForces[k]);}
+\DoxyCodeLine{00110             sharedCourant[i] = courant = min(courant, sharedCourant[k]);}
+\DoxyCodeLine{00111         \}}
+\DoxyCodeLine{00112     \}}
+\DoxyCodeLine{00113     // write block result to global memory}
+\DoxyCodeLine{00114     if (i == 0) \{}
+\DoxyCodeLine{00115         k = blockIdx.x;}
+\DoxyCodeLine{00116         forcesPerBlock[k] = forces;}
+\DoxyCodeLine{00117         courantPerBlock[k] = courant;}
+\DoxyCodeLine{00118         m = gridDim.x -\/ 1;}
+\DoxyCodeLine{00119         if (m == atomicInc((unsigned int *)\&blockCount, m)) \{}
+\DoxyCodeLine{00120             // last block, so combine all block results}
+\DoxyCodeLine{00121             for (j = 0; j <= m; j++) \{}
+\DoxyCodeLine{00122                 forces = min(forces, forcesPerBlock[j]);}
+\DoxyCodeLine{00123                 courant = min(courant, courantPerBlock[j]);}
+\DoxyCodeLine{00124             \}}
+\DoxyCodeLine{00125             // set new timestep}
+\DoxyCodeLine{00126             dt = min(COURANT*courant, forces*0.2);}
+\DoxyCodeLine{00127             dt = min(dt, endTimeD -\/ currentTimeD);}
+\DoxyCodeLine{00128             if (dt > dtmax) \{}
+\DoxyCodeLine{00129                 printf("{}<limittimestep> timestep \%g is larger than maximum timestep \%g, reducing to \%g\(\backslash\)n"{}, dt, dtmax, dtmax);}
+\DoxyCodeLine{00130                 dt = dtmax;}
+\DoxyCodeLine{00131             \}}
+\DoxyCodeLine{00132             // reset block count}
+\DoxyCodeLine{00133             blockCount = 0;}
+\DoxyCodeLine{00134         \}}
+\DoxyCodeLine{00135     \}}
+\DoxyCodeLine{00136 \}}
+\DoxyCodeLine{00137 }
+\DoxyCodeLine{00138 }
+\DoxyCodeLine{00139 /*}
+\DoxyCodeLine{00140    the runge-\/kutta 2nd order integrator with adaptive timestep}
+\DoxyCodeLine{00141    see cuda-\/paper for details}
+\DoxyCodeLine{00142  */}
+\DoxyCodeLine{00143 void rk2Adaptive()}
+\DoxyCodeLine{00144 \{}
+\DoxyCodeLine{00145     int rkstep;}
+\DoxyCodeLine{00146     int errorSmallEnough\_host;}
+\DoxyCodeLine{00147     double dtNewErrorCheck\_host = 0.0;}
+\DoxyCodeLine{00148 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00149     double dtNewAlphaCheck\_host = -\/1.0;}
+\DoxyCodeLine{00150     double dt\_alphanew = 0;}
+\DoxyCodeLine{00151     double dt\_alphaold = 0;}
+\DoxyCodeLine{00152 \#endif}
+\DoxyCodeLine{00153     double *maxPosAbsErrorPerBlock;}
+\DoxyCodeLine{00154     double *maxVelAbsErrorPerBlock;}
+\DoxyCodeLine{00155 \#if FRAGMENTATION}
+\DoxyCodeLine{00156     double dt\_damagenew = 0;}
+\DoxyCodeLine{00157     double dt\_damageold = 0;}
+\DoxyCodeLine{00158 \#endif}
+\DoxyCodeLine{00159 }
+\DoxyCodeLine{00160     /* first of all copy the rk\_epsrel to the device */}
+\DoxyCodeLine{00161     cudaVerify(cudaMemcpyToSymbol(rk\_epsrel\_d, \&param.rk\_epsrel, sizeof(double)));}
+\DoxyCodeLine{00162 }
+\DoxyCodeLine{00163     // allocate memory for runge kutta second order}
+\DoxyCodeLine{00164     cudaVerify(cudaMalloc((void**)\&maxPosAbsErrorPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00165     cudaVerify(cudaMalloc((void**)\&maxVelAbsErrorPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00166 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00167     double *maxDensityAbsErrorPerBlock;}
+\DoxyCodeLine{00168     cudaVerify(cudaMalloc((void**)\&maxDensityAbsErrorPerBlock , sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00169 \#endif}
+\DoxyCodeLine{00170 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00171     double *maxEnergyAbsErrorPerBlock;}
+\DoxyCodeLine{00172     cudaVerify(cudaMalloc((void**)\&maxEnergyAbsErrorPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00173 \#endif}
+\DoxyCodeLine{00174 \#if FRAGMENTATION}
+\DoxyCodeLine{00175     double *maxDamageTimeStepPerBlock;}
+\DoxyCodeLine{00176     cudaVerify(cudaMalloc((void**)\&maxDamageTimeStepPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00177 \#endif}
+\DoxyCodeLine{00178 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00179     double *maxalphaDiffPerBlock;}
+\DoxyCodeLine{00180     cudaVerify(cudaMalloc((void**)\&maxalphaDiffPerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00181     double *maxPressureAbsChangePerBlock;}
+\DoxyCodeLine{00182     cudaVerify(cudaMalloc((void**)\&maxPressureAbsChangePerBlock, sizeof(double)*numberOfMultiprocessors));}
+\DoxyCodeLine{00183 \#endif}
+\DoxyCodeLine{00184 }
+\DoxyCodeLine{00185 }
+\DoxyCodeLine{00186     // alloc mem for multiple rhs and copy immutables}
+\DoxyCodeLine{00187     int allocate\_immutables = 0;}
+\DoxyCodeLine{00188     for (rkstep = 0; rkstep < 3; rkstep++) \{}
+\DoxyCodeLine{00189         allocate\_particles\_memory(\&rk\_device[rkstep], allocate\_immutables);}
+\DoxyCodeLine{00190         copy\_particles\_immutables\_device\_to\_device(\&rk\_device[rkstep], \&p\_device);}
+\DoxyCodeLine{00191 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00192         allocate\_pointmass\_memory(\&rk\_pointmass\_device[rkstep], allocate\_immutables);}
+\DoxyCodeLine{00193         copy\_pointmass\_immutables\_device\_to\_device(\&rk\_pointmass\_device[rkstep], \&pointmass\_device);}
+\DoxyCodeLine{00194 \#endif}
+\DoxyCodeLine{00195     \}}
+\DoxyCodeLine{00196     // set the symbol pointers}
+\DoxyCodeLine{00197     cudaVerify(cudaMemcpyToSymbol(rk, \&rk\_device, sizeof(struct Particle) * 3));}
+\DoxyCodeLine{00198 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00199     cudaVerify(cudaMemcpyToSymbol(rk\_pointmass, \&rk\_pointmass\_device, sizeof(struct Pointmass) * 3));}
+\DoxyCodeLine{00200 \#endif}
+\DoxyCodeLine{00201 }
+\DoxyCodeLine{00202     int lastTimestep = startTimestep + numberOfTimesteps;}
+\DoxyCodeLine{00203     int timestep;}
+\DoxyCodeLine{00204     int nsteps\_cnt = 0;}
+\DoxyCodeLine{00205     double dt\_host\_old = timePerStep;}
+\DoxyCodeLine{00206     currentTime = startTime;}
+\DoxyCodeLine{00207     double endTime = startTime;}
+\DoxyCodeLine{00208     double substep\_currentTime;}
+\DoxyCodeLine{00209 }
+\DoxyCodeLine{00210     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00211 }
+\DoxyCodeLine{00212     cudaVerify(cudaMemcpyToSymbol(currentTimeD, \&currentTime, sizeof(double)));}
+\DoxyCodeLine{00213 }
+\DoxyCodeLine{00214 }
+\DoxyCodeLine{00215     for (timestep = startTimestep; timestep < lastTimestep; timestep++) \{}
+\DoxyCodeLine{00216         fprintf(stderr, "{}calculating step \%d\(\backslash\)n"{}, timestep);}
+\DoxyCodeLine{00217         fprintf(stdout, "{}\(\backslash\)nstep \%d / \%d\(\backslash\)n"{}, timestep, lastTimestep);}
+\DoxyCodeLine{00218         endTime += timePerStep;}
+\DoxyCodeLine{00219         fprintf(stdout, "{}currenttime: \%e \(\backslash\)t endtime: \%e\(\backslash\)n"{}, currentTime, endTime);}
+\DoxyCodeLine{00220         if (nsteps\_cnt == 0) \{}
+\DoxyCodeLine{00221             if (timePerStep > param.maxtimestep) \{}
+\DoxyCodeLine{00222                 cudaVerify(cudaMemcpyToSymbol(dt, \&param.maxtimestep, sizeof(double)));}
+\DoxyCodeLine{00223                 dt\_host\_old = param.maxtimestep;}
+\DoxyCodeLine{00224             \} else \{}
+\DoxyCodeLine{00225                 cudaVerify(cudaMemcpyToSymbol(dt, \&timePerStep, sizeof(double)));}
+\DoxyCodeLine{00226             \}}
+\DoxyCodeLine{00227             if (param.verbose) fprintf(stdout, "{}Starting with timestep \%.17e\(\backslash\)n"{}, dt\_host\_old);}
+\DoxyCodeLine{00228         \} else \{}
+\DoxyCodeLine{00229             cudaVerify(cudaMemcpyToSymbol(dt, \&dt\_host\_old, sizeof(double)));}
+\DoxyCodeLine{00230             dt\_host = dt\_host\_old;}
+\DoxyCodeLine{00231             if (param.verbose) fprintf(stdout, "{}Continuing with timestep \%.17e\(\backslash\)n"{}, dt\_host\_old);}
+\DoxyCodeLine{00232         \}}
+\DoxyCodeLine{00233         nsteps\_cnt++;}
+\DoxyCodeLine{00234         cudaVerify(cudaMemcpyToSymbol(endTimeD, \&endTime, sizeof(double)));}
+\DoxyCodeLine{00235 }
+\DoxyCodeLine{00236         // checking for changes in angular momentum}
+\DoxyCodeLine{00237         if (param.angular\_momentum\_check > 0) \{}
+\DoxyCodeLine{00238             double L\_current = calculate\_angular\_momentum();}
+\DoxyCodeLine{00239             double L\_change\_relative;}
+\DoxyCodeLine{00240             if (L\_ini > 0) \{}
+\DoxyCodeLine{00241                 L\_change\_relative = fabs((L\_ini -\/ L\_current)/L\_ini);}
+\DoxyCodeLine{00242             \}}
+\DoxyCodeLine{00243             if (param.verbose) \{}
+\DoxyCodeLine{00244                 fprintf(stdout, "{}Checking angular momentum conservation.\(\backslash\)n"{});}
+\DoxyCodeLine{00245                 fprintf(stdout, "{}Initial angular momentum: \%.17e\(\backslash\)n"{}, L\_ini);}
+\DoxyCodeLine{00246                 fprintf(stdout, "{}Current angular momentum: \%.17e\(\backslash\)n"{}, L\_current);}
+\DoxyCodeLine{00247                 fprintf(stdout, "{}Relative change: \%.17e\(\backslash\)n"{}, L\_change\_relative);}
+\DoxyCodeLine{00248             \}}
+\DoxyCodeLine{00249             if (L\_change\_relative > param.angular\_momentum\_check) \{}
+\DoxyCodeLine{00250                 fprintf(stderr, "{}Conservation of angular momentum violated. Exiting.\(\backslash\)n"{});}
+\DoxyCodeLine{00251                 exit(111);}
+\DoxyCodeLine{00252             \}}
+\DoxyCodeLine{00253         \}}
+\DoxyCodeLine{00254 }
+\DoxyCodeLine{00255 }
+\DoxyCodeLine{00256         while (currentTime < endTime) \{}
+\DoxyCodeLine{00257             // get the correct time}
+\DoxyCodeLine{00258             substep\_currentTime = currentTime;}
+\DoxyCodeLine{00259             cudaVerify(cudaMemcpyToSymbol(substep\_currentTimeD, \&substep\_currentTime, sizeof(double)));}
+\DoxyCodeLine{00260 }
+\DoxyCodeLine{00261             cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00262             // copy particle data to first runge kutta step}
+\DoxyCodeLine{00263             copy\_particles\_variables\_device\_to\_device(\&rk\_device[RKFIRST], \&p\_device);}
+\DoxyCodeLine{00264             cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00265 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00266             copy\_pointmass\_variables\_device\_to\_device(\&rk\_pointmass\_device[RKFIRST], \&pointmass\_device);}
+\DoxyCodeLine{00267             cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00268 \#endif}
+\DoxyCodeLine{00269 }
+\DoxyCodeLine{00270             // calculate first right hand side with rk[RKFIRST]\_device}
+\DoxyCodeLine{00271             cudaVerify(cudaMemcpyToSymbol(p, \&rk\_device[RKFIRST], sizeof(struct Particle)));}
+\DoxyCodeLine{00272             cudaVerify(cudaMemcpyToSymbol(pointmass, \&rk\_pointmass\_device[RKFIRST], sizeof(struct Pointmass)));}
+\DoxyCodeLine{00273             rightHandSide();}
+\DoxyCodeLine{00274             cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00275 }
+\DoxyCodeLine{00276 }
+\DoxyCodeLine{00277 \#if FRAGMENTATION}
+\DoxyCodeLine{00278             cudaVerify(cudaMemcpyFromSymbol(\&dt\_damageold, dt, sizeof(double)));}
+\DoxyCodeLine{00279             /* add function for best timestep with fragmentation here */}
+\DoxyCodeLine{00280             cudaVerifyKernel((damageMaxTimeStep<<<numberOfMultiprocessors, NUM\_THREADS\_ERRORCHECK>>>(}
+\DoxyCodeLine{00281                                 maxDamageTimeStepPerBlock}
+\DoxyCodeLine{00282             )));}
+\DoxyCodeLine{00283             cudaVerify(cudaMemcpyFromSymbol(\&dt\_damagenew, dt, sizeof(double)));}
+\DoxyCodeLine{00284             if (dt\_damagenew < dt\_damageold \&\& param.verbose) \{}
+\DoxyCodeLine{00285                 fprintf(stdout, "{}current time: \%e \(\backslash\)t\(\backslash\)t reducing timestep due to damage evolution from suggested time step \%g to \%g\(\backslash\)n"{}, currentTime, dt\_damageold, dt\_damagenew);}
+\DoxyCodeLine{00286                 dt\_host = dt\_damagenew;}
+\DoxyCodeLine{00287                 dt\_host\_old = dt\_host;}
+\DoxyCodeLine{00288             \}}
+\DoxyCodeLine{00289 \#endif}
+\DoxyCodeLine{00290 }
+\DoxyCodeLine{00291             // remember values of first step}
+\DoxyCodeLine{00292             copy\_particles\_variables\_device\_to\_device(\&rk\_device[RKSTART], \&rk\_device[RKFIRST]);}
+\DoxyCodeLine{00293             copy\_particles\_derivatives\_device\_to\_device(\&rk\_device[RKSTART], \&rk\_device[RKFIRST]);}
+\DoxyCodeLine{00294 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00295             copy\_pointmass\_variables\_device\_to\_device(\&rk\_pointmass\_device[RKSTART], \&rk\_pointmass\_device[RKFIRST]);}
+\DoxyCodeLine{00296             copy\_pointmass\_derivatives\_device\_to\_device(\&rk\_pointmass\_device[RKSTART], \&rk\_pointmass\_device[RKFIRST]);}
+\DoxyCodeLine{00297 \#endif}
+\DoxyCodeLine{00298 }
+\DoxyCodeLine{00299             // remember accels due to gravity}
+\DoxyCodeLine{00300             if (param.selfgravity) \{}
+\DoxyCodeLine{00301                 copy\_gravitational\_accels\_device\_to\_device(\&rk\_device[RKSTART], \&rk\_device[RKFIRST]);}
+\DoxyCodeLine{00302             \}}
+\DoxyCodeLine{00303 }
+\DoxyCodeLine{00304 \#define SMALLEST\_DT\_ALLOWED 1e-\/30}
+\DoxyCodeLine{00305             // integrate with adaptive timestep}
+\DoxyCodeLine{00306             while (TRUE) \{}
+\DoxyCodeLine{00307                 cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00308                 // set rk[RKFIRST] variables}
+\DoxyCodeLine{00309                 cudaVerifyKernel((integrateFirstStep<<<numberOfMultiprocessors, NUM\_THREADS\_RK2\_INTEGRATE\_STEP>>>()));}
+\DoxyCodeLine{00310 }
+\DoxyCodeLine{00311                 cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00312                 // get derivatives for second step}
+\DoxyCodeLine{00313                 // this happens at t = t0 + h/2}
+\DoxyCodeLine{00314                 cudaVerify(cudaMemcpyFromSymbol(\&dt\_host, dt, sizeof(double)));}
+\DoxyCodeLine{00315                 if (dt\_host < SMALLEST\_DT\_ALLOWED) \{}
+\DoxyCodeLine{00316                     fprintf(stderr, "{}Timestep is smaller than SMALLEST\_DT\_ALLOWED. Stopping here.\(\backslash\)n"{});}
+\DoxyCodeLine{00317                     exit(1);}
+\DoxyCodeLine{00318                 \}}
+\DoxyCodeLine{00319                 substep\_currentTime = currentTime + dt\_host*0.5;}
+\DoxyCodeLine{00320                 cudaVerify(cudaMemcpyToSymbol(substep\_currentTimeD, \&substep\_currentTime, sizeof(double)));}
+\DoxyCodeLine{00321                 cudaVerify(cudaMemcpyToSymbol(p, \&rk\_device[RKFIRST], sizeof(struct Particle)));}
+\DoxyCodeLine{00322 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00323                 cudaVerify(cudaMemcpyToSymbol(pointmass, \&rk\_pointmass\_device[RKFIRST], sizeof(struct Pointmass)));}
+\DoxyCodeLine{00324 \#endif}
+\DoxyCodeLine{00325                 rightHandSide();}
+\DoxyCodeLine{00326 }
+\DoxyCodeLine{00327                 cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00328 }
+\DoxyCodeLine{00329                 // integrate second step}
+\DoxyCodeLine{00330                 cudaVerifyKernel((integrateSecondStep<<<numberOfMultiprocessors, NUM\_THREADS\_RK2\_INTEGRATE\_STEP>>>()));}
+\DoxyCodeLine{00331 }
+\DoxyCodeLine{00332                 cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00333 }
+\DoxyCodeLine{00334                 if (param.selfgravity) \{}
+\DoxyCodeLine{00335                     copy\_gravitational\_accels\_device\_to\_device(\&rk\_device[RKSECOND], \&rk\_device[RKFIRST]);}
+\DoxyCodeLine{00336                 \}}
+\DoxyCodeLine{00337 }
+\DoxyCodeLine{00338                 // get derivatives for the 3rd (and last) step}
+\DoxyCodeLine{00339                 // this happens at t = t0 + h}
+\DoxyCodeLine{00340                 cudaVerify(cudaMemcpyToSymbol(p, \&rk\_device[RKSECOND], sizeof(struct Particle)));}
+\DoxyCodeLine{00341 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00342                 cudaVerify(cudaMemcpyToSymbol(pointmass, \&rk\_pointmass\_device[RKSECOND], sizeof(struct Pointmass)));}
+\DoxyCodeLine{00343 \#endif}
+\DoxyCodeLine{00344                 substep\_currentTime = currentTime + dt\_host;}
+\DoxyCodeLine{00345                 cudaVerify(cudaMemcpyToSymbol(substep\_currentTimeD, \&substep\_currentTime, sizeof(double)));}
+\DoxyCodeLine{00346                 rightHandSide();}
+\DoxyCodeLine{00347 }
+\DoxyCodeLine{00348                 cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00349 }
+\DoxyCodeLine{00350                 // integrate third step}
+\DoxyCodeLine{00351                 cudaVerify(cudaMemcpyToSymbol(p, \&p\_device, sizeof(struct Particle)));}
+\DoxyCodeLine{00352 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00353                 cudaVerify(cudaMemcpyToSymbol(pointmass, \&pointmass\_device, sizeof(struct Pointmass)));}
+\DoxyCodeLine{00354 \#endif}
+\DoxyCodeLine{00355                 cudaVerifyKernel((integrateThirdStep<<<numberOfMultiprocessors, NUM\_THREADS\_RK2\_INTEGRATE\_STEP>>>()));}
+\DoxyCodeLine{00356 }
+\DoxyCodeLine{00357                 cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00358 }
+\DoxyCodeLine{00359                 // calculate errors}
+\DoxyCodeLine{00360                 // following Stephen Oxley 1999, Modelling the Capture Theory for the}
+\DoxyCodeLine{00361                 // Origin of Planetary Systems}
+\DoxyCodeLine{00362                 cudaVerifyKernel((checkError<<<numberOfMultiprocessors, NUM\_THREADS\_ERRORCHECK>>>(}
+\DoxyCodeLine{00363                                 maxPosAbsErrorPerBlock, maxVelAbsErrorPerBlock}
+\DoxyCodeLine{00364 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00365                                 , maxDensityAbsErrorPerBlock}
+\DoxyCodeLine{00366 \#endif}
+\DoxyCodeLine{00367 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00368                                 , maxEnergyAbsErrorPerBlock}
+\DoxyCodeLine{00369 \#endif}
+\DoxyCodeLine{00370 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00371                                 , maxPressureAbsChangePerBlock}
+\DoxyCodeLine{00372 \#endif}
+\DoxyCodeLine{00373                                 )));}
+\DoxyCodeLine{00374                 /* get info about the quality of the time step: if errorSmallEnough is TRUE, then}
+\DoxyCodeLine{00375                    the integration is successful and the timestep size is raised. if errorSmallEnough}
+\DoxyCodeLine{00376                    is FALSE, the timestep size is lowered and the step is repeated */}
+\DoxyCodeLine{00377                 cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00378                 cudaVerify(cudaMemcpyFromSymbol(\&dtNewErrorCheck\_host, dtNewErrorCheck, sizeof(double)));}
+\DoxyCodeLine{00379                 cudaVerify(cudaMemcpyFromSymbol(\&errorSmallEnough\_host, errorSmallEnough, sizeof(int)));}
+\DoxyCodeLine{00380 }
+\DoxyCodeLine{00381 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00382                 /* special checks for the convergence of the p(alpha) crush curve stuff */}
+\DoxyCodeLine{00383                 if (errorSmallEnough\_host) \{}
+\DoxyCodeLine{00384                     dt\_alphaold = dt\_host;}
+\DoxyCodeLine{00385                     //cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00386                     //cudaVerify(cudaMemcpyFromSymbol(\&dt\_alphaold, dtNewErrorCheck, sizeof(double)));}
+\DoxyCodeLine{00387                     /* checking if the distention change is within the set limit */}
+\DoxyCodeLine{00388                     cudaVerifyKernel((alphaMaxTimeStep<<<numberOfMultiprocessors, NUM\_THREADS\_ERRORCHECK>>>(}
+\DoxyCodeLine{00389                                     maxalphaDiffPerBlock}
+\DoxyCodeLine{00390                     )));}
+\DoxyCodeLine{00391                     cudaVerify(cudaMemcpyFromSymbol(\&dt\_alphanew, dtNewAlphaCheck, sizeof(double)));}
+\DoxyCodeLine{00392                     if (dt\_alphanew < dt\_alphaold \&\& param.verbose \&\& dt\_alphanew > 0) \{}
+\DoxyCodeLine{00393                         fprintf(stdout, "{}current time step: \%e is too large for distention. lowering it to \%e\(\backslash\)n"{}, dt\_alphaold, dt\_alphanew);}
+\DoxyCodeLine{00394                     \}}
+\DoxyCodeLine{00395                 \}}
+\DoxyCodeLine{00396                 dtNewAlphaCheck\_host = -\/1.0;}
+\DoxyCodeLine{00397                 cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00398                 cudaVerify(cudaMemcpyFromSymbol(\&dtNewAlphaCheck\_host, dtNewAlphaCheck, sizeof(double)));}
+\DoxyCodeLine{00399                 cudaVerify(cudaMemcpyFromSymbol(\&errorSmallEnough\_host, errorSmallEnough, sizeof(int)));}
+\DoxyCodeLine{00400 \#endif}
+\DoxyCodeLine{00401 }
+\DoxyCodeLine{00402                 /* last time step was okay, forward time and continue with new time step size */}
+\DoxyCodeLine{00403                 if (errorSmallEnough\_host) \{}
+\DoxyCodeLine{00404                     currentTime += dt\_host;}
+\DoxyCodeLine{00405                     cudaVerifyKernel((BoundaryConditionsAfterIntegratorStep<<<numberOfMultiprocessors, NUM\_THREADS\_ERRORCHECK>>>(interactions)));}
+\DoxyCodeLine{00406                 \}}
+\DoxyCodeLine{00407 }
+\DoxyCodeLine{00408 }
+\DoxyCodeLine{00409                 double errPos, errVel, errDensity = 0;}
+\DoxyCodeLine{00410                 cudaVerify(cudaMemcpyFromSymbol(\&errPos, maxPosAbsError, sizeof(double)));}
+\DoxyCodeLine{00411                 cudaVerify(cudaMemcpyFromSymbol(\&errVel, maxVelAbsError, sizeof(double)));}
+\DoxyCodeLine{00412 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00413                 cudaVerify(cudaMemcpyFromSymbol(\&errDensity, maxDensityAbsError, sizeof(double)));}
+\DoxyCodeLine{00414 \#endif}
+\DoxyCodeLine{00415                 cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00416                 if (param.verbose) printf("{}total relative max error: \%g (locations: \%e, velocities: \%e, density: \%e) with timestep \%e\(\backslash\)n"{}, max(max(errPos, errVel), errDensity) / param.rk\_epsrel, errPos, errVel, errDensity, dt\_host);}
+\DoxyCodeLine{00417 }
+\DoxyCodeLine{00418 }
+\DoxyCodeLine{00419 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00420                 if (param.verbose)}
+\DoxyCodeLine{00421                     printf("{}Current time: \%g \(\backslash\)t dt: \%g \(\backslash\)t dtNewErrorCheck: \%g \(\backslash\)t dtNewAlphaCheck: \%g \(\backslash\)n"{}, currentTime, dt\_host, dtNewErrorCheck\_host, dtNewAlphaCheck\_host);}
+\DoxyCodeLine{00422 \#endif}
+\DoxyCodeLine{00423                 /* set new time step for next step */}
+\DoxyCodeLine{00424 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00425                 dt\_host\_old = dt\_host;}
+\DoxyCodeLine{00426                 if (dtNewAlphaCheck\_host <= 0) \{}
+\DoxyCodeLine{00427                     dt\_host = dtNewErrorCheck\_host;}
+\DoxyCodeLine{00428                 \} else \{}
+\DoxyCodeLine{00429                     dt\_host = min(dtNewErrorCheck\_host, dtNewAlphaCheck\_host);}
+\DoxyCodeLine{00430                 \}}
+\DoxyCodeLine{00431 \#else}
+\DoxyCodeLine{00432                 dt\_host\_old = dt\_host;}
+\DoxyCodeLine{00433                 dt\_host = dtNewErrorCheck\_host;}
+\DoxyCodeLine{00434 \#endif}
+\DoxyCodeLine{00435                 /* check if time step is too large */}
+\DoxyCodeLine{00436                 /* and lower if necessary */}
+\DoxyCodeLine{00437                 if (currentTime + dt\_host > endTime) \{}
+\DoxyCodeLine{00438                     dt\_host\_old = dt\_host;}
+\DoxyCodeLine{00439                     dt\_host = endTime -\/ currentTime;}
+\DoxyCodeLine{00440                 \}}
+\DoxyCodeLine{00441 }
+\DoxyCodeLine{00442                 cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00443                 /* tell the gpu the new time step size and the current time */}
+\DoxyCodeLine{00444                 cudaVerify(cudaMemcpyToSymbol(currentTimeD, \&currentTime, sizeof(double)));}
+\DoxyCodeLine{00445                 cudaVerify(cudaMemcpyToSymbol(dt, \&dt\_host, sizeof(double)));}
+\DoxyCodeLine{00446                 if (errorSmallEnough\_host) \{}
+\DoxyCodeLine{00447                     cudaVerify(cudaMemcpyFromSymbol(\&currentTime, currentTimeD, sizeof(double)));}
+\DoxyCodeLine{00448                     if (param.verbose) \{}
+\DoxyCodeLine{00449                         fprintf(stdout, "{}last error small enough: current time \%.17e  with timestep \%.17e new timestep \%.17e, time to next output is \%.17e  \(\backslash\)n"{}, currentTime, dt\_host\_old, dt\_host, endTime-\/currentTime);}
+\DoxyCodeLine{00450                     \}}
+\DoxyCodeLine{00451                     break; // break while(true) -\/> continue with next timestep}
+\DoxyCodeLine{00452                 \} else \{}
+\DoxyCodeLine{00453                     // integration not successful, dt has been lowered, try another round}
+\DoxyCodeLine{00454                     if (param.verbose) \{}
+\DoxyCodeLine{00455                         fprintf(stdout, "{}error too large >>>>>>>>>>>> current time: \%e timestep lowered to \%e\(\backslash\)n"{}, currentTime, dt\_host);}
+\DoxyCodeLine{00456                     \}}
+\DoxyCodeLine{00457                     // copy back the initial values of particles}
+\DoxyCodeLine{00458                     copy\_particles\_variables\_device\_to\_device(\&rk\_device[RKFIRST], \&rk\_device[RKSTART]);}
+\DoxyCodeLine{00459                     copy\_particles\_derivatives\_device\_to\_device(\&rk\_device[RKFIRST], \&rk\_device[RKSTART]);}
+\DoxyCodeLine{00460 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00461                     copy\_pointmass\_variables\_device\_to\_device(\&rk\_pointmass\_device[RKFIRST], \&rk\_pointmass\_device[RKSTART]);}
+\DoxyCodeLine{00462                     copy\_pointmass\_derivatives\_device\_to\_device(\&rk\_pointmass\_device[RKFIRST], \&rk\_pointmass\_device[RKSTART]);}
+\DoxyCodeLine{00463 \#endif}
+\DoxyCodeLine{00464                     cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00465                 \}}
+\DoxyCodeLine{00466 }
+\DoxyCodeLine{00467             \} // loop until error small enough}
+\DoxyCodeLine{00468 }
+\DoxyCodeLine{00469         \} // current time < end time loop}
+\DoxyCodeLine{00470         // write results}
+\DoxyCodeLine{00471 \#if FRAGMENTATION}
+\DoxyCodeLine{00472         cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00473         cudaVerifyKernel((damageLimit<<<numberOfMultiprocessors*4, NUM\_THREADS\_PC\_INTEGRATOR>>>()));}
+\DoxyCodeLine{00474         cudaVerify(cudaDeviceSynchronize());}
+\DoxyCodeLine{00475 \#endif}
+\DoxyCodeLine{00476         copyToHostAndWriteToFile(timestep, lastTimestep);}
+\DoxyCodeLine{00477 }
+\DoxyCodeLine{00478     \} // timestep loop}
+\DoxyCodeLine{00479 }
+\DoxyCodeLine{00480     // free memory}
+\DoxyCodeLine{00481     // free mem of rksteps}
+\DoxyCodeLine{00482     int free\_immutables = 0;}
+\DoxyCodeLine{00483     for (rkstep = 0; rkstep < 3; rkstep++) \{}
+\DoxyCodeLine{00484         free\_particles\_memory(\&rk\_device[rkstep], free\_immutables);}
+\DoxyCodeLine{00485 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00486         free\_pointmass\_memory(\&rk\_pointmass\_device[rkstep], free\_immutables);}
+\DoxyCodeLine{00487 \#endif}
+\DoxyCodeLine{00488     \}}
+\DoxyCodeLine{00489 }
+\DoxyCodeLine{00490     cudaVerify(cudaFree(maxPosAbsErrorPerBlock));}
+\DoxyCodeLine{00491     cudaVerify(cudaFree(maxVelAbsErrorPerBlock));}
+\DoxyCodeLine{00492 }
+\DoxyCodeLine{00493 \#if FRAGMENTATION}
+\DoxyCodeLine{00494     cudaVerify(cudaFree(maxDamageTimeStepPerBlock));}
+\DoxyCodeLine{00495 \#endif}
+\DoxyCodeLine{00496 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00497     cudaVerify(cudaFree(maxEnergyAbsErrorPerBlock));}
+\DoxyCodeLine{00498 \#endif}
+\DoxyCodeLine{00499 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00500     cudaVerify(cudaFree(maxDensityAbsErrorPerBlock));}
+\DoxyCodeLine{00501 \#endif}
+\DoxyCodeLine{00502 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00503     cudaVerify(cudaFree(maxalphaDiffPerBlock));}
+\DoxyCodeLine{00504 \#endif}
+\DoxyCodeLine{00505 }
+\DoxyCodeLine{00506 }
+\DoxyCodeLine{00507 \}}
+\DoxyCodeLine{00508 }
+\DoxyCodeLine{00509 }
+\DoxyCodeLine{00510 }
+\DoxyCodeLine{00511 }
+\DoxyCodeLine{00512 \_\_global\_\_ void integrateFirstStep(void)}
+\DoxyCodeLine{00513 \{}
+\DoxyCodeLine{00514     int i;}
+\DoxyCodeLine{00515 }
+\DoxyCodeLine{00516 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00517     // loop for the point masses}
+\DoxyCodeLine{00518     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00519         rk\_pointmass[RKFIRST].x[i] = rk\_pointmass[RKSTART].x[i] + dt * b21 * rk\_pointmass[RKSTART].vx[i];}
+\DoxyCodeLine{00520 \#if DIM > 1}
+\DoxyCodeLine{00521         rk\_pointmass[RKFIRST].y[i] = rk\_pointmass[RKSTART].y[i] + dt * b21 * rk\_pointmass[RKSTART].vy[i];}
+\DoxyCodeLine{00522 \#endif}
+\DoxyCodeLine{00523 }
+\DoxyCodeLine{00524 \#if DIM > 2}
+\DoxyCodeLine{00525         rk\_pointmass[RKFIRST].z[i] = rk\_pointmass[RKSTART].z[i] + dt * b21 * rk\_pointmass[RKSTART].vz[i];}
+\DoxyCodeLine{00526 \#endif}
+\DoxyCodeLine{00527 }
+\DoxyCodeLine{00528         rk\_pointmass[RKFIRST].vx[i] = rk\_pointmass[RKSTART].vx[i] + dt * b21 * rk\_pointmass[RKSTART].ax[i];}
+\DoxyCodeLine{00529 \#if DIM > 1}
+\DoxyCodeLine{00530         rk\_pointmass[RKFIRST].vy[i] = rk\_pointmass[RKSTART].vy[i] + dt * b21 * rk\_pointmass[RKSTART].ay[i];}
+\DoxyCodeLine{00531 \#endif}
+\DoxyCodeLine{00532 \#if DIM > 2}
+\DoxyCodeLine{00533         rk\_pointmass[RKFIRST].vz[i] = rk\_pointmass[RKSTART].vz[i] + dt * b21 * rk\_pointmass[RKSTART].az[i];}
+\DoxyCodeLine{00534 \#endif}
+\DoxyCodeLine{00535     \}}
+\DoxyCodeLine{00536 \#endif // GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00537 }
+\DoxyCodeLine{00538     // loop for the particles}
+\DoxyCodeLine{00539     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00540 }
+\DoxyCodeLine{00541         //printf("{}START: vx: \%g \(\backslash\)t \%g :dxdt \(\backslash\)t\(\backslash\)t\(\backslash\)t vy: \%g \(\backslash\)t \%g :dydt\(\backslash\)n"{}, velxStart[i], dxdtStart[i], velyStart[i], dydtStart[i]);}
+\DoxyCodeLine{00542 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00543         rk[RKFIRST].rho[i] = rk[RKSTART].rho[i] + dt * b21 * rk[RKSTART].drhodt[i];}
+\DoxyCodeLine{00544 \#endif}
+\DoxyCodeLine{00545 \#if INTEGRATE\_SML}
+\DoxyCodeLine{00546         rk[RKFIRST].h[i] = rk[RKSTART].h[i] + dt * b21 * rk[RKSTART].dhdt[i];}
+\DoxyCodeLine{00547 \#else}
+\DoxyCodeLine{00548         rk[RKFIRST].h[i] = rk[RKSTART].h[i];}
+\DoxyCodeLine{00549 \#endif}
+\DoxyCodeLine{00550 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00551         rk[RKFIRST].e[i] = rk[RKSTART].e[i] + dt * b21 * rk[RKSTART].dedt[i];}
+\DoxyCodeLine{00552 \#endif}
+\DoxyCodeLine{00553 \#if FRAGMENTATION}
+\DoxyCodeLine{00554         rk[RKFIRST].d[i] = rk[RKSTART].d[i] + dt * b21 * rk[RKSTART].dddt[i];}
+\DoxyCodeLine{00555         rk[RKFIRST].numActiveFlaws[i] = rk[RKSTART].numActiveFlaws[i];}
+\DoxyCodeLine{00556 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00557         rk[RKFIRST].damage\_porjutzi[i] = rk[RKSTART].damage\_porjutzi[i] + dt * b21 * rk[RKSTART].ddamage\_porjutzidt[i];}
+\DoxyCodeLine{00558 \#endif}
+\DoxyCodeLine{00559 \#endif}
+\DoxyCodeLine{00560 \#if INVISCID\_SPH}
+\DoxyCodeLine{00561         rk[RKFIRST].beta[i] = rk[RKSTART].beta[i] + dt * b21 * rk[RKSTART].dbetadt[i];}
+\DoxyCodeLine{00562 \#endif}
+\DoxyCodeLine{00563 \#if SOLID}
+\DoxyCodeLine{00564         int j, k;}
+\DoxyCodeLine{00565         for (j = 0; j < DIM; j++) \{}
+\DoxyCodeLine{00566             for (k = 0; k < DIM; k++) \{}
+\DoxyCodeLine{00567                 rk[RKFIRST].S[stressIndex(i,j,k)] = rk[RKSTART].S[stressIndex(i,j,k)] + dt * b21 * rk[RKSTART].dSdt[stressIndex(i,j,k)];}
+\DoxyCodeLine{00568             \}}
+\DoxyCodeLine{00569         \}}
+\DoxyCodeLine{00570 \#endif}
+\DoxyCodeLine{00571 }
+\DoxyCodeLine{00572 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00573         rk[RKFIRST].ep[i] = rk[RKSTART].ep[i] + dt * b21 * rk[RKSTART].edotp[i];}
+\DoxyCodeLine{00574         rk[RKFIRST].T[i] = rk[RKSTART].T[i] + dt * b21 * rk[RKSTART].dTdt[i];}
+\DoxyCodeLine{00575 \#endif}
+\DoxyCodeLine{00576 }
+\DoxyCodeLine{00577 }
+\DoxyCodeLine{00578 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00579         rk[RKFIRST].alpha\_jutzi[i] = rk[RKSTART].alpha\_jutzi[i] + dt * b21 * rk[RKSTART].dalphadt[i];}
+\DoxyCodeLine{00580         // rk[RKFIRST].p is the pressure at the begin of the new timestep}
+\DoxyCodeLine{00581         // this pressure has to be compared to the pressure at the end of the timestep}
+\DoxyCodeLine{00582         rk[RKFIRST].pold[i] = rk[RKFIRST].p[i];}
+\DoxyCodeLine{00583 \#endif}
+\DoxyCodeLine{00584 }
+\DoxyCodeLine{00585 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00586         rk[RKFIRST].rho\_0prime[i] = rk[RKSTART].rho\_0prime[i];}
+\DoxyCodeLine{00587         rk[RKFIRST].rho\_c\_plus[i] = rk[RKSTART].rho\_c\_plus[i];}
+\DoxyCodeLine{00588         rk[RKFIRST].rho\_c\_minus[i] = rk[RKSTART].rho\_c\_minus[i];}
+\DoxyCodeLine{00589         rk[RKFIRST].compressive\_strength[i] = rk[RKSTART].compressive\_strength[i];}
+\DoxyCodeLine{00590         rk[RKFIRST].tensile\_strength[i] = rk[RKSTART].tensile\_strength[i];}
+\DoxyCodeLine{00591         rk[RKFIRST].shear\_strength[i] = rk[RKSTART].shear\_strength[i];}
+\DoxyCodeLine{00592         rk[RKFIRST].K[i] = rk[RKSTART].K[i];}
+\DoxyCodeLine{00593         rk[RKFIRST].flag\_rho\_0prime[i] = rk[RKSTART].flag\_rho\_0prime[i];}
+\DoxyCodeLine{00594         rk[RKFIRST].flag\_plastic[i] = rk[RKSTART].flag\_plastic[i];}
+\DoxyCodeLine{00595 \#endif}
+\DoxyCodeLine{00596 }
+\DoxyCodeLine{00597 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00598         rk[RKFIRST].alpha\_epspor[i] = rk[RKSTART].alpha\_epspor[i] + dt * b21 * rk[RKSTART].dalpha\_epspordt[i];}
+\DoxyCodeLine{00599         rk[RKFIRST].epsilon\_v[i] = rk[RKSTART].epsilon\_v[i] + dt * b21 * rk[RKSTART].depsilon\_vdt[i];}
+\DoxyCodeLine{00600 \#endif}
+\DoxyCodeLine{00601 }
+\DoxyCodeLine{00602         rk[RKFIRST].x[i] = rk[RKSTART].x[i] + dt * b21 * rk[RKSTART].dxdt[i];}
+\DoxyCodeLine{00603 \#if DIM > 1}
+\DoxyCodeLine{00604         rk[RKFIRST].y[i] = rk[RKSTART].y[i] + dt * b21 * rk[RKSTART].dydt[i];}
+\DoxyCodeLine{00605 \#endif}
+\DoxyCodeLine{00606 }
+\DoxyCodeLine{00607 }
+\DoxyCodeLine{00608 \#if DIM > 2}
+\DoxyCodeLine{00609         rk[RKFIRST].z[i] = rk[RKSTART].z[i] + dt * b21 * rk[RKSTART].dzdt[i];}
+\DoxyCodeLine{00610 \#endif}
+\DoxyCodeLine{00611 }
+\DoxyCodeLine{00612         rk[RKFIRST].vx[i] = rk[RKSTART].vx[i] + dt * b21 * rk[RKSTART].ax[i];}
+\DoxyCodeLine{00613 \#if DIM > 1}
+\DoxyCodeLine{00614         rk[RKFIRST].vy[i] = rk[RKSTART].vy[i] + dt * b21 * rk[RKSTART].ay[i];}
+\DoxyCodeLine{00615 \#endif}
+\DoxyCodeLine{00616 \#if DIM > 2}
+\DoxyCodeLine{00617         rk[RKFIRST].vz[i] = rk[RKSTART].vz[i] + dt * b21 * rk[RKSTART].az[i];}
+\DoxyCodeLine{00618 \#endif}
+\DoxyCodeLine{00619 }
+\DoxyCodeLine{00620     \}}
+\DoxyCodeLine{00621 \}}
+\DoxyCodeLine{00622 }
+\DoxyCodeLine{00623 \_\_global\_\_ void integrateSecondStep(void)}
+\DoxyCodeLine{00624 \{}
+\DoxyCodeLine{00625     int i;}
+\DoxyCodeLine{00626 }
+\DoxyCodeLine{00627 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00628     // loop for pointmasses}
+\DoxyCodeLine{00629     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00630         rk\_pointmass[RKSECOND].vx[i] = rk\_pointmass[RKSTART].vx[i] + dt * (b31 * rk\_pointmass[RKSTART].ax[i] + b32 * rk\_pointmass[RKFIRST].ax[i]);}
+\DoxyCodeLine{00631 \#if DIM > 1}
+\DoxyCodeLine{00632         rk\_pointmass[RKSECOND].vy[i] = rk\_pointmass[RKSTART].vy[i] + dt * (b31 * rk\_pointmass[RKSTART].ay[i] + b32 * rk\_pointmass[RKFIRST].ay[i]);}
+\DoxyCodeLine{00633 \#endif}
+\DoxyCodeLine{00634 \#if DIM == 3}
+\DoxyCodeLine{00635         rk\_pointmass[RKSECOND].vz[i] = rk\_pointmass[RKSTART].vz[i] + dt * (b31 * rk\_pointmass[RKSTART].az[i] + b32 * rk\_pointmass[RKFIRST].az[i]);}
+\DoxyCodeLine{00636 \#endif}
+\DoxyCodeLine{00637         rk\_pointmass[RKSECOND].x[i] = rk\_pointmass[RKSTART].x[i] + dt * (b31 * rk\_pointmass[RKSTART].vx[i] + b32 * rk\_pointmass[RKFIRST].vx[i]);}
+\DoxyCodeLine{00638 \#if DIM > 1}
+\DoxyCodeLine{00639         rk\_pointmass[RKSECOND].y[i] = rk\_pointmass[RKSTART].y[i] + dt * (b31 * rk\_pointmass[RKSTART].vy[i] + b32 * rk\_pointmass[RKFIRST].vy[i]);}
+\DoxyCodeLine{00640 \#endif}
+\DoxyCodeLine{00641 \#if DIM == 3}
+\DoxyCodeLine{00642         rk\_pointmass[RKSECOND].z[i] = rk\_pointmass[RKSTART].z[i] + dt * (b31 * rk\_pointmass[RKSTART].vz[i] + b32 * rk\_pointmass[RKFIRST].vz[i]);}
+\DoxyCodeLine{00643 \#endif}
+\DoxyCodeLine{00644     \}}
+\DoxyCodeLine{00645 }
+\DoxyCodeLine{00646 \#endif // GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00647     // loop for particles}
+\DoxyCodeLine{00648     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00649 }
+\DoxyCodeLine{00650 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00651         rk[RKSECOND].rho[i] = rk[RKSTART].rho[i] + dt * (b31 * rk[RKSTART].drhodt[i] + b32 * rk[RKFIRST].drhodt[i]);}
+\DoxyCodeLine{00652 \#endif}
+\DoxyCodeLine{00653 \#if INTEGRATE\_SML}
+\DoxyCodeLine{00654         rk[RKSECOND].h[i] = rk[RKSTART].h[i] + dt * (b31 * rk[RKSTART].dhdt[i] + b32 * rk[RKFIRST].dhdt[i]);}
+\DoxyCodeLine{00655 \#else}
+\DoxyCodeLine{00656         rk[RKSECOND].h[i] = rk[RKSTART].h[i];}
+\DoxyCodeLine{00657 \#endif}
+\DoxyCodeLine{00658 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00659         rk[RKSECOND].e[i] = rk[RKSTART].e[i] + dt * (b31 * rk[RKSTART].dedt[i] + b32 * rk[RKFIRST].dedt[i]);}
+\DoxyCodeLine{00660 \#endif}
+\DoxyCodeLine{00661 \#if FRAGMENTATION}
+\DoxyCodeLine{00662         rk[RKSECOND].d[i] = rk[RKSTART].d[i] + dt * (b31 * rk[RKSTART].dddt[i] + b32 * rk[RKFIRST].dddt[i]);}
+\DoxyCodeLine{00663         rk[RKSECOND].numActiveFlaws[i] = rk[RKFIRST].numActiveFlaws[i];}
+\DoxyCodeLine{00664 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00665         rk[RKSECOND].damage\_porjutzi[i] = rk[RKSTART].damage\_porjutzi[i] + dt * (b31 * rk[RKSTART].ddamage\_porjutzidt[i] + b32 * rk[RKFIRST].ddamage\_porjutzidt[i]);}
+\DoxyCodeLine{00666 \#endif}
+\DoxyCodeLine{00667 \#endif}
+\DoxyCodeLine{00668 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00669         rk[RKSECOND].ep[i] = rk[RKSTART].ep[i] + dt * (b31 * rk[RKSTART].edotp[i] + b32 * rk[RKFIRST].edotp[i]);}
+\DoxyCodeLine{00670         rk[RKSECOND].T[i] = rk[RKSTART].T[i] + dt * (b31 * rk[RKSTART].dTdt[i] + b32 * rk[RKFIRST].dTdt[i]);}
+\DoxyCodeLine{00671 \#endif}
+\DoxyCodeLine{00672 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00673         rk[RKSECOND].alpha\_jutzi[i] = rk[RKSTART].alpha\_jutzi[i] + dt * (b31 * rk[RKSTART].dalphadt[i] + b32 * rk[RKFIRST].dalphadt[i]);}
+\DoxyCodeLine{00674         rk[RKSECOND].pold[i] = rk[RKFIRST].pold[i];}
+\DoxyCodeLine{00675 \#endif}
+\DoxyCodeLine{00676 }
+\DoxyCodeLine{00677 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00678         rk[RKSECOND].rho\_0prime[i] = rk[RKFIRST].rho\_0prime[i];}
+\DoxyCodeLine{00679         rk[RKSECOND].rho\_c\_plus[i] = rk[RKFIRST].rho\_c\_plus[i];}
+\DoxyCodeLine{00680         rk[RKSECOND].rho\_c\_minus[i] = rk[RKFIRST].rho\_c\_minus[i];}
+\DoxyCodeLine{00681         rk[RKSECOND].compressive\_strength[i] = rk[RKFIRST].compressive\_strength[i];}
+\DoxyCodeLine{00682         rk[RKSECOND].tensile\_strength[i] = rk[RKFIRST].tensile\_strength[i];}
+\DoxyCodeLine{00683         rk[RKSECOND].shear\_strength[i] = rk[RKFIRST].shear\_strength[i];}
+\DoxyCodeLine{00684         rk[RKSECOND].K[i] = rk[RKFIRST].K[i];}
+\DoxyCodeLine{00685         rk[RKSECOND].flag\_rho\_0prime[i] = rk[RKFIRST].flag\_rho\_0prime[i];}
+\DoxyCodeLine{00686         rk[RKSECOND].flag\_plastic[i] = rk[RKFIRST].flag\_plastic[i];}
+\DoxyCodeLine{00687 \#endif}
+\DoxyCodeLine{00688 }
+\DoxyCodeLine{00689 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00690         rk[RKSECOND].alpha\_epspor[i] = rk[RKSTART].alpha\_epspor[i] + dt * (b31 * rk[RKSTART].dalpha\_epspordt[i] + b32 * rk[RKFIRST].dalpha\_epspordt[i]);}
+\DoxyCodeLine{00691         rk[RKSECOND].epsilon\_v[i] = rk[RKSTART].epsilon\_v[i] + dt * (b31 * rk[RKSTART].depsilon\_vdt[i] + b32 * rk[RKFIRST].depsilon\_vdt[i]);}
+\DoxyCodeLine{00692 \#endif}
+\DoxyCodeLine{00693 }
+\DoxyCodeLine{00694 \#if INVISCID\_SPH}
+\DoxyCodeLine{00695         rk[RKSECOND].beta[i] = rk[RKSTART].beta[i] + dt * (b31 * rk[RKSTART].dbetadt[i] + b32 * rk[RKFIRST].dbetadt[i]);}
+\DoxyCodeLine{00696 \#endif}
+\DoxyCodeLine{00697 \#if SOLID}
+\DoxyCodeLine{00698         int j;}
+\DoxyCodeLine{00699         for (j = 0; j < DIM*DIM; j++) \{}
+\DoxyCodeLine{00700             rk[RKSECOND].S[i*DIM*DIM+j] = rk[RKSTART].S[i*DIM*DIM+j] + dt * (b31 * rk[RKSTART].dSdt[i*DIM*DIM+j] + b32 * rk[RKFIRST].dSdt[i*DIM*DIM+j]);}
+\DoxyCodeLine{00701         \}}
+\DoxyCodeLine{00702 \#endif}
+\DoxyCodeLine{00703 }
+\DoxyCodeLine{00704         rk[RKSECOND].vx[i] = rk[RKSTART].vx[i] + dt * (b31 * rk[RKSTART].ax[i] + b32 * rk[RKFIRST].ax[i]);}
+\DoxyCodeLine{00705 \#if DIM > 1}
+\DoxyCodeLine{00706         rk[RKSECOND].vy[i] = rk[RKSTART].vy[i] + dt * (b31 * rk[RKSTART].ay[i] + b32 * rk[RKFIRST].ay[i]);}
+\DoxyCodeLine{00707 \#endif}
+\DoxyCodeLine{00708 \#if DIM == 3}
+\DoxyCodeLine{00709         rk[RKSECOND].vz[i] = rk[RKSTART].vz[i] + dt * (b31 * rk[RKSTART].az[i] + b32 * rk[RKFIRST].az[i]);}
+\DoxyCodeLine{00710 \#endif}
+\DoxyCodeLine{00711         rk[RKSECOND].x[i] = rk[RKSTART].x[i] + dt * (b31 * rk[RKSTART].dxdt[i] + b32 * rk[RKFIRST].dxdt[i]);}
+\DoxyCodeLine{00712 \#if DIM > 1}
+\DoxyCodeLine{00713         rk[RKSECOND].y[i] = rk[RKSTART].y[i] + dt * (b31 * rk[RKSTART].dydt[i] + b32 * rk[RKFIRST].dydt[i]);}
+\DoxyCodeLine{00714 \#endif}
+\DoxyCodeLine{00715 \#if DIM == 3}
+\DoxyCodeLine{00716         rk[RKSECOND].z[i] = rk[RKSTART].z[i] + dt * (b31 * rk[RKSTART].dzdt[i] + b32 * rk[RKFIRST].dzdt[i]);}
+\DoxyCodeLine{00717 \#endif}
+\DoxyCodeLine{00718 }
+\DoxyCodeLine{00719     \}}
+\DoxyCodeLine{00720 \}}
+\DoxyCodeLine{00721 }
+\DoxyCodeLine{00722 \_\_global\_\_ void integrateThirdStep(void)}
+\DoxyCodeLine{00723 \{}
+\DoxyCodeLine{00724     int i;}
+\DoxyCodeLine{00725     int d;}
+\DoxyCodeLine{00726 }
+\DoxyCodeLine{00727 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00728     // loop pointmasses}
+\DoxyCodeLine{00729     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00730         pointmass.vx[i] = rk\_pointmass[RKSTART].vx[i] + dt/6.0 * (c1 * rk\_pointmass[RKSTART].ax[i] + c2 * rk\_pointmass[RKFIRST].ax[i] + c3 * rk\_pointmass[RKSECOND].ax[i]);}
+\DoxyCodeLine{00731         pointmass.ax[i] = 1./6.0 *(c1 * rk\_pointmass[RKSTART].ax[i] + c2 * rk\_pointmass[RKFIRST].ax[i] + c3 * rk\_pointmass[RKSECOND].ax[i]);}
+\DoxyCodeLine{00732 \#if DIM > 1}
+\DoxyCodeLine{00733         pointmass.vy[i] = rk\_pointmass[RKSTART].vy[i] + dt/6.0 * (c1 * rk\_pointmass[RKSTART].ay[i] + c2 * rk\_pointmass[RKFIRST].ay[i] + c3 * rk\_pointmass[RKSECOND].ay[i]);}
+\DoxyCodeLine{00734         pointmass.ay[i] = 1./6.0 *(c1 * rk\_pointmass[RKSTART].ay[i] + c2 * rk\_pointmass[RKFIRST].ay[i] + c3 * rk\_pointmass[RKSECOND].ay[i]);}
+\DoxyCodeLine{00735 \#endif}
+\DoxyCodeLine{00736 \#if DIM > 2}
+\DoxyCodeLine{00737         pointmass.vz[i] = rk\_pointmass[RKSTART].vz[i] + dt/6.0 * (c1 * rk\_pointmass[RKSTART].az[i] + c2 * rk\_pointmass[RKFIRST].az[i] + c3 * rk\_pointmass[RKSECOND].az[i]);}
+\DoxyCodeLine{00738         pointmass.az[i] = 1./6.0 *(c1 * rk\_pointmass[RKSTART].az[i] + c2 * rk\_pointmass[RKFIRST].az[i] + c3 * rk\_pointmass[RKSECOND].az[i]);}
+\DoxyCodeLine{00739 \#endif}
+\DoxyCodeLine{00740 }
+\DoxyCodeLine{00741         pointmass.x[i] = rk\_pointmass[RKSTART].x[i] + dt/6.0 * (c1 * rk\_pointmass[RKSTART].vx[i] + c2 * rk\_pointmass[RKFIRST].vx[i] + c3 * rk\_pointmass[RKSECOND].vx[i]);}
+\DoxyCodeLine{00742 \#if DIM > 1}
+\DoxyCodeLine{00743         pointmass.y[i] = rk\_pointmass[RKSTART].y[i] + dt/6.0 * (c1 * rk\_pointmass[RKSTART].vy[i] + c2 * rk\_pointmass[RKFIRST].vy[i] + c3 * rk\_pointmass[RKSECOND].vy[i]);}
+\DoxyCodeLine{00744 \#endif}
+\DoxyCodeLine{00745 \#if DIM > 2}
+\DoxyCodeLine{00746         pointmass.z[i] = rk\_pointmass[RKSTART].z[i] + dt/6.0 * (c1 * rk\_pointmass[RKSTART].vz[i] + c2 * rk\_pointmass[RKFIRST].vz[i] + c3 * rk\_pointmass[RKSECOND].vz[i]);}
+\DoxyCodeLine{00747 \#endif}
+\DoxyCodeLine{00748 }
+\DoxyCodeLine{00749     \}}
+\DoxyCodeLine{00750 \#endif // GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00751 }
+\DoxyCodeLine{00752     // loop particles}
+\DoxyCodeLine{00753     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00754         //printf("{}THIRD: vx: \%g \(\backslash\)t \%g :dxdt \(\backslash\)t\(\backslash\)t\(\backslash\)t vy: \%g \(\backslash\)t \%g :dydt\(\backslash\)n"{}, velxSecond[i], dxdtSecond[i], velySecond[i], dydtSecond[i]);}
+\DoxyCodeLine{00755 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00756         p.rho[i] = rk[RKSTART].rho[i] + dt/6.0 *}
+\DoxyCodeLine{00757             (  c1 * rk[RKSTART].drhodt[i]}
+\DoxyCodeLine{00758                + c2 * rk[RKFIRST].drhodt[i]}
+\DoxyCodeLine{00759                + c3 * rk[RKSECOND].drhodt[i]);}
+\DoxyCodeLine{00760         p.drhodt[i] = 1./6.*(c1 * rk[RKSTART].drhodt[i]}
+\DoxyCodeLine{00761                + c2 * rk[RKFIRST].drhodt[i]}
+\DoxyCodeLine{00762                + c3 * rk[RKSECOND].drhodt[i]);}
+\DoxyCodeLine{00763 \#else}
+\DoxyCodeLine{00764         p.rho[i] = rk[RKSECOND].rho[i];}
+\DoxyCodeLine{00765 \#endif}
+\DoxyCodeLine{00766 }
+\DoxyCodeLine{00767 \#if INTEGRATE\_SML}
+\DoxyCodeLine{00768         p.h[i] = rk[RKSTART].h[i] + dt/6.0 *}
+\DoxyCodeLine{00769             (  c1 * rk[RKSTART].dhdt[i]}
+\DoxyCodeLine{00770                + c2 * rk[RKFIRST].dhdt[i]}
+\DoxyCodeLine{00771                + c3 * rk[RKSECOND].dhdt[i]);}
+\DoxyCodeLine{00772         p.dhdt[i] = 1./6.*(c1 * rk[RKSTART].dhdt[i]}
+\DoxyCodeLine{00773                + c2 * rk[RKFIRST].dhdt[i]}
+\DoxyCodeLine{00774                + c3 * rk[RKSECOND].dhdt[i]);}
+\DoxyCodeLine{00775 \#else}
+\DoxyCodeLine{00776         p.h[i] = rk[RKSECOND].h[i];}
+\DoxyCodeLine{00777 \#endif}
+\DoxyCodeLine{00778 }
+\DoxyCodeLine{00779 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00780         p.e[i] = rk[RKSTART].e[i] + dt/6.0 *}
+\DoxyCodeLine{00781             (  c1 * rk[RKSTART].dedt[i]}
+\DoxyCodeLine{00782                + c2 * rk[RKFIRST].dedt[i]}
+\DoxyCodeLine{00783                + c3 * rk[RKSECOND].dedt[i]);}
+\DoxyCodeLine{00784         p.dedt[i] = 1./6.* (c1 * rk[RKSTART].dedt[i]}
+\DoxyCodeLine{00785                + c2 * rk[RKFIRST].dedt[i]}
+\DoxyCodeLine{00786                + c3 * rk[RKSECOND].dedt[i]);}
+\DoxyCodeLine{00787 \#endif}
+\DoxyCodeLine{00788 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00789         double dp = rk[RKSECOND].p[i] -\/ rk[RKSTART].p[i];}
+\DoxyCodeLine{00790 \#endif}
+\DoxyCodeLine{00791 \#if FRAGMENTATION}
+\DoxyCodeLine{00792         p.d[i] = rk[RKSTART].d[i] + dt/6.0 *}
+\DoxyCodeLine{00793             (  c1 * rk[RKSTART].dddt[i]}
+\DoxyCodeLine{00794                + c2 * rk[RKFIRST].dddt[i]}
+\DoxyCodeLine{00795                + c3 * rk[RKSECOND].dddt[i]);}
+\DoxyCodeLine{00796         p.dddt[i] = 1./6. * (c1 * rk[RKSTART].dddt[i]}
+\DoxyCodeLine{00797                + c2 * rk[RKFIRST].dddt[i]}
+\DoxyCodeLine{00798                + c3 * rk[RKSECOND].dddt[i]);}
+\DoxyCodeLine{00799 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00800         if (dp > 0.0) \{}
+\DoxyCodeLine{00801             p.damage\_porjutzi[i] = rk[RKSTART].damage\_porjutzi[i] + dt/6.0 *}
+\DoxyCodeLine{00802                 (  c1 * rk[RKSTART].ddamage\_porjutzidt[i]}
+\DoxyCodeLine{00803                    + c2 * rk[RKFIRST].ddamage\_porjutzidt[i]}
+\DoxyCodeLine{00804                    + c3 * rk[RKSECOND].ddamage\_porjutzidt[i]);}
+\DoxyCodeLine{00805             p.ddamage\_porjutzidt[i] = 1./6. * (c1 * rk[RKSTART].ddamage\_porjutzidt[i]}
+\DoxyCodeLine{00806                    + c2 * rk[RKFIRST].ddamage\_porjutzidt[i]}
+\DoxyCodeLine{00807                    + c3 * rk[RKSECOND].ddamage\_porjutzidt[i]);}
+\DoxyCodeLine{00808         \} else \{}
+\DoxyCodeLine{00809             p.d[i] = p.d[i];}
+\DoxyCodeLine{00810             p.damage\_porjutzi[i] = rk[RKSTART].damage\_porjutzi[i];}
+\DoxyCodeLine{00811         \}}
+\DoxyCodeLine{00812 \#endif}
+\DoxyCodeLine{00813 \#endif}
+\DoxyCodeLine{00814 }
+\DoxyCodeLine{00815 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00816         p.ep[i] = rk[RKSTART].ep[i] + dt/6.0 *}
+\DoxyCodeLine{00817             (  c1 * rk[RKSTART].edotp[i]}
+\DoxyCodeLine{00818                + c2 * rk[RKFIRST].edotp[i]}
+\DoxyCodeLine{00819                + c3 * rk[RKSECOND].edotp[i]);}
+\DoxyCodeLine{00820         p.T[i] = rk[RKSTART].T[i] + dt/6.0 *}
+\DoxyCodeLine{00821             (  c1 * rk[RKSTART].dTdt[i]}
+\DoxyCodeLine{00822                + c2 * rk[RKFIRST].dTdt[i]}
+\DoxyCodeLine{00823                + c3 * rk[RKSECOND].dTdt[i]);}
+\DoxyCodeLine{00824         p.edotp[i] = 1./6. * (  c1 * rk[RKSTART].edotp[i]}
+\DoxyCodeLine{00825                + c2 * rk[RKFIRST].edotp[i]}
+\DoxyCodeLine{00826                + c3 * rk[RKSECOND].edotp[i]);}
+\DoxyCodeLine{00827         p.dTdt[i] =  1./6. * (  c1 * rk[RKSTART].dTdt[i]}
+\DoxyCodeLine{00828                + c2 * rk[RKFIRST].dTdt[i]}
+\DoxyCodeLine{00829                + c3 * rk[RKSECOND].dTdt[i]);}
+\DoxyCodeLine{00830 \#endif}
+\DoxyCodeLine{00831 }
+\DoxyCodeLine{00832 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00833         if (dp > 0.0) \{}
+\DoxyCodeLine{00834             p.alpha\_jutzi[i] = rk[RKSTART].alpha\_jutzi[i] + dt/6.0 *}
+\DoxyCodeLine{00835                 (  c1 * rk[RKSTART].dalphadt[i]}
+\DoxyCodeLine{00836                    + c2 * rk[RKFIRST].dalphadt[i]}
+\DoxyCodeLine{00837                    + c3 * rk[RKSECOND].dalphadt[i]);}
+\DoxyCodeLine{00838             p.dalphadt[i] = 1./6. * (c1 * rk[RKSTART].dalphadt[i]}
+\DoxyCodeLine{00839                    + c2 * rk[RKFIRST].dalphadt[i]}
+\DoxyCodeLine{00840                    + c3 * rk[RKSECOND].dalphadt[i]);}
+\DoxyCodeLine{00841         \} else \{}
+\DoxyCodeLine{00842             p.alpha\_jutzi[i] = rk[RKSTART].alpha\_jutzi[i];}
+\DoxyCodeLine{00843         \}}
+\DoxyCodeLine{00844 \#endif}
+\DoxyCodeLine{00845 }
+\DoxyCodeLine{00846 \#if EPSALPHA\_POROSITY}
+\DoxyCodeLine{00847         p.alpha\_epspor[i] = rk[RKSTART].alpha\_epspor[i] + dt/6.0 *}
+\DoxyCodeLine{00848                 (     c1 * rk[RKSTART].dalpha\_epspordt[i]}
+\DoxyCodeLine{00849                     + c2 * rk[RKFIRST].dalpha\_epspordt[i]}
+\DoxyCodeLine{00850                     + c3 * rk[RKSECOND].dalpha\_epspordt[i]);}
+\DoxyCodeLine{00851         p.dalpha\_epspordt[i] = 1./6. *}
+\DoxyCodeLine{00852                 (     c1 * rk[RKSTART].dalpha\_epspordt[i]}
+\DoxyCodeLine{00853                     + c2 * rk[RKFIRST].dalpha\_epspordt[i]}
+\DoxyCodeLine{00854                     + c3 * rk[RKSECOND].dalpha\_epspordt[i]);}
+\DoxyCodeLine{00855         p.epsilon\_v[i] = rk[RKSTART].epsilon\_v[i] + dt/6.0 *}
+\DoxyCodeLine{00856                 (     c1 * rk[RKSTART].depsilon\_vdt[i]}
+\DoxyCodeLine{00857                     + c2 * rk[RKFIRST].depsilon\_vdt[i]}
+\DoxyCodeLine{00858                     + c3 * rk[RKSECOND].depsilon\_vdt[i]);}
+\DoxyCodeLine{00859         p.depsilon\_vdt[i] = 1./6. *}
+\DoxyCodeLine{00860                 (     c1 * rk[RKSTART].depsilon\_vdt[i]}
+\DoxyCodeLine{00861                     + c2 * rk[RKFIRST].depsilon\_vdt[i]}
+\DoxyCodeLine{00862                     + c3 * rk[RKSECOND].depsilon\_vdt[i]);}
+\DoxyCodeLine{00863 \#endif}
+\DoxyCodeLine{00864 }
+\DoxyCodeLine{00865 \#if INVISCID\_SPH}
+\DoxyCodeLine{00866         p.beta[i] = rk[RKSTART].beta[i] + dt/6.0 *}
+\DoxyCodeLine{00867             (     c1 * rk[RKSTART].dbetadt[i]}
+\DoxyCodeLine{00868                 + c2 * rk[RKFIRST].dbetadt[i]}
+\DoxyCodeLine{00869                 + c3 * rk[RKSECOND].dbetadt[i]);}
+\DoxyCodeLine{00870         p.dbetadt[i] = 1./6. * (c1 * rk[RKSTART].dbetadt[i]}
+\DoxyCodeLine{00871                              +  c2 * rk[RKFIRST].dbetadt[i]}
+\DoxyCodeLine{00872                              +  c3 * rk[RKSECOND].dbetadt[i]);}
+\DoxyCodeLine{00873 \#endif}
+\DoxyCodeLine{00874 \#if SOLID}
+\DoxyCodeLine{00875         int j;}
+\DoxyCodeLine{00876         for (j = 0; j < DIM*DIM; j++) \{}
+\DoxyCodeLine{00877             p.S[i*DIM*DIM+j] = rk[RKSTART].S[i*DIM*DIM+j] + dt/6.0 *}
+\DoxyCodeLine{00878                 (  c1 * rk[RKSTART].dSdt[i*DIM*DIM+j]}
+\DoxyCodeLine{00879                    + c2 * rk[RKFIRST].dSdt[i*DIM*DIM+j]}
+\DoxyCodeLine{00880                    + c3 * rk[RKSECOND].dSdt[i*DIM*DIM+j]);}
+\DoxyCodeLine{00881             p.dSdt[i*DIM*DIM+j] = 1./6. *}
+\DoxyCodeLine{00882                 (  c1 * rk[RKSTART].dSdt[i*DIM*DIM+j]}
+\DoxyCodeLine{00883                    + c2 * rk[RKFIRST].dSdt[i*DIM*DIM+j]}
+\DoxyCodeLine{00884                    + c3 * rk[RKSECOND].dSdt[i*DIM*DIM+j]);}
+\DoxyCodeLine{00885         \}}
+\DoxyCodeLine{00886 \#endif}
+\DoxyCodeLine{00887         p.vx[i] = rk[RKSTART].vx[i] + dt/6.0 * (c1 * rk[RKSTART].ax[i] + c2 * rk[RKFIRST].ax[i] + c3 * rk[RKSECOND].ax[i]);}
+\DoxyCodeLine{00888         p.ax[i] = 1./6.0 *(c1 * rk[RKSTART].ax[i] + c2 * rk[RKFIRST].ax[i] + c3 * rk[RKSECOND].ax[i]);}
+\DoxyCodeLine{00889         p.g\_ax[i] = 1./6.0 *(c1 * rk[RKSTART].g\_ax[i] + c2 * rk[RKFIRST].g\_ax[i] + c3 * rk[RKSECOND].g\_ax[i]);}
+\DoxyCodeLine{00890 \#if DIM > 1}
+\DoxyCodeLine{00891         p.vy[i] = rk[RKSTART].vy[i] + dt/6.0 * (c1 * rk[RKSTART].ay[i] + c2 * rk[RKFIRST].ay[i] + c3 * rk[RKSECOND].ay[i]);}
+\DoxyCodeLine{00892         p.ay[i] = 1./6.0 *(c1 * rk[RKSTART].ay[i] + c2 * rk[RKFIRST].ay[i] + c3 * rk[RKSECOND].ay[i]);}
+\DoxyCodeLine{00893         p.g\_ay[i] = 1./6.0 *(c1 * rk[RKSTART].g\_ay[i] + c2 * rk[RKFIRST].g\_ay[i] + c3 * rk[RKSECOND].g\_ay[i]);}
+\DoxyCodeLine{00894 \#endif}
+\DoxyCodeLine{00895 \#if DIM > 2}
+\DoxyCodeLine{00896         p.vz[i] = rk[RKSTART].vz[i] + dt/6.0 * (c1 * rk[RKSTART].az[i] + c2 * rk[RKFIRST].az[i] + c3 * rk[RKSECOND].az[i]);}
+\DoxyCodeLine{00897         p.az[i] = 1./6.0 *(c1 * rk[RKSTART].az[i] + c2 * rk[RKFIRST].az[i] + c3 * rk[RKSECOND].az[i]);}
+\DoxyCodeLine{00898         p.g\_az[i] = 1./6.0 *(c1 * rk[RKSTART].g\_az[i] + c2 * rk[RKFIRST].g\_az[i] + c3 * rk[RKSECOND].g\_az[i]);}
+\DoxyCodeLine{00899 \#endif}
+\DoxyCodeLine{00900 }
+\DoxyCodeLine{00901         p.x[i] = rk[RKSTART].x[i] + dt/6.0 * (c1 * rk[RKSTART].dxdt[i] + c2 * rk[RKFIRST].dxdt[i] + c3 * rk[RKSECOND].dxdt[i]);}
+\DoxyCodeLine{00902 \#if DIM > 1}
+\DoxyCodeLine{00903         p.y[i] = rk[RKSTART].y[i] + dt/6.0 * (c1 * rk[RKSTART].dydt[i] + c2 * rk[RKFIRST].dydt[i] + c3 * rk[RKSECOND].dydt[i]);}
+\DoxyCodeLine{00904 \#endif}
+\DoxyCodeLine{00905 \#if DIM > 2}
+\DoxyCodeLine{00906         p.z[i] = rk[RKSTART].z[i] + dt/6.0 * (c1 * rk[RKSTART].dzdt[i] + c2 * rk[RKFIRST].dzdt[i] + c3 * rk[RKSECOND].dzdt[i]);}
+\DoxyCodeLine{00907 \#endif}
+\DoxyCodeLine{00908 }
+\DoxyCodeLine{00909         /* remember some more values */}
+\DoxyCodeLine{00910         p.noi[i] = rk[RKSECOND].noi[i];}
+\DoxyCodeLine{00911         p.p[i] = rk[RKSECOND].p[i];}
+\DoxyCodeLine{00912 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00913         p.pold[i] = rk[RKSECOND].p[i];}
+\DoxyCodeLine{00914 \#endif}
+\DoxyCodeLine{00915 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00916         p.rho\_0prime[i] = rk[RKSECOND].rho\_0prime[i];}
+\DoxyCodeLine{00917         p.rho\_c\_plus[i] = rk[RKSECOND].rho\_c\_plus[i];}
+\DoxyCodeLine{00918         p.rho\_c\_minus[i] = rk[RKSECOND].rho\_c\_minus[i];}
+\DoxyCodeLine{00919         p.compressive\_strength[i] = rk[RKSECOND].compressive\_strength[i];}
+\DoxyCodeLine{00920         p.tensile\_strength[i] = rk[RKSECOND].tensile\_strength[i];}
+\DoxyCodeLine{00921         p.shear\_strength[i] = rk[RKSECOND].shear\_strength[i];}
+\DoxyCodeLine{00922         p.K[i] = rk[RKSECOND].K[i];}
+\DoxyCodeLine{00923         p.flag\_rho\_0prime[i] = rk[RKSECOND].flag\_rho\_0prime[i];}
+\DoxyCodeLine{00924         p.flag\_plastic[i] = rk[RKSECOND].flag\_plastic[i];}
+\DoxyCodeLine{00925 \#endif}
+\DoxyCodeLine{00926         p.cs[i] = rk[RKSECOND].cs[i];}
+\DoxyCodeLine{00927 \#if FRAGMENTATION}
+\DoxyCodeLine{00928         p.numActiveFlaws[i] = rk[RKSECOND].numActiveFlaws[i];}
+\DoxyCodeLine{00929 \#endif}
+\DoxyCodeLine{00930 \#if SOLID}
+\DoxyCodeLine{00931         p.local\_strain[i] = rk[RKSECOND].local\_strain[i];}
+\DoxyCodeLine{00932 \#endif}
+\DoxyCodeLine{00933 \#if NAVIER\_STOKES}
+\DoxyCodeLine{00934         for (d = 0; d < DIM*DIM; d++) \{}
+\DoxyCodeLine{00935             p.Tshear[i*DIM*DIM+d] = rk[RKSECOND].Tshear[i*DIM*DIM+d];}
+\DoxyCodeLine{00936         \}}
+\DoxyCodeLine{00937 \#endif}
+\DoxyCodeLine{00938 }
+\DoxyCodeLine{00939 \#if 0}
+\DoxyCodeLine{00940 \#warning experimental superstuff in rk2adaptive...}
+\DoxyCodeLine{00941         if (p\_rhs.materialId[i] == EOS\_TYPE\_IGNORE) \{}
+\DoxyCodeLine{00942             p.x[i] = 1e12+1e6*i;}
+\DoxyCodeLine{00943             p.y[i] = 1e12+1e6*i;}
+\DoxyCodeLine{00944         \}}
+\DoxyCodeLine{00945 \#endif}
+\DoxyCodeLine{00946     \}}
+\DoxyCodeLine{00947 \}}
+\DoxyCodeLine{00948 }
+\DoxyCodeLine{00949 \#if FRAGMENTATION}
+\DoxyCodeLine{00950 \#define MAX\_DAMAGE\_CHANGE 1e-\/2}
+\DoxyCodeLine{00951 /* set maximum time step for damage evolution */}
+\DoxyCodeLine{00952 \_\_global\_\_ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock)}
+\DoxyCodeLine{00953 \{}
+\DoxyCodeLine{00954     \_\_shared\_\_ double sharedMaxDamageTimeStep[NUM\_THREADS\_ERRORCHECK];}
+\DoxyCodeLine{00955     double localMaxDamageTimeStep = 0;}
+\DoxyCodeLine{00956     double tmp = 0;}
+\DoxyCodeLine{00957     double dtsuggested = 0;}
+\DoxyCodeLine{00958     int i, j, k, m;}
+\DoxyCodeLine{00959     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{00960         if (rk[RKFIRST].dddt[i] > 0) \{}
+\DoxyCodeLine{00961             tmp = 1./ ( (rk[RKFIRST].d[i] + MAX\_DAMAGE\_CHANGE) / rk[RKFIRST].dddt[i] );}
+\DoxyCodeLine{00962             localMaxDamageTimeStep = max(tmp, localMaxDamageTimeStep);}
+\DoxyCodeLine{00963         \}}
+\DoxyCodeLine{00964     \}}
+\DoxyCodeLine{00965     i = threadIdx.x;}
+\DoxyCodeLine{00966     sharedMaxDamageTimeStep[i] = localMaxDamageTimeStep;}
+\DoxyCodeLine{00967     for (j = NUM\_THREADS\_ERRORCHECK / 2; j > 0; j /= 2) \{}
+\DoxyCodeLine{00968         \_\_syncthreads();}
+\DoxyCodeLine{00969         if (i < j) \{}
+\DoxyCodeLine{00970             k = i + j;}
+\DoxyCodeLine{00971             sharedMaxDamageTimeStep[i] = localMaxDamageTimeStep = max(localMaxDamageTimeStep, sharedMaxDamageTimeStep[k]);}
+\DoxyCodeLine{00972         \}}
+\DoxyCodeLine{00973     \}}
+\DoxyCodeLine{00974     // write block result to global memory}
+\DoxyCodeLine{00975     if (i == 0) \{}
+\DoxyCodeLine{00976         k = blockIdx.x;}
+\DoxyCodeLine{00977         maxDamageTimeStepPerBlock[k] = localMaxDamageTimeStep;}
+\DoxyCodeLine{00978         m = gridDim.x -\/ 1;}
+\DoxyCodeLine{00979         if (m == atomicInc((unsigned int *)\&blockCount, m)) \{}
+\DoxyCodeLine{00980             // last block, so combine all block results}
+\DoxyCodeLine{00981             for (j = 0; j <= m; j++) \{}
+\DoxyCodeLine{00982                 localMaxDamageTimeStep = max(localMaxDamageTimeStep, maxDamageTimeStepPerBlock[j]);}
+\DoxyCodeLine{00983             \}}
+\DoxyCodeLine{00984             maxDamageTimeStep = localMaxDamageTimeStep;}
+\DoxyCodeLine{00985             // reset block count}
+\DoxyCodeLine{00986             blockCount = 0;}
+\DoxyCodeLine{00987 }
+\DoxyCodeLine{00988             if (maxDamageTimeStep > 0) \{}
+\DoxyCodeLine{00989                 dtsuggested = 1./maxDamageTimeStep;}
+\DoxyCodeLine{00990                 if (dtsuggested > dtmax) \{}
+\DoxyCodeLine{00991     //                printf("{}<damageMaxTimeStep> timestep \%g is larger than maximum timestep \%g, reducing to \%g\(\backslash\)n"{}, dtsuggested, dtmax, dtmax);}
+\DoxyCodeLine{00992                     dtsuggested = dtmax;}
+\DoxyCodeLine{00993                 \}}
+\DoxyCodeLine{00994                 if (dtsuggested < dt) \{}
+\DoxyCodeLine{00995                     dt = dtsuggested;}
+\DoxyCodeLine{00996                     if (currentTimeD+dt > endTimeD) \{}
+\DoxyCodeLine{00997                         dt = endTimeD -\/ currentTimeD;}
+\DoxyCodeLine{00998                     \}}
+\DoxyCodeLine{00999                 \}}
+\DoxyCodeLine{01000             \}}
+\DoxyCodeLine{01001         \}}
+\DoxyCodeLine{01002     \}}
+\DoxyCodeLine{01003 \}}
+\DoxyCodeLine{01004 \#endif}
+\DoxyCodeLine{01005 }
+\DoxyCodeLine{01006 }
+\DoxyCodeLine{01007 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01008 \#define MAX\_ALPHA\_CHANGE 1e-\/4}
+\DoxyCodeLine{01009 /* set maximum time step for damage evolution */}
+\DoxyCodeLine{01010 \_\_global\_\_ void alphaMaxTimeStep(double *maxalphaDiffPerBlock)}
+\DoxyCodeLine{01011 \{}
+\DoxyCodeLine{01012     \_\_shared\_\_ double sharedMaxalphaDiff[NUM\_THREADS\_ERRORCHECK];}
+\DoxyCodeLine{01013     double localMaxalphaDiff = 0.0;}
+\DoxyCodeLine{01014     double tmp = 0.0;}
+\DoxyCodeLine{01015     int i, j, k, m;}
+\DoxyCodeLine{01016     maxalphaDiff = 0.0;}
+\DoxyCodeLine{01017     dtNewAlphaCheck = -\/1.0;}
+\DoxyCodeLine{01018     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{01019         tmp = fabs(rk[RKSTART].alpha\_jutzi\_old[i] -\/ p.alpha\_jutzi[i]);}
+\DoxyCodeLine{01020         localMaxalphaDiff = max(tmp, localMaxalphaDiff);}
+\DoxyCodeLine{01021     \}}
+\DoxyCodeLine{01022     i = threadIdx.x;}
+\DoxyCodeLine{01023     sharedMaxalphaDiff[i] = localMaxalphaDiff;}
+\DoxyCodeLine{01024     for (j = NUM\_THREADS\_ERRORCHECK / 2; j > 0; j /= 2) \{}
+\DoxyCodeLine{01025         \_\_syncthreads();}
+\DoxyCodeLine{01026         if (i < j) \{}
+\DoxyCodeLine{01027             k = i + j;}
+\DoxyCodeLine{01028             sharedMaxalphaDiff[i] = localMaxalphaDiff = max(localMaxalphaDiff, sharedMaxalphaDiff[k]);}
+\DoxyCodeLine{01029         \}}
+\DoxyCodeLine{01030     \}}
+\DoxyCodeLine{01031     // write block result to global memory}
+\DoxyCodeLine{01032     if (i == 0) \{}
+\DoxyCodeLine{01033         k = blockIdx.x;}
+\DoxyCodeLine{01034         maxalphaDiffPerBlock[k] = localMaxalphaDiff;}
+\DoxyCodeLine{01035         m = gridDim.x -\/ 1;}
+\DoxyCodeLine{01036         if (m == atomicInc((unsigned int *)\&blockCount, m)) \{}
+\DoxyCodeLine{01037             // last block, so combine all block results}
+\DoxyCodeLine{01038             for (j = 0; j <= m; j++) \{}
+\DoxyCodeLine{01039                 localMaxalphaDiff = max(localMaxalphaDiff, maxalphaDiffPerBlock[j]);}
+\DoxyCodeLine{01040             \}}
+\DoxyCodeLine{01041             maxalphaDiff = localMaxalphaDiff;}
+\DoxyCodeLine{01042             // reset block count}
+\DoxyCodeLine{01043             blockCount = 0;}
+\DoxyCodeLine{01044         \}}
+\DoxyCodeLine{01045 }
+\DoxyCodeLine{01046 \#define FIXMEDT 1000}
+\DoxyCodeLine{01047         /* maybe needs a smoother implementation -\/ also if timestep gets too small because of alpha}
+\DoxyCodeLine{01048            set it to 5e-\/14. It's a temporary fix for cases where dtNewAlphaCheck gets too low and crashes */}
+\DoxyCodeLine{01049         dtNewAlphaCheck = FIXMEDT*dt;}
+\DoxyCodeLine{01050 //        dtNewAlphaCheck = dt * MAX\_ALPHA\_CHANGE / (maxalphaDiff);}
+\DoxyCodeLine{01051         if (maxalphaDiff > MAX\_ALPHA\_CHANGE) \{}
+\DoxyCodeLine{01052             dtNewAlphaCheck = dt * MAX\_ALPHA\_CHANGE / (maxalphaDiff * 1.51);}
+\DoxyCodeLine{01053             if (dtNewAlphaCheck > dtmax) \{}
+\DoxyCodeLine{01054                 printf("{}<alphaMaxTimeStep> timestep \%g is larger than maximum timestep \%g, reducing to \%g\(\backslash\)n"{}, dtNewAlphaCheck, dtmax, dtmax);}
+\DoxyCodeLine{01055                 dtNewAlphaCheck = dtmax;}
+\DoxyCodeLine{01056             \}}
+\DoxyCodeLine{01057             errorSmallEnough = FALSE;}
+\DoxyCodeLine{01058 //            if (dtNewAlphaCheck < 1e-\/29) \{}
+\DoxyCodeLine{01059 //                dtNewAlphaCheck = 1e-\/29;}
+\DoxyCodeLine{01060 //                errorSmallEnough = TRUE;}
+\DoxyCodeLine{01061 //                printf("{}Timestep too small: \%g Old Timestep: \%g Alpha Change: \%g Max Allowed: \%g \(\backslash\)n"{}, dtNewAlphaCheck, dt, maxalphaDiff, MAX\_ALPHA\_CHANGE);}
+\DoxyCodeLine{01062 //            \}}
+\DoxyCodeLine{01063         \}}
+\DoxyCodeLine{01064     \}}
+\DoxyCodeLine{01065 \}}
+\DoxyCodeLine{01066 \#endif}
+\DoxyCodeLine{01067 }
+\DoxyCodeLine{01068 }
+\DoxyCodeLine{01069 \_\_global\_\_ void checkError}
+\DoxyCodeLine{01070 (}
+\DoxyCodeLine{01071         double *maxPosAbsErrorPerBlock, double *maxVelAbsErrorPerBlock}
+\DoxyCodeLine{01072 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{01073         , double *maxDensityAbsErrorPerBlock}
+\DoxyCodeLine{01074 \#endif}
+\DoxyCodeLine{01075 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{01076         , double *maxEnergyAbsErrorPerBlock}
+\DoxyCodeLine{01077 \#endif}
+\DoxyCodeLine{01078 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01079         , double *maxPressureAbsChangePerBlock}
+\DoxyCodeLine{01080 \#endif}
+\DoxyCodeLine{01081         )}
+\DoxyCodeLine{01082 \{}
+\DoxyCodeLine{01083     \_\_shared\_\_ double sharedMaxPosAbsError[NUM\_THREADS\_ERRORCHECK];}
+\DoxyCodeLine{01084     \_\_shared\_\_ double sharedMaxVelAbsError[NUM\_THREADS\_ERRORCHECK];}
+\DoxyCodeLine{01085 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{01086     \_\_shared\_\_ double sharedMaxDensityAbsError[NUM\_THREADS\_ERRORCHECK];}
+\DoxyCodeLine{01087     double localMaxDensityAbsError = 0;}
+\DoxyCodeLine{01088 \#endif}
+\DoxyCodeLine{01089 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{01090     \_\_shared\_\_ double sharedMaxEnergyAbsError[NUM\_THREADS\_ERRORCHECK];}
+\DoxyCodeLine{01091     double localMaxEnergyAbsError = 0;}
+\DoxyCodeLine{01092     int hasEnergy = 0;}
+\DoxyCodeLine{01093 \#endif}
+\DoxyCodeLine{01094 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01095     \_\_shared\_\_ double sharedMaxPressureAbsChange[NUM\_THREADS\_ERRORCHECK];}
+\DoxyCodeLine{01096     double localMaxPressureAbsChange = 0;}
+\DoxyCodeLine{01097 \#endif}
+\DoxyCodeLine{01098 }
+\DoxyCodeLine{01099     int i, j, k, m;}
+\DoxyCodeLine{01100     double posAbsErrorTemp = 0, velAbsErrorTemp = 0, temp = 0, dtNew = 0;}
+\DoxyCodeLine{01101     double localMaxPosAbsError = 0, localMaxVelAbsError = 0;}
+\DoxyCodeLine{01102     double tmp\_vel = 0.0;}
+\DoxyCodeLine{01103     double tmp\_vel2 = 0.0;}
+\DoxyCodeLine{01104     double tmp\_pos = 0.0;}
+\DoxyCodeLine{01105     double tmp\_pos2 = 0.0;}
+\DoxyCodeLine{01106 // parameter for the adaptive time integration}
+\DoxyCodeLine{01107     double min\_pos\_change\_rk2 = 0.0;}
+\DoxyCodeLine{01108 \#define TINY\_RK2 1e-\/30}
+\DoxyCodeLine{01109 \#define MIN\_VEL\_CHANGE\_RK2 1e100}
+\DoxyCodeLine{01110 \#define RK2\_LOCATION\_SAFETY 0.1}
+\DoxyCodeLine{01111 }
+\DoxyCodeLine{01112 \#if 1}
+\DoxyCodeLine{01113 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{01114     // pointmasses loop}
+\DoxyCodeLine{01115     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{01116         temp = dt * (rk\_pointmass[RKFIRST].ax[i]/3.0 -\/ (rk\_pointmass[RKSTART].ax[i] + rk\_pointmass[RKSECOND].ax[i])/6.0);}
+\DoxyCodeLine{01117         tmp\_vel = fabs(rk\_pointmass[RKSTART].vx[i]) + fabs(dt*rk\_pointmass[RKSTART].ax[i]);}
+\DoxyCodeLine{01118         if (tmp\_vel > MIN\_VEL\_CHANGE\_RK2) \{}
+\DoxyCodeLine{01119             tmp\_vel2 = fabs(temp) / tmp\_vel;}
+\DoxyCodeLine{01120             velAbsErrorTemp = tmp\_vel2;}
+\DoxyCodeLine{01121         \}}
+\DoxyCodeLine{01122 \#if DIM > 1}
+\DoxyCodeLine{01123         temp = dt * (rk\_pointmass[RKFIRST].ay[i]/3.0 -\/ (rk\_pointmass[RKSTART].ay[i] + rk\_pointmass[RKSECOND].ay[i])/6.0);}
+\DoxyCodeLine{01124         tmp\_vel = fabs(rk\_pointmass[RKSTART].vy[i]) + fabs(dt*rk\_pointmass[RKSTART].ay[i]);}
+\DoxyCodeLine{01125         if (tmp\_vel > MIN\_VEL\_CHANGE\_RK2) \{}
+\DoxyCodeLine{01126             tmp\_vel2 = fabs(temp) / tmp\_vel;}
+\DoxyCodeLine{01127             velAbsErrorTemp = max(velAbsErrorTemp, tmp\_vel2);}
+\DoxyCodeLine{01128         \}}
+\DoxyCodeLine{01129 \#endif}
+\DoxyCodeLine{01130 \#if DIM == 3}
+\DoxyCodeLine{01131         temp = dt * (rk\_pointmass[RKFIRST].az[i]/3.0 -\/ (rk\_pointmass[RKSTART].az[i] + rk\_pointmass[RKSECOND].az[i])/6.0);}
+\DoxyCodeLine{01132         tmp\_vel = fabs(rk\_pointmass[RKSTART].vz[i]) + fabs(dt*rk\_pointmass[RKSTART].az[i]);}
+\DoxyCodeLine{01133         if (tmp\_vel > MIN\_VEL\_CHANGE\_RK2) \{}
+\DoxyCodeLine{01134             tmp\_vel2 = fabs(temp) / tmp\_vel;}
+\DoxyCodeLine{01135             velAbsErrorTemp = max(velAbsErrorTemp, tmp\_vel2);}
+\DoxyCodeLine{01136         \}}
+\DoxyCodeLine{01137 \#endif}
+\DoxyCodeLine{01138         localMaxVelAbsError = max(localMaxVelAbsError, velAbsErrorTemp);}
+\DoxyCodeLine{01139     \}}
+\DoxyCodeLine{01140 \#endif // gravitating point masses}
+\DoxyCodeLine{01141 \#endif// 0}
+\DoxyCodeLine{01142 }
+\DoxyCodeLine{01143     // particle loop}
+\DoxyCodeLine{01144     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) \{}
+\DoxyCodeLine{01145         if (p\_rhs.materialId[i] == EOS\_TYPE\_IGNORE) continue;}
+\DoxyCodeLine{01146         temp = dt * (rk[RKFIRST].dxdt[i]/3.0 -\/ (rk[RKSTART].dxdt[i] + rk[RKSECOND].dxdt[i])/6.0);}
+\DoxyCodeLine{01147         tmp\_pos = fabs(rk[RKSTART].x[i]) + fabs(dt*rk[RKSTART].dxdt[i]);}
+\DoxyCodeLine{01148         min\_pos\_change\_rk2 = rk[RKSTART].h[i];}
+\DoxyCodeLine{01149         min\_pos\_change\_rk2 *= RK2\_LOCATION\_SAFETY;}
+\DoxyCodeLine{01150         if (tmp\_pos > min\_pos\_change\_rk2) \{}
+\DoxyCodeLine{01151             posAbsErrorTemp = fabs(temp) / tmp\_pos;}
+\DoxyCodeLine{01152         \}}
+\DoxyCodeLine{01153 \#if DIM > 1}
+\DoxyCodeLine{01154         temp = dt * (rk[RKFIRST].dydt[i]/3.0 -\/ (rk[RKSTART].dydt[i] + rk[RKSECOND].dydt[i])/6.0);}
+\DoxyCodeLine{01155         tmp\_pos = fabs(rk[RKSTART].y[i]) + fabs(dt*rk[RKSTART].dydt[i]);}
+\DoxyCodeLine{01156         if (tmp\_pos > min\_pos\_change\_rk2) \{}
+\DoxyCodeLine{01157             tmp\_pos2 = fabs(temp) / tmp\_pos;}
+\DoxyCodeLine{01158             posAbsErrorTemp = max(posAbsErrorTemp,tmp\_pos2);}
+\DoxyCodeLine{01159         \}}
+\DoxyCodeLine{01160 \#endif}
+\DoxyCodeLine{01161 \#if DIM > 2}
+\DoxyCodeLine{01162         temp = dt * (rk[RKFIRST].dzdt[i]/3.0 -\/ (rk[RKSTART].dzdt[i] + rk[RKSECOND].dzdt[i])/6.0);}
+\DoxyCodeLine{01163         tmp\_pos = fabs(rk[RKSTART].z[i]) + fabs(dt*rk[RKSTART].dzdt[i]);}
+\DoxyCodeLine{01164         if (tmp\_pos > min\_pos\_change\_rk2) \{}
+\DoxyCodeLine{01165             tmp\_pos2 = fabs(temp) / tmp\_pos;}
+\DoxyCodeLine{01166             posAbsErrorTemp = max(posAbsErrorTemp,tmp\_pos2);}
+\DoxyCodeLine{01167         \}}
+\DoxyCodeLine{01168 \#endif}
+\DoxyCodeLine{01169         localMaxPosAbsError = max(localMaxPosAbsError, posAbsErrorTemp);}
+\DoxyCodeLine{01170 }
+\DoxyCodeLine{01171         temp = dt * (rk[RKFIRST].ax[i]/3.0 -\/ (rk[RKSTART].ax[i] + rk[RKSECOND].ax[i])/6.0);}
+\DoxyCodeLine{01172         tmp\_vel = fabs(rk[RKSTART].vx[i]) + fabs(dt*rk[RKSTART].ax[i]);}
+\DoxyCodeLine{01173         if (tmp\_vel > MIN\_VEL\_CHANGE\_RK2) \{}
+\DoxyCodeLine{01174             tmp\_vel2 = fabs(temp) / tmp\_vel;}
+\DoxyCodeLine{01175             velAbsErrorTemp = tmp\_vel2;}
+\DoxyCodeLine{01176         \}}
+\DoxyCodeLine{01177 \#if DIM > 1}
+\DoxyCodeLine{01178         temp = dt * (rk[RKFIRST].ay[i]/3.0 -\/ (rk[RKSTART].ay[i] + rk[RKSECOND].ay[i])/6.0);}
+\DoxyCodeLine{01179         tmp\_vel = fabs(rk[RKSTART].vy[i]) + fabs(dt*rk[RKSTART].ay[i]);}
+\DoxyCodeLine{01180         if (tmp\_vel > MIN\_VEL\_CHANGE\_RK2) \{}
+\DoxyCodeLine{01181             tmp\_vel2 = fabs(temp) / tmp\_vel;}
+\DoxyCodeLine{01182             velAbsErrorTemp = max(velAbsErrorTemp, tmp\_vel2);}
+\DoxyCodeLine{01183         \}}
+\DoxyCodeLine{01184 \#endif}
+\DoxyCodeLine{01185 \#if DIM == 3}
+\DoxyCodeLine{01186         temp = dt * (rk[RKFIRST].az[i]/3.0 -\/ (rk[RKSTART].az[i] + rk[RKSECOND].az[i])/6.0);}
+\DoxyCodeLine{01187         tmp\_vel = fabs(rk[RKSTART].vz[i]) + fabs(dt*rk[RKSTART].az[i]);}
+\DoxyCodeLine{01188         if (tmp\_vel > MIN\_VEL\_CHANGE\_RK2) \{}
+\DoxyCodeLine{01189             tmp\_vel2 = fabs(temp) / tmp\_vel;}
+\DoxyCodeLine{01190             velAbsErrorTemp = max(velAbsErrorTemp, tmp\_vel2);}
+\DoxyCodeLine{01191         \}}
+\DoxyCodeLine{01192 \#endif}
+\DoxyCodeLine{01193         localMaxVelAbsError = max(localMaxVelAbsError, velAbsErrorTemp);}
+\DoxyCodeLine{01194 }
+\DoxyCodeLine{01195 }
+\DoxyCodeLine{01196 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{01197         temp = dt * (rk[RKFIRST].drhodt[i]/3.0 -\/ (rk[RKSTART].drhodt[i] + rk[RKSECOND].drhodt[i])/6.0);}
+\DoxyCodeLine{01198         temp = fabs(temp) / (fabs(rk[RKSTART].rho[i]) + fabs(dt*rk[RKSTART].drhodt[i]) + TINY\_RK2);}
+\DoxyCodeLine{01199         localMaxDensityAbsError = max(localMaxDensityAbsError, temp);}
+\DoxyCodeLine{01200 \#endif}
+\DoxyCodeLine{01201 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01202         // check if the pressure changes too much}
+\DoxyCodeLine{01203         temp = fabs(rk[RKFIRST].p[i] -\/ rk[RKSECOND].p[i]);}
+\DoxyCodeLine{01204         localMaxPressureAbsChange = max(localMaxPressureAbsChange, temp);}
+\DoxyCodeLine{01205 \#endif}
+\DoxyCodeLine{01206 }
+\DoxyCodeLine{01207 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{01208         hasEnergy = 0;}
+\DoxyCodeLine{01209 }
+\DoxyCodeLine{01210         switch  (matEOS[p\_rhs.materialId[i]]) \{}
+\DoxyCodeLine{01211             case (EOS\_TYPE\_TILLOTSON):}
+\DoxyCodeLine{01212                 hasEnergy = 1;}
+\DoxyCodeLine{01213                 break;}
+\DoxyCodeLine{01214             case (EOS\_TYPE\_JUTZI):}
+\DoxyCodeLine{01215                 hasEnergy = 1;}
+\DoxyCodeLine{01216                 break;}
+\DoxyCodeLine{01217             case (EOS\_TYPE\_SIRONO):}
+\DoxyCodeLine{01218                 hasEnergy = 1;}
+\DoxyCodeLine{01219                 break;}
+\DoxyCodeLine{01220             case (EOS\_TYPE\_EPSILON):}
+\DoxyCodeLine{01221                 hasEnergy = 1;}
+\DoxyCodeLine{01222                 break;}
+\DoxyCodeLine{01223             case (EOS\_TYPE\_ANEOS):}
+\DoxyCodeLine{01224                 hasEnergy = 1;}
+\DoxyCodeLine{01225                 break;}
+\DoxyCodeLine{01226             case (EOS\_TYPE\_IDEAL\_GAS):}
+\DoxyCodeLine{01227                 hasEnergy = 1;}
+\DoxyCodeLine{01228                 break;}
+\DoxyCodeLine{01229             default:}
+\DoxyCodeLine{01230                 hasEnergy = 0;}
+\DoxyCodeLine{01231                 break;}
+\DoxyCodeLine{01232         \}}
+\DoxyCodeLine{01233         if (hasEnergy) \{}
+\DoxyCodeLine{01234             temp = dt * (rk[RKFIRST].dedt[i]/3.0 -\/ (rk[RKSTART].dedt[i] + rk[RKSECOND].dedt[i])/6.0);}
+\DoxyCodeLine{01235             temp = fabs(temp) / (fabs(rk[RKSTART].e[i]) + fabs(dt*rk[RKSTART].dedt[i]) + TINY\_RK2);}
+\DoxyCodeLine{01236             localMaxEnergyAbsError = max(localMaxEnergyAbsError, temp);}
+\DoxyCodeLine{01237         \}}
+\DoxyCodeLine{01238 \#endif}
+\DoxyCodeLine{01239     \}}
+\DoxyCodeLine{01240     i = threadIdx.x;}
+\DoxyCodeLine{01241     sharedMaxPosAbsError[i] = localMaxPosAbsError;}
+\DoxyCodeLine{01242     sharedMaxVelAbsError[i] = localMaxVelAbsError;}
+\DoxyCodeLine{01243 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{01244     sharedMaxDensityAbsError[i] = localMaxDensityAbsError;}
+\DoxyCodeLine{01245 \#endif}
+\DoxyCodeLine{01246 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{01247     sharedMaxEnergyAbsError[i] = localMaxEnergyAbsError;}
+\DoxyCodeLine{01248 \#endif}
+\DoxyCodeLine{01249 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01250     sharedMaxPressureAbsChange[i] = localMaxPressureAbsChange;}
+\DoxyCodeLine{01251 \#endif}
+\DoxyCodeLine{01252     for (j = NUM\_THREADS\_ERRORCHECK / 2; j > 0; j /= 2) \{}
+\DoxyCodeLine{01253         \_\_syncthreads();}
+\DoxyCodeLine{01254         if (i < j) \{}
+\DoxyCodeLine{01255             k = i + j;}
+\DoxyCodeLine{01256             sharedMaxPosAbsError[i] = localMaxPosAbsError = max(localMaxPosAbsError, sharedMaxPosAbsError[k]);}
+\DoxyCodeLine{01257             sharedMaxVelAbsError[i] = localMaxVelAbsError = max(localMaxVelAbsError, sharedMaxVelAbsError[k]);}
+\DoxyCodeLine{01258 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{01259             sharedMaxDensityAbsError[i] = localMaxDensityAbsError = max(localMaxDensityAbsError, sharedMaxDensityAbsError[k]);}
+\DoxyCodeLine{01260 \#endif}
+\DoxyCodeLine{01261 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{01262             sharedMaxEnergyAbsError[i] = localMaxEnergyAbsError = max(localMaxEnergyAbsError, sharedMaxEnergyAbsError[k]);}
+\DoxyCodeLine{01263 \#endif}
+\DoxyCodeLine{01264 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01265             sharedMaxPressureAbsChange[i] = localMaxPressureAbsChange = max(localMaxPressureAbsChange, sharedMaxPressureAbsChange[k]);}
+\DoxyCodeLine{01266 \#endif}
+\DoxyCodeLine{01267         \}}
+\DoxyCodeLine{01268     \}}
+\DoxyCodeLine{01269     // write block result to global memory}
+\DoxyCodeLine{01270     if (i == 0) \{}
+\DoxyCodeLine{01271         k = blockIdx.x;}
+\DoxyCodeLine{01272         maxPosAbsErrorPerBlock[k] = localMaxPosAbsError;}
+\DoxyCodeLine{01273         maxVelAbsErrorPerBlock[k] = localMaxVelAbsError;}
+\DoxyCodeLine{01274 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{01275         maxDensityAbsErrorPerBlock[k] = localMaxDensityAbsError;}
+\DoxyCodeLine{01276 \#endif}
+\DoxyCodeLine{01277 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{01278         maxEnergyAbsErrorPerBlock[k] = localMaxEnergyAbsError;}
+\DoxyCodeLine{01279 \#endif}
+\DoxyCodeLine{01280 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01281         maxPressureAbsChangePerBlock[k] = localMaxPressureAbsChange;}
+\DoxyCodeLine{01282 \#endif}
+\DoxyCodeLine{01283         m = gridDim.x -\/ 1;}
+\DoxyCodeLine{01284         if (m == atomicInc((unsigned int *)\&blockCount, m)) \{}
+\DoxyCodeLine{01285             // last block, so combine all block results}
+\DoxyCodeLine{01286             for (j = 0; j <= m; j++) \{}
+\DoxyCodeLine{01287                 localMaxPosAbsError = max(localMaxPosAbsError, maxPosAbsErrorPerBlock[j]);}
+\DoxyCodeLine{01288                 localMaxVelAbsError = max(localMaxVelAbsError, maxVelAbsErrorPerBlock[j]);}
+\DoxyCodeLine{01289 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{01290                 localMaxDensityAbsError = max(localMaxDensityAbsError, maxDensityAbsErrorPerBlock[j]);}
+\DoxyCodeLine{01291 \#endif}
+\DoxyCodeLine{01292 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{01293                 localMaxEnergyAbsError = max(localMaxEnergyAbsError, maxEnergyAbsErrorPerBlock[j]);}
+\DoxyCodeLine{01294 \#endif}
+\DoxyCodeLine{01295 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01296                 localMaxPressureAbsChange = max(localMaxPressureAbsChange, maxPressureAbsChangePerBlock[j]);}
+\DoxyCodeLine{01297 \#endif}
+\DoxyCodeLine{01298             \}}
+\DoxyCodeLine{01299             maxPosAbsError = localMaxPosAbsError;}
+\DoxyCodeLine{01300             maxVelAbsError = localMaxVelAbsError;}
+\DoxyCodeLine{01301             temp = max(localMaxPosAbsError, localMaxVelAbsError); // relative total max error}
+\DoxyCodeLine{01302 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{01303             maxDensityAbsError = localMaxDensityAbsError;}
+\DoxyCodeLine{01304             temp = max(temp, localMaxDensityAbsError);}
+\DoxyCodeLine{01305 \#endif}
+\DoxyCodeLine{01306 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{01307             maxEnergyAbsError = localMaxEnergyAbsError;}
+\DoxyCodeLine{01308 // we neglect the error from the energy integration}
+\DoxyCodeLine{01309 //            temp = max(temp, localMaxEnergyAbsError);}
+\DoxyCodeLine{01310 \#endif}
+\DoxyCodeLine{01311 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01312             maxPressureAbsChange = localMaxPressureAbsChange;}
+\DoxyCodeLine{01313 \#endif}
+\DoxyCodeLine{01314             temp /= rk\_epsrel\_d; // total error}
+\DoxyCodeLine{01315             if (temp > 1 \&\& maxPressureAbsChange > max\_abs\_pressure\_change) \{}
+\DoxyCodeLine{01316                 printf("{}pressure changes too much, maximum allowed change is \%e, current registered change was \%e, reducing time step\(\backslash\)n"{}, max\_abs\_pressure\_change, maxPressureAbsChange);}
+\DoxyCodeLine{01317                 temp = 1.1;}
+\DoxyCodeLine{01318             \}}
+\DoxyCodeLine{01319             if (temp > 1) \{ // error too large}
+\DoxyCodeLine{01320                 errorSmallEnough = FALSE;}
+\DoxyCodeLine{01321                 dtNew = max(0.1*dt, dt*safety*pow(temp,-\/0.25));}
+\DoxyCodeLine{01322             \} else \{ // error small enough}
+\DoxyCodeLine{01323                 errorSmallEnough = TRUE;}
+\DoxyCodeLine{01324                 dtNew = dt * safety * pow(temp, -\/0.3);}
+\DoxyCodeLine{01325 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{01326                                 // do not increase more than 1.1 times in the porous case}
+\DoxyCodeLine{01327                                 if (dtNew > 1.1 * dt) \{}
+\DoxyCodeLine{01328                                         dtNew = 1.1 * dt;}
+\DoxyCodeLine{01329                                 \}}
+\DoxyCodeLine{01330 \#else}
+\DoxyCodeLine{01331                 // do not increase more than 5 times}
+\DoxyCodeLine{01332                 if (dtNew > 5.0 * dt) \{}
+\DoxyCodeLine{01333                     dtNew = 5.0 * dt;}
+\DoxyCodeLine{01334                 \}}
+\DoxyCodeLine{01335 \#endif}
+\DoxyCodeLine{01336                 // do not make timestep smaller}
+\DoxyCodeLine{01337                 if (dtNew < dt) \{}
+\DoxyCodeLine{01338                     dtNew = 1.05 * dt;}
+\DoxyCodeLine{01339                 \}}
+\DoxyCodeLine{01340             \}}
+\DoxyCodeLine{01341             if (dtNew > dtmax) \{}
+\DoxyCodeLine{01342                 printf("{}<checkError> timestep \%g is larger than maximum timestep \%g, reducing to \%g\(\backslash\)n"{}, dtNew, dtmax, dtmax);}
+\DoxyCodeLine{01343                 dtNew = dtmax;}
+\DoxyCodeLine{01344             \}}
+\DoxyCodeLine{01345             dtNewErrorCheck = dtNew;}
+\DoxyCodeLine{01346             // reset block count}
+\DoxyCodeLine{01347             blockCount = 0;}
+\DoxyCodeLine{01348         \}}
+\DoxyCodeLine{01349     \}}
+\DoxyCodeLine{01350 \}}
+
+\end{DoxyCode}

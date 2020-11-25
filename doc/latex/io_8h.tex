@@ -1,0 +1,177 @@
+\hypertarget{io_8h}{}\doxysection{io.\+h File Reference}
+\label{io_8h}\index{io.h@{io.h}}
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$unistd.\+h$>$}\newline
+{\ttfamily \#include $<$libconfig.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}miluph.\+h\char`\"{}}\newline
+Include dependency graph for io.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{io_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{io_8h__dep__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_file}{File}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_file}{File}} \mbox{\hyperlink{io_8h_a35addb8715fe28f18f6cf3b6a7f7a1b4}{File}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{io_8h_a5ec360b371f7ac6d5f2cbba38ba5fdd1}{load\+Config\+From\+File}} (char $\ast$config\+File)
+\item 
+void \mbox{\hyperlink{io_8h_af4180e83b791f21f9663f2017fa159ca}{transfer\+Materials\+To\+G\+PU}} ()
+\item 
+void \mbox{\hyperlink{io_8h_a36e1bd004d77e5bfd809373a3bdcbaa1}{write\+\_\+tree\+\_\+to\+\_\+file}} (\mbox{\hyperlink{struct_file}{File}} file)
+\item 
+void \mbox{\hyperlink{io_8h_a07ed6f675c3146b0fddf941b31f7615a}{write\+\_\+particles\+\_\+to\+\_\+file}} (\mbox{\hyperlink{struct_file}{File}} file)
+\item 
+void \mbox{\hyperlink{io_8h_ace12b259be57c81c83b0cb51acc2a9be}{read\+\_\+particles\+\_\+from\+\_\+file}} (\mbox{\hyperlink{struct_file}{File}} \mbox{\hyperlink{io_8h_a1a0b313619c4109bb31c365d33b84b90}{input\+File}})
+\item 
+void $\ast$ \mbox{\hyperlink{io_8h_af467bf4a377d412a9d822824757615b1}{write\+\_\+timestep}} (void $\ast$argument)
+\item 
+void \mbox{\hyperlink{io_8h_a0ded60bcaf7c4f7d1a333657947e0213}{write\+\_\+performance}} (float $\ast$time)
+\item 
+void \mbox{\hyperlink{io_8h_aa2816e51a2a9737be6ade00f28d8412b}{clear\+\_\+performance\+\_\+file}} ()
+\item 
+void \mbox{\hyperlink{io_8h_aa07a6c422a89a8dca138a979ce31db99}{write\+\_\+fragments\+\_\+file}} ()
+\item 
+void \mbox{\hyperlink{io_8h_a8c1d6a36e6868d7d9cf3cf2f4fcdc553}{init\+\_\+values}} ()
+\item 
+void \mbox{\hyperlink{io_8h_a00eed732ff15367664201d10fed171ba}{set\+\_\+integration\+\_\+parameters}} ()
+\item 
+void \mbox{\hyperlink{io_8h_aeb07186d62049f2b5568dedb0264bdd2}{copy\+To\+Host\+And\+Write\+To\+File}} (int timestep, int last\+Timestep)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{struct_file}{File}} \mbox{\hyperlink{io_8h_a1a0b313619c4109bb31c365d33b84b90}{input\+File}}
+\item 
+int \mbox{\hyperlink{io_8h_ac2177f153962a874cf3d53742eb227e0}{current\+Disk\+IO}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{io_8h_a35addb8715fe28f18f6cf3b6a7f7a1b4}\label{io_8h_a35addb8715fe28f18f6cf3b6a7f7a1b4}} 
+\index{io.h@{io.h}!File@{File}}
+\index{File@{File}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{File}{File}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_file}{File}} \mbox{\hyperlink{struct_file}{File}}}
+
+\begin{DoxyAuthor}{Author}
+Christoph Schaefer \href{mailto:cm.schaefer@gmail.com}{\texttt{ cm.\+schaefer@gmail.\+com}}
+\end{DoxyAuthor}
+\hypertarget{xsph_8h_LICENSE}{}\doxysubsection{L\+I\+C\+E\+N\+SE}\label{xsph_8h_LICENSE}
+Copyright (c) 2019 Christoph Schaefer
+
+This file is part of miluphcuda.
+
+miluphcuda is free software\+: you can redistribute it and/or modify it under the terms of the G\+NU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+miluphcuda is distributed in the hope that it will be useful, but W\+I\+T\+H\+O\+UT A\+NY W\+A\+R\+R\+A\+N\+TY; without even the implied warranty of M\+E\+R\+C\+H\+A\+N\+T\+A\+B\+I\+L\+I\+TY or F\+I\+T\+N\+E\+SS F\+OR A P\+A\+R\+T\+I\+C\+U\+L\+AR P\+U\+R\+P\+O\+SE. See the G\+NU General Public License for more details.
+
+You should have received a copy of the G\+NU General Public License along with miluphcuda. If not, see \href{http://www.gnu.org/licenses/}{\texttt{ http\+://www.\+gnu.\+org/licenses/}}. 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{io_8h_aa2816e51a2a9737be6ade00f28d8412b}\label{io_8h_aa2816e51a2a9737be6ade00f28d8412b}} 
+\index{io.h@{io.h}!clear\_performance\_file@{clear\_performance\_file}}
+\index{clear\_performance\_file@{clear\_performance\_file}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{clear\_performance\_file()}{clear\_performance\_file()}}
+{\footnotesize\ttfamily void clear\+\_\+performance\+\_\+file (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{io_8h_aeb07186d62049f2b5568dedb0264bdd2}\label{io_8h_aeb07186d62049f2b5568dedb0264bdd2}} 
+\index{io.h@{io.h}!copyToHostAndWriteToFile@{copyToHostAndWriteToFile}}
+\index{copyToHostAndWriteToFile@{copyToHostAndWriteToFile}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{copyToHostAndWriteToFile()}{copyToHostAndWriteToFile()}}
+{\footnotesize\ttfamily void copy\+To\+Host\+And\+Write\+To\+File (\begin{DoxyParamCaption}\item[{int}]{timestep,  }\item[{int}]{last\+Timestep }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{io_8h_a8c1d6a36e6868d7d9cf3cf2f4fcdc553}\label{io_8h_a8c1d6a36e6868d7d9cf3cf2f4fcdc553}} 
+\index{io.h@{io.h}!init\_values@{init\_values}}
+\index{init\_values@{init\_values}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{init\_values()}{init\_values()}}
+{\footnotesize\ttfamily void init\+\_\+values (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{io_8h_a5ec360b371f7ac6d5f2cbba38ba5fdd1}\label{io_8h_a5ec360b371f7ac6d5f2cbba38ba5fdd1}} 
+\index{io.h@{io.h}!loadConfigFromFile@{loadConfigFromFile}}
+\index{loadConfigFromFile@{loadConfigFromFile}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{loadConfigFromFile()}{loadConfigFromFile()}}
+{\footnotesize\ttfamily void load\+Config\+From\+File (\begin{DoxyParamCaption}\item[{char $\ast$}]{config\+File }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{io_8h_ace12b259be57c81c83b0cb51acc2a9be}\label{io_8h_ace12b259be57c81c83b0cb51acc2a9be}} 
+\index{io.h@{io.h}!read\_particles\_from\_file@{read\_particles\_from\_file}}
+\index{read\_particles\_from\_file@{read\_particles\_from\_file}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{read\_particles\_from\_file()}{read\_particles\_from\_file()}}
+{\footnotesize\ttfamily void read\+\_\+particles\+\_\+from\+\_\+file (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_file}{File}}}]{input\+File }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{io_8h_a00eed732ff15367664201d10fed171ba}\label{io_8h_a00eed732ff15367664201d10fed171ba}} 
+\index{io.h@{io.h}!set\_integration\_parameters@{set\_integration\_parameters}}
+\index{set\_integration\_parameters@{set\_integration\_parameters}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{set\_integration\_parameters()}{set\_integration\_parameters()}}
+{\footnotesize\ttfamily void set\+\_\+integration\+\_\+parameters (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{io_8h_af4180e83b791f21f9663f2017fa159ca}\label{io_8h_af4180e83b791f21f9663f2017fa159ca}} 
+\index{io.h@{io.h}!transferMaterialsToGPU@{transferMaterialsToGPU}}
+\index{transferMaterialsToGPU@{transferMaterialsToGPU}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{transferMaterialsToGPU()}{transferMaterialsToGPU()}}
+{\footnotesize\ttfamily void transfer\+Materials\+To\+G\+PU (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{io_8h_aa07a6c422a89a8dca138a979ce31db99}\label{io_8h_aa07a6c422a89a8dca138a979ce31db99}} 
+\index{io.h@{io.h}!write\_fragments\_file@{write\_fragments\_file}}
+\index{write\_fragments\_file@{write\_fragments\_file}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{write\_fragments\_file()}{write\_fragments\_file()}}
+{\footnotesize\ttfamily void write\+\_\+fragments\+\_\+file (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{io_8h_a07ed6f675c3146b0fddf941b31f7615a}\label{io_8h_a07ed6f675c3146b0fddf941b31f7615a}} 
+\index{io.h@{io.h}!write\_particles\_to\_file@{write\_particles\_to\_file}}
+\index{write\_particles\_to\_file@{write\_particles\_to\_file}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{write\_particles\_to\_file()}{write\_particles\_to\_file()}}
+{\footnotesize\ttfamily void write\+\_\+particles\+\_\+to\+\_\+file (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_file}{File}}}]{file }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{io_8h_a0ded60bcaf7c4f7d1a333657947e0213}\label{io_8h_a0ded60bcaf7c4f7d1a333657947e0213}} 
+\index{io.h@{io.h}!write\_performance@{write\_performance}}
+\index{write\_performance@{write\_performance}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{write\_performance()}{write\_performance()}}
+{\footnotesize\ttfamily void write\+\_\+performance (\begin{DoxyParamCaption}\item[{float $\ast$}]{time }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{io_8h_af467bf4a377d412a9d822824757615b1}\label{io_8h_af467bf4a377d412a9d822824757615b1}} 
+\index{io.h@{io.h}!write\_timestep@{write\_timestep}}
+\index{write\_timestep@{write\_timestep}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{write\_timestep()}{write\_timestep()}}
+{\footnotesize\ttfamily void$\ast$ write\+\_\+timestep (\begin{DoxyParamCaption}\item[{void $\ast$}]{argument }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{io_8h_a36e1bd004d77e5bfd809373a3bdcbaa1}\label{io_8h_a36e1bd004d77e5bfd809373a3bdcbaa1}} 
+\index{io.h@{io.h}!write\_tree\_to\_file@{write\_tree\_to\_file}}
+\index{write\_tree\_to\_file@{write\_tree\_to\_file}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{write\_tree\_to\_file()}{write\_tree\_to\_file()}}
+{\footnotesize\ttfamily void write\+\_\+tree\+\_\+to\+\_\+file (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{struct_file}{File}}}]{file }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{io_8h_ac2177f153962a874cf3d53742eb227e0}\label{io_8h_ac2177f153962a874cf3d53742eb227e0}} 
+\index{io.h@{io.h}!currentDiskIO@{currentDiskIO}}
+\index{currentDiskIO@{currentDiskIO}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{currentDiskIO}{currentDiskIO}}
+{\footnotesize\ttfamily int current\+Disk\+IO\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{io_8h_a1a0b313619c4109bb31c365d33b84b90}\label{io_8h_a1a0b313619c4109bb31c365d33b84b90}} 
+\index{io.h@{io.h}!inputFile@{inputFile}}
+\index{inputFile@{inputFile}!io.h@{io.h}}
+\doxysubsubsection{\texorpdfstring{inputFile}{inputFile}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_file}{File}} input\+File\hspace{0.3cm}{\ttfamily [extern]}}
+

@@ -1,0 +1,92 @@
+\hypertarget{linalg_8h}{}\doxysection{linalg.\+h File Reference}
+\label{linalg_8h}\index{linalg.h@{linalg.h}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ int \mbox{\hyperlink{linalg_8h_a4dafeaf0a8b28945534511113dc0b7bf}{max\+\_\+\+Matrix}} (double M\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}, int $\ast$e, int $\ast$f, double $\ast$elmax)
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ void \mbox{\hyperlink{linalg_8h_a4645103d033d7dc5c15618754fad7e04}{rotate\+\_\+matrix}} (volatile double m\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}, volatile double c, volatile double s, volatile int e, volatile int f)
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ double \mbox{\hyperlink{linalg_8h_ab7f86ff133d2ee7624a7760a93080c2f}{calculate\+Max\+Eigenvalue}} (double M\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]})
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ int \mbox{\hyperlink{linalg_8h_a2254477b3a2ad5b59fc68f8c1b0551c9}{calculate\+\_\+all\+\_\+eigenvalues}} (double M\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}, double eigenvals\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}, double v\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]})
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ int \mbox{\hyperlink{linalg_8h_aacc9f38d87c48a936e95a4a81834c928}{invert\+Matrix}} (double $\ast$m, double $\ast$inverted)
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ void \mbox{\hyperlink{linalg_8h_a30aa34d2dedf80793ad3192ee3caa772}{multiply\+\_\+matrix}} (double a\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}, double b\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}, double c\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]})
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ void \mbox{\hyperlink{linalg_8h_a7bfd4dc8feccfdf93b17adf078b728a3}{copy\+\_\+matrix}} (double src\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}, double dst\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]})
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ void \mbox{\hyperlink{linalg_8h_a452520efc4550f04c567c4bf8522c76c}{identity\+\_\+matrix}} (double a\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]})
+\item 
+\+\_\+\+\_\+device\+\_\+\+\_\+ void \mbox{\hyperlink{linalg_8h_aa56886d93c78e345ff29d26856fb9b7f}{transpose\+\_\+matrix}} (double a\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]}\mbox{[}\mbox{\hyperlink{test__cases_2viscously__spreading__ring_2parameter_8h_ac25189db92959bff3c6c2adf4c34b50a}{D\+IM}}\mbox{]})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{linalg_8h_a2254477b3a2ad5b59fc68f8c1b0551c9}\label{linalg_8h_a2254477b3a2ad5b59fc68f8c1b0551c9}} 
+\index{linalg.h@{linalg.h}!calculate\_all\_eigenvalues@{calculate\_all\_eigenvalues}}
+\index{calculate\_all\_eigenvalues@{calculate\_all\_eigenvalues}!linalg.h@{linalg.h}}
+\doxysubsubsection{\texorpdfstring{calculate\_all\_eigenvalues()}{calculate\_all\_eigenvalues()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ int calculate\+\_\+all\+\_\+eigenvalues (\begin{DoxyParamCaption}\item[{double}]{M\mbox{[}\+D\+I\+M\mbox{]}\mbox{[}\+D\+I\+M\mbox{]},  }\item[{double}]{eigenvals\mbox{[}\+D\+I\+M\mbox{]},  }\item[{double}]{v\mbox{[}\+D\+I\+M\mbox{]}\mbox{[}\+D\+I\+M\mbox{]} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{linalg_8h_ab7f86ff133d2ee7624a7760a93080c2f}\label{linalg_8h_ab7f86ff133d2ee7624a7760a93080c2f}} 
+\index{linalg.h@{linalg.h}!calculateMaxEigenvalue@{calculateMaxEigenvalue}}
+\index{calculateMaxEigenvalue@{calculateMaxEigenvalue}!linalg.h@{linalg.h}}
+\doxysubsubsection{\texorpdfstring{calculateMaxEigenvalue()}{calculateMaxEigenvalue()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ double calculate\+Max\+Eigenvalue (\begin{DoxyParamCaption}\item[{double}]{M\mbox{[}\+D\+I\+M\mbox{]}\mbox{[}\+D\+I\+M\mbox{]} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{linalg_8h_a7bfd4dc8feccfdf93b17adf078b728a3}\label{linalg_8h_a7bfd4dc8feccfdf93b17adf078b728a3}} 
+\index{linalg.h@{linalg.h}!copy\_matrix@{copy\_matrix}}
+\index{copy\_matrix@{copy\_matrix}!linalg.h@{linalg.h}}
+\doxysubsubsection{\texorpdfstring{copy\_matrix()}{copy\_matrix()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ void copy\+\_\+matrix (\begin{DoxyParamCaption}\item[{double}]{src\mbox{[}\+D\+I\+M\mbox{]}\mbox{[}\+D\+I\+M\mbox{]},  }\item[{double}]{dst\mbox{[}\+D\+I\+M\mbox{]}\mbox{[}\+D\+I\+M\mbox{]} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{linalg_8h_a452520efc4550f04c567c4bf8522c76c}\label{linalg_8h_a452520efc4550f04c567c4bf8522c76c}} 
+\index{linalg.h@{linalg.h}!identity\_matrix@{identity\_matrix}}
+\index{identity\_matrix@{identity\_matrix}!linalg.h@{linalg.h}}
+\doxysubsubsection{\texorpdfstring{identity\_matrix()}{identity\_matrix()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ void identity\+\_\+matrix (\begin{DoxyParamCaption}\item[{double}]{a\mbox{[}\+D\+I\+M\mbox{]}\mbox{[}\+D\+I\+M\mbox{]} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{linalg_8h_aacc9f38d87c48a936e95a4a81834c928}\label{linalg_8h_aacc9f38d87c48a936e95a4a81834c928}} 
+\index{linalg.h@{linalg.h}!invertMatrix@{invertMatrix}}
+\index{invertMatrix@{invertMatrix}!linalg.h@{linalg.h}}
+\doxysubsubsection{\texorpdfstring{invertMatrix()}{invertMatrix()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ int invert\+Matrix (\begin{DoxyParamCaption}\item[{double $\ast$}]{m,  }\item[{double $\ast$}]{inverted }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{linalg_8h_a4dafeaf0a8b28945534511113dc0b7bf}\label{linalg_8h_a4dafeaf0a8b28945534511113dc0b7bf}} 
+\index{linalg.h@{linalg.h}!max\_Matrix@{max\_Matrix}}
+\index{max\_Matrix@{max\_Matrix}!linalg.h@{linalg.h}}
+\doxysubsubsection{\texorpdfstring{max\_Matrix()}{max\_Matrix()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ int max\+\_\+\+Matrix (\begin{DoxyParamCaption}\item[{double}]{M\mbox{[}\+D\+I\+M\mbox{]}\mbox{[}\+D\+I\+M\mbox{]},  }\item[{int $\ast$}]{e,  }\item[{int $\ast$}]{f,  }\item[{double $\ast$}]{elmax }\end{DoxyParamCaption})}
+
+\begin{DoxyAuthor}{Author}
+Christoph Schaefer \href{mailto:cm.schaefer@gmail.com}{\texttt{ cm.\+schaefer@gmail.\+com}}
+\end{DoxyAuthor}
+\hypertarget{xsph_8h_LICENSE}{}\doxysubsection{L\+I\+C\+E\+N\+SE}\label{xsph_8h_LICENSE}
+Copyright (c) 2019 Christoph Schaefer
+
+This file is part of miluphcuda.
+
+miluphcuda is free software\+: you can redistribute it and/or modify it under the terms of the G\+NU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+miluphcuda is distributed in the hope that it will be useful, but W\+I\+T\+H\+O\+UT A\+NY W\+A\+R\+R\+A\+N\+TY; without even the implied warranty of M\+E\+R\+C\+H\+A\+N\+T\+A\+B\+I\+L\+I\+TY or F\+I\+T\+N\+E\+SS F\+OR A P\+A\+R\+T\+I\+C\+U\+L\+AR P\+U\+R\+P\+O\+SE. See the G\+NU General Public License for more details.
+
+You should have received a copy of the G\+NU General Public License along with miluphcuda. If not, see \href{http://www.gnu.org/licenses/}{\texttt{ http\+://www.\+gnu.\+org/licenses/}}. \mbox{\Hypertarget{linalg_8h_a30aa34d2dedf80793ad3192ee3caa772}\label{linalg_8h_a30aa34d2dedf80793ad3192ee3caa772}} 
+\index{linalg.h@{linalg.h}!multiply\_matrix@{multiply\_matrix}}
+\index{multiply\_matrix@{multiply\_matrix}!linalg.h@{linalg.h}}
+\doxysubsubsection{\texorpdfstring{multiply\_matrix()}{multiply\_matrix()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ void multiply\+\_\+matrix (\begin{DoxyParamCaption}\item[{double}]{a\mbox{[}\+D\+I\+M\mbox{]}\mbox{[}\+D\+I\+M\mbox{]},  }\item[{double}]{b\mbox{[}\+D\+I\+M\mbox{]}\mbox{[}\+D\+I\+M\mbox{]},  }\item[{double}]{c\mbox{[}\+D\+I\+M\mbox{]}\mbox{[}\+D\+I\+M\mbox{]} }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{linalg_8h_a4645103d033d7dc5c15618754fad7e04}\label{linalg_8h_a4645103d033d7dc5c15618754fad7e04}} 
+\index{linalg.h@{linalg.h}!rotate\_matrix@{rotate\_matrix}}
+\index{rotate\_matrix@{rotate\_matrix}!linalg.h@{linalg.h}}
+\doxysubsubsection{\texorpdfstring{rotate\_matrix()}{rotate\_matrix()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ void rotate\+\_\+matrix (\begin{DoxyParamCaption}\item[{volatile double}]{m\mbox{[}\+D\+I\+M\mbox{]}\mbox{[}\+D\+I\+M\mbox{]},  }\item[{volatile double}]{c,  }\item[{volatile double}]{s,  }\item[{volatile int}]{e,  }\item[{volatile int}]{f }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{linalg_8h_aa56886d93c78e345ff29d26856fb9b7f}\label{linalg_8h_aa56886d93c78e345ff29d26856fb9b7f}} 
+\index{linalg.h@{linalg.h}!transpose\_matrix@{transpose\_matrix}}
+\index{transpose\_matrix@{transpose\_matrix}!linalg.h@{linalg.h}}
+\doxysubsubsection{\texorpdfstring{transpose\_matrix()}{transpose\_matrix()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+device\+\_\+\+\_\+ void transpose\+\_\+matrix (\begin{DoxyParamCaption}\item[{double}]{a\mbox{[}\+D\+I\+M\mbox{]}\mbox{[}\+D\+I\+M\mbox{]} }\end{DoxyParamCaption})}
+

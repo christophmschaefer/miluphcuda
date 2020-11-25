@@ -1,0 +1,179 @@
+\hypertarget{euler_8cu_source}{}\doxysection{euler.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 \#include "{}euler.h"{}}
+\DoxyCodeLine{00025 \#include "{}timeintegration.h"{}}
+\DoxyCodeLine{00026 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00027 \#include "{}rhs.h"{}}
+\DoxyCodeLine{00028 }
+\DoxyCodeLine{00029 }
+\DoxyCodeLine{00030 extern \_\_device\_\_ double dt;}
+\DoxyCodeLine{00031 extern \_\_device\_\_ double endTimeD, currentTimeD;}
+\DoxyCodeLine{00032 }
+\DoxyCodeLine{00033 extern double L\_ini;}
+\DoxyCodeLine{00034 }
+\DoxyCodeLine{00035 }
+\DoxyCodeLine{00036 }
+\DoxyCodeLine{00037 \_\_global\_\_ void integrateEuler(void)}
+\DoxyCodeLine{00038 \{}
+\DoxyCodeLine{00039         register int i, inc;}
+\DoxyCodeLine{00040         inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00041 \#if GRAVITATING\_POINT\_MASSES}
+\DoxyCodeLine{00042         for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i += inc) \{}
+\DoxyCodeLine{00043                 pointmass.x[i] += dt * pointmass.vx[i];}
+\DoxyCodeLine{00044 \#if DIM > 1}
+\DoxyCodeLine{00045                 pointmass.y[i] += dt * pointmass.vy[i];}
+\DoxyCodeLine{00046                 pointmass.vy[i] += dt * pointmass.ay[i];}
+\DoxyCodeLine{00047 \#if DIM == 3}
+\DoxyCodeLine{00048                 pointmass.z[i] += dt * pointmass.vz[i];}
+\DoxyCodeLine{00049 \#endif}
+\DoxyCodeLine{00050 \#endif}
+\DoxyCodeLine{00051                 pointmass.vx[i] += dt * pointmass.ax[i];}
+\DoxyCodeLine{00052 \#if DIM == 3}
+\DoxyCodeLine{00053                 pointmass.vz[i] += dt * pointmass.az[i];}
+\DoxyCodeLine{00054 \#endif}
+\DoxyCodeLine{00055 }
+\DoxyCodeLine{00056         \}}
+\DoxyCodeLine{00057 \#endif}
+\DoxyCodeLine{00058         for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00059 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00060             p.rho[i] += dt * p.drhodt[i];}
+\DoxyCodeLine{00061 \#endif}
+\DoxyCodeLine{00062 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00063             p.e[i] += dt * p.dedt[i];}
+\DoxyCodeLine{00064 \#endif}
+\DoxyCodeLine{00065 }
+\DoxyCodeLine{00066 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00067             p.alpha\_jutzi[i] += dt * p.dalphadt[i];}
+\DoxyCodeLine{00068 \#endif}
+\DoxyCodeLine{00069 }
+\DoxyCodeLine{00070 \#if SIRONO\_POROSITY}
+\DoxyCodeLine{00071             p.rho\_0prime[i] = p.rho\_0prime[i];}
+\DoxyCodeLine{00072             p.rho\_c\_plus[i] = p.rho\_c\_plus[i];}
+\DoxyCodeLine{00073             p.rho\_c\_minus[i] = p.rho\_c\_minus[i];}
+\DoxyCodeLine{00074             p.compressive\_strength[i] = p.compressive\_strength[i];}
+\DoxyCodeLine{00075             p.tensile\_strength[i] = p.tensile\_strength[i];}
+\DoxyCodeLine{00076             p.shear\_strength[i] = p.shear\_strength[i];}
+\DoxyCodeLine{00077             p.K[i] = p.K[i];}
+\DoxyCodeLine{00078             p.flag\_rho\_0prime[i] = p.flag\_rho\_0prime[i];}
+\DoxyCodeLine{00079             p.flag\_plastic[i] = p.flag\_plastic[i];}
+\DoxyCodeLine{00080 \#endif}
+\DoxyCodeLine{00081 }
+\DoxyCodeLine{00082 \#if INTEGRATE\_SML}
+\DoxyCodeLine{00083             p.h[i] += dt * p.dhdt[i];}
+\DoxyCodeLine{00084 \#endif}
+\DoxyCodeLine{00085 \#if JC\_PLASTICITY}
+\DoxyCodeLine{00086             p.ep[i] += dt * p.edotp[i];}
+\DoxyCodeLine{00087             p.T[i] += dt * p.dTdt[i];}
+\DoxyCodeLine{00088 \#endif}
+\DoxyCodeLine{00089 \#if INVISCID\_SPH}
+\DoxyCodeLine{00090             p.beta[i] += dt * p.dbetadt[i];}
+\DoxyCodeLine{00091 \#endif}
+\DoxyCodeLine{00092 \#if SOLID}
+\DoxyCodeLine{00093 \#if FRAGMENTATION}
+\DoxyCodeLine{00094             p.d[i] += dt * p.dddt[i];}
+\DoxyCodeLine{00095 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00096             p.damage\_porjutzi[i] += dt * p.ddamage\_porjutzidt[i];}
+\DoxyCodeLine{00097             p.pold[i] = p.p[i];}
+\DoxyCodeLine{00098 \#endif}
+\DoxyCodeLine{00099 \#endif}
+\DoxyCodeLine{00100             int k;}
+\DoxyCodeLine{00101             for (k = 0; k < DIM*DIM; k++) \{}
+\DoxyCodeLine{00102                     p.S[i*DIM*DIM+k] += dt * p.dSdt[i*DIM*DIM+k];}
+\DoxyCodeLine{00103             \}}
+\DoxyCodeLine{00104 \#endif}
+\DoxyCodeLine{00105             p.x[i] += dt * p.dxdt[i];}
+\DoxyCodeLine{00106 \#if DIM > 1}
+\DoxyCodeLine{00107             p.y[i] += dt * p.dydt[i];}
+\DoxyCodeLine{00108             p.vy[i] += dt * p.ay[i];}
+\DoxyCodeLine{00109 \#if DIM == 3}
+\DoxyCodeLine{00110             p.z[i] += dt * p.dzdt[i];}
+\DoxyCodeLine{00111 \#endif}
+\DoxyCodeLine{00112 \#endif}
+\DoxyCodeLine{00113             p.vx[i] += dt * p.ax[i];}
+\DoxyCodeLine{00114 \#if DIM == 3}
+\DoxyCodeLine{00115             p.vz[i] += dt * p.az[i];}
+\DoxyCodeLine{00116 \#endif}
+\DoxyCodeLine{00117         \}}
+\DoxyCodeLine{00118 \}}
+\DoxyCodeLine{00119 }
+\DoxyCodeLine{00120 }
+\DoxyCodeLine{00121 }
+\DoxyCodeLine{00122 }
+\DoxyCodeLine{00123 void euler()}
+\DoxyCodeLine{00124 \{}
+\DoxyCodeLine{00125         // integrate}
+\DoxyCodeLine{00126         int lastTimestep = startTimestep + numberOfTimesteps;}
+\DoxyCodeLine{00127         int timestep;}
+\DoxyCodeLine{00128         int eulerstep;}
+\DoxyCodeLine{00129         double tmptimestep = param.maxtimestep;}
+\DoxyCodeLine{00130         double endTime = startTime;}
+\DoxyCodeLine{00131         currentTime = startTime;}
+\DoxyCodeLine{00132         cudaVerify(cudaMemcpyToSymbol(currentTimeD, \&currentTime, sizeof(double)));}
+\DoxyCodeLine{00133         cudaVerify(cudaMemcpyToSymbol(dt, \&tmptimestep, sizeof(double)));}
+\DoxyCodeLine{00134 }
+\DoxyCodeLine{00135         for (timestep = startTimestep; timestep < lastTimestep; timestep++) \{}
+\DoxyCodeLine{00136                 eulerstep = 0;}
+\DoxyCodeLine{00137                 endTime += timePerStep;}
+\DoxyCodeLine{00138                 cudaVerify(cudaMemcpyToSymbol(endTimeD, \&endTime, sizeof(double)));}
+\DoxyCodeLine{00139                 // checking for changes in angular momentum}
+\DoxyCodeLine{00140                 if (param.angular\_momentum\_check > 0) \{}
+\DoxyCodeLine{00141                     double L\_current = calculate\_angular\_momentum();}
+\DoxyCodeLine{00142                     double L\_change\_relative;}
+\DoxyCodeLine{00143                     if (L\_ini > 0) \{}
+\DoxyCodeLine{00144                         L\_change\_relative = fabs((L\_ini -\/ L\_current)/L\_ini);}
+\DoxyCodeLine{00145                     \}}
+\DoxyCodeLine{00146                     if (param.verbose) \{}
+\DoxyCodeLine{00147                         fprintf(stdout, "{}Checking angular momentum conservation.\(\backslash\)n"{});}
+\DoxyCodeLine{00148                         fprintf(stdout, "{}Initial angular momentum: \%.17e\(\backslash\)n"{}, L\_ini);}
+\DoxyCodeLine{00149                         fprintf(stdout, "{}Current angular momentum: \%.17e\(\backslash\)n"{}, L\_current);}
+\DoxyCodeLine{00150                         fprintf(stdout, "{}Relative change: \%.17e\(\backslash\)n"{}, L\_change\_relative);}
+\DoxyCodeLine{00151                     \}}
+\DoxyCodeLine{00152                     if (L\_change\_relative > param.angular\_momentum\_check) \{}
+\DoxyCodeLine{00153                         fprintf(stderr, "{}Conservation of angular momentum violated. Exiting.\(\backslash\)n"{});}
+\DoxyCodeLine{00154                         exit(111);}
+\DoxyCodeLine{00155                     \}}
+\DoxyCodeLine{00156                 \}}
+\DoxyCodeLine{00157                 while (currentTime < endTime) \{}
+\DoxyCodeLine{00158                         fprintf(stdout, "{}Euler Step \# \%d\(\backslash\)n"{}, ++eulerstep);}
+\DoxyCodeLine{00159                         fprintf(stdout, "{} currenttime: \%e \(\backslash\)t endtime: \%e, integrating with euler dt: \%g\(\backslash\)n"{}, currentTime, endTime, param.maxtimestep);}
+\DoxyCodeLine{00160                         rightHandSide();}
+\DoxyCodeLine{00161                         if (currentTime + param.maxtimestep > endTime) \{}
+\DoxyCodeLine{00162                             tmptimestep = endTime -\/ currentTime;}
+\DoxyCodeLine{00163                             cudaVerify(cudaMemcpyToSymbol(dt, \&tmptimestep, sizeof(double)));}
+\DoxyCodeLine{00164                             currentTime += tmptimestep;}
+\DoxyCodeLine{00165                         \} else \{}
+\DoxyCodeLine{00166                             cudaVerify(cudaMemcpyToSymbol(dt, \&param.maxtimestep, sizeof(double)));}
+\DoxyCodeLine{00167                             currentTime += param.maxtimestep;}
+\DoxyCodeLine{00168                         \}}
+\DoxyCodeLine{00169                         cudaVerifyKernel((integrateEuler<<<numberOfMultiprocessors, NUM\_THREADS\_EULER\_INTEGRATOR>>>()));}
+\DoxyCodeLine{00170                 \}}
+\DoxyCodeLine{00171 }
+\DoxyCodeLine{00172                 copyToHostAndWriteToFile(timestep, lastTimestep);}
+\DoxyCodeLine{00173         \}}
+\DoxyCodeLine{00174 \}}
+
+\end{DoxyCode}

@@ -1,0 +1,475 @@
+\hypertarget{miluph_8h}{}\doxysection{miluph.\+h File Reference}
+\label{miluph_8h}\index{miluph.h@{miluph.h}}
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include $<$errno.\+h$>$}\newline
+{\ttfamily \#include $<$getopt.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$unistd.\+h$>$}\newline
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$libconfig.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}cuda\+\_\+utils.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}parameter.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}io.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}timeintegration.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}cuda\+\_\+profiler\+\_\+api.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}checks.\+h\char`\"{}}\newline
+Include dependency graph for miluph.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{miluph_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{miluph_8h__dep__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_particle}{Particle}}
+\item 
+struct \mbox{\hyperlink{struct_pointmass}{Pointmass}}
+\item 
+struct \mbox{\hyperlink{struct_run_parameter}{Run\+Parameter}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{miluph_8h_aa93f0eb578d23995850d61f7d61c55c1}{F\+A\+L\+SE}}~0
+\item 
+\#define \mbox{\hyperlink{miluph_8h_aa8cecfc5c5c054d2875c03e77b7be15d}{T\+R\+UE}}~1
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef struct \mbox{\hyperlink{struct_run_parameter}{Run\+Parameter}} \mbox{\hyperlink{miluph_8h_a985cd2d9f23132f86fac13d3455ed185}{Run\+Parameter}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \{ \mbox{\hyperlink{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55baacab89fffe1a3997dfb89071df5ae943}{R\+K\+S\+T\+A\+RT}}, 
+\mbox{\hyperlink{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55bacaf1b9b57a3f73eca5a455bdf5602ac9}{R\+K\+F\+I\+R\+ST}}, 
+\mbox{\hyperlink{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55babb952d593bd6f9ae35648033e8bf7af9}{R\+K\+S\+E\+C\+O\+ND}}
+ \}
+\item 
+enum \{ \mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7ab29a294112c9ef5c3c0c7db6363a6d2e}{E\+U\+L\+ER}}, 
+\mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7acd343968fdf1f81d98e598822641ebbe}{R\+K2\+\_\+\+A\+D\+A\+P\+T\+I\+VE}}, 
+\mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7a9e2a351047afa1abab0f2037aad734b0}{M\+O\+N\+A\+G\+H\+A\+N\+\_\+\+PC}}, 
+\mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7adce75d88594d2a63dec1a4ea2f669254}{E\+U\+L\+E\+R\+\_\+\+PC}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} \mbox{\hyperlink{miluph_8h_ae8a81884fe1ed60eefa06f22a2ec2f1b}{pointmass\+\_\+host}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} \mbox{\hyperlink{miluph_8h_a8798c21a7b2043e5155ca22c2b398cf6}{pointmass}}
+\item 
+struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} \mbox{\hyperlink{miluph_8h_aea5ac75f4380143b585f49ab962ab822}{pointmass\+\_\+device}}
+\item 
+struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} \mbox{\hyperlink{miluph_8h_aacd189a1104a14b8bd9fa8f34653678c}{rk\+\_\+pointmass\+\_\+device}} \mbox{[}3\mbox{]}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} \mbox{\hyperlink{miluph_8h_a50749133e014ae2cc306ea78084cffd9}{rk\+\_\+pointmass}} \mbox{[}3\mbox{]}
+\item 
+struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} \mbox{\hyperlink{miluph_8h_a8ffcf340b094bce9bbb25c354cf7e796}{predictor\+\_\+pointmass\+\_\+device}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} \mbox{\hyperlink{miluph_8h_a199ee8d4374bbb3c3a76b6073e109735}{predictor\+\_\+pointmass}}
+\item 
+struct \mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_a43f583b42078aa24dd8da16315918b4d}{p\+\_\+host}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ struct \mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_a9c416f8a5261389ba7b66c159c03d53d}{p}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ struct \mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_aa7123d849e86157036f10deaa6be2558}{p\+\_\+rhs}}
+\item 
+struct \mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_a9de5c2e08c156c001e1b244acb3caf3e}{p\+\_\+device}}
+\item 
+struct \mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_ad14f5c9f5d1b53b977aede013407bb27}{rk\+\_\+device}} \mbox{[}3\mbox{]}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ struct \mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_a4a6c73e833d232244b849c1e8156329e}{rk}} \mbox{[}3\mbox{]}
+\item 
+struct \mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_ad59732ba733939c11cb3db84edfffccd}{predictor\+\_\+device}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ struct \mbox{\hyperlink{struct_particle}{Particle}} \mbox{\hyperlink{miluph_8h_a6d1c593c1ad5b070b3b40acaad4eda44}{predictor}}
+\item 
+int $\ast$ \mbox{\hyperlink{miluph_8h_a6452a9acca23effecb6f5a6e0cd332ec}{interactions}}
+\item 
+int $\ast$ \mbox{\hyperlink{miluph_8h_a572e71e272ac3b2dc96e75c46e95572a}{interactions\+\_\+host}}
+\item 
+int $\ast$ \mbox{\hyperlink{miluph_8h_ad23cf9629b76b621151904d6d9551d5c}{child\+List\+\_\+host}}
+\item 
+int $\ast$ \mbox{\hyperlink{miluph_8h_a81c529c63618e550b35e2091e9573751}{child\+Listd}}
+\item 
+\+\_\+\+\_\+constant\+\_\+\+\_\+ volatile int $\ast$ \mbox{\hyperlink{miluph_8h_a086693613dbb3693485ba52b97c4e465}{child\+List}}
+\item 
+int \mbox{\hyperlink{miluph_8h_a0991032076bf439261a04c42163df141}{number\+Of\+Particles}}
+\item 
+int \mbox{\hyperlink{miluph_8h_aa484b076a954486d3a4a527e57045f3b}{max\+Number\+Of\+Particles}}
+\item 
+int \mbox{\hyperlink{miluph_8h_aef84c66ae80d51f0400be806d8b25a02}{number\+Of\+Real\+Particles}}
+\item 
+int \mbox{\hyperlink{miluph_8h_a5b6a390fce314f1da2360859a60ae27f}{number\+Of\+Pointmasses}}
+\item 
+int \mbox{\hyperlink{miluph_8h_a4911d0367b4953405b93a67be90981b0}{memory\+Size\+For\+Pointmasses}}
+\item 
+int \mbox{\hyperlink{miluph_8h_a53ebfa70db06da872a90c16a7196d696}{memory\+Size\+For\+Particles}}
+\item 
+int \mbox{\hyperlink{miluph_8h_a4fc0d3b9311b16ae575855f7ddba7cde}{memory\+Size\+For\+Tree}}
+\item 
+int \mbox{\hyperlink{miluph_8h_acbacf33e888881503c94c6669df253cf}{memory\+Size\+For\+Interactions}}
+\item 
+int \mbox{\hyperlink{miluph_8h_a6eafc402e9ece597895784f6634d8980}{memory\+Size\+For\+Children}}
+\item 
+int \mbox{\hyperlink{miluph_8h_a767bbecc7f2df0c39a4b88e7da71d2bb}{memory\+Size\+For\+Stress}}
+\item 
+int \mbox{\hyperlink{miluph_8h_a4c8f9b962957f758f66a7e9a4367d567}{number\+Of\+Children}}
+\item 
+int \mbox{\hyperlink{miluph_8h_a05037792b8959d7a716948abd0021655}{number\+Of\+Nodes}}
+\item 
+int \mbox{\hyperlink{miluph_8h_ac2181c08064123d55cc01a6b99278766}{restarted\+Run}}
+\item 
+int \mbox{\hyperlink{miluph_8h_ad8a83283303f020de0d8ed12f3478bfa}{number\+Of\+Multiprocessors}}
+\item 
+double \mbox{\hyperlink{miluph_8h_a5d095fb4b7849b1d981d6a8d45d5ad88}{tree\+Theta}}
+\item 
+\mbox{\hyperlink{struct_run_parameter}{Run\+Parameter}} \mbox{\hyperlink{miluph_8h_a52ddd705ed657b9eccbcfa25d8bd9d5c}{param}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{miluph_8h_aa93f0eb578d23995850d61f7d61c55c1}\label{miluph_8h_aa93f0eb578d23995850d61f7d61c55c1}} 
+\index{miluph.h@{miluph.h}!FALSE@{FALSE}}
+\index{FALSE@{FALSE}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{FALSE}{FALSE}}
+{\footnotesize\ttfamily \#define F\+A\+L\+SE~0}
+
+\begin{DoxyAuthor}{Author}
+Christoph Schaefer \href{mailto:cm.schaefer@gmail.com}{\texttt{ cm.\+schaefer@gmail.\+com}}
+\end{DoxyAuthor}
+\hypertarget{xsph_8h_LICENSE}{}\doxysubsection{L\+I\+C\+E\+N\+SE}\label{xsph_8h_LICENSE}
+Copyright (c) 2019 Christoph Schaefer
+
+This file is part of miluphcuda.
+
+miluphcuda is free software\+: you can redistribute it and/or modify it under the terms of the G\+NU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+miluphcuda is distributed in the hope that it will be useful, but W\+I\+T\+H\+O\+UT A\+NY W\+A\+R\+R\+A\+N\+TY; without even the implied warranty of M\+E\+R\+C\+H\+A\+N\+T\+A\+B\+I\+L\+I\+TY or F\+I\+T\+N\+E\+SS F\+OR A P\+A\+R\+T\+I\+C\+U\+L\+AR P\+U\+R\+P\+O\+SE. See the G\+NU General Public License for more details.
+
+You should have received a copy of the G\+NU General Public License along with miluphcuda. If not, see \href{http://www.gnu.org/licenses/}{\texttt{ http\+://www.\+gnu.\+org/licenses/}}. 
+
+Definition at line \mbox{\hyperlink{miluph_8h_source_l00028}{28}} of file \mbox{\hyperlink{miluph_8h_source}{miluph.\+h}}.
+
+\mbox{\Hypertarget{miluph_8h_aa8cecfc5c5c054d2875c03e77b7be15d}\label{miluph_8h_aa8cecfc5c5c054d2875c03e77b7be15d}} 
+\index{miluph.h@{miluph.h}!TRUE@{TRUE}}
+\index{TRUE@{TRUE}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{TRUE}{TRUE}}
+{\footnotesize\ttfamily \#define T\+R\+UE~1}
+
+
+
+Definition at line \mbox{\hyperlink{miluph_8h_source_l00029}{29}} of file \mbox{\hyperlink{miluph_8h_source}{miluph.\+h}}.
+
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{miluph_8h_a985cd2d9f23132f86fac13d3455ed185}\label{miluph_8h_a985cd2d9f23132f86fac13d3455ed185}} 
+\index{miluph.h@{miluph.h}!RunParameter@{RunParameter}}
+\index{RunParameter@{RunParameter}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{RunParameter}{RunParameter}}
+{\footnotesize\ttfamily typedef struct \mbox{\hyperlink{struct_run_parameter}{Run\+Parameter}} \mbox{\hyperlink{struct_run_parameter}{Run\+Parameter}}}
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55b}\label{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55b}} 
+\doxysubsubsection{\texorpdfstring{anonymous enum}{anonymous enum}}
+{\footnotesize\ttfamily anonymous enum}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RKSTART@{RKSTART}!miluph.h@{miluph.h}}\index{miluph.h@{miluph.h}!RKSTART@{RKSTART}}}\mbox{\Hypertarget{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55baacab89fffe1a3997dfb89071df5ae943}\label{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55baacab89fffe1a3997dfb89071df5ae943}} 
+R\+K\+S\+T\+A\+RT&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RKFIRST@{RKFIRST}!miluph.h@{miluph.h}}\index{miluph.h@{miluph.h}!RKFIRST@{RKFIRST}}}\mbox{\Hypertarget{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55bacaf1b9b57a3f73eca5a455bdf5602ac9}\label{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55bacaf1b9b57a3f73eca5a455bdf5602ac9}} 
+R\+K\+F\+I\+R\+ST&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RKSECOND@{RKSECOND}!miluph.h@{miluph.h}}\index{miluph.h@{miluph.h}!RKSECOND@{RKSECOND}}}\mbox{\Hypertarget{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55babb952d593bd6f9ae35648033e8bf7af9}\label{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55babb952d593bd6f9ae35648033e8bf7af9}} 
+R\+K\+S\+E\+C\+O\+ND&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line \mbox{\hyperlink{miluph_8h_source_l00293}{293}} of file \mbox{\hyperlink{miluph_8h_source}{miluph.\+h}}.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00293      \{}
+\DoxyCodeLine{00294     \mbox{\hyperlink{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55baacab89fffe1a3997dfb89071df5ae943}{RKSTART}},}
+\DoxyCodeLine{00295     \mbox{\hyperlink{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55bacaf1b9b57a3f73eca5a455bdf5602ac9}{RKFIRST}},}
+\DoxyCodeLine{00296     \mbox{\hyperlink{miluph_8h_a06fc87d81c62e9abb8790b6e5713c55babb952d593bd6f9ae35648033e8bf7af9}{RKSECOND}}}
+\DoxyCodeLine{00297 \};}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7}\label{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7}} 
+\doxysubsubsection{\texorpdfstring{anonymous enum}{anonymous enum}}
+{\footnotesize\ttfamily anonymous enum}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EULER@{EULER}!miluph.h@{miluph.h}}\index{miluph.h@{miluph.h}!EULER@{EULER}}}\mbox{\Hypertarget{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7ab29a294112c9ef5c3c0c7db6363a6d2e}\label{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7ab29a294112c9ef5c3c0c7db6363a6d2e}} 
+E\+U\+L\+ER&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{RK2\_ADAPTIVE@{RK2\_ADAPTIVE}!miluph.h@{miluph.h}}\index{miluph.h@{miluph.h}!RK2\_ADAPTIVE@{RK2\_ADAPTIVE}}}\mbox{\Hypertarget{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7acd343968fdf1f81d98e598822641ebbe}\label{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7acd343968fdf1f81d98e598822641ebbe}} 
+R\+K2\+\_\+\+A\+D\+A\+P\+T\+I\+VE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MONAGHAN\_PC@{MONAGHAN\_PC}!miluph.h@{miluph.h}}\index{miluph.h@{miluph.h}!MONAGHAN\_PC@{MONAGHAN\_PC}}}\mbox{\Hypertarget{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7a9e2a351047afa1abab0f2037aad734b0}\label{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7a9e2a351047afa1abab0f2037aad734b0}} 
+M\+O\+N\+A\+G\+H\+A\+N\+\_\+\+PC&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{EULER\_PC@{EULER\_PC}!miluph.h@{miluph.h}}\index{miluph.h@{miluph.h}!EULER\_PC@{EULER\_PC}}}\mbox{\Hypertarget{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7adce75d88594d2a63dec1a4ea2f669254}\label{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7adce75d88594d2a63dec1a4ea2f669254}} 
+E\+U\+L\+E\+R\+\_\+\+PC&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+Definition at line \mbox{\hyperlink{miluph_8h_source_l00302}{302}} of file \mbox{\hyperlink{miluph_8h_source}{miluph.\+h}}.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00302      \{}
+\DoxyCodeLine{00303     \mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7ab29a294112c9ef5c3c0c7db6363a6d2e}{EULER}},}
+\DoxyCodeLine{00304     \mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7acd343968fdf1f81d98e598822641ebbe}{RK2\_ADAPTIVE}},}
+\DoxyCodeLine{00305     \mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7a9e2a351047afa1abab0f2037aad734b0}{MONAGHAN\_PC}},}
+\DoxyCodeLine{00306     \mbox{\hyperlink{miluph_8h_adf764cbdea00d65edcd07bb9953ad2b7adce75d88594d2a63dec1a4ea2f669254}{EULER\_PC}}}
+\DoxyCodeLine{00307 \};}
+
+\end{DoxyCode}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{miluph_8h_a086693613dbb3693485ba52b97c4e465}\label{miluph_8h_a086693613dbb3693485ba52b97c4e465}} 
+\index{miluph.h@{miluph.h}!childList@{childList}}
+\index{childList@{childList}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{childList}{childList}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ volatile int$\ast$ child\+List\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_ad23cf9629b76b621151904d6d9551d5c}\label{miluph_8h_ad23cf9629b76b621151904d6d9551d5c}} 
+\index{miluph.h@{miluph.h}!childList\_host@{childList\_host}}
+\index{childList\_host@{childList\_host}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{childList\_host}{childList\_host}}
+{\footnotesize\ttfamily int$\ast$ child\+List\+\_\+host\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a81c529c63618e550b35e2091e9573751}\label{miluph_8h_a81c529c63618e550b35e2091e9573751}} 
+\index{miluph.h@{miluph.h}!childListd@{childListd}}
+\index{childListd@{childListd}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{childListd}{childListd}}
+{\footnotesize\ttfamily int$\ast$ child\+Listd\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a6452a9acca23effecb6f5a6e0cd332ec}\label{miluph_8h_a6452a9acca23effecb6f5a6e0cd332ec}} 
+\index{miluph.h@{miluph.h}!interactions@{interactions}}
+\index{interactions@{interactions}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{interactions}{interactions}}
+{\footnotesize\ttfamily int$\ast$ interactions\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a572e71e272ac3b2dc96e75c46e95572a}\label{miluph_8h_a572e71e272ac3b2dc96e75c46e95572a}} 
+\index{miluph.h@{miluph.h}!interactions\_host@{interactions\_host}}
+\index{interactions\_host@{interactions\_host}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{interactions\_host}{interactions\_host}}
+{\footnotesize\ttfamily int$\ast$ interactions\+\_\+host\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_aa484b076a954486d3a4a527e57045f3b}\label{miluph_8h_aa484b076a954486d3a4a527e57045f3b}} 
+\index{miluph.h@{miluph.h}!maxNumberOfParticles@{maxNumberOfParticles}}
+\index{maxNumberOfParticles@{maxNumberOfParticles}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{maxNumberOfParticles}{maxNumberOfParticles}}
+{\footnotesize\ttfamily int max\+Number\+Of\+Particles\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a6eafc402e9ece597895784f6634d8980}\label{miluph_8h_a6eafc402e9ece597895784f6634d8980}} 
+\index{miluph.h@{miluph.h}!memorySizeForChildren@{memorySizeForChildren}}
+\index{memorySizeForChildren@{memorySizeForChildren}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{memorySizeForChildren}{memorySizeForChildren}}
+{\footnotesize\ttfamily int memory\+Size\+For\+Children\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_acbacf33e888881503c94c6669df253cf}\label{miluph_8h_acbacf33e888881503c94c6669df253cf}} 
+\index{miluph.h@{miluph.h}!memorySizeForInteractions@{memorySizeForInteractions}}
+\index{memorySizeForInteractions@{memorySizeForInteractions}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{memorySizeForInteractions}{memorySizeForInteractions}}
+{\footnotesize\ttfamily int memory\+Size\+For\+Interactions\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a53ebfa70db06da872a90c16a7196d696}\label{miluph_8h_a53ebfa70db06da872a90c16a7196d696}} 
+\index{miluph.h@{miluph.h}!memorySizeForParticles@{memorySizeForParticles}}
+\index{memorySizeForParticles@{memorySizeForParticles}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{memorySizeForParticles}{memorySizeForParticles}}
+{\footnotesize\ttfamily int memory\+Size\+For\+Particles\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a4911d0367b4953405b93a67be90981b0}\label{miluph_8h_a4911d0367b4953405b93a67be90981b0}} 
+\index{miluph.h@{miluph.h}!memorySizeForPointmasses@{memorySizeForPointmasses}}
+\index{memorySizeForPointmasses@{memorySizeForPointmasses}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{memorySizeForPointmasses}{memorySizeForPointmasses}}
+{\footnotesize\ttfamily int memory\+Size\+For\+Pointmasses\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a767bbecc7f2df0c39a4b88e7da71d2bb}\label{miluph_8h_a767bbecc7f2df0c39a4b88e7da71d2bb}} 
+\index{miluph.h@{miluph.h}!memorySizeForStress@{memorySizeForStress}}
+\index{memorySizeForStress@{memorySizeForStress}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{memorySizeForStress}{memorySizeForStress}}
+{\footnotesize\ttfamily int memory\+Size\+For\+Stress\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a4fc0d3b9311b16ae575855f7ddba7cde}\label{miluph_8h_a4fc0d3b9311b16ae575855f7ddba7cde}} 
+\index{miluph.h@{miluph.h}!memorySizeForTree@{memorySizeForTree}}
+\index{memorySizeForTree@{memorySizeForTree}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{memorySizeForTree}{memorySizeForTree}}
+{\footnotesize\ttfamily int memory\+Size\+For\+Tree\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a4c8f9b962957f758f66a7e9a4367d567}\label{miluph_8h_a4c8f9b962957f758f66a7e9a4367d567}} 
+\index{miluph.h@{miluph.h}!numberOfChildren@{numberOfChildren}}
+\index{numberOfChildren@{numberOfChildren}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{numberOfChildren}{numberOfChildren}}
+{\footnotesize\ttfamily int number\+Of\+Children\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_ad8a83283303f020de0d8ed12f3478bfa}\label{miluph_8h_ad8a83283303f020de0d8ed12f3478bfa}} 
+\index{miluph.h@{miluph.h}!numberOfMultiprocessors@{numberOfMultiprocessors}}
+\index{numberOfMultiprocessors@{numberOfMultiprocessors}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{numberOfMultiprocessors}{numberOfMultiprocessors}}
+{\footnotesize\ttfamily int number\+Of\+Multiprocessors\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a05037792b8959d7a716948abd0021655}\label{miluph_8h_a05037792b8959d7a716948abd0021655}} 
+\index{miluph.h@{miluph.h}!numberOfNodes@{numberOfNodes}}
+\index{numberOfNodes@{numberOfNodes}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{numberOfNodes}{numberOfNodes}}
+{\footnotesize\ttfamily int number\+Of\+Nodes\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a0991032076bf439261a04c42163df141}\label{miluph_8h_a0991032076bf439261a04c42163df141}} 
+\index{miluph.h@{miluph.h}!numberOfParticles@{numberOfParticles}}
+\index{numberOfParticles@{numberOfParticles}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{numberOfParticles}{numberOfParticles}}
+{\footnotesize\ttfamily int number\+Of\+Particles\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a5b6a390fce314f1da2360859a60ae27f}\label{miluph_8h_a5b6a390fce314f1da2360859a60ae27f}} 
+\index{miluph.h@{miluph.h}!numberOfPointmasses@{numberOfPointmasses}}
+\index{numberOfPointmasses@{numberOfPointmasses}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{numberOfPointmasses}{numberOfPointmasses}}
+{\footnotesize\ttfamily int number\+Of\+Pointmasses\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_aef84c66ae80d51f0400be806d8b25a02}\label{miluph_8h_aef84c66ae80d51f0400be806d8b25a02}} 
+\index{miluph.h@{miluph.h}!numberOfRealParticles@{numberOfRealParticles}}
+\index{numberOfRealParticles@{numberOfRealParticles}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{numberOfRealParticles}{numberOfRealParticles}}
+{\footnotesize\ttfamily int number\+Of\+Real\+Particles\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a9c416f8a5261389ba7b66c159c03d53d}\label{miluph_8h_a9c416f8a5261389ba7b66c159c03d53d}} 
+\index{miluph.h@{miluph.h}!p@{p}}
+\index{p@{p}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{p}{p}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ struct \mbox{\hyperlink{struct_particle}{Particle}} p\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a9de5c2e08c156c001e1b244acb3caf3e}\label{miluph_8h_a9de5c2e08c156c001e1b244acb3caf3e}} 
+\index{miluph.h@{miluph.h}!p\_device@{p\_device}}
+\index{p\_device@{p\_device}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{p\_device}{p\_device}}
+{\footnotesize\ttfamily struct \mbox{\hyperlink{struct_particle}{Particle}} p\+\_\+device\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a43f583b42078aa24dd8da16315918b4d}\label{miluph_8h_a43f583b42078aa24dd8da16315918b4d}} 
+\index{miluph.h@{miluph.h}!p\_host@{p\_host}}
+\index{p\_host@{p\_host}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{p\_host}{p\_host}}
+{\footnotesize\ttfamily struct \mbox{\hyperlink{struct_particle}{Particle}} p\+\_\+host\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_aa7123d849e86157036f10deaa6be2558}\label{miluph_8h_aa7123d849e86157036f10deaa6be2558}} 
+\index{miluph.h@{miluph.h}!p\_rhs@{p\_rhs}}
+\index{p\_rhs@{p\_rhs}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{p\_rhs}{p\_rhs}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ struct \mbox{\hyperlink{struct_particle}{Particle}} p\+\_\+rhs\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a52ddd705ed657b9eccbcfa25d8bd9d5c}\label{miluph_8h_a52ddd705ed657b9eccbcfa25d8bd9d5c}} 
+\index{miluph.h@{miluph.h}!param@{param}}
+\index{param@{param}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{param}{param}}
+{\footnotesize\ttfamily \mbox{\hyperlink{struct_run_parameter}{Run\+Parameter}} param\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a8798c21a7b2043e5155ca22c2b398cf6}\label{miluph_8h_a8798c21a7b2043e5155ca22c2b398cf6}} 
+\index{miluph.h@{miluph.h}!pointmass@{pointmass}}
+\index{pointmass@{pointmass}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{pointmass}{pointmass}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} pointmass\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_aea5ac75f4380143b585f49ab962ab822}\label{miluph_8h_aea5ac75f4380143b585f49ab962ab822}} 
+\index{miluph.h@{miluph.h}!pointmass\_device@{pointmass\_device}}
+\index{pointmass\_device@{pointmass\_device}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{pointmass\_device}{pointmass\_device}}
+{\footnotesize\ttfamily struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} pointmass\+\_\+device\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_ae8a81884fe1ed60eefa06f22a2ec2f1b}\label{miluph_8h_ae8a81884fe1ed60eefa06f22a2ec2f1b}} 
+\index{miluph.h@{miluph.h}!pointmass\_host@{pointmass\_host}}
+\index{pointmass\_host@{pointmass\_host}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{pointmass\_host}{pointmass\_host}}
+{\footnotesize\ttfamily struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} pointmass\+\_\+host\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a6d1c593c1ad5b070b3b40acaad4eda44}\label{miluph_8h_a6d1c593c1ad5b070b3b40acaad4eda44}} 
+\index{miluph.h@{miluph.h}!predictor@{predictor}}
+\index{predictor@{predictor}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{predictor}{predictor}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ struct \mbox{\hyperlink{struct_particle}{Particle}} predictor\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_ad59732ba733939c11cb3db84edfffccd}\label{miluph_8h_ad59732ba733939c11cb3db84edfffccd}} 
+\index{miluph.h@{miluph.h}!predictor\_device@{predictor\_device}}
+\index{predictor\_device@{predictor\_device}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{predictor\_device}{predictor\_device}}
+{\footnotesize\ttfamily struct \mbox{\hyperlink{struct_particle}{Particle}} predictor\+\_\+device\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a199ee8d4374bbb3c3a76b6073e109735}\label{miluph_8h_a199ee8d4374bbb3c3a76b6073e109735}} 
+\index{miluph.h@{miluph.h}!predictor\_pointmass@{predictor\_pointmass}}
+\index{predictor\_pointmass@{predictor\_pointmass}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{predictor\_pointmass}{predictor\_pointmass}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} predictor\+\_\+pointmass\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a8ffcf340b094bce9bbb25c354cf7e796}\label{miluph_8h_a8ffcf340b094bce9bbb25c354cf7e796}} 
+\index{miluph.h@{miluph.h}!predictor\_pointmass\_device@{predictor\_pointmass\_device}}
+\index{predictor\_pointmass\_device@{predictor\_pointmass\_device}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{predictor\_pointmass\_device}{predictor\_pointmass\_device}}
+{\footnotesize\ttfamily struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} predictor\+\_\+pointmass\+\_\+device\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_ac2181c08064123d55cc01a6b99278766}\label{miluph_8h_ac2181c08064123d55cc01a6b99278766}} 
+\index{miluph.h@{miluph.h}!restartedRun@{restartedRun}}
+\index{restartedRun@{restartedRun}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{restartedRun}{restartedRun}}
+{\footnotesize\ttfamily int restarted\+Run\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a4a6c73e833d232244b849c1e8156329e}\label{miluph_8h_a4a6c73e833d232244b849c1e8156329e}} 
+\index{miluph.h@{miluph.h}!rk@{rk}}
+\index{rk@{rk}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{rk}{rk}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ struct \mbox{\hyperlink{struct_particle}{Particle}} rk\mbox{[}3\mbox{]}\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_ad14f5c9f5d1b53b977aede013407bb27}\label{miluph_8h_ad14f5c9f5d1b53b977aede013407bb27}} 
+\index{miluph.h@{miluph.h}!rk\_device@{rk\_device}}
+\index{rk\_device@{rk\_device}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{rk\_device}{rk\_device}}
+{\footnotesize\ttfamily struct \mbox{\hyperlink{struct_particle}{Particle}} rk\+\_\+device\mbox{[}3\mbox{]}\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a50749133e014ae2cc306ea78084cffd9}\label{miluph_8h_a50749133e014ae2cc306ea78084cffd9}} 
+\index{miluph.h@{miluph.h}!rk\_pointmass@{rk\_pointmass}}
+\index{rk\_pointmass@{rk\_pointmass}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{rk\_pointmass}{rk\_pointmass}}
+{\footnotesize\ttfamily \+\_\+\+\_\+constant\+\_\+\+\_\+ struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} rk\+\_\+pointmass\mbox{[}3\mbox{]}\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_aacd189a1104a14b8bd9fa8f34653678c}\label{miluph_8h_aacd189a1104a14b8bd9fa8f34653678c}} 
+\index{miluph.h@{miluph.h}!rk\_pointmass\_device@{rk\_pointmass\_device}}
+\index{rk\_pointmass\_device@{rk\_pointmass\_device}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{rk\_pointmass\_device}{rk\_pointmass\_device}}
+{\footnotesize\ttfamily struct \mbox{\hyperlink{struct_pointmass}{Pointmass}} rk\+\_\+pointmass\+\_\+device\mbox{[}3\mbox{]}\hspace{0.3cm}{\ttfamily [extern]}}
+
+\mbox{\Hypertarget{miluph_8h_a5d095fb4b7849b1d981d6a8d45d5ad88}\label{miluph_8h_a5d095fb4b7849b1d981d6a8d45d5ad88}} 
+\index{miluph.h@{miluph.h}!treeTheta@{treeTheta}}
+\index{treeTheta@{treeTheta}!miluph.h@{miluph.h}}
+\doxysubsubsection{\texorpdfstring{treeTheta}{treeTheta}}
+{\footnotesize\ttfamily double tree\+Theta\hspace{0.3cm}{\ttfamily [extern]}}
+

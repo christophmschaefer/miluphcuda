@@ -1,0 +1,114 @@
+\hypertarget{artificial__stress_8cu_source}{}\doxysection{artificial\+\_\+stress.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 \#include "{}artificial\_stress.h"{}}
+\DoxyCodeLine{00025 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00026 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00027 \#include "{}linalg.h"{}}
+\DoxyCodeLine{00028 }
+\DoxyCodeLine{00029 // transform to principal axes before applying artificial stress}
+\DoxyCodeLine{00030 \#define PRINCIPAL\_AXES\_ARTIFICIAL\_STRESS 1}
+\DoxyCodeLine{00031 }
+\DoxyCodeLine{00032 \#if ARTIFICIAL\_STRESS}
+\DoxyCodeLine{00033 \_\_global\_\_ void compute\_artificial\_stress(int *interactions) }
+\DoxyCodeLine{00034 \{}
+\DoxyCodeLine{00035     int i, inc;}
+\DoxyCodeLine{00036     int d, e;}
+\DoxyCodeLine{00037     int niters = 0;}
+\DoxyCodeLine{00038     int matId;}
+\DoxyCodeLine{00039     double max\_ev = -\/1e300;}
+\DoxyCodeLine{00040 }
+\DoxyCodeLine{00041     // the diagonalized tensors}
+\DoxyCodeLine{00042     double main\_stresses[DIM];}
+\DoxyCodeLine{00043     double rotation\_matrix[DIM][DIM];}
+\DoxyCodeLine{00044     double R[DIM][DIM];}
+\DoxyCodeLine{00045     double sigma[DIM][DIM];}
+\DoxyCodeLine{00046     double Rtmp[DIM][DIM];}
+\DoxyCodeLine{00047 }
+\DoxyCodeLine{00048 }
+\DoxyCodeLine{00049     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00050 }
+\DoxyCodeLine{00051     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) \{}
+\DoxyCodeLine{00052         matId = p\_rhs.materialId[i];}
+\DoxyCodeLine{00053         // build stress tensor from deviatoric stress and pressure}
+\DoxyCodeLine{00054         for (d = 0; d < DIM; d++) \{ }
+\DoxyCodeLine{00055             for (e = 0; e < DIM; e++) \{}
+\DoxyCodeLine{00056                 sigma[d][e] = p\_rhs.sigma[stressIndex(i,d,e)];}
+\DoxyCodeLine{00057             \}}
+\DoxyCodeLine{00058         \}}
+\DoxyCodeLine{00059 \#if PRINCIPAL\_AXES\_ARTIFICIAL\_STRESS}
+\DoxyCodeLine{00060         niters = calculate\_all\_eigenvalues(sigma, main\_stresses, rotation\_matrix);}
+\DoxyCodeLine{00061        // determine the maximum stress}
+\DoxyCodeLine{00062         max\_ev = main\_stresses[0];}
+\DoxyCodeLine{00063             for (e = 1; e < DIM; e++) \{}
+\DoxyCodeLine{00064                     if (main\_stresses[e] > max\_ev) \{}
+\DoxyCodeLine{00065                             max\_ev = main\_stresses[e];}
+\DoxyCodeLine{00066             \}}
+\DoxyCodeLine{00067                 \}}
+\DoxyCodeLine{00068         // now calculate the artificial stress from the main stresses}
+\DoxyCodeLine{00069         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00070             for (e = 0; e < DIM; e++) \{}
+\DoxyCodeLine{00071                 R[d][e] = 0.0;}
+\DoxyCodeLine{00072             \}}
+\DoxyCodeLine{00073             if (main\_stresses[d] > 0) \{}
+\DoxyCodeLine{00074                 R[d][d] = -\/matepsilon\_stress[matId]*main\_stresses[d];}
+\DoxyCodeLine{00075             \}}
+\DoxyCodeLine{00076         \}    }
+\DoxyCodeLine{00077         // convert back in the original coordinate system with the rotation matrix}
+\DoxyCodeLine{00078         multiply\_matrix(R, rotation\_matrix, Rtmp);}
+\DoxyCodeLine{00079         transpose\_matrix(rotation\_matrix);}
+\DoxyCodeLine{00080         multiply\_matrix(rotation\_matrix, Rtmp, R);}
+\DoxyCodeLine{00081         // now save R for the particle}
+\DoxyCodeLine{00082         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00083             for (e = 0; e < DIM; e++) \{}
+\DoxyCodeLine{00084                 p\_rhs.R[stressIndex(i,d,e)]= R[d][e];}
+\DoxyCodeLine{00085             \}}
+\DoxyCodeLine{00086         \}}
+\DoxyCodeLine{00087 \#else}
+\DoxyCodeLine{00088         // no transformation, just reduce the standard stress}
+\DoxyCodeLine{00089         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00090             for (e = 0; e < DIM; e++) \{}
+\DoxyCodeLine{00091                 if (sigma[d][e] > 0) \{}
+\DoxyCodeLine{00092                     p\_rhs.R[stressIndex(i,d,e)] = -\/matepsilon\_stress[matId] * sigma[d][e];}
+\DoxyCodeLine{00093                 \}}
+\DoxyCodeLine{00094             \}}
+\DoxyCodeLine{00095         \}}
+\DoxyCodeLine{00096 \#endif // PRINCIPAL\_AXES\_ARTIFICIAL\_STRESS}
+\DoxyCodeLine{00097 }
+\DoxyCodeLine{00098     \}}
+\DoxyCodeLine{00099 \}}
+\DoxyCodeLine{00100 \#endif}
+\DoxyCodeLine{00101 }
+\DoxyCodeLine{00102 }
+\DoxyCodeLine{00103 }
+\DoxyCodeLine{00104 }
+\DoxyCodeLine{00105 }
+\DoxyCodeLine{00106 }
+\DoxyCodeLine{00107 }
+\DoxyCodeLine{00108 }
+\DoxyCodeLine{00109 }
+
+\end{DoxyCode}

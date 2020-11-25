@@ -1,0 +1,129 @@
+\hypertarget{little__helpers_8cu_source}{}\doxysection{little\+\_\+helpers.\+cu}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001 /**}
+\DoxyCodeLine{00002  * @author      Christoph Schaefer cm.schaefer@gmail.com}
+\DoxyCodeLine{00003  *}
+\DoxyCodeLine{00004  * @section     LICENSE}
+\DoxyCodeLine{00005  * Copyright (c) 2019 Christoph Schaefer}
+\DoxyCodeLine{00006  *}
+\DoxyCodeLine{00007  * This file is part of miluphcuda.}
+\DoxyCodeLine{00008  *}
+\DoxyCodeLine{00009  * miluphcuda is free software: you can redistribute it and/or modify}
+\DoxyCodeLine{00010  * it under the terms of the GNU General Public License as published by}
+\DoxyCodeLine{00011  * the Free Software Foundation, either version 3 of the License, or}
+\DoxyCodeLine{00012  * (at your option) any later version.}
+\DoxyCodeLine{00013  *}
+\DoxyCodeLine{00014  * miluphcuda is distributed in the hope that it will be useful,}
+\DoxyCodeLine{00015  * but WITHOUT ANY WARRANTY; without even the implied warranty of}
+\DoxyCodeLine{00016  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the}
+\DoxyCodeLine{00017  * GNU General Public License for more details.}
+\DoxyCodeLine{00018  *}
+\DoxyCodeLine{00019  * You should have received a copy of the GNU General Public License}
+\DoxyCodeLine{00020  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.}
+\DoxyCodeLine{00021  *}
+\DoxyCodeLine{00022  */}
+\DoxyCodeLine{00023 }
+\DoxyCodeLine{00024 }
+\DoxyCodeLine{00025 \#include "{}parameter.h"{}}
+\DoxyCodeLine{00026 \#include "{}miluph.h"{}}
+\DoxyCodeLine{00027 \#include "{}little\_helpers.h"{}}
+\DoxyCodeLine{00028 }
+\DoxyCodeLine{00029 }
+\DoxyCodeLine{00030 \#if USE\_SIGNAL\_HANDLER}
+\DoxyCodeLine{00031 extern volatile int terminate\_flag;}
+\DoxyCodeLine{00032 }
+\DoxyCodeLine{00033 }
+\DoxyCodeLine{00034 // handles the SIGTERM}
+\DoxyCodeLine{00035 void signal\_handler(int signum)}
+\DoxyCodeLine{00036 \{}
+\DoxyCodeLine{00037    printf("{}Caught signal \%d, trying to write particle data and exit...\(\backslash\)n"{}, signum);}
+\DoxyCodeLine{00038    terminate\_flag = 1;}
+\DoxyCodeLine{00039 \}}
+\DoxyCodeLine{00040 }
+\DoxyCodeLine{00041 \#endif}
+\DoxyCodeLine{00042 }
+\DoxyCodeLine{00043 \_\_global\_\_ void checkNaNs(int *interactions)}
+\DoxyCodeLine{00044 \{}
+\DoxyCodeLine{00045     int i, k, inc, j, numInteractions;}
+\DoxyCodeLine{00046     int d;}
+\DoxyCodeLine{00047 }
+\DoxyCodeLine{00048 }
+\DoxyCodeLine{00049 }
+\DoxyCodeLine{00050     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00051     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numRealParticles; i += inc) \{}
+\DoxyCodeLine{00052         assert(!isnan(p.e[i]));}
+\DoxyCodeLine{00053         assert(!isnan(p.p[i]));}
+\DoxyCodeLine{00054         assert(!isnan(p.rho[i]));}
+\DoxyCodeLine{00055 \#if FRAGMENTATION}
+\DoxyCodeLine{00056         assert(!isnan(p.d[i]));}
+\DoxyCodeLine{00057 \#endif}
+\DoxyCodeLine{00058 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00059         assert(!isnan(p.alpha\_jutzi[i]));}
+\DoxyCodeLine{00060 \#endif}
+\DoxyCodeLine{00061         assert(!isnan(p.x[i]));}
+\DoxyCodeLine{00062 \#if DIM > 1}
+\DoxyCodeLine{00063         assert(!isnan(p.y[i]));}
+\DoxyCodeLine{00064 \# if DIM > 2}
+\DoxyCodeLine{00065         assert(!isnan(p.z[i]));}
+\DoxyCodeLine{00066 \# endif}
+\DoxyCodeLine{00067 \#endif}
+\DoxyCodeLine{00068         for (d = 0; d < DIM*DIM; d++) \{}
+\DoxyCodeLine{00069 \#if TENSORIAL\_CORRECTION}
+\DoxyCodeLine{00070             assert(!isnan(p\_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d]));}
+\DoxyCodeLine{00071 \#endif}
+\DoxyCodeLine{00072 \#if SOLID}
+\DoxyCodeLine{00073             assert(!isnan(p.S[i*DIM*DIM+d]));}
+\DoxyCodeLine{00074             assert(!isnan(p\_rhs.sigma[i*DIM*DIM+d]));}
+\DoxyCodeLine{00075 \#endif}
+\DoxyCodeLine{00076         \}}
+\DoxyCodeLine{00077 \#if PALPHA\_POROSITY}
+\DoxyCodeLine{00078         assert(!isnan(p.dalphadt[i]));}
+\DoxyCodeLine{00079 \#endif}
+\DoxyCodeLine{00080 \#if INTEGRATE\_ENERGY}
+\DoxyCodeLine{00081         assert(!isnan(p.dedt[i]));}
+\DoxyCodeLine{00082 \#endif}
+\DoxyCodeLine{00083 \#if INTEGRATE\_DENSITY}
+\DoxyCodeLine{00084         assert(!isnan(p.drhodt[i]));}
+\DoxyCodeLine{00085 \#endif}
+\DoxyCodeLine{00086 \#if FRAGMENTATION}
+\DoxyCodeLine{00087         assert(!isnan(p.dddt[i]));}
+\DoxyCodeLine{00088 \#endif}
+\DoxyCodeLine{00089 \#if SOLID}
+\DoxyCodeLine{00090         for (d = 0; d < DIM*DIM; d++) \{}
+\DoxyCodeLine{00091             assert(!isnan(p.dSdt[i*DIM*DIM+d]));}
+\DoxyCodeLine{00092         \}}
+\DoxyCodeLine{00093 \#endif}
+\DoxyCodeLine{00094         assert(!isnan(p.ax[i]));}
+\DoxyCodeLine{00095 \#if DIM > 1}
+\DoxyCodeLine{00096         assert(!isnan(p.ay[i]));}
+\DoxyCodeLine{00097 \# if DIM > 2}
+\DoxyCodeLine{00098         assert(!isnan(p.az[i]));}
+\DoxyCodeLine{00099 \# endif}
+\DoxyCodeLine{00100 \#endif}
+\DoxyCodeLine{00101         if (p.noi[i] == 0) \{}
+\DoxyCodeLine{00102             printf("{}particle \%d with no interactions...\(\backslash\)n"{}, i);}
+\DoxyCodeLine{00103         \}}
+\DoxyCodeLine{00104     \}}
+\DoxyCodeLine{00105 \}}
+\DoxyCodeLine{00106 }
+\DoxyCodeLine{00107 \#if TENSORIAL\_CORRECTION}
+\DoxyCodeLine{00108 \_\_global\_\_ void printTensorialCorrectionMatrix(int *interactions)}
+\DoxyCodeLine{00109 \{}
+\DoxyCodeLine{00110     int i, k, inc, j, numInteractions;}
+\DoxyCodeLine{00111     int d, dd;}
+\DoxyCodeLine{00112 }
+\DoxyCodeLine{00113     inc = blockDim.x * gridDim.x;}
+\DoxyCodeLine{00114     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numRealParticles; i += inc) \{}
+\DoxyCodeLine{00115         printf("{}\%d\(\backslash\)n"{}, i);}
+\DoxyCodeLine{00116         for (d = 0; d < DIM; d++) \{}
+\DoxyCodeLine{00117             for (dd = 0; dd < DIM; dd++) \{}
+\DoxyCodeLine{00118                 printf("{}\%.17lf \(\backslash\)t"{}, p\_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd]);}
+\DoxyCodeLine{00119             \}}
+\DoxyCodeLine{00120             printf("{}\(\backslash\)n"{});}
+\DoxyCodeLine{00121         \}}
+\DoxyCodeLine{00122     \}}
+\DoxyCodeLine{00123 \}}
+\DoxyCodeLine{00124 \#endif}
+
+\end{DoxyCode}
