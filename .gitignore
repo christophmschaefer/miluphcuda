@@ -47,3 +47,4 @@
 *.cmd
 
 .idea/
+.DS_Store
