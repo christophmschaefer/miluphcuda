@@ -2,8 +2,6 @@
 
 Miluphcuda is a smoothed particle hydrodynamics code
 
-Check out the [documentation](https://michaelst98.github.io/miluphcuda/index.html)!
-
 
 ## Related pages
 
