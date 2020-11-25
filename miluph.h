@@ -47,16 +47,16 @@
 // particle structure for memory management
 // on host and device
 struct Particle {
-    double *x0; /**< the x coordinate */
+    double *x0; /**< @brief the x coordinate */
 #if DIM > 1
-    double *y0; /**< the y coordinate */
+    double *y0; /**< @brief the y coordinate */
 #if DIM > 2
     double *z0;
 #endif
 #endif
-    double *x; /**< the x coordinate */
+    double *x; /**< @brief the x coordinate */
 #if DIM > 1
-    double *y; /**< the x coordinate */
+    double *y; /**< @brief the x coordinate */
 #if DIM > 2
     double *z;
 #endif
