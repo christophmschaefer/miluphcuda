@@ -46,5 +46,14 @@
 *.mod*
 *.cmd
 
+# Ignore files created by some IDEs
 .idea/
 .DS_Store
+*.yml
+
+# Ignore (generated) documentation
+# The Documentation is located at the documentation branch!
+doc/html/
+doc/latex/
+docs/
+create_doc/
