@@ -57,3 +57,5 @@ doc/html/
 doc/latex/
 docs/
 create_doc/
+*.inc
+*.swp

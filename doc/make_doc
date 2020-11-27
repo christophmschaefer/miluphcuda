@@ -1,0 +1,97 @@
+#!/bin/bash
+
+#DOXY="doxy"
+#DOXY="/usr/local/Cellar/doxygen/1.8.20/bin/doxygen" 
+BASHDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+DOCSDIR="$BASHDIR/../docs"
+DOXYDIR="$BASHDIR/DoxygenFiles"
+
+#open_index_html=false
+#show_help=false
+
+usage() 
+{
+	echo "[-d | --doxygen]          path to doxygen executable"
+	echo "[-r | --remove]           remove the documentation"
+	echo "[-h | --help]             show the help"
+}
+
+create_folder_structure()
+{
+	mkdir -p $DOCSDIR/
+}
+
+delete_documentation()
+{
+	rm -r $BASHDIR/html/
+	rm -r $BASHDIR/latex/
+	rm -r $DOCSDIR
+}
+
+write_to_doxygen_inc()
+{	
+	echo "# Generatd by make_doc shell script" > $DOXYDIR/doxyfile.inc
+	echo "# -----------------------------------------------" >> $DOXYDIR/doxyfile.inc
+	echo "INPUT = $BASHDIR/../" >> $DOXYDIR/doxyfile.inc
+	echo "FILE_PATTERNS = "*.md" "*.h" "*.cu"" >> $DOXYDIR/doxyfile.inc
+	echo "OUTPUT_DIRECTORY = $BASHDIR/" >> $DOXYDIR/doxyfile.inc
+	echo "HTML_HEADER = $DOXYDIR/header.html" >> $DOXYDIR/doxyfile.inc
+	echo "HTML_FOOTER = $DOXYDIR/footer.html" >> $DOXYDIR/doxyfile.inc
+	echo "HTML_STYLESHEET = $DOXYDIR/doxygen-custom.css" >> $DOXYDIR/doxyfile.inc
+	echo "# -----------------------------------------------" >> $DOXYDIR/doxyfile.inc
+	echo "HTML_EXTRA_FILES = $BASHDIR/miluphcuda_documentation.pdf" >> $DOXYDIR/doxyfile.inc
+	echo "USE_MDFILE_AS_MAINPAGE = $BASHDIR/Mainpage.md" >> $DOXYDIR/doxyfile.inc
+}
+
+copy_to_docs()
+{
+cp -r $BASHDIR/html/ $DOCSDIR
+}
+
+
+while [ "$1" != "" ]; do
+    case $1 in
+	-d | --doxygen )        echo "-d was given"
+				shift
+				DOXY="$1"
+				;;
+	-r | --remove ) 	echo "-r was given"
+				delete_documentation
+				exit 1
+				;;
+        #-o | --open )           echo "-o was given"
+	#			open_index_html=true
+	#			#shift
+        #                        #filename="$1"
+        #                        ;;
+        -h | --help )           usage
+                                exit 1
+                                ;;
+        * )                     usage
+                                exit 1
+    esac
+    shift
+done
+
+# echo "BASHDIR: $BASHDIR"
+# echo "DOCSDIR: $DOCSDIR"
+
+echo "Doxygen executable: $DOXY"
+echo " "
+echo "deleting the (old) documentation ..."
+delete_documentation
+echo "creating folder structure ..."
+create_folder_structure
+echo "writing to doxygen_inc ..."
+write_to_doxygen_inc
+echo "create documentation with doxygen (takes some seconds) ..."
+$DOXY $DOXYDIR/Doxyfile &> $BASHDIR/doxygen.log
+echo "copying html files to docs/ dir"
+copy_to_docs
+
+echo " "
+echo "Go to docs/ and open index.html in a browser to see the result!"
+
+# if [ "$open_index_html" = true ]; then
+#	echo "-o was set"
+# fi
