@@ -22,21 +22,24 @@
  */
 
 
-#ifndef _INVISCIDSPH_H
-#define _INVISCIDSPH_H
+#ifndef _RK4_POINTMASS_H
+#define _RK4_POINTMASS_H
 
+#include "miluph.h"
 #include "timeintegration.h"
 
 
-__global__ void betaviscosity(int *interactions);
+void rk4_nbodies();
 
-__global__ void calculate_shear_stress_tensor(int *interactions);
-__global__ void calculate_kinematic_viscosity(void);
+__global__ void rhs_pointmass();
+__global__ void rk4_integrateFirstStep();
+__global__ void rk4_integrateSecondStep();
+__global__ void rk4_integrateThirdStep();
+__global__ void rk4_integrateFourthStep();
 
 
 
-__device__ int sign(double x);
-__device__ void multiply(double mat1[][DIM], double mat2[][DIM], double res[][DIM]);
+
 
 
 

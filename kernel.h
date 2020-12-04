@@ -58,12 +58,8 @@ __device__ void wendlandc6(double *W, double dWdx[DIM], double *dWdr, double dx[
 __device__ void kernelvalue(double &W, int particle1, int particle2);
 __device__ double fixTensileInstability( int particle1, int particle2);
 __global__ void tensorialCorrection(int *interactions);
-
-
+__global__ void shepardCorrection(int *interactions);
 
 __global__ void CalcDivvandCurlv(int *interactions);
-
-
-
 
 #endif

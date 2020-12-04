@@ -27,4 +27,5 @@ __global__ void calculateDensity(int *interactions);
 
 
 
+
 #endif

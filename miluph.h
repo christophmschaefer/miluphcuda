@@ -47,18 +47,25 @@
 // particle structure for memory management
 // on host and device
 struct Particle {
-    double *x0; /**< @brief the x coordinate */
+    double *x0;
 #if DIM > 1
-    double *y0; /**< @brief the y coordinate */
+    double *y0;
 #if DIM > 2
     double *z0;
 #endif
 #endif
-    double *x; /**< @brief the x coordinate */
+    double *x;
 #if DIM > 1
-    double *y; /**< @brief the x coordinate */
+    double *y;
 #if DIM > 2
     double *z;
+#endif
+#endif
+    double *vx0;
+#if DIM > 1
+    double *vy0;
+#if DIM > 2
+    double *vz0;
 #endif
 #endif
     double *dxdt;
@@ -100,28 +107,40 @@ struct Particle {
 # endif
 #endif
 
-
     double *m;
 // the smoothing length
     double *h;
+// the initial smoothing length
+    double *h0;
 #if INTEGRATE_SML
     double *dhdt;
 #endif
     double *rho;
-
     double *drhodt;
     double *p;
     double *e;
+
+#if MORE_OUTPUT
+    double *p_min;
+    double *p_max;
+    double *rho_min;
+    double *rho_max;
+    double *e_min;
+    double *e_max;
+    double *cs_min;
+    double *cs_max;
+#endif
 #if INTEGRATE_ENERGY
     double *dedt;
 #endif
 
 #if NAVIER_STOKES
     // the viscous shear tensor
-    // note: this is the traceless tensor 
+    // note: this is the traceless tensor
     // the viscous tensor is given by sigma = eta T + zeta div v
     // and since we're storing div v for each particle, we do not store it here
     double *Tshear;
+    double *eta;
 #endif
 
 #if SOLID
@@ -164,7 +183,7 @@ struct Particle {
 
 #if FRAGMENTATION
     double *d;
-    double *damage_total; // = tensile damage plus porous damage
+    double *damage_total; // tensile damage + porous damage
     double *dddt;
     int *numFlaws;
     int maxNumFlaws;
@@ -173,7 +192,6 @@ struct Particle {
 #if PALPHA_POROSITY
     double *damage_porjutzi;
     double *ddamage_porjutzidt;
-    double *cs_old;
 #endif
 #endif
 
@@ -198,6 +216,7 @@ struct Particle {
     double *f;
     double *delpdelrho;
     double *delpdele;
+	double *cs_old;
 #endif
 
 #if SIRONO_POROSITY
@@ -224,15 +243,25 @@ struct Particle {
     int *real_partner;
 #endif
 
+#if SHEPARD_CORRECTION
+    double *shepard_correction;
+#endif
+
 #if TENSORIAL_CORRECTION
     double *tensorialCorrectionMatrix;
     double *tensorialCorrectiondWdrr;
 #endif
+#if SML_CORRECTION
+    double *sml_omega;
+#endif
     double *cs;
     int *noi;
     int *materialId;
+    // the initial material id
+    int *materialId0;
     int *depth;
-};
+};  // end 'struct Particle'
+
 
 struct Pointmass {
     double *x;
@@ -250,15 +279,20 @@ struct Pointmass {
 #endif
 #endif
     double *ax;
+    double *feedback_ax;
 #if DIM > 1
     double *ay;
+    double *feedback_ay;
 #if DIM > 2
     double *az;
+    double *feedback_az;
 #endif
 #endif
     double *m;
     double *rmin;
     double *rmax;
+
+    int *feels_particles;
 };
 
 
@@ -271,9 +305,13 @@ extern struct Pointmass pointmass_device;
 // the pointers to the arrays for the runge-kutta integrator
 extern struct Pointmass rk_pointmass_device[3];
 extern __constant__ struct Pointmass rk_pointmass[3];
+// the pointers to the arrays for the runge-kutta 4 integrator
+extern struct Pointmass rk4_pointmass_device[4];
+extern __constant__ struct Pointmass rk4_pointmass[4];
 
 extern struct Pointmass predictor_pointmass_device;
 extern __constant__ struct Pointmass predictor_pointmass;
+extern __constant__ struct Pointmass pointmass_rhs;
 
 // the pointers to the arrays on the host
 extern struct Particle p_host;
@@ -289,33 +327,32 @@ extern __constant__ struct Particle rk[3];
 extern struct Particle predictor_device;
 extern __constant__ struct Particle predictor;
 
-// the three integrator steps
+
+// the three (four for rk4) integrator steps
 enum {
     RKSTART,
     RKFIRST,
-    RKSECOND
+    RKSECOND,
+    RKTHIRD
 };
 
 
 // the implemented integrators
-
 enum {
     EULER,
     RK2_ADAPTIVE,
     MONAGHAN_PC,
-    EULER_PC
+    EULER_PC,
+    HEUN_RK4
 };
-
 
 
 #if FRAGMENTATION
 extern int maxNumFlaws_host;
 #endif
 
-
 extern int *interactions;
 extern int *interactions_host;
-
 
 extern int *childList_host;
 extern int *childListd;
@@ -327,6 +364,7 @@ extern int numberOfRealParticles;
 
 extern int numberOfPointmasses;
 extern int memorySizeForPointmasses;
+extern int integermemorySizeForPointmasses;
 
 extern int memorySizeForParticles;
 extern int memorySizeForTree;
@@ -346,22 +384,26 @@ extern int numberOfMultiprocessors;
 extern double treeTheta;
 
 typedef struct RunParameter {
-	int performanceTest;
-	int verbose;
+    int performanceTest;
+    int verbose;
     int restart;
-	int selfgravity;
-	int directselfgravity;
+    int selfgravity;
+    int directselfgravity;
     int decouplegravity;
+    int treeinformation;
     int hdf5output;
     int hdf5input;
     int ascii_output;
     int integrator_type;
     double maxtimestep;
+    double firsttimestep;
     double angular_momentum_check;
     double rk_epsrel;
     double boundary_ratio;
     char kernel[256];
-	config_t config;
+    char conservedquantitiesfilename[255];
+    char binarysystemfilename[256];
+    config_t config;
 } RunParameter;
 
 extern RunParameter param;

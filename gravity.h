@@ -28,6 +28,7 @@
 __global__ void direct_selfgravity();
 __global__ void selfgravity();
 __global__ void addoldselfgravity();
-__global__ void gravitation_from_point_masses();
-
+__global__ void gravitation_from_point_masses(int calculate_nbody);
+__global__ void particles_gravitational_feedback(int n, double *, double *, double *);
+void backreaction_from_disk_to_point_masses(int calculate_nbody);
 #endif

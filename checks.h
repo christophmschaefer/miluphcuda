@@ -20,16 +20,28 @@
  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
 #ifndef _CHECKS_H
 #define _CHECKS_H
+
+
 #if MOHR_COULOMB_PLASTICITY && DRUCKER_PRAGER_PLASTICITY
-#error choose only one of the three available plastic flow rules
+#error ERROR. Choose only one of the three available plastic flow rules in parameter.h.
 #endif
-#if MOHR_COULOMB_PLASTICITY && COLLINS_PRESSURE_DEPENDENT_YIELD_STRENGTH
-#error choose only one of the three available plastic flow rules
+#if MOHR_COULOMB_PLASTICITY && COLLINS_PLASTICITY
+#error ERROR. Choose only one of the three available plastic flow rules in parameter.h.
 #endif
-#if DRUCKER_PRAGER_PLASTICITY && COLLINS_PRESSURE_DEPENDENT_YIELD_STRENGTH
-#error choose only one of the three available plastic flow rules
+#if DRUCKER_PRAGER_PLASTICITY && COLLINS_PLASTICITY
+#error ERROR. Choose only one of the three available plastic flow rules in parameter.h.
+#endif
+#if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY && !COLLINS_PLASTICITY
+#error ERROR. You have chosen COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY but not also COLLINS_PLASTICITY in parameter.h. That is not what you want.
+#endif
+#if COLLINS_PLASTICITY && COLLINS_PLASTICITY_SIMPLE
+#error ERROR. You have chosen COLLINS_PLASTICITY and also COLLINS_PLASTICITY_SIMPLE in parameter.h. Choose either one, not both.
+#endif
+#if COLLINS_PLASTICITY_SIMPLE && COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
+#error ERROR. You have chosen COLLINS_PLASTICITY_SIMPLE and also COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY in parameter.h. This combination is not implemented yet...
 #endif
 
 #if USE_BSPLINE_KERNEL && USE_WENDLAND_KERNEL
@@ -52,6 +64,10 @@
 #error turn SOLID on when using FRAGMENTATION
 #endif
 
+#if VON_MISES_PLASTICITY && JC_PLASTICITY
+#error Error: Cannot use both Von Mises and Johnson-Cook Plasticity Models at the same time. Decide for one and recompile.
+#endif
+
 
 #if SYMMETRIC_STRESSTENSOR && !SOLID
 #error turn SOLID on when using SYMMETRIC_STRESSTENSOR
@@ -61,6 +77,19 @@
 # error turn on FRAGMENTATION when using COHESION_FOR_DAMAGED_MATERIAL
 #endif
 
+#if SHAKURA_SUNYAEV_ALPHA && CONSTANT_KINEMATIC_VISCOSITY 
+# error choose only one viscosity model
+#endif
+
+#if NAVIER_STOKES
+# if !SHAKURA_SUNYAEV_ALPHA && !CONSTANT_KINEMATIC_VISCOSITY
+#error set either SHAKURA_SUNYAEV_ALPHA or CONSTANT_KINEMATIC_VISCOSITY
+#endif
+#endif
+
+#if DIM == 1 && PARTICLE_ACCRETION
+#error Particle accretion only if DIM > 1
+#endif
 
 #if ARTIFICIAL_STRESS && !SOLID
 # error turn off ARTIFICIAL_STRESS when running pure hydro

@@ -44,6 +44,7 @@ __global__ void symmetrizeInteractions(int *interactions);
 
 __global__ void check_sml_boundary(void);
 
+__device__ void redo_NeighbourSearch(int particle_id, int *interactions);
 
 
 __global__ void computationalDomain(

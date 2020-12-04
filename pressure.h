@@ -28,6 +28,7 @@
 #include "timeintegration.h"
 
 enum EquationOfStates {
+    EOS_TYPE_ACCRETED = -2,
     EOS_TYPE_IGNORE = -1,
 // polytropic EOS for gas, needs polytropic_K and polytropic_gamma in material.cfg file
     EOS_TYPE_POLYTROPIC_GAS = 0,
@@ -58,16 +59,12 @@ enum EquationOfStates {
 // Tillotson EOS with espilon-alpha model by Wuennemann Collins ..
     EOS_TYPE_EPSILON = 11,
 // locally isothermal gas: p = c_s**2 \times rho
-    EOS_TYPE_LOCALLY_ISOTHERMAL_GAS = 12
+    EOS_TYPE_LOCALLY_ISOTHERMAL_GAS = 12,
+// ANEOS EOS with p-alpha model by Jutzi et al.
+	EOS_TYPE_JUTZI_ANEOS = 13
 };
 
-/**
- * @brief calculate pressure function
- *
- * this will be an awesome documentation
- *
- * @return void
- */
+
 __global__ void calculatePressure(void);
 
 #endif

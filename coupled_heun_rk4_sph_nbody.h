@@ -21,23 +21,16 @@
  *
  */
 
+#ifndef _HEUN_RK4_H
+#define _HEUN_RK4_H
 
-#ifndef _INVISCIDSPH_H
-#define _INVISCIDSPH_H
-
+#include "miluph.h"
 #include "timeintegration.h"
 
 
-__global__ void betaviscosity(int *interactions);
+void heun_rk4();
 
-__global__ void calculate_shear_stress_tensor(int *interactions);
-__global__ void calculate_kinematic_viscosity(void);
-
-
-
-__device__ int sign(double x);
-__device__ void multiply(double mat1[][DIM], double mat2[][DIM], double res[][DIM]);
-
-
+__global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock, double *dtSPerBlock, double *dtePerBlock, double *dtrhoPerBlock, double *dtdamagePerBlock, double *dtalphaPerBlock, double *dtartviscPerBlock, double *dtbetaPerBlock, double *dtalpha_epsporPerBlock, double *dtepsilon_vPerBlock);
+__global__ void pressureChangeCheck_heun(double *maxpressureDiffPerBlock);
 
 #endif

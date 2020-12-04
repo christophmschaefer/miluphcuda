@@ -1,5 +1,5 @@
 /**
- * @author      Christoph Schaefer cm.schaefer@gmail.com
+ * @author      Christoph Schaefer cm.schaefer@gmail.com and Thomas I. Maindl
  *
  * @section     LICENSE
  * Copyright (c) 2019 Christoph Schaefer
@@ -21,23 +21,13 @@
  *
  */
 
+//#ifndef _SAVE_SPECIAL_VALUES_H
+//#define _SAVE_SPECIAL_VALUES_H
+#ifndef _EXTREMA_H
+#define _EXTREMA_H
 
-#ifndef _INVISCIDSPH_H
-#define _INVISCIDSPH_H
+#include "parameter.h"
 
-#include "timeintegration.h"
-
-
-__global__ void betaviscosity(int *interactions);
-
-__global__ void calculate_shear_stress_tensor(int *interactions);
-__global__ void calculate_kinematic_viscosity(void);
-
-
-
-__device__ int sign(double x);
-__device__ void multiply(double mat1[][DIM], double mat2[][DIM], double res[][DIM]);
-
-
+__global__ void get_extrema(void);
 
 #endif

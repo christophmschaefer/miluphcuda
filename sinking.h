@@ -1,5 +1,5 @@
 /**
- * @author      Christoph Schaefer cm.schaefer@gmail.com
+ * @author      Christoph Schaefer cm.schaefer@gmail.com and Thomas I. Maindl
  *
  * @section     LICENSE
  * Copyright (c) 2019 Christoph Schaefer
@@ -21,23 +21,7 @@
  *
  */
 
+#include "parameter.h"
 
-#ifndef _INVISCIDSPH_H
-#define _INVISCIDSPH_H
+__global__ void ParticleSinking(void);
 
-#include "timeintegration.h"
-
-
-__global__ void betaviscosity(int *interactions);
-
-__global__ void calculate_shear_stress_tensor(int *interactions);
-__global__ void calculate_kinematic_viscosity(void);
-
-
-
-__device__ int sign(double x);
-__device__ void multiply(double mat1[][DIM], double mat2[][DIM], double res[][DIM]);
-
-
-
-#endif

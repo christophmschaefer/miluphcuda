@@ -30,7 +30,7 @@
 #if SOLID
 __global__ void plasticity(void);
 __global__ void JohnsonCookPlasticity(void);
-__global__ void vonMisesPlasticity(void);
+__global__ void plasticityModel(void);
 #endif
 
 
