@@ -24,12 +24,13 @@
 #include "rk2adaptive.h"
 #include "miluph.h"
 #include "timeintegration.h"
+#include "config_parameter.h"
 #include "parameter.h"
 #include "memory_handling.h"
 #include "rhs.h"
 #include "pressure.h"
 #include "boundary.h"
-
+#include "damage.h"
 
 extern __device__ double endTimeD, currentTimeD;
 extern __device__ double substep_currentTimeD;
@@ -218,7 +219,10 @@ void rk2Adaptive()
         endTime += timePerStep;
         fprintf(stdout, "currenttime: %e \t endtime: %e\n", currentTime, endTime);
         if (nsteps_cnt == 0) {
-            if (timePerStep > param.maxtimestep) {
+            if (timePerStep > param.firsttimestep && param.firsttimestep > 0) {
+                cudaVerify(cudaMemcpyToSymbol(dt, &param.firsttimestep, sizeof(double)));
+                dt_host_old = param.firsttimestep;
+            } else if (timePerStep > param.maxtimestep) {
                 cudaVerify(cudaMemcpyToSymbol(dt, &param.maxtimestep, sizeof(double)));
                 dt_host_old = param.maxtimestep;
             } else {
@@ -406,14 +410,17 @@ void rk2Adaptive()
                 }
 
 
-                double errPos, errVel, errDensity = 0;
+                double errPos, errVel, errDensity, errEnergy = 0;
                 cudaVerify(cudaMemcpyFromSymbol(&errPos, maxPosAbsError, sizeof(double)));
                 cudaVerify(cudaMemcpyFromSymbol(&errVel, maxVelAbsError, sizeof(double)));
 #if INTEGRATE_DENSITY
                 cudaVerify(cudaMemcpyFromSymbol(&errDensity, maxDensityAbsError, sizeof(double)));
 #endif
+#if INTEGRATE_ENERGY
+                cudaVerify(cudaMemcpyFromSymbol(&errEnergy, maxEnergyAbsError, sizeof(double)));
+#endif
                 cudaVerify(cudaDeviceSynchronize());
-                if (param.verbose) printf("total relative max error: %g (locations: %e, velocities: %e, density: %e) with timestep %e\n", max(max(errPos, errVel), errDensity) / param.rk_epsrel, errPos, errVel, errDensity, dt_host);
+                if (param.verbose) printf("total relative max error: %g (locations: %e, velocities: %e, density: %e, energy: %e) with timestep %e\n", max(max(errPos, errVel), errDensity) / param.rk_epsrel, errPos, errVel, errDensity, errEnergy, dt_host);
 
 
 #if PALPHA_POROSITY
@@ -445,8 +452,10 @@ void rk2Adaptive()
                 cudaVerify(cudaMemcpyToSymbol(dt, &dt_host, sizeof(double)));
                 if (errorSmallEnough_host) {
                     cudaVerify(cudaMemcpyFromSymbol(&currentTime, currentTimeD, sizeof(double)));
-                    if (param.verbose) {
-                        fprintf(stdout, "last error small enough: current time %.17e  with timestep %.17e new timestep %.17e, time to next output is %.17e  \n", currentTime, dt_host_old, dt_host, endTime-currentTime);
+		    //step was successful --> do something (e.g. look for min/max pressure...)
+		    afterIntegrationStep();
+		    if (param.verbose) {
+  			    fprintf(stdout, "last error small enough: current time %.17e  with timestep %.17e new timestep %.17e, time to next output is %.17e  \n", currentTime, dt_host_old, dt_host, endTime-currentTime);
                     }
                     break; // break while(true) -> continue with next timestep
                 } else {
@@ -1214,6 +1223,9 @@ __global__ void checkError
             case (EOS_TYPE_JUTZI):
                 hasEnergy = 1;
                 break;
+			case (EOS_TYPE_JUTZI_ANEOS):
+				hasEnergy = 1;
+				break;
             case (EOS_TYPE_SIRONO):
                 hasEnergy = 1;
                 break;

@@ -23,6 +23,7 @@
 
 #include "kernel.h"
 #include "timeintegration.h"
+#include "config_parameter.h"
 #include "tree.h"
 #include "parameter.h"
 #include "miluph.h"
@@ -31,8 +32,10 @@
 
 // for interaction partners less than this value, the tensorial correction matrix
 // will be set to the identity matrix (-> disabling the correction factors)
-#define MIN_NUMBER_OF_INTERACTIONS_FOR_TENSORIAL_CORRECTION_TO_WORK 8
+#define MIN_NUMBER_OF_INTERACTIONS_FOR_TENSORIAL_CORRECTION_TO_WORK 12
 
+
+#define DEBUG_LINALG 0
 
 
 // pointers for the kernel function
@@ -120,7 +123,9 @@ __device__ void cubic_spline(double *W, double dWdx[DIM], double *dWdr, double d
     if (q > 1) {
         *W = 0;
         *dWdr = 0.0;
-        printf("This should never happen, actually.\n");
+#if !AVERAGE_KERNELS
+       // printf("This should never happen, actually.\n");
+#endif
     } else if (q > 0.5) {
         *W = 2.*f * (1.-q)*(1.-q)*(1-q);
         *dWdr = -6.*f*1./sml * (1.-q)*(1.-q);
@@ -332,16 +337,17 @@ __device__ double fixTensileInstability(int a, int b)
 #if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH || INTEGRATE_ENERGY)
 __global__ void CalcDivvandCurlv(int *interactions)
 {
-    int i, inc, j, k, m, d;
-    inc = blockDim.x * gridDim.x;
+    int i, inc, j, k, m, d, dd;
     /* absolute values of div v and curl v */
     double divv;
     double curlv[DIM];
     double W, dWdr;
+    double Wj, dWdrj, dWdxj[DIM];
     double dWdx[DIM], dx[DIM];
     double sml;
     double vi[DIM], vj[DIM];
     double r;
+    inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
                continue;
@@ -367,7 +373,32 @@ __global__ void CalcDivvandCurlv(int *interactions)
             dx[2] = p.z[i] - p.z[j];
 #endif
 #endif
+
+
+#if AVERAGE_KERNELS
+            kernel(&W, dWdx, &dWdr, dx, p.h[i]);
+            kernel(&Wj, dWdxj, &dWdrj, dx, p.h[j]);
+# if SHEPARD_CORRECTION
+            W /= p_rhs.shepard_correction[i];
+            Wj /= p_rhs.shepard_correction[j];
+            for (d = 0; d < DIM; d++) {
+                dWdx[d] /= p_rhs.shepard_correction[i];
+                dWdxj[d] /= p_rhs.shepard_correction[j];
+            }
+# endif
+            W = 0.5 * (W + Wj);
+            for (d = 0; d < DIM; d++) {
+                dWdx[d] = 0.5 * (dWdx[d] + dWdxj[d]);
+            }
+#else
             kernel(&W, dWdx, &dWdr, dx, sml);
+# if SHEPARD_CORRECTION
+            W /= p_rhs.shepard_correction[i];
+            for (d = 0; d < DIM; d++) {
+                dWdx[d] /= p_rhs.shepard_correction[i];
+            }
+# endif
+#endif // AVERAGE_KERNELS
 
             vi[0] = p.vx[i];
             vj[0] = p.vx[j];
@@ -386,7 +417,14 @@ __global__ void CalcDivvandCurlv(int *interactions)
             r = sqrt(r);
             /* divv */
             for (d = 0; d < DIM; d++) {
-                divv += p.m[j]/p.rho[i] * (vj[d] - vi[d]) * dWdx[d];
+#if TENSORIAL_CORRECTION
+                for (dd = 0; dd < DIM; dd++) {
+                    divv += p.m[j]/p.rho[j] * (vj[d] - vi[d]) * p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
+                }
+#else
+                divv += p.m[j]/p.rho[j] * (vj[d] - vi[d]) * dWdx[d];
+#endif
+
             }
             /* curlv */
 #if (DIM == 1 && BALSARA_SWITCH)
@@ -413,10 +451,62 @@ __global__ void CalcDivvandCurlv(int *interactions)
 }
 #endif //  (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH)
 
+#if SHEPARD_CORRECTION
 // this adds zeroth order consistency but needs one more loop over all neighbours
-#define SHEPARD_CORRECTION 0
+__global__ void shepardCorrection(int *interactions) {
+
+    register int i, inc, j, m;
+    register double dr[DIM], h, dWdr;
+    inc = blockDim.x * gridDim.x;
+    double W, dWdx[DIM], Wj;
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+        double shepard_correction;
+        W = 0;
+        for (m = 0; m < DIM; m++) {
+            dr[m] = 0.0;
+        }
+        kernel(&W, dWdx, &dWdr, dr, p.h[i]);
+        shepard_correction = p.m[i]/p.rho[i]*W;
+
+        for (m = 0; m < p.noi[i]; m++) {
+            W = 0;
+            j = interactions[i*MAX_NUM_INTERACTIONS+m];
+            if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || p_rhs.materialId[j] == EOS_TYPE_IGNORE) {
+                continue;
+            }
+            dr[0] = p.x[i] - p.x[j];
+#if DIM > 1
+            dr[1] = p.y[i] - p.y[j];
+#if DIM > 2
+            dr[2] = p.z[i] - p.z[j];
+#endif
+#endif
+
+#if AVERAGE_KERNELS
+            kernel(&W, dWdx, &dWdr, dr, p.h[i]);
+            Wj = 0;
+            kernel(&Wj, dWdx, &dWdr, dr, p.h[j]);
+            W = 0.5*(W + Wj);
+#else
+            h = 0.5*(p.h[i] + p.h[j]);
+            kernel(&W, dWdx, &dWdr, dr, h);
+#endif
+
+            shepard_correction += p.m[j]/p.rho[j]*W;
+        }
+        p_rhs.shepard_correction[i] = shepard_correction;
+        //printf("%g\n", shepard_correction);
+    }
+}
+#endif
+
+
+
+
+
 
 #if TENSORIAL_CORRECTION
+// this adds first order consistency but needs one more loop over all neighbours
 __global__ void tensorialCorrection(int *interactions)
 {
     register int i, inc, j, k, m;
@@ -425,11 +515,12 @@ __global__ void tensorialCorrection(int *interactions)
     inc = blockDim.x * gridDim.x;
     register double r, dr[DIM], h, dWdr, tmp, f1, f2;
     double W, dWdx[DIM];
+    double Wj, dWdxj[DIM];
     double wend_f, wend_sml, q, distance;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         register double corrmatrix[DIM*DIM];
         register double matrix[DIM*DIM];
-        for(d = 0; d < DIM*DIM; d++) {
+        for (d = 0; d < DIM*DIM; d++) {
             corrmatrix[d] = 0;
             matrix[d] = 0;
         }
@@ -437,31 +528,7 @@ __global__ void tensorialCorrection(int *interactions)
                continue;
         }
 
-        double shepard_correction = 0;
         k = p.noi[i];
-#if SHEPARD_CORRECTION
-        for (m = 0; m < k; m++) {
-            j = interactions[i*MAX_NUM_INTERACTIONS+m];
-            if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || p_rhs.materialId[j] == EOS_TYPE_IGNORE) {
-                continue;
-            }
-            dr[0] = p.x[i] - p.x[j];
-#if DIM > 1
-            dr[1] = p.y[i] - p.y[j];
-#if DIM == 3
-            dr[2] = p.z[i] - p.z[j];
-            r = sqrt(dr[0]*dr[0]+dr[1]*dr[1]+dr[2]*dr[2]);
-#elif DIM == 2
-            r = sqrt(dr[0]*dr[0]+dr[1]*dr[1]);
-#endif
-#endif
-            h = 0.5*(p.h[i] + p.h[j]);
-
-
-            kernel(&W, dWdx, &dWdr, dr, h);
-            shepard_correction += p.m[j]/p.rho[j]*W;
-        }
-#endif
 
         // loop over all interaction partner
         for (m = 0; m < k; m++) {
@@ -479,20 +546,38 @@ __global__ void tensorialCorrection(int *interactions)
             r = sqrt(dr[0]*dr[0]+dr[1]*dr[1]);
 #endif
 #endif
-            h = 0.5*(p.h[i] + p.h[j]);
 
-
-            kernel(&W, dWdx, &dWdr, dr, h);
-            tmp = p.m[j] / p.rho[j] * dWdr/r;
-#if SHEPARD_CORRECTION
-            if (shepard_correction > 0) {
-                tmp /= shepard_correction;
+#if AVERAGE_KERNELS
+            kernel(&W, dWdx, &dWdr, dr, p.h[i]);
+            kernel(&Wj, dWdxj, &dWdr, dr, p.h[j]);
+# if SHEPARD_CORRECTION
+            W /= p_rhs.shepard_correction[i];
+            Wj /= p_rhs.shepard_correction[j];
+            for (d = 0; d < DIM; d++) {
+                dWdx[d] /= p_rhs.shepard_correction[i];
+                dWdxj[d] /= p_rhs.shepard_correction[j];
             }
-#endif
-            //p_rhs.tensorialCorrectiondWdrr[i*MAX_NUM_INTERACTIONS+m] = dWdrr;
+            for (d = 0; d < DIM; d++) {
+                dWdx[d] = 0.5 * (dWdx[d] + dWdxj[d]);
+            }
+            W = 0.5 * (W + Wj);
+# endif
+
+
+#else
+            h = 0.5*(p.h[i] + p.h[j]);
+            kernel(&W, dWdx, &dWdr, dr, h);
+# if SHEPARD_CORRECTION
+            W /= p_rhs.shepard_correction[i];
+            for (d = 0; d < DIM; d++) {
+                dWdx[d] /= p_rhs.shepard_correction[i];
+            }
+# endif
+#endif // AVERAGE_KERNELS
+
             for (d = 0; d < DIM; d++) {
                 for (dd = 0; dd < DIM; dd++) {
-                    corrmatrix[d*DIM+dd] -= tmp * dr[d] * dr[dd];
+                    corrmatrix[d*DIM+dd] -= p.m[j]/p.rho[j] * dr[d] * dWdx[dd];
                 }
             }
         } // end loop over interaction partners
@@ -500,6 +585,17 @@ __global__ void tensorialCorrection(int *interactions)
         rv = invertMatrix(corrmatrix, matrix);
         // if something went wrong during inversion, use identity matrix
         if (rv < 0 || k < MIN_NUMBER_OF_INTERACTIONS_FOR_TENSORIAL_CORRECTION_TO_WORK) {
+            #if DEBUG_LINALG
+            if (threadIdx.x == 0) {
+                printf("could not invert matrix: rv: %d and k: %d\n", rv, k);
+                for (d = 0; d < DIM; d++) {
+                    for (dd = 0; dd < DIM; dd++) {
+                        printf("%e\t", corrmatrix[d*DIM+dd]);
+                    }
+                        printf("\n");
+                }
+            }
+            #endif
             for (d = 0; d < DIM; d++) {
                 for (dd = 0; dd < DIM; dd++) {
                     matrix[d*DIM+dd] = 0.0;
@@ -510,6 +606,7 @@ __global__ void tensorialCorrection(int *interactions)
         }
         for (d = 0; d < DIM*DIM; d++) {
             p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d] = matrix[d];
+
         }
     }
 }

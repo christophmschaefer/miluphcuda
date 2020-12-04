@@ -28,23 +28,28 @@
 /* allocate memory on the device for pointmasses */
 int allocate_pointmass_memory(struct Pointmass *a, int allocate_immutables)
 {
+
     int rc = 0;
 	cudaVerify(cudaMalloc((void**)&a->x, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->vx, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->ax, memorySizeForPointmasses));
+	cudaVerify(cudaMalloc((void**)&a->feedback_ax, memorySizeForPointmasses));
 #if DIM > 1
 	cudaVerify(cudaMalloc((void**)&a->y, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->vy, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->ay, memorySizeForPointmasses));
+	cudaVerify(cudaMalloc((void**)&a->feedback_ay, memorySizeForPointmasses));
 # if DIM > 2
 	cudaVerify(cudaMalloc((void**)&a->z, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->vz, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->az, memorySizeForPointmasses));
+	cudaVerify(cudaMalloc((void**)&a->feedback_az, memorySizeForPointmasses));
 # endif
 #endif
 	cudaVerify(cudaMalloc((void**)&a->m, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->rmin, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->rmax, memorySizeForPointmasses));
+	cudaVerify(cudaMalloc((void**)&a->feels_particles, integermemorySizeForPointmasses));
     return rc;
 }
 
@@ -106,6 +111,10 @@ int allocate_particles_memory(struct Particle *a, int allocate_immutables)
 	cudaVerify(cudaMalloc((void**)&a->ddamage_porjutzidt, memorySizeForParticles));
 #endif
 #endif
+
+    if (allocate_immutables) {
+        cudaVerify(cudaMalloc((void**)&a->h0, memorySizeForParticles));
+    }
 
 #if GHOST_BOUNDARIES
 	cudaVerify(cudaMalloc((void**)&a->real_partner, memorySizeForInteractions));
@@ -181,12 +190,26 @@ int allocate_particles_memory(struct Particle *a, int allocate_immutables)
 	cudaVerify(cudaMalloc((void**)&a->dhdt, memorySizeForParticles));
 #endif
 
+#if SML_CORRECTION
+	cudaVerify(cudaMalloc((void**)&a->sml_omega, memorySizeForParticles));
+#endif
+
 	cudaVerify(cudaMalloc((void**)&a->rho, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&a->p, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&a->e, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&a->cs, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&a->noi, memorySizeForInteractions));
 	cudaVerify(cudaMalloc((void**)&a->depth, memorySizeForInteractions));
+#if MORE_OUTPUT
+	cudaVerify(cudaMalloc((void**)&a->p_min, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&a->p_max, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&a->rho_min, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&a->rho_max, memorySizeForParticles));
+	cudaVerify(cudaMalloc((void**)&a->e_min, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&a->e_max, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&a->cs_min, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&a->cs_max, memorySizeForParticles));
+#endif
 // moved to p_device only, so we don't need mem here anymore
 //	cudaVerify(cudaMalloc((void**)&a->materialId, memorySizeForInteractions));
 
@@ -243,10 +266,16 @@ int copy_pointmass_derivatives_device_to_device(struct Pointmass *dst, struct Po
 {
     int rc = 0;
     cudaVerify(cudaMemcpy(dst->ax, src->ax, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->vx, src->vx, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->feedback_ax, src->feedback_ax, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
 #if DIM > 1
     cudaVerify(cudaMemcpy(dst->ay, src->ay, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->vy, src->vy, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->feedback_ay, src->feedback_ay, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
 # if DIM > 2
     cudaVerify(cudaMemcpy(dst->az, src->az, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->vz, src->vz, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->feedback_az, src->feedback_az, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
 # endif
 #endif
     return rc;
@@ -275,6 +304,10 @@ int copy_particles_derivatives_device_to_device(struct Particle *dst, struct Par
 
 #if INTEGRATE_SML
     cudaVerify(cudaMemcpy(dst->dhdt, src->dhdt, memorySizeForParticles, cudaMemcpyDeviceToDevice));
+#endif
+
+#if SML_CORRECTION
+    cudaVerify(cudaMemcpy(dst->sml_omega, src->sml_omega, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
 
 #if PALPHA_POROSITY
@@ -319,6 +352,7 @@ int copy_pointmass_immutables_device_to_device(struct Pointmass *dst, struct Poi
 {
     int rc = 0;
     cudaVerify(cudaMemcpy((*dst).m, (*src).m, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy((*dst).feels_particles, (*src).feels_particles, integermemorySizeForPointmasses, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy((*dst).rmin, (*src).rmin, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy((*dst).rmax, (*src).rmax, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
     return rc;
@@ -351,6 +385,8 @@ int copy_pointmass_variables_device_to_device(struct Pointmass *dst, struct Poin
 {
     int rc = 0;
     cudaVerify(cudaMemcpy(dst->x, src->x, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
+    // mass is variable
+    cudaVerify(cudaMemcpy(dst->m, src->m, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy(dst->vx, src->vx, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
 #if DIM > 1
     cudaVerify(cudaMemcpy(dst->y, src->y, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
@@ -406,6 +442,17 @@ int copy_particles_variables_device_to_device(struct Particle *dst, struct Parti
 #if FRAGMENTATION
     cudaVerify(cudaMemcpy(dst->damage_porjutzi, src->damage_porjutzi, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
+#endif
+
+#if MORE_OUTPUT
+    cudaVerify(cudaMemcpy(dst->p_min, src->p_min, memorySizeForParticles, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->p_max, src->p_max, memorySizeForParticles, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->rho_min, src->rho_min, memorySizeForParticles, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->rho_max, src->rho_max, memorySizeForParticles, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->e_min, src->e_min, memorySizeForParticles, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->e_max, src->e_max, memorySizeForParticles, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->cs_min, src->cs_min, memorySizeForParticles, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->cs_max, src->cs_max, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
 
 #if SIRONO_POROSITY
@@ -464,17 +511,21 @@ int free_pointmass_memory(struct Pointmass *a, int free_immutables)
 	cudaVerify(cudaFree(a->x));
 	cudaVerify(cudaFree(a->vx));
 	cudaVerify(cudaFree(a->ax));
+	cudaVerify(cudaFree(a->feedback_ax));
 	cudaVerify(cudaFree(a->m));
+	cudaVerify(cudaFree(a->feels_particles));
 	cudaVerify(cudaFree(a->rmin));
 	cudaVerify(cudaFree(a->rmax));
 #if DIM > 1
 	cudaVerify(cudaFree(a->y));
 	cudaVerify(cudaFree(a->vy));
 	cudaVerify(cudaFree(a->ay));
+	cudaVerify(cudaFree(a->feedback_ay));
 # if DIM > 2
 	cudaVerify(cudaFree(a->z));
 	cudaVerify(cudaFree(a->vz));
 	cudaVerify(cudaFree(a->az));
+	cudaVerify(cudaFree(a->feedback_az));
 # endif
 #endif
     return rc;
@@ -497,6 +548,7 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 	cudaVerify(cudaFree(a->dydt));
 	cudaVerify(cudaFree(a->y));
 	cudaVerify(cudaFree(a->y0));
+	cudaVerify(cudaFree(a->vy0));
 	cudaVerify(cudaFree(a->vy));
 	cudaVerify(cudaFree(a->ay));
 	cudaVerify(cudaFree(a->g_ay));
@@ -516,6 +568,16 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 	cudaVerify(cudaFree(a->cs));
 	cudaVerify(cudaFree(a->noi));
 	cudaVerify(cudaFree(a->depth));
+#if MORE_OUTPUT
+	cudaVerify(cudaFree(a->p_min));
+	cudaVerify(cudaFree(a->p_max));
+	cudaVerify(cudaFree(a->rho_min));
+	cudaVerify(cudaFree(a->rho_max));
+	cudaVerify(cudaFree(a->e_min));
+	cudaVerify(cudaFree(a->e_max));
+	cudaVerify(cudaFree(a->cs_min));
+	cudaVerify(cudaFree(a->cs_max));
+#endif
     // materialId only on p_device
 	//cudaVerify(cudaFree(a->materialId));
 #if DIM > 2
@@ -534,7 +596,7 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 #if ARTIFICIAL_VISCOSITY
 	cudaVerify(cudaFree(a->muijmax));
 #endif
-#if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH || INTEGRATE_ENERGY) 
+#if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH || INTEGRATE_ENERGY)
 	cudaVerify(cudaFree(a->divv));
 	cudaVerify(cudaFree(a->curlv));
 #endif
@@ -567,6 +629,9 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 	cudaVerify(cudaFree(a->dhdt));
 #endif
 
+#if SML_CORRECTION
+    cudaVerify(cudaFree(a->sml_omega));
+#endif
 
 #if SOLID
 	cudaVerify(cudaFree(a->S));
@@ -626,6 +691,9 @@ int free_particles_memory(struct Particle *a, int free_immutables)
     if (free_immutables) {
 	    cudaVerify(cudaFree(a->flaws));
     }
+    if (free_immutables) {
+	    cudaVerify(cudaFree(a->h0));
+    }
 #if PALPHA_POROSITY
 	cudaVerify(cudaFree(a->damage_porjutzi));
 	cudaVerify(cudaFree(a->ddamage_porjutzidt));
@@ -660,6 +728,7 @@ int init_allocate_memory(void)
     }
 	memorySizeForParticles = maxNumberOfParticles * sizeof(double);
 	memorySizeForPointmasses = numberOfPointmasses * sizeof(double);
+	integermemorySizeForPointmasses = numberOfPointmasses * sizeof(int);
 	memorySizeForTree = numberOfNodes * sizeof(double);
 	memorySizeForStress = maxNumberOfParticles * DIM * DIM * sizeof(double);
 	memorySizeForChildren = numberOfChildren * (numberOfNodes-numberOfRealParticles) * sizeof(int);
@@ -681,6 +750,7 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&pointmass_device.x, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&pointmass_device.vx, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&pointmass_device.ax, memorySizeForPointmasses));
+	cudaVerify(cudaMalloc((void**)&pointmass_device.feedback_ax, memorySizeForPointmasses));
 #if DIM > 1
 	cudaVerify(cudaMallocHost((void**)&pointmass_host.y, memorySizeForPointmasses));
 	cudaVerify(cudaMallocHost((void**)&pointmass_host.vy, memorySizeForPointmasses));
@@ -688,6 +758,7 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&pointmass_device.y, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&pointmass_device.vy, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&pointmass_device.ay, memorySizeForPointmasses));
+	cudaVerify(cudaMalloc((void**)&pointmass_device.feedback_ay, memorySizeForPointmasses));
 #if DIM > 2
 	cudaVerify(cudaMallocHost((void**)&pointmass_host.z, memorySizeForPointmasses));
 	cudaVerify(cudaMallocHost((void**)&pointmass_host.vz, memorySizeForPointmasses));
@@ -695,6 +766,7 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&pointmass_device.z, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&pointmass_device.vz, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&pointmass_device.az, memorySizeForPointmasses));
+	cudaVerify(cudaMalloc((void**)&pointmass_device.feedback_az, memorySizeForPointmasses));
 #endif
 #endif
 	cudaVerify(cudaMallocHost((void**)&pointmass_host.rmin, memorySizeForPointmasses));
@@ -703,6 +775,8 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&pointmass_device.rmax, memorySizeForPointmasses));
 	cudaVerify(cudaMallocHost((void**)&pointmass_host.m, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&pointmass_device.m, memorySizeForPointmasses));
+	cudaVerify(cudaMallocHost((void**)&pointmass_host.feels_particles, integermemorySizeForPointmasses));
+	cudaVerify(cudaMalloc((void**)&pointmass_device.feels_particles, integermemorySizeForPointmasses));
 #endif
 
 	cudaVerify(cudaMallocHost((void**)&p_host.g_ax, memorySizeForParticles));
@@ -712,6 +786,17 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMallocHost((void**)&p_host.p, memorySizeForParticles));
 	cudaVerify(cudaMallocHost((void**)&p_host.e, memorySizeForParticles));
 	cudaVerify(cudaMallocHost((void**)&p_host.cs, memorySizeForParticles));
+
+#if MORE_OUTPUT
+	cudaVerify(cudaMallocHost((void**)&p_host.p_min, memorySizeForParticles));
+	cudaVerify(cudaMallocHost((void**)&p_host.p_max, memorySizeForParticles));
+	cudaVerify(cudaMallocHost((void**)&p_host.rho_min, memorySizeForParticles));
+	cudaVerify(cudaMallocHost((void**)&p_host.rho_max, memorySizeForParticles));
+	cudaVerify(cudaMallocHost((void**)&p_host.e_min, memorySizeForParticles));
+	cudaVerify(cudaMallocHost((void**)&p_host.e_max, memorySizeForParticles));
+	cudaVerify(cudaMallocHost((void**)&p_host.cs_min, memorySizeForParticles));
+	cudaVerify(cudaMallocHost((void**)&p_host.cs_max, memorySizeForParticles));
+#endif
 
 	cudaVerify(cudaMallocHost((void**)&p_host.noi, memorySizeForInteractions));
 	cudaVerify(cudaMallocHost((void**)&p_host.depth, memorySizeForInteractions));
@@ -746,6 +831,10 @@ int init_allocate_memory(void)
 	//cudaVerify(cudaMalloc((void**)&p_device.tensorialCorrectiondWdrr, MAX_NUM_INTERACTIONS * maxNumberOfParticles * sizeof(double)));
 #endif
 
+#if SHEPARD_CORRECTION
+	cudaVerify(cudaMalloc((void**)&p_device.shepard_correction, memorySizeForParticles));
+#endif
+
 #if INTEGRATE_ENERGY
 	cudaVerify(cudaMallocHost((void**)&p_host.dedt, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&p_device.dedt, memorySizeForParticles));
@@ -767,6 +856,7 @@ int init_allocate_memory(void)
 #if NAVIER_STOKES
 	cudaVerify(cudaMallocHost((void**)&p_host.Tshear, memorySizeForStress));
 	cudaVerify(cudaMalloc((void**)&p_device.Tshear, memorySizeForStress));
+	cudaVerify(cudaMalloc((void**)&p_device.eta, memorySizeForParticles));
 #endif
 
 #if ARTIFICIAL_STRESS
@@ -804,6 +894,9 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&p_device.ddamage_porjutzidt, memorySizeForParticles));
 #endif
 #endif
+
+	cudaVerify(cudaMalloc((void**)&p_device.h0, memorySizeForParticles));
+	cudaVerify(cudaMallocHost((void**)&p_host.h0, memorySizeForParticles));
 
 #if GHOST_BOUNDARIES
 	cudaVerify(cudaMalloc((void**)&p_device.real_partner, memorySizeForInteractions));
@@ -870,11 +963,17 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&p_device.vy, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&p_device.dydt, memorySizeForParticles));
     cudaVerify(cudaMalloc((void**)&p_device.y0, memorySizeForTree));
+    cudaVerify(cudaMalloc((void**)&p_device.vy0, memorySizeForTree));
+    cudaVerify(cudaMallocHost((void**)&p_host.vy0, memorySizeForTree));
 #endif
 
     cudaVerify(cudaMalloc((void**)&p_device.x0, memorySizeForTree));
+    cudaVerify(cudaMalloc((void**)&p_device.vx0, memorySizeForTree));
+    cudaVerify(cudaMallocHost((void**)&p_host.vx0, memorySizeForTree));
 #if DIM > 2
     cudaVerify(cudaMalloc((void**)&p_device.z0, memorySizeForTree));
+    cudaVerify(cudaMalloc((void**)&p_device.vz0, memorySizeForTree));
+    cudaVerify(cudaMallocHost((void**)&p_host.vz0, memorySizeForTree));
 #endif
 
 
@@ -900,6 +999,9 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&p_device.dhdt, memorySizeForParticles));
 #endif
 
+#if SML_CORRECTION
+	cudaVerify(cudaMalloc((void**)&p_device.sml_omega, memorySizeForParticles));
+#endif
 
 	cudaVerify(cudaMalloc((void**)&p_device.rho, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&p_device.p, memorySizeForParticles));
@@ -908,7 +1010,18 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&p_device.depth, memorySizeForInteractions));
 	cudaVerify(cudaMalloc((void**)&p_device.noi, memorySizeForInteractions));
 	cudaVerify(cudaMalloc((void**)&p_device.materialId, memorySizeForInteractions));
+	cudaVerify(cudaMalloc((void**)&p_device.materialId0, memorySizeForInteractions));
 
+#if MORE_OUTPUT
+	cudaVerify(cudaMalloc((void**)&p_device.p_min, memorySizeForParticles));
+	cudaVerify(cudaMalloc((void**)&p_device.p_max, memorySizeForParticles));
+	cudaVerify(cudaMalloc((void**)&p_device.rho_min, memorySizeForParticles));
+	cudaVerify(cudaMalloc((void**)&p_device.rho_max, memorySizeForParticles));
+	cudaVerify(cudaMalloc((void**)&p_device.e_min, memorySizeForParticles));
+	cudaVerify(cudaMalloc((void**)&p_device.e_max, memorySizeForParticles));
+	cudaVerify(cudaMalloc((void**)&p_device.cs_min, memorySizeForParticles));
+	cudaVerify(cudaMalloc((void**)&p_device.cs_max, memorySizeForParticles));
+#endif
 
 	cudaVerify(cudaMalloc((void**)&interactions, memorySizeForInteractions*MAX_NUM_INTERACTIONS));
 	cudaVerify(cudaMalloc((void**)&childListd, memorySizeForChildren));
@@ -949,10 +1062,12 @@ int copy_particle_data_to_device()
 	cudaVerify(cudaMemcpy(p_device.x0, p_host.x, memorySizeForTree, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.x, p_host.x, memorySizeForTree, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.vx, p_host.vx, memorySizeForParticles, cudaMemcpyHostToDevice));
+	cudaVerify(cudaMemcpy(p_device.vx0, p_host.vx0, memorySizeForParticles, cudaMemcpyHostToDevice));
 #if DIM > 1
 	cudaVerify(cudaMemcpy(p_device.y0, p_host.y, memorySizeForTree, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.y, p_host.y, memorySizeForTree, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.vy, p_host.vy, memorySizeForParticles, cudaMemcpyHostToDevice));
+	cudaVerify(cudaMemcpy(p_device.vy0, p_host.vy0, memorySizeForParticles, cudaMemcpyHostToDevice));
 #endif
 #if DIM > 2
 	cudaVerify(cudaMemcpy(p_device.z0, p_host.z, memorySizeForTree, cudaMemcpyHostToDevice));
@@ -967,11 +1082,13 @@ int copy_particle_data_to_device()
 #  if DIM > 2
 	cudaVerify(cudaMemcpy(pointmass_device.z, pointmass_host.z, memorySizeForPointmasses, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(pointmass_device.vz, pointmass_host.vz, memorySizeForPointmasses, cudaMemcpyHostToDevice));
+	cudaVerify(cudaMemcpy(pointmass_device.vz0, pointmass_host.vz0, memorySizeForPointmasses, cudaMemcpyHostToDevice));
 #  endif
 # endif
 	cudaVerify(cudaMemcpy(pointmass_device.rmin, pointmass_host.rmin, memorySizeForPointmasses, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(pointmass_device.rmax, pointmass_host.rmax, memorySizeForPointmasses, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(pointmass_device.m, pointmass_host.m, memorySizeForPointmasses, cudaMemcpyHostToDevice));
+	cudaVerify(cudaMemcpy(pointmass_device.feels_particles, pointmass_host.feels_particles, integermemorySizeForPointmasses, cudaMemcpyHostToDevice));
 #endif
 
 	cudaVerify(cudaMemcpy(p_device.h, p_host.h, memorySizeForParticles, cudaMemcpyHostToDevice));
@@ -993,6 +1110,16 @@ int copy_particle_data_to_device()
 	cudaVerify(cudaMemcpy(p_device.p, p_host.p, memorySizeForParticles, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.pold, p_host.pold, memorySizeForParticles, cudaMemcpyHostToDevice));
 #endif
+#if MORE_OUTPUT
+    cudaVerify(cudaMemcpy(p_device.p_min, p_host.p_min, memorySizeForParticles, cudaMemcpyHostToDevice));
+    cudaVerify(cudaMemcpy(p_device.p_max, p_host.p_max, memorySizeForParticles, cudaMemcpyHostToDevice));
+    cudaVerify(cudaMemcpy(p_device.rho_min, p_host.rho_min, memorySizeForParticles, cudaMemcpyHostToDevice));
+    cudaVerify(cudaMemcpy(p_device.rho_max, p_host.rho_max, memorySizeForParticles, cudaMemcpyHostToDevice));
+    cudaVerify(cudaMemcpy(p_device.e_min, p_host.e_min, memorySizeForParticles, cudaMemcpyHostToDevice));
+    cudaVerify(cudaMemcpy(p_device.e_max, p_host.e_max, memorySizeForParticles, cudaMemcpyHostToDevice));
+    cudaVerify(cudaMemcpy(p_device.cs_min, p_host.cs_min, memorySizeForParticles, cudaMemcpyHostToDevice));
+    cudaVerify(cudaMemcpy(p_device.cs_max, p_host.cs_max, memorySizeForParticles, cudaMemcpyHostToDevice));
+#endif
 #if SIRONO_POROSITY
     cudaVerify(cudaMemcpy(p_device.compressive_strength, p_host.compressive_strength, memorySizeForParticles, cudaMemcpyHostToDevice));
     cudaVerify(cudaMemcpy(p_device.tensile_strength, p_host.tensile_strength, memorySizeForParticles, cudaMemcpyHostToDevice));
@@ -1008,6 +1135,7 @@ int copy_particle_data_to_device()
     cudaVerify(cudaMemcpy(p_device.alpha_epspor, p_host.alpha_epspor, memorySizeForParticles, cudaMemcpyHostToDevice));
     cudaVerify(cudaMemcpy(p_device.epsilon_v, p_host.epsilon_v, memorySizeForParticles, cudaMemcpyHostToDevice));
 #endif
+    cudaVerify(cudaMemcpy(p_device.h0, p_host.h0, memorySizeForParticles, cudaMemcpyHostToDevice));
 #if JC_PLASTICITY
 	cudaVerify(cudaMemcpy(p_device.ep, p_host.ep, memorySizeForParticles, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.T, p_host.T, memorySizeForParticles, cudaMemcpyHostToDevice));
@@ -1023,6 +1151,7 @@ int copy_particle_data_to_device()
 #endif
 	cudaVerify(cudaMemcpy(p_device.noi, p_host.noi, memorySizeForInteractions, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.materialId, p_host.materialId, memorySizeForInteractions, cudaMemcpyHostToDevice));
+	cudaVerify(cudaMemcpy(p_device.materialId0, p_host.materialId, memorySizeForInteractions, cudaMemcpyHostToDevice));
 #if DIM > 2
 	cudaVerify(cudaMemcpy(p_device.z, p_host.z, memorySizeForTree, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.vz, p_host.vz, memorySizeForParticles, cudaMemcpyHostToDevice));
@@ -1047,10 +1176,20 @@ int free_memory()
 	cudaVerify(cudaFree(p_device.x0));
 	cudaVerify(cudaFree(p_device.dxdt));
 	cudaVerify(cudaFree(p_device.vx));
+	cudaVerify(cudaFree(p_device.vx0));
+	cudaVerify(cudaFreeHost(p_host.vx0));
 	cudaVerify(cudaFree(p_device.ax));
 	cudaVerify(cudaFree(p_device.g_ax));
 	cudaVerify(cudaFree(p_device.m));
 
+#if DIM > 1
+	cudaVerify(cudaFree(p_device.vy0));
+	cudaVerify(cudaFreeHost(p_host.vy0));
+#if DIM > 2
+	cudaVerify(cudaFree(p_device.vz0));
+	cudaVerify(cudaFreeHost(p_host.vz0));
+#endif
+#endif
 #if DIM > 1
 	cudaVerify(cudaFree(p_device.y));
 	cudaVerify(cudaFree(p_device.g_y));
@@ -1065,17 +1204,21 @@ int free_memory()
 	cudaVerify(cudaFree(pointmass_device.x));
 	cudaVerify(cudaFree(pointmass_device.vx));
 	cudaVerify(cudaFree(pointmass_device.ax));
+	cudaVerify(cudaFree(pointmass_device.feedback_ax));
 # if DIM > 1
 	cudaVerify(cudaFree(pointmass_device.y));
 	cudaVerify(cudaFree(pointmass_device.vy));
 	cudaVerify(cudaFree(pointmass_device.ay));
+	cudaVerify(cudaFree(pointmass_device.feedback_ay));
 #  if DIM > 2
 	cudaVerify(cudaFree(pointmass_device.z));
 	cudaVerify(cudaFree(pointmass_device.vz));
 	cudaVerify(cudaFree(pointmass_device.az));
+	cudaVerify(cudaFree(pointmass_device.feedback_az));
 #  endif
 # endif
 	cudaVerify(cudaFree(pointmass_device.m));
+	cudaVerify(cudaFree(pointmass_device.feels_particles));
 	cudaVerify(cudaFree(pointmass_device.rmin));
 	cudaVerify(cudaFree(pointmass_device.rmax));
 
@@ -1093,6 +1236,7 @@ int free_memory()
 #  endif
 # endif
 	cudaVerify(cudaFreeHost(pointmass_host.m));
+	cudaVerify(cudaFreeHost(pointmass_host.feels_particles));
 	cudaVerify(cudaFreeHost(pointmass_host.rmin));
 	cudaVerify(cudaFreeHost(pointmass_host.rmax));
 #endif
@@ -1109,6 +1253,16 @@ int free_memory()
 	cudaVerify(cudaFree(p_device.e));
 	cudaVerify(cudaFree(p_device.cs));
 	cudaVerify(cudaFree(p_device.noi));
+#if MORE_OUTPUT
+	cudaVerify(cudaFree(p_device.p_min));
+    cudaVerify(cudaFree(p_device.p_max));
+    cudaVerify(cudaFree(p_device.rho_min));
+    cudaVerify(cudaFree(p_device.rho_max));
+	cudaVerify(cudaFree(p_device.e_min));
+    cudaVerify(cudaFree(p_device.e_max));
+    cudaVerify(cudaFree(p_device.cs_min));
+    cudaVerify(cudaFree(p_device.cs_max));
+#endif
 #if ARTIFICIAL_VISCOSITY
 	cudaVerify(cudaFree(p_device.muijmax));
 #endif
@@ -1119,6 +1273,7 @@ int free_memory()
 #endif
 	cudaVerify(cudaFree(interactions));
 	cudaVerify(cudaFree(p_device.materialId));
+	cudaVerify(cudaFree(p_device.materialId0));
 	cudaVerify(cudaFree(childListd));
 #if DIM > 2
 	cudaVerify(cudaFree(p_device.z));
@@ -1138,6 +1293,10 @@ int free_memory()
 	//cudaVerify(cudaFree(p_device.tensorialCorrectiondWdrr));
 #endif
 
+#if SHEPARD_CORRECTION
+	cudaVerify(cudaFree(p_device.shepard_correction));
+#endif
+
 #if INTEGRATE_ENERGY
 	cudaVerify(cudaFreeHost(p_host.dedt));
 	cudaVerify(cudaFree(p_device.dedt));
@@ -1149,10 +1308,14 @@ int free_memory()
 #if INTEGRATE_SML
 	cudaVerify(cudaFree(p_device.dhdt));
 #endif
+#if SML_CORRECTION
+	cudaVerify(cudaFree(p_device.sml_omega));
+#endif
 
 #if NAVIER_STOKES
 	cudaVerify(cudaFree(p_device.Tshear));
 	cudaVerify(cudaFreeHost(p_host.Tshear));
+	cudaVerify(cudaFree(p_device.eta));
 #endif
 #if SOLID
 	cudaVerify(cudaFree(p_device.S));
@@ -1254,6 +1417,16 @@ int free_memory()
 	cudaVerify(cudaFreeHost(p_host.depth));
 	cudaVerify(cudaFreeHost(p_host.materialId));
 	cudaVerify(cudaFreeHost(childList_host));
+#if MORE_OUTPUT
+	cudaVerify(cudaFreeHost(p_host.p_min));
+	cudaVerify(cudaFreeHost(p_host.p_max));
+	cudaVerify(cudaFreeHost(p_host.rho_min));
+	cudaVerify(cudaFreeHost(p_host.rho_max));
+	cudaVerify(cudaFreeHost(p_host.e_min));
+	cudaVerify(cudaFreeHost(p_host.e_max));
+	cudaVerify(cudaFreeHost(p_host.cs_min));
+	cudaVerify(cudaFreeHost(p_host.cs_max));
+#endif
 #if INVISCID_SPH
 	cudaVerify(cudaFreeHost(p_host.beta));
 	cudaVerify(cudaFreeHost(p_host.beta_old));
@@ -1302,6 +1475,4 @@ int free_memory()
     free_aneos_memory();
 
     return rc;
-
-
 }

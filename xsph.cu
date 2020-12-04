@@ -22,6 +22,7 @@
  */
 #include "xsph.h"
 #include "miluph.h"
+#include "config_parameter.h"
 #include "timeintegration.h"
 #include "parameter.h"
 #include "pressure.h"
@@ -34,14 +35,14 @@ extern __device__ SPH_kernel kernel;
 __global__ void calculateXSPHchanges(int *interactions)
 {
 
-    register int i, k, inc, j, numInteractions;
+    register int i, k, inc, j, numInteractions, e;
 
     double W;
+    double Wj;
     double dWdx[DIM];
     double dWdr;
     double dx[DIM];
     double hbar;
-    double densityi, densityj;
 
     double vx;
 #if DIM > 1
@@ -74,7 +75,6 @@ __global__ void calculateXSPHchanges(int *interactions)
         vz = p.vz[i];
 #endif
 #endif
-        densityi = p.rho[i];
         p.xsphvx[i] = 0.0;
 #if DIM > 1
         p.xsphvy[i] = 0.0;
@@ -95,7 +95,6 @@ __global__ void calculateXSPHchanges(int *interactions)
             hbar = 0.5*(p.h[i] + p.h[j]);
 #endif
 
-            densityj = p.rho[j];
             dx[0] = p.x[i] - p.x[j];
 #if DIM > 1
             dx[1] = p.y[i] - p.y[j];
@@ -103,7 +102,21 @@ __global__ void calculateXSPHchanges(int *interactions)
             dx[2] = p.z[i] - p.z[j];
 #endif
 #endif
+
+#if AVERAGE_KERNELS
+            kernel(&W, dWdx, &dWdr, dx, p.h[i]);
+            kernel(&Wj, dWdx, &dWdr, dx, p.h[j]);
+# if SHEPARD_CORRECTION
+            W /= p_rhs.shepard_correction[i];
+            Wj /= p_rhs.shepard_correction[j];
+# endif
+            W = 0.5 * (W + Wj);
+#else
             kernel(&W, dWdx, &dWdr, dx, hbar);
+# if SHEPARD_CORRECTION
+            W /= p_rhs.shepard_correction[i];
+# endif
+#endif
 
             dvx = vx - p.vx[j];
 #if DIM > 1
@@ -112,11 +125,11 @@ __global__ void calculateXSPHchanges(int *interactions)
             dvz = vz - p.vz[j];
 #endif
 #endif
-            p.xsphvx[i] -= p.m[j] / (0.5 * (densityi + densityj)) * W * dvx;
+            p.xsphvx[i] -= p.m[j] / (0.5 * (p.rho[i] + p.rho[j])) * W * dvx;
 #if DIM > 1
-            p.xsphvy[i] -= p.m[j] / (0.5 * (densityi + densityj)) * W * dvy;
+            p.xsphvy[i] -= p.m[j] / (0.5 * (p.rho[i] + p.rho[j])) * W * dvy;
 #if DIM == 3
-            p.xsphvz[i] -= p.m[j] / (0.5 * (densityi + densityj)) * W * dvz;
+            p.xsphvz[i] -= p.m[j] / (0.5 * (p.rho[i] + p.rho[j])) * W * dvz;
 #endif
 #endif
         } /* neighbours loop end */

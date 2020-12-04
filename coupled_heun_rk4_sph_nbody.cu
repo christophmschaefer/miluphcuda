@@ -2,7 +2,7 @@
  * @author      Christoph Schaefer cm.schaefer@gmail.com
  *
  * @section     LICENSE
- * Copyright (c) 2019 Christoph Schaefer
+ * Copyright (c) 2020 Christoph Schaefer
  *
  * This file is part of miluphcuda.
  *
@@ -23,9 +23,20 @@
 
 
 
-/* predictor corrector scheme with an initial euler step and the corrector step at half dt */
+/* coupled heun and rk4 integrator */
+// Heun is used for the SPH particles
+// RK4 for the NBODYs
+// following the idea from Daniel Thun in Append A of https://www.aanda.org/articles/aa/pdf/2018/08/aa32804-18.pdf
+// note: this integrator is designed to calculate the nbody orbit with high precision while keeping
+//       the hydro computational effort low (meaning with a higher timestep)
+// designed for circumbinary disks
 
-#include "predictor_corrector_euler.h"
+
+// authors: Evita Vavilina and cms
+
+
+
+#include "coupled_heun_rk4_sph_nbody.h"
 #include "config_parameter.h"
 #include "timeintegration.h"
 #include "parameter.h"
@@ -33,9 +44,9 @@
 #include "miluph.h"
 #include "pressure.h"
 #include "rhs.h"
+#include "gravity.h"
 #include "damage.h"
 #include <float.h>
-
 
 
 extern __device__ double endTimeD, currentTimeD;
@@ -58,31 +69,13 @@ extern __device__ double maxpressureDiff;
 extern double L_ini;
 
 
-__global__ void CorrectorStep_euler()
+__global__ void CorrectorStep_heun()
 {
     register int i;
 #if SOLID
     register int j;
     register int k;
 #endif
-#if GRAVITATING_POINT_MASSES
-    // pointmass loop
-    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
-        pointmass.x[i] = pointmass.x[i] + dt/2 * (predictor_pointmass.vx[i] + pointmass.vx[i]);
-#if DIM > 1
-        pointmass.y[i] = pointmass.y[i] + dt/2 * (predictor_pointmass.vy[i] + pointmass.vy[i]);
-        pointmass.vy[i] = pointmass.vy[i] + dt/2 * (predictor_pointmass.ay[i] + pointmass.ay[i]);
-        pointmass.ay[i] = 0.5*(predictor_pointmass.ay[i] + pointmass.ay[i]);
-#endif
-        pointmass.vx[i] = pointmass.vx[i] + dt/2 * (predictor_pointmass.ax[i] + pointmass.ax[i]);
-        pointmass.ax[i] = 0.5*(predictor_pointmass.ax[i] + pointmass.ax[i]);
-#if DIM == 3
-        pointmass.z[i] = pointmass.z[i] + dt/2 * (predictor_pointmass.vz[i] + pointmass.vz[i]);
-        pointmass.vz[i] = pointmass.vz[i] + dt/2 * (predictor_pointmass.az[i] + pointmass.az[i]);
-        pointmass.az[i] = 0.5*(predictor_pointmass.az[i] + pointmass.az[i]);
-#endif
-    }
-#endif // GRAVITATING_POINT_MASSES
 
     // particle loop
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
@@ -185,31 +178,13 @@ __global__ void CorrectorStep_euler()
     }
 }
 
-__global__ void PredictorStep_euler()
+__global__ void PredictorStep_heun()
 {
     register int i;
 #if SOLID
     register int j;
     register int k;
 #endif
-
-#if GRAVITATING_POINT_MASSES
-    // pointmass loop
-    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
-        predictor_pointmass.x[i] = pointmass.x[i] + dt * pointmass.vx[i];
-        predictor_pointmass.vx[i] = pointmass.vx[i] + dt * pointmass.ax[i];
-
-#if DIM > 1
-        predictor_pointmass.y[i] = pointmass.y[i] + dt * pointmass.vy[i];
-        predictor_pointmass.vy[i] = pointmass.vy[i] + dt * pointmass.ay[i];
-#endif
-#if DIM > 2
-        predictor_pointmass.z[i] = pointmass.z[i] + dt * pointmass.vz[i];
-        predictor_pointmass.vz[i] = pointmass.vz[i] + dt * pointmass.az[i];
-#endif
-    }
-#endif // GRAVITATING_POINT_MASSES
-
 
     // particle loop
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
@@ -294,7 +269,7 @@ __global__ void PredictorStep_euler()
 
 #if PALPHA_POROSITY
 /* check the pressure change to avoid large deviation from the crush-curve */
-__global__ void pressureChangeCheck_euler(double *maxpressureDiffPerBlock)
+__global__ void pressureChangeCheck_heun(double *maxpressureDiffPerBlock)
 {
     __shared__ double sharedMaxpressureDiff[NUM_THREADS_PC_INTEGRATOR];
     double localMaxpressureDiff = 0.0;
@@ -349,7 +324,7 @@ __global__ void pressureChangeCheck_euler(double *maxpressureDiffPerBlock)
 }
 #endif
 
-__global__ void setTimestep_euler(double *forcesPerBlock, double *courantPerBlock, double *dtSPerBlock, double *dtePerBlock, double *dtrhoPerBlock, double *dtdamagePerBlock, double *dtalphaPerBlock, double *dtartviscPerBlock, double *dtbetaPerBlock, double *dtalpha_epsporPerBlock, double *dtepsilon_vPerBlock)
+__global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock, double *dtSPerBlock, double *dtePerBlock, double *dtrhoPerBlock, double *dtdamagePerBlock, double *dtalphaPerBlock, double *dtartviscPerBlock, double *dtbetaPerBlock, double *dtalpha_epsporPerBlock, double *dtepsilon_vPerBlock)
 {
 
 #define SAFETY_FIRST 0.1
@@ -614,7 +589,27 @@ __global__ void setTimestep_euler(double *forcesPerBlock, double *courantPerBloc
 #endif
             dt = min(dt, endTimeD - currentTimeD);
             if (dt > dtmax) dt = dtmax;
-            printf("Time Step Information: dt(v and x): %.17e dtS: %.17e dte: %.17e dtrho: %.17e dtdamage: %.17e dtalpha: %.17e dtalpha_epspor: %.17e dtepsilon_v: %.17e\n", dtx, dtS, dte, dtrho, dtdamage, dtalpha, dtalpha_epspor, dtepsilon_v);
+            printf("Time Step Information: dt(v and x): %.17e ", dtx);
+#if INTEGRATE_DENSITY
+            printf("rho: %.17e ", dtrho);
+#endif
+#if INTEGRATE_ENERGY
+            printf("e: %.17e ", dte);
+#endif
+#if SOLID
+            printf("S: %.17e ", dtS);
+#endif
+#if FRAGMENTATION
+            printf("damage: %.17e ", dtdamage);
+#endif
+#if PALPHA_POROSITY
+            printf("distention: %.17e ", dtalpha);
+#endif
+#if EPSALPHA_POROSITY
+            printf("distention: %.17e ", dtalpha_epspor);
+            printf("epsilon: %.17e ", dtepsilon_v);
+#endif
+            printf("\n");
             printf("time: %.17e timestep set to %.17e, integrating until %.17e \n", currentTimeD, dt, endTimeD);
 #if !PALPHA_POROSITY
             currentTimeD += dt;
@@ -628,7 +623,7 @@ __global__ void setTimestep_euler(double *forcesPerBlock, double *courantPerBloc
 
 
 
-void predictor_corrector_euler()
+void heun_rk4()
 {
 
     double *courantPerBlock, *forcesPerBlock;
@@ -672,10 +667,18 @@ void predictor_corrector_euler()
     /* tell the gpu the current time */
     cudaVerify(cudaMemcpyToSymbol(currentTimeD, &currentTime, sizeof(double)));
     cudaVerify(cudaMemcpyToSymbol(predictor, &predictor_device, sizeof(struct Particle)));
+
+
+
 #if GRAVITATING_POINT_MASSES
-    allocate_pointmass_memory(&predictor_pointmass_device, allocate_immutables);
-    copy_pointmass_immutables_device_to_device(&predictor_pointmass_device, &pointmass_device);
-    cudaVerify(cudaMemcpyToSymbol(predictor_pointmass, &predictor_pointmass_device, sizeof(struct Pointmass)));
+    int rkstep;
+    int with_feedback;
+
+    // alloc mem for multiple rhs and copy immutables
+    for (rkstep = 0; rkstep < 4; rkstep++) {
+        allocate_pointmass_memory(&rk4_pointmass_device[rkstep], allocate_immutables);
+    }
+    cudaVerify(cudaMemcpyToSymbol(rk4_pointmass, &rk4_pointmass_device, sizeof(struct Pointmass) * 4));
 #endif
 
 
@@ -702,8 +705,8 @@ void predictor_corrector_euler()
             }
             if (param.verbose) {
                 fprintf(stdout, "Checking angular momentum conservation.\n");
-                fprintf(stdout, "Initial angular momentum: %.17e\n", L_ini);
-                fprintf(stdout, "Current angular momentum: %.17e\n", L_current);
+                fprintf(stdout, "Initial angular momentum of the particles: %.17e\n", L_ini);
+                fprintf(stdout, "Current angular momentum of the particles: %.17e\n", L_current);
                 fprintf(stdout, "Relative change: %.17e\n", L_change_relative);
             }
             if (L_change_relative > param.angular_momentum_check) {
@@ -720,29 +723,26 @@ void predictor_corrector_euler()
 			cudaVerify(cudaDeviceSynchronize());
 			// calculate first right hand side with p_device
 	        cudaVerify(cudaMemcpyToSymbol(p, &p_device, sizeof(struct Particle)));
-#if GRAVITATING_POINT_MASSES
-	        cudaVerify(cudaMemcpyToSymbol(pointmass, &pointmass_device, sizeof(struct Pointmass)));
-#endif
             cudaVerify(cudaDeviceSynchronize());
             cudaVerify(cudaMemcpyFromSymbol(&currentTime, currentTimeD, sizeof(double)));
             substep_currentTime = currentTime;
             cudaVerify(cudaMemcpyToSymbol(substep_currentTimeD, &substep_currentTime, sizeof(double)));
+#if GRAVITATING_POINT_MASSES
+	        cudaVerify(cudaMemcpyToSymbol(pointmass, &pointmass_device, sizeof(struct Pointmass)));
+#endif
             rightHandSide();
             cudaVerify(cudaDeviceSynchronize());
-            cudaVerifyKernel((setTimestep_euler<<<numberOfMultiprocessors, NUM_THREADS_LIMITTIMESTEP>>>(
+            cudaVerifyKernel((setTimestep_heun<<<numberOfMultiprocessors, NUM_THREADS_LIMITTIMESTEP>>>(
                               forcesPerBlock, courantPerBlock,
                               dtSPerBlock, dtePerBlock, dtrhoPerBlock, dtdamagePerBlock,
                               dtalphaPerBlock, dtartviscPerBlock, dtbetaPerBlock, dtalpha_epsporPerBlock, dtepsilon_vPerBlock)));
             cudaVerify(cudaDeviceSynchronize());
             /* get the time and the time step from the gpu */
             cudaVerify(cudaMemcpyFromSymbol(&dt_host, dt, sizeof(double)));
-            if (dt_host > param.maxtimestep) {
-                fprintf(stdout, "Recuding timestep from %e to -M maxtimestep %e\n", dt_host, param.maxtimestep);
-                dt_host = param.maxtimestep;
-                cudaVerify(cudaMemcpyToSymbol(dt, &dt_host, sizeof(double)));
-            }
-            substep_currentTime = currentTime + dt_host;
-
+#if GRAVITATING_POINT_MASSES
+            // calculate disk feedback if wanted
+            backreaction_from_disk_to_point_masses(TRUE);
+#endif
 			cudaVerify(cudaDeviceSynchronize());
             pressureChangeSmallEnough_host = FALSE;
             maxpressureDiff_cnt = 0;
@@ -750,12 +750,13 @@ void predictor_corrector_euler()
             maxpressureDiff_previous = 0;
             while (pressureChangeSmallEnough_host == FALSE) {
 	            // do the predictor step (writes to predictor)
-                printf("Predictor step with time step: %e at time: %e.\n", dt_host, currentTime);
+                printf("First step with time step: %e at time: %e.\n", dt_host, currentTime);
 	            cudaVerify(cudaMemcpyToSymbol(p, &p_device, sizeof(struct Particle)));
 #if GRAVITATING_POINT_MASSES
+                // fix this for rk4
 	            cudaVerify(cudaMemcpyToSymbol(pointmass, &pointmass_device, sizeof(struct Pointmass)));
 #endif
-    	        cudaVerifyKernel((PredictorStep_euler<<<numberOfMultiprocessors, NUM_THREADS_PC_INTEGRATOR>>>()));
+    	        cudaVerifyKernel((PredictorStep_heun<<<numberOfMultiprocessors, NUM_THREADS_PC_INTEGRATOR>>>()));
 			    cudaVerify(cudaDeviceSynchronize());
 
 
@@ -767,14 +768,11 @@ void predictor_corrector_euler()
                 /* check if the step was too large */
                 /* check the pressure at predictor step */
 		        cudaVerify(cudaMemcpyToSymbol(p, &predictor_device, sizeof(struct Particle)));
-#if GRAVITATING_POINT_MASSES
-	            cudaVerify(cudaMemcpyToSymbol(pointmass, &predictor_pointmass_device, sizeof(struct Pointmass)));
-#endif
 				cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
     			cudaVerify(cudaDeviceSynchronize());
 			    cudaVerify(cudaMemcpyFromSymbol(&dt_host, dt, sizeof(double)));
 				printf("before pressure change check: dt_host: %e\n", dt_host);
-				cudaVerifyKernel((pressureChangeCheck_euler<<<numberOfMultiprocessors, NUM_THREADS_PC_INTEGRATOR>>>(maxpressureDiffPerBlock)));
+				cudaVerifyKernel((pressureChangeCheck_heun<<<numberOfMultiprocessors, NUM_THREADS_PC_INTEGRATOR>>>(maxpressureDiffPerBlock)));
     			cudaVerify(cudaDeviceSynchronize());
                 cudaVerify(cudaMemcpyFromSymbol(&pressureChangeSmallEnough_host, pressureChangeSmallEnough, sizeof(int)));
                 cudaVerify(cudaMemcpyFromSymbol(&maxpressureDiff_host, maxpressureDiff, sizeof(double)));
@@ -803,8 +801,14 @@ void predictor_corrector_euler()
 				}
                 if (pressureChangeSmallEnough_host == TRUE) {
                     /* okay, step seems good, let's do the corrector step */
+                    substep_currentTime = currentTime + dt_host;
 					currentTime += dt_host;
-					printf("Timestep okay, doing corrector step.\n");
+					printf("Timestep okay, continuing with NBODY integration rk4.\n");
+                        // -> rk4 integration with back reaction if wanted
+#if GRAVITATING_POINT_MASSES
+	                cudaVerify(cudaMemcpyToSymbol(pointmass, &pointmass_device, sizeof(struct Pointmass)));
+                    rk4_nbodies();
+#endif
 					cudaVerify(cudaMemcpyToSymbol(currentTimeD, &currentTime, sizeof(double)));
     	            if (param.selfgravity) {
         	            copy_gravitational_accels_device_to_device(&predictor_device, &p_device);
@@ -813,7 +817,7 @@ void predictor_corrector_euler()
                     /* now righthandside with predictor variables */
 		            cudaVerify(cudaMemcpyToSymbol(p, &predictor_device, sizeof(struct Particle)));
 #if GRAVITATING_POINT_MASSES
-	                cudaVerify(cudaMemcpyToSymbol(pointmass, &predictor_pointmass_device, sizeof(struct Pointmass)));
+	                cudaVerify(cudaMemcpyToSymbol(pointmass, &pointmass_device, sizeof(struct Pointmass)));
 #endif
 				    rightHandSide();
                     /* now the corrector step  with the original values of p_device and the derivatives of p_device and predictor_device */
@@ -821,7 +825,7 @@ void predictor_corrector_euler()
 #if GRAVITATING_POINT_MASSES
 	                cudaVerify(cudaMemcpyToSymbol(pointmass, &pointmass_device, sizeof(struct Pointmass)));
 #endif
-    	            cudaVerifyKernel((CorrectorStep_euler<<<numberOfMultiprocessors, NUM_THREADS_PC_INTEGRATOR>>>()));
+    	            cudaVerifyKernel((CorrectorStep_heun<<<numberOfMultiprocessors, NUM_THREADS_PC_INTEGRATOR>>>()));
 		    //step was successful --> do something (e.g. look for min/max pressure...)
                     afterIntegrationStep();
 
@@ -841,6 +845,12 @@ void predictor_corrector_euler()
 	// free memory
 
     int free_immutables = 1;
+#if GRAVITATING_POINT_MASSES
+    for (rkstep = 0; rkstep < 4; rkstep++) {
+        free_pointmass_memory(&rk4_pointmass_device[rkstep], free_immutables);
+        }
+#endif
+
     free_particles_memory(&predictor_device, free_immutables);
 #if GRAVITATING_POINT_MASSES
     free_pointmass_memory(&predictor_pointmass_device, free_immutables);

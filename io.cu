@@ -24,8 +24,10 @@
 
 #include "io.h"
 #include "timeintegration.h"
+#include "config_parameter.h"
 #include "pressure.h"
 #include <libconfig.h>
+#include <float.h>
 #include "aneos.h"
 
 
@@ -51,6 +53,7 @@ extern double epsilon_vmin;
 
 File inputFile;
 
+
 /*! \brief
   Reading the material properties using libconfig.
   \param pointer to config file
@@ -59,7 +62,6 @@ File inputFile;
 void loadConfigFromFile(char *configFile)
 {
     config_init(&param.config);
-
 
     if (!config_read_file(&param.config, configFile)) {
         fprintf(stderr, "Error reading config file %s.\n", configFile);
@@ -79,10 +81,8 @@ void set_integration_parameters()
     const char s[] = " = ";
     int found = FALSE;
 
-    f = fopen(fn,"r");
 
-
-    if (f == NULL){
+    if ( (f = fopen(fn,"r")) == NULL) {
         if (param.integrator_type == MONAGHAN_PC || param.integrator_type == EULER_PC) {
             fprintf(stderr, "Can't open file %s!\n", fn);
             exit(1);
@@ -156,17 +156,11 @@ void set_integration_parameters()
 
 
 
-
-
-
-
 /* set some initial values */
 void init_values(void)
 {
-
     int i;
     int matId;
-
 
     if (param.verbose) {
         printf("initialising material constants and copying them to the gpu\n");
@@ -175,26 +169,52 @@ void init_values(void)
 
     for (i = 0; i < numberOfParticles; i++) {
         matId = p_host.materialId[i];
+
+#if MORE_OUTPUT
+
+#if PALPHA_POROSITY
+	p_host.p_max[i] = p_host.p[i];
+	p_host.p_min[i] = p_host.p[i];
+#else
+	p_host.p_max[i] = -DBL_MAX;
+	p_host.p_min[i] = DBL_MAX;
+#endif
+#if INTEGRATE_DENSITY
+	p_host.rho_max[i] = p_host.rho[i];
+	p_host.rho_min[i] = p_host.rho[i];
+#else
+	p_host.rho_max[i] = -DBL_MAX;
+	p_host.rho_min[i] = DBL_MAX;
+#endif
+
+	p_host.e_max[i] = p_host.e[i];
+	p_host.e_min[i] = p_host.e[i];
+
+	p_host.cs_max[i] = -DBL_MAX;
+	p_host.cs_min[i] = DBL_MAX;
+
+#endif
+
 #if PALPHA_POROSITY
         p_host.cs[i] = cs_porous[matId];
 #else
         p_host.cs[i] = sqrt(bulk_modulus[matId]/till_rho_0[matId]);
 #endif
+
 #if !READ_INITIAL_SML_FROM_PARTICLE_FILE
         if (!(p_host.h[i] > 0)) {
             p_host.h[i] = sml[matId];
         }
 #endif
+        p_host.h0[i] = p_host.h[i];
     }
-
-
-
-
 }
 
-// read in particle from start file
-void read_particles_from_file(File inputFile) {
 
+
+// read in particles from start file
+void read_particles_from_file(File inputFile)
+{
     int my_anop;
     int i;
     int d;
@@ -202,7 +222,6 @@ void read_particles_from_file(File inputFile) {
 #if SOLID || NAVIER_STOKES
     int e;
 #endif
-    /*int rc = 1;*/
     char h5filename[256];
     char h5massfilename[256];
     char massfilename[256];
@@ -211,56 +230,54 @@ void read_particles_from_file(File inputFile) {
     double *x;
     int *ix;
 
-
 #if HDF5IO
-    /* hdf5 related stuff */
     hid_t file_id;
     hid_t x_id, v_id, m_id, mtype_id;
-#if INTEGRATE_DENSITY
+# if INTEGRATE_DENSITY
     hid_t rho_id;
-#endif
-#if INTEGRATE_ENERGY
+# endif
+# if INTEGRATE_ENERGY
     hid_t e_id;
-#endif
+# endif
     hid_t time_id;
-#if VARIABLE_SML || READ_INITIAL_SML_FROM_PARTICLE_FILE
+# if VARIABLE_SML || READ_INITIAL_SML_FROM_PARTICLE_FILE
     hid_t sml_id;
-#endif
+# endif
     hid_t dspace;
-
-#if FRAGMENTATION
+# if FRAGMENTATION
     hid_t noaf_id, damage_id;
     hid_t activation_thresholds_id;
     hid_t maxnof_id;
     int nofi;
     int maxnof;
     double *ax;
-#endif
-#if GRAVITATING_POINT_MASSES
+# endif
+# if GRAVITATING_POINT_MASSES
     hid_t rmin_id;
     hid_t rmax_id;
-#endif
-#if JC_PLASTICITY
+    hid_t flag_id;
+# endif
+# if JC_PLASTICITY
     hid_t ep_id, T_id;
-#endif
-#if SOLID
+# endif
+# if SOLID
     hid_t S_id;
-#endif
-#if NAVIER_STOKES
+# endif
+# if NAVIER_STOKES
     hid_t Tshear_id;
-#endif
+# endif
 
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
     hid_t p_id;
     hid_t alpha_id;
-#if SOLID
-#if FRAGMENTATION
+# if SOLID
+# if FRAGMENTATION
     hid_t damage_porjutzi_id;
-#endif
-#endif
-#endif
+# endif
+# endif
+# endif
 
-#if SIRONO_POROSITY
+# if SIRONO_POROSITY
     hid_t K_id;
     hid_t rho_0prime_id;
     hid_t rho_c_plus_id;
@@ -270,12 +287,12 @@ void read_particles_from_file(File inputFile) {
     hid_t flag_rho_0prime_id;
     hid_t flag_plastic_id;
     hid_t shear_strength_id;
-#endif
+# endif
 
-#if EPSALPHA_POROSITY
+# if EPSALPHA_POROSITY
     hid_t alpha_epspor_id;
     hid_t epsilon_v_id;
-#endif
+# endif
 
     herr_t status;
 
@@ -286,7 +303,7 @@ void read_particles_from_file(File inputFile) {
     strcpy(h5massfilename, inputFile.name);
     strcat(h5filename, ".h5");
     strcat(h5massfilename, ".mass.h5");
-#endif
+#endif // HDF5IO
 
     // set start timestep from input filename
     const char* ext;
@@ -300,14 +317,13 @@ void read_particles_from_file(File inputFile) {
     }
 
 
-
+    // here starts hdf5 file reading ...
 #if HDF5IO
     if (param.hdf5input) {
         printf("reading particle data from hdf5 file: %s.h5\n", inputFile.name);
-#if GRAVITATING_POINT_MASSES
+# if GRAVITATING_POINT_MASSES
         printf("reading pointmass data from hdf5 file: %s.mass.h5\n", inputFile.name);
-#endif
-
+# endif
         file_id = H5Fopen (h5filename, H5F_ACC_RDONLY, H5P_DEFAULT);
         if (file_id < 0) {
             fprintf(stderr, "********************** Error opening file %s\n", h5filename);
@@ -340,12 +356,12 @@ void read_particles_from_file(File inputFile) {
         status = H5Dclose(x_id);
         for (i = 0, d = 0; i < my_anop; i++, d += DIM) {
             p_host.x[i] = x[d];
-#if DIM > 1
+# if DIM > 1
             p_host.y[i] = x[d+1];
-#if DIM == 3
+# if DIM == 3
             p_host.z[i] = x[d+2];
-#endif
-#endif
+# endif
+# endif
         }
 
         /* read velocities */
@@ -358,12 +374,32 @@ void read_particles_from_file(File inputFile) {
         status = H5Dclose(v_id);
         for (i = 0, d = 0; i < my_anop; i++, d += DIM) {
             p_host.vx[i] = x[d];
-#if DIM > 1
+# if DIM > 1
             p_host.vy[i] = x[d+1];
-#if DIM == 3
+# if DIM == 3
             p_host.vz[i] = x[d+2];
-#endif
-#endif
+# endif
+# endif
+        }
+
+        /* read accreted velocities */
+        v_id = H5Dopen(file_id, "/v_accreted", H5P_DEFAULT);
+        if (v_id < 0) {
+            fprintf(stdout, "Could not find accreted velocities in hdf5 file.\n");
+        }
+        else {
+            fprintf(stdout, "Found velocities of accreted particles and reading them.\n");
+            status = H5Dread(v_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+            status = H5Dclose(v_id);
+            for (i = 0, d = 0; i < my_anop; i++, d += DIM) {
+                p_host.vx0[i] = x[d];
+# if DIM > 1
+                p_host.vy0[i] = x[d+1];
+# if DIM == 3
+                p_host.vz0[i] = x[d+2];
+# endif
+# endif
+            }
         }
         free(x);
 
@@ -397,8 +433,7 @@ void read_particles_from_file(File inputFile) {
         }
         free(x);
 
-
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
         /* read alpha_jutzi */
         dims[0] = my_anop;
         dims[1] = 1;
@@ -433,7 +468,7 @@ void read_particles_from_file(File inputFile) {
         }
         free(x);
 
-#if FRAGMENTATION
+# if FRAGMENTATION
         /* damage_porjutzi */
         damage_porjutzi_id = H5Dopen(file_id, "/DIM_root_of_damage_porjutzi", H5P_DEFAULT);
         if (damage_porjutzi_id < 0) {
@@ -448,10 +483,10 @@ void read_particles_from_file(File inputFile) {
             p_host.damage_porjutzi[i] = x[i];
         }
         free(x);
-#endif
-#endif
+# endif
+# endif
 
-#if SIRONO_POROSITY
+# if SIRONO_POROSITY
         /* read rho_c_plus */
         rho_c_plus_id = H5Dopen(file_id, "/rho_c_plus", H5P_DEFAULT);
         if (rho_c_plus_id < 0) {
@@ -599,9 +634,9 @@ void read_particles_from_file(File inputFile) {
             p_host.flag_plastic[i] = ix[i];
         }
         free(ix);
-#endif
+# endif
 
-#if EPSALPHA_POROSITY
+# if EPSALPHA_POROSITY
         /* read alpha_epspor */
         alpha_epspor_id = H5Dopen(file_id, "/alpha_epspor", H5P_DEFAULT);
         if (alpha_epspor_id < 0) {
@@ -631,9 +666,9 @@ void read_particles_from_file(File inputFile) {
         }
         free(x);
 
-#endif
+# endif
 
-#if VARIABLE_SML || READ_INITIAL_SML_FROM_PARTICLE_FILE
+# if VARIABLE_SML || READ_INITIAL_SML_FROM_PARTICLE_FILE
         /* read sml */
         sml_id =  H5Dopen(file_id, "/sml", H5P_DEFAULT);
         if (sml_id < 0) {
@@ -648,10 +683,26 @@ void read_particles_from_file(File inputFile) {
             p_host.h[i] = x[i];
         }
         free(x);
-#endif
+# endif
 
+# if READ_INITIAL_SML_FROM_PARTICLE_FILE
+        /* read sml0 */
+        sml_id =  H5Dopen(file_id, "/sml_initial", H5P_DEFAULT);
+        if (sml_id < 0) {
+            fprintf(stderr, "Could not find initial smoothing length information in hdf5 file.  Exiting\n");
+            exit(1);
+        }
+        x = (double * ) malloc(sizeof(double) * my_anop);
+        status = H5Dread(sml_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(sml_id);
 
-#if INTEGRATE_DENSITY
+        for (i = 0; i < my_anop; i++) {
+            p_host.h0[i] = x[i];
+        }
+        free(x);
+# endif
+
+# if INTEGRATE_DENSITY
         /* density */
         rho_id = H5Dopen(file_id, "/rho", H5P_DEFAULT);
         if (rho_id < 0) {
@@ -666,9 +717,9 @@ void read_particles_from_file(File inputFile) {
             p_host.rho[i] = x[i];
         }
         free(x);
-#endif
+# endif
 
-#if INTEGRATE_ENERGY
+# if INTEGRATE_ENERGY
         /* internal energy */
         e_id = H5Dopen(file_id, "/e", H5P_DEFAULT);
         if (e_id < 0) {
@@ -683,8 +734,7 @@ void read_particles_from_file(File inputFile) {
             p_host.e[i] = x[i];
         }
         free(x);
-#endif
-
+# endif
 
         /* material types */
         mtype_id = H5Dopen(file_id, "/material_type", H5P_DEFAULT);
@@ -705,7 +755,7 @@ void read_particles_from_file(File inputFile) {
         }
         free(ix);
 
-#if JC_PLASTICITY
+# if JC_PLASTICITY
         /* plastic strain */
         ep_id = H5Dopen(file_id, "/ep", H5P_DEFAULT);
         if (ep_id < 0) {
@@ -735,10 +785,9 @@ void read_particles_from_file(File inputFile) {
             p_host.T[i] = x[i];
         }
         free(x);
-#endif
+# endif
 
-
-#if FRAGMENTATION
+# if FRAGMENTATION
         /* number of activated flaws */
         noaf_id = H5Dopen(file_id, "/number_of_activated_flaws", H5P_DEFAULT);
         if (noaf_id < 0) {
@@ -769,7 +818,6 @@ void read_particles_from_file(File inputFile) {
         }
         free(x);
 
-
         /* now the activation thresholds */
         /* read max number of activation threshold */
         maxnof_id = H5Dopen(file_id, "/maximum_number_of_flaws", H5P_DEFAULT);
@@ -779,9 +827,7 @@ void read_particles_from_file(File inputFile) {
         }
         status = H5Dread(maxnof_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, &maxnof);
         status = H5Dclose(maxnof_id);
-
         fprintf(stdout, "Maximum number of activation thresholds for a particle in the data is %d\n", maxnof);
-
 
         /* now read the activation thresholds */
         dims[0] = my_anop;
@@ -814,9 +860,9 @@ void read_particles_from_file(File inputFile) {
         }
         free(ax);
         free(x);
-#endif
+# endif
 
-#if NAVIER_STOKES
+# if NAVIER_STOKES
         /* deviatoric stresses */
         x = (double *) malloc(sizeof(double) * my_anop * DIM * DIM);
         dims[0] = my_anop;
@@ -837,9 +883,9 @@ void read_particles_from_file(File inputFile) {
             }
         }
         free(x);
-#endif
+# endif
 
-#if SOLID
+# if SOLID
         /* deviatoric stresses */
         x = (double *) malloc(sizeof(double) * my_anop * DIM * DIM);
         dims[0] = my_anop;
@@ -860,11 +906,11 @@ void read_particles_from_file(File inputFile) {
             }
         }
         free(x);
-#endif
+# endif
 
         H5Fclose(file_id);
 
-#if GRAVITATING_POINT_MASSES
+# if GRAVITATING_POINT_MASSES
         file_id = H5Fopen (h5massfilename, H5F_ACC_RDONLY, H5P_DEFAULT);
         if (file_id < 0) {
             fprintf(stderr, "********************** Error opening file %s\n", h5massfilename);
@@ -897,12 +943,12 @@ void read_particles_from_file(File inputFile) {
         status = H5Dclose(x_id);
         for (i = 0, d = 0; i < my_anop; i++, d += DIM) {
             pointmass_host.x[i] = x[d];
-#if DIM > 1
+# if DIM > 1
             pointmass_host.y[i] = x[d+1];
-#if DIM == 3
+# if DIM == 3
             pointmass_host.z[i] = x[d+2];
-#endif
-#endif
+# endif
+# endif
         }
 
         /* read velocities */
@@ -915,12 +961,12 @@ void read_particles_from_file(File inputFile) {
         status = H5Dclose(v_id);
         for (i = 0, d = 0; i < my_anop; i++, d += DIM) {
             pointmass_host.vx[i] = x[d];
-#if DIM > 1
+# if DIM > 1
             pointmass_host.vy[i] = x[d+1];
-#if DIM == 3
+# if DIM == 3
             pointmass_host.vz[i] = x[d+2];
-#endif
-#endif
+# endif
+# endif
         }
 
         /* read mass */
@@ -966,24 +1012,41 @@ void read_particles_from_file(File inputFile) {
         }
 
         free(x);
-        H5Fclose(file_id);
-#endif
 
+
+        // read feels_particles flag
+        ix = (int *) malloc(sizeof(int) * my_anop);
+        flag_id = H5Dopen(file_id, "/feels_particles", H5P_DEFAULT);
+        if (flag_id < 0) {
+            fprintf(stderr, "Could not find feels_particles flag information in hdf5 file.  Exiting\n");
+            exit(1);
+        }
+        status = H5Dread(flag_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, ix);
+        status = H5Dclose(flag_id);
+
+        for (i = 0; i < my_anop; i++) {
+            pointmass_host.feels_particles[i] = ix[i];
+        }
+
+        free(ix);
+        H5Fclose(file_id);
+# endif
 
         if (param.verbose) {
             fprintf(stdout, "%d\n", status);
         }
 
     }
+#endif // HDF5IO
 
-#endif
 
+    // here starts ascii file reading ...
 #if FRAGMENTATION
     maxNumFlaws_host = MAX_NUM_FLAWS;
 #endif
     int columns;
+    int pcnt = 0;
     char iotmp[256];
-
 
     if (!param.hdf5input) {
         for (i = 0; i < numberOfParticles; i++) {
@@ -1043,12 +1106,13 @@ void read_particles_from_file(File inputFile) {
             columns++;
 #endif
 
-
 #if READ_INITIAL_SML_FROM_PARTICLE_FILE
             // read in smoothing length
             if (!fscanf(inputFile.data, "%s", &iotmp))
                 fprintf(stderr, "could not read smoothing length from input file\n");
             p_host.h[i] = atof(iotmp);
+            // remember the input value
+            p_host.h0[i] = p_host.h[i];
             columns++;
 #else
             if (param.restart) {
@@ -1106,11 +1170,10 @@ void read_particles_from_file(File inputFile) {
             if (param.restart) {
                 // dummy read in of pressure
                 fscanf(inputFile.data, "%s", &iotmp);
-
             }
 
 #if SOLID
-            // read in stress tensor
+            // read in deviator stress tensor
             int j, k;
             for (j = 0; j < DIM; j++) {
                 for (k = 0; k < DIM; k++) {
@@ -1190,6 +1253,7 @@ void read_particles_from_file(File inputFile) {
             p_host.pold[i] = atof(iotmp);
             columns++;
 #endif
+
 #if EPSALPHA_POROSITY
             // read in alpha_epspor
             if (!fscanf(inputFile.data, "%s", &iotmp))
@@ -1202,6 +1266,7 @@ void read_particles_from_file(File inputFile) {
             p_host.epsilon_v[i] = atof(iotmp);
             columns++;
 #endif
+
 #if FRAGMENTATION
             int d;
             for (d = 0; d < p_host.numFlaws[i]; d++) {
@@ -1211,19 +1276,46 @@ void read_particles_from_file(File inputFile) {
                 columns++;
             }
 #endif
-//	    fprintf(stderr,"i= %d xyz= %e %e %e\n",i,p_host.x[i],p_host.y[i],p_host.z[i]);
-        }
-        // here we check if we reached the end of the line or the file
-        c = fgetc(inputFile.data);
-        if (c != '\n' && c != EOF && c != '\t') {
-            fprintf(stderr, "Error in input file formation. Read %d columns and did not reach end of line.\n", columns);
-            fprintf(stderr, "c=%c. i=%d.\n", c, c);
-            exit(1);
+
+            // check for end of line
+            char ch;
+            char ch2;
+            fscanf(inputFile.data, "%c", &ch);
+            if (ch == '\n') {
+#if DEBUG
+# if DIM == 1
+    	        fprintf(stdout, "Reading coordinates for particle no. %d (x) = %e \n", i+1, p_host.x[i]);
+# endif
+# if DIM == 2
+	            fprintf(stdout, "Reading coordinates for particle no. %d (x,y) = %e %e\n", i+1, p_host.x[i], p_host.y[i]);
+# endif
+# if DIM == 3
+	            fprintf(stdout, "Reading coordinates for particle no. %d (x,y,z) = %e %e %e\n", i+1, p_host.x[i], p_host.y[i], p_host.z[i]);
+# endif
+#endif
+            } else if (ch == '\t') {
+                fscanf(inputFile.data, "%c", &ch2);
+                if (ch2 == '\n') {
+                    fprintf(stdout, "Warning. Line ending with \\t\\n, expected only a \\n.");
+#if DIM == 1
+                    fprintf(stdout, "Reading coordinates for particle no. %d (x) = %e \n", i+1, p_host.x[i]);
+#endif
+#if DIM == 2
+                    fprintf(stdout, "Reading coordinates for particle no. %d (x,y) = %e %e\n", i+1, p_host.x[i], p_host.y[i]);
+#endif
+#if DIM == 3
+                    fprintf(stdout, "Reading coordinates for particle no. %d (x,y,z) = %e %e %e\n", i+1, p_host.x[i], p_host.y[i], p_host.z[i]);
+#endif
+                } else {
+                    fprintf(stderr, "End of line not reached. Check your input file.\n");
+                    exit(1);
+                }
+            }
         }
 
 #if GRAVITATING_POINT_MASSES
         if ((massfile = fopen(massfilename, "r")) == NULL) {
-        fprintf(stderr, "Wtf? File %s not found.\n", massfilename);
+        fprintf(stderr, "Error: File %s not found.\n", massfilename);
             exit(1);
         }
 
@@ -1278,6 +1370,16 @@ void read_particles_from_file(File inputFile) {
                 fprintf(stderr, "could not read rmax from input file\n");
             pointmass_host.rmax[i] = atof(iotmp);
             columns++;
+            // read in feels_particles flag
+            if (!fscanf(massfile, "%s", &iotmp)) {
+                fprintf(stderr, "could not read feels_particles flag from input file\n");
+                fprintf(stderr, "using the default value of zero\n");
+                pointmass_host.feels_particles[i] = 0;
+            } else {
+                pointmass_host.feels_particles[i] = atoi(iotmp);
+            }
+            printf("Mass no %d feels particles (no 0/ yes 1) %d\n", i, pointmass_host.feels_particles[i]);
+            columns++;
         }
 
         c = fgetc(massfile);
@@ -1289,8 +1391,6 @@ void read_particles_from_file(File inputFile) {
         fclose(massfile);
 #endif // GRAVITATING_POINT_MASSES
     } /* ! param.hdf5input */
-
-
 }
 
 void write_particles_to_file(File file) {
@@ -1306,13 +1406,26 @@ void write_particles_to_file(File file) {
     int d;
     FILE *infofile;
     FILE *massfile;
+    FILE *conservedquantitiesfile;
+    FILE *binarysystemfile;
+    int numberOfParticlesToIgnore;
     double totalp, totalmass, totalkineticenergy, totalinnerenergy;
-    double totalangularmomentum[DIM], totalL;
-    double totalpx, totalpy, v;
-#if DIM == 3
-    double totalpz = 0;
+#if GRAVITATING_POINT_MASSES
+    double binaryangularmomentum[DIM], diskangularmomentum[DIM], diskmass, totalDL, totalBL;
+    diskmass = totalDL = totalBL = 0.0;
+    for (d=0; d<DIM; d++) {
+        diskangularmomentum[d] = binaryangularmomentum[d] = 0.0;
+    }
 #endif
-    totalp = totalmass = totalkineticenergy = totalinnerenergy = totalpx = totalpy = 0.0;
+#if OUTPUT_GRAV_ENERGY
+    double totalgravenergy = 0.0;
+    double dist;
+#endif
+    double totalangularmomentum[DIM], totalL;
+    double totalpx, totalpy, totalpz, v;
+    double barycenter_pos[DIM], barycenter_vel[DIM];
+
+    totalp = totalmass = totalkineticenergy = totalinnerenergy = 0.0;
 
     strcpy(h5filename, file.name);
     strcat(h5filename, ".h5");
@@ -1332,11 +1445,14 @@ void write_particles_to_file(File file) {
 #if MORE_ANEOS_OUTPUT
     hid_t aneos_T_id, aneos_cs_id, aneos_entropy_id, aneos_phase_flag_id;
 #endif
+#if MORE_OUTPUT
+    hid_t p_min_id, p_max_id, rho_min_id, rho_max_id, e_min_id, e_max_id, cs_min_id, cs_max_id;
+#endif
     hid_t time_id;
     hid_t cs_id;
     hid_t depth_id;
 #if GRAVITATING_POINT_MASSES
-    hid_t rmin_id, rmax_id;
+    hid_t rmin_id, rmax_id, flag_id;
 #endif
 #if FRAGMENTATION
     hid_t noaf_id, damage_id;
@@ -1395,8 +1511,6 @@ void write_particles_to_file(File file) {
     hsize_t dims[2];
     hid_t dataspace_id;
 #endif // HDF5IO
-
-    totalp = totalmass = totalkineticenergy = totalinnerenergy;
 
     if (! (param.hdf5output || param.ascii_output)) {
         fprintf(stderr, "Neither HDF5 nor ASCII output wanted. That's not what you want. Re-enabling ASCII output.\n");
@@ -1493,39 +1607,82 @@ void write_particles_to_file(File file) {
     } /* ascii_output == TRUE */
 
 
-    /* energy and momentum */
-    totalL = 0;
-    for (d = 0; d < DIM; d++) {
+    /* compute kin. energy, inner energy, lin. momentum, and ang. momentum (of all SPH particles that have not EOS_TYPE_IGNORE + all gravitating point masses) */
+    totalpx = totalpy = totalpz = totalL = 0.0;
+    for (d=0; d<DIM; d++) {
         totalangularmomentum[d] = 0.0;
     }
-    for (i = 0; i < numberOfParticles; i++) {
-        v = 0;
-        v = p_host.vx[i] * p_host.vx[i];
-        totalpx += p_host.vx[i] * p_host.m[i];
+    numberOfParticlesToIgnore=0;    // number of particles with EOS_TYPE_IGNORE
+    for (i=0; i<numberOfParticles; i++) {
+        if( p_host.materialId[i] == EOS_TYPE_IGNORE ) {
+            numberOfParticlesToIgnore++;
+        }
+        else {  // process only SPH particles that have not EOS_TYPE_IGNORE
+            v = p_host.vx[i] * p_host.vx[i];
+            totalpx += p_host.vx[i] * p_host.m[i];
 #if DIM > 1
-        v += p_host.vy[i] * p_host.vy[i];
-        totalpy += p_host.vy[i] * p_host.m[i];
+            v += p_host.vy[i] * p_host.vy[i];
+            totalpy += p_host.vy[i] * p_host.m[i];
 #if DIM == 3
-        v += p_host.vz[i] * p_host.vz[i];
-        totalpz += p_host.vz[i] * p_host.m[i];
+            v += p_host.vz[i] * p_host.vz[i];
+            totalpz += p_host.vz[i] * p_host.m[i];
 #endif
 #endif
-        totalmass += p_host.m[i];
-        totalkineticenergy += p_host.m[i] * v;
+            totalmass += p_host.m[i];
+            totalkineticenergy += p_host.m[i] * v;
 #if INTEGRATE_ENERGY
-        totalinnerenergy += p_host.m[i] * p_host.e[i];
+            totalinnerenergy += p_host.m[i] * p_host.e[i];
 #endif
-
 #if DIM == 2
-        totalangularmomentum[0] += p_host.m[i] * (p_host.x[i]*p_host.vy[i] - p_host.y[i]*p_host.vx[i]);
+            totalangularmomentum[0] += p_host.m[i] * (p_host.x[i]*p_host.vy[i] - p_host.y[i]*p_host.vx[i]);
 #elif DIM > 2
-        totalangularmomentum[0] += p_host.m[i] * (p_host.y[i]*p_host.vz[i] - p_host.z[i]*p_host.vy[i]);
-        totalangularmomentum[1] += p_host.m[i] * (p_host.z[i]*p_host.vx[i] - p_host.x[i]*p_host.vz[i]);
-        totalangularmomentum[2] += p_host.m[i] * (p_host.x[i]*p_host.vy[i] - p_host.y[i]*p_host.vx[i]);
+            totalangularmomentum[0] += p_host.m[i] * (p_host.y[i]*p_host.vz[i] - p_host.z[i]*p_host.vy[i]);
+            totalangularmomentum[1] += p_host.m[i] * (p_host.z[i]*p_host.vx[i] - p_host.x[i]*p_host.vz[i]);
+            totalangularmomentum[2] += p_host.m[i] * (p_host.x[i]*p_host.vy[i] - p_host.y[i]*p_host.vx[i]);
 #endif
-
+        }
     }
-
+#if GRAVITATING_POINT_MASSES
+    diskmass += totalmass;
+#if DIM == 2
+    diskangularmomentum[0] += totalangularmomentum[0];
+#elif DIM == 3
+    diskangularmomentum[0] += totalangularmomentum[0];
+    diskangularmomentum[1] += totalangularmomentum[1];
+    diskangularmomentum[2] += totalangularmomentum[2];
+#endif
+    for(i=0; i<numberOfPointmasses; i++) {
+        v = pointmass_host.vx[i] * pointmass_host.vx[i];
+        totalpx += pointmass_host.vx[i] * pointmass_host.m[i];
+#if DIM > 1
+        v += pointmass_host.vy[i] * pointmass_host.vy[i];
+        totalpy += pointmass_host.vy[i] * pointmass_host.m[i];
+#if DIM == 3
+        v += pointmass_host.vz[i] * pointmass_host.vz[i];
+        totalpz += pointmass_host.vz[i] * pointmass_host.m[i];
+#endif
+#endif
+        totalmass += pointmass_host.m[i];
+        totalkineticenergy += pointmass_host.m[i] * v;
+#if DIM == 2
+        binaryangularmomentum[0] += pointmass_host.m[i] * (pointmass_host.x[i]*pointmass_host.vy[i] - pointmass_host.y[i]*pointmass_host.vx[i]);
+        totalangularmomentum[0] += binaryangularmomentum[0];
+#elif DIM > 2
+        binaryangularmomentum[0] += pointmass_host.m[i] * (pointmass_host.y[i]*pointmass_host.vz[i] - pointmass_host.z[i]*pointmass_host.vy[i]);
+        binaryangularmomentum[1] += pointmass_host.m[i] * (pointmass_host.z[i]*pointmass_host.vx[i] - pointmass_host.x[i]*pointmass_host.vz[i]);
+        binaryangularmomentum[2] += pointmass_host.m[i] * (pointmass_host.x[i]*pointmass_host.vy[i] - pointmass_host.y[i]*pointmass_host.vx[i]);
+        totalangularmomentum[0] += binaryangularmomentum[0];
+        totalangularmomentum[1] += binaryangularmomentum[1];
+        totalangularmomentum[2] += binaryangularmomentum[2];
+#endif
+    }
+    for (d=0; d<DIM; d++) {
+        totalDL += diskangularmomentum[d]*diskangularmomentum[d];
+        totalBL += binaryangularmomentum[d]*binaryangularmomentum[d];
+        }
+    totalDL = sqrt(totalDL);
+    totalBL = sqrt(totalBL);
+#endif // GRAVITATINT_POINT_MASSES
 
     totalkineticenergy *= 0.5;
     totalp = totalpx*totalpx;
@@ -1536,58 +1693,221 @@ void write_particles_to_file(File file) {
 #endif
 #endif
     totalp = sqrt(totalp);
+    for (d=0; d<DIM; d++) {
+        totalL += totalangularmomentum[d]*totalangularmomentum[d];
+    }
+    totalL = sqrt(totalL);
+
+    /* compute grav. energy between all SPH particles, and also gravitating point masses (w.r.t. SPH particles and also among themselves) */
+#if OUTPUT_GRAV_ENERGY
+    totalgravenergy = 0.0;
+    if( param.selfgravity || param.directselfgravity ) {
+        // mutual grav. energy between SPH particles:
+        for(i=0; i<(numberOfParticles-1); i++) {
+            for (j=i+1; j<numberOfParticles; j++) {
+                if( p_host.materialId[i] != EOS_TYPE_IGNORE  &&  p_host.materialId[j] != EOS_TYPE_IGNORE ) {
+                    dist = pow(p_host.x[i]-p_host.x[j],2);
+#if DIM > 1
+                    dist += pow(p_host.y[i]-p_host.y[j],2);
+#if DIM == 3
+                    dist += pow(p_host.z[i]-p_host.z[j],2);
+#endif
+#endif
+                    totalgravenergy -= C_GRAVITY * p_host.m[i] * p_host.m[j] / sqrt(dist);
+                }
+            }
+        }
+    }
+    if( GRAVITATING_POINT_MASSES ) {
+        // mutual grav. energy between SPH particles and gravitating point masses:
+        for(i=0; i<numberOfParticles; i++) {
+            if( p_host.materialId[i] != EOS_TYPE_IGNORE ) {
+                for(j=0; j<numberOfPointmasses; j++) {
+                    dist = pow(p_host.x[i]-pointmass_host.x[j],2);
+#if DIM > 1
+                    dist += pow(p_host.y[i]-pointmass_host.y[j],2);
+#if DIM == 3
+                    dist += pow(p_host.z[i]-pointmass_host.z[j],2);
+#endif
+#endif
+                    totalgravenergy -= C_GRAVITY * p_host.m[i] * pointmass_host.m[j] / sqrt(dist);
+                }
+            }
+        }
+        // mutual grav. energy between gravitating point masses:
+        for(i=0; i<(numberOfPointmasses-1); i++) {
+            for (j=i+1; j<numberOfPointmasses; j++) {
+                dist = pow(pointmass_host.x[i]-pointmass_host.x[j],2);
+#if DIM > 1
+                dist += pow(pointmass_host.y[i]-pointmass_host.y[j],2);
+#if DIM == 3
+                dist += pow(pointmass_host.z[i]-pointmass_host.z[j],2);
+#endif
+#endif
+                totalgravenergy -= C_GRAVITY * pointmass_host.m[i] * pointmass_host.m[j] / sqrt(dist);
+            }
+        }
+    }
+#endif  // OUTPUT_GRAV_ENERGY
+
+    /* compute position and velocity of the barycenter (of all SPH particles + gravitating point masses) */
+    for(i=0; i<DIM; i++)
+        barycenter_pos[i] = barycenter_vel[i] = 0.0;
+    for(i=0; i<numberOfParticles; i++) {
+        if( p_host.materialId[i] != EOS_TYPE_IGNORE ) {
+            barycenter_pos[0] += p_host.m[i] * p_host.x[i];
+            barycenter_vel[0] += p_host.m[i] * p_host.vx[i];
+#if DIM > 1
+            barycenter_pos[1] += p_host.m[i] * p_host.y[i];
+            barycenter_vel[1] += p_host.m[i] * p_host.vy[i];
+#if DIM == 3
+            barycenter_pos[2] += p_host.m[i] * p_host.z[i];
+            barycenter_vel[2] += p_host.m[i] * p_host.vz[i];
+#endif
+#endif
+        }
+    }
+    if( GRAVITATING_POINT_MASSES ) {
+        for(i=0; i<numberOfPointmasses; i++) {
+            barycenter_pos[0] += pointmass_host.m[i] * pointmass_host.x[i];
+            barycenter_vel[0] += pointmass_host.m[i] * pointmass_host.vx[i];
+#if DIM > 1
+            barycenter_pos[1] += pointmass_host.m[i] * pointmass_host.y[i];
+            barycenter_vel[1] += pointmass_host.m[i] * pointmass_host.vy[i];
+#if DIM == 3
+            barycenter_pos[2] += pointmass_host.m[i] * pointmass_host.z[i];
+            barycenter_vel[2] += pointmass_host.m[i] * pointmass_host.vz[i];
+#endif
+#endif
+        }
+    }
+    for(i=0; i<DIM; i++) {
+        barycenter_pos[i] /= totalmass;
+        barycenter_vel[i] /= totalmass;
+    }
 
 #if GRAVITATING_POINT_MASSES
-    // write mass file
-    /* write info file name */
-    if (param.verbose) {
-        printf("writing info file %s.mass.\n", file.name);
-    }
-    if ((massfile = fopen(massfilename, "w")) == NULL) {
-        fprintf(stderr, "Eih? Cannot write to %s.\n", massfilename);
+    if (param.ascii_output) {
+        // write mass file
+        /* write info file name */
+        if (param.verbose) {
+            printf("writing info file %s.mass.\n", file.name);
+        }
+        if ((massfile = fopen(massfilename, "w")) == NULL) {
+            fprintf(stderr, "Eih? Cannot write to %s.\n", massfilename);
+            exit(1);
+        }
+
+        for (i = 0; i < numberOfPointmasses; i++) {
+            fprintf(massfile, "%+.15le\t", pointmass_host.x[i]);
+    #if DIM > 1
+            fprintf(massfile, "%+.15le\t", pointmass_host.y[i]);
+    #if DIM == 3
+            fprintf(massfile, "%+.15le\t", pointmass_host.z[i]);
+    #endif
+    #endif
+            fprintf(massfile, "%+.15le\t", pointmass_host.vx[i]);
+    #if DIM > 1
+            fprintf(massfile, "%+.15le\t", pointmass_host.vy[i]);
+    #if DIM == 3
+            fprintf(massfile, "%+.15le\t", pointmass_host.vz[i]);
+    #endif
+    #endif
+            fprintf(massfile, "%+.17le\t", pointmass_host.m[i]);
+            fprintf(massfile, "%+.17le\t", pointmass_host.rmin[i]);
+            fprintf(massfile, "%+.17le\t", pointmass_host.rmax[i]);
+            fprintf(massfile, "%d", pointmass_host.feels_particles[i]);
+            fprintf(massfile, "\n");
+        }
+        fclose(massfile);
+    } // param.ascii_output
+
+// calculate semi-major axis and eccentricity of binary system and write in a file
+#if BINARY_INFO
+    double distance, velocity, h, r_x, r_y, r_z, v_x, v_y, v_z, h_x, h_y, h_z;
+    double a_binary, ecc;
+
+#if DIM == 2
+    distance = sqrt( (pointmass_host.x[0]-pointmass_host.x[1])*(pointmass_host.x[0]-pointmass_host.x[1]) + (pointmass_host.y[0]-pointmass_host.y[1])*(pointmass_host.y[0]-pointmass_host.y[1]) );
+    velocity = sqrt( (pointmass_host.vx[0]-pointmass_host.vx[1])*(pointmass_host.vx[0]-pointmass_host.vx[1]) + (pointmass_host.vy[0]-pointmass_host.vy[1])*(pointmass_host.vy[0]-pointmass_host.vy[1]) );
+    // angular momentum
+    r_x = pointmass_host.x[0] - pointmass_host.x[1];
+    r_y = pointmass_host.y[0] - pointmass_host.y[1];
+    v_x = pointmass_host.vx[0] - pointmass_host.vx[1];
+    v_y = pointmass_host.vy[0] - pointmass_host.vy[1];
+    h_z = r_x*v_y - r_y*v_x;
+    h = sqrt(h_z*h_z);
+#endif // DIM == 2
+
+#if DIM == 3
+    distance = sqrt( (pointmass_host.x[0]-pointmass_host.x[1])*(pointmass_host.x[0]-pointmass_host.x[1]) + (pointmass_host.y[0]-pointmass_host.y[1])*(pointmass_host.y[0]-pointmass_host.y[1]) + (pointmass_host.z[0]-pointmass_host.z[1])*(pointmass_host.z[0]-pointmass_host.z[1]) );
+    velocity = sqrt( (pointmass_host.vx[0]-pointmass_host.vx[1])*(pointmass_host.vx[0]-pointmass_host.vx[1]) + (pointmass_host.vy[0]-pointmass_host.vy[1])*(pointmass_host.vy[0]-pointmass_host.vy[1]) + (pointmass_host.vz[0]-pointmass_host.vz[1])*(pointmass_host.vz[0]-pointmass_host.vz[1]) );
+    // angular momentum
+	r_x = pointmass_host.x[0] - pointmass_host.x[1];
+    r_y = pointmass_host.y[0] - pointmass_host.y[1];
+    r_z = pointmass_host.z[0] - pointmass_host.z[1];
+    v_x = pointmass_host.vx[0] - pointmass_host.vx[1];
+    v_y = pointmass_host.vy[0] - pointmass_host.vy[1];
+    v_z = pointmass_host.vz[0] - pointmass_host.vz[1];
+    h_x = r_y*v_z - r_z*v_y;
+    h_y = r_z*v_x - r_x*v_z;
+    h_z = r_x*v_y - r_y*v_x;
+    h = sqrt(h_x*h_x + h_y*h_y + h_z*h_z);
+#endif // DIM == 3
+
+    a_binary = 1 / ( 2 / distance - velocity*velocity / (C_GRAVITY*(pointmass_host.m[0] + pointmass_host.m[1])) );   // semi-major axis of binary system
+    ecc = sqrt( 1 - h*h / (C_GRAVITY*(pointmass_host.m[0] + pointmass_host.m[1])*a_binary) );    // eccentricity of binary system
+
+    /* write binary system file*/
+    if( (binarysystemfile = fopen(param.binarysystemfilename, "a")) == NULL ) {
+        fprintf(stderr, "Ohoh..Merry Xmas... Cannot open '%s' for appending. Abort...\n", param.binarysystemfilename);
         exit(1);
     }
-
-    for (i = 0; i < numberOfPointmasses; i++){
-        fprintf(massfile, "%+.15le\t", pointmass_host.x[i]);
-#if DIM > 1
-        fprintf(massfile, "%+.15le\t", pointmass_host.y[i]);
-#if DIM == 3
-        fprintf(massfile, "%+.15le\t", pointmass_host.z[i]);
-#endif
-#endif
-        fprintf(massfile, "%+.15le\t", pointmass_host.vx[i]);
-#if DIM > 1
-        fprintf(massfile, "%+.15le\t", pointmass_host.vy[i]);
-#if DIM == 3
-        fprintf(massfile, "%+.15le\t", pointmass_host.vz[i]);
-#endif
-#endif
-        fprintf(massfile, "%e\t", pointmass_host.m[i]);
-        fprintf(massfile, "%e\t", pointmass_host.rmin[i]);
-        fprintf(massfile, "%e", pointmass_host.rmax[i]);
-        fprintf(massfile, "\n");
-    }
-
-    fclose(massfile);
+    fprintf(binarysystemfile, "%26.10le\t%.10le\t%.10le\t%.17le\n", h5time, a_binary, ecc, totalBL);
+    fclose(binarysystemfile);
+#endif // BINARY_INFO
 #endif // GRAVITATING_POINT_MASSES
-    /* write info file name */
+
+    /* write info file */
     if (param.verbose) {
         printf("writing info file %s.info.\n", file.name);
     }
-
     if ((infofile = fopen(infofilename, "w")) == NULL) {
         fprintf(stderr, "Eih? Cannot write to %s.\n", infofilename);
         exit(1);
     }
-
     fprintf(infofile, "Information about particle data of file %s\n", file.name);
     fprintf(infofile, "Time: \t %.20e\n", h5time);
-    fprintf(infofile, "Number of particles: \t %d\n", numberOfParticles);
+    fprintf(infofile, "Number of SPH particles (total): \t %d\n", numberOfParticles);
+#if GRAVITATING_POINT_MASSES // info file dedicated to disk only. future UPDATE: columns table format instead of rows
+    fprintf(infofile, "Number of deactivated SPH particles (EOS_TYPE_IGNORED): \t %d\n", numberOfParticlesToIgnore);
+    fprintf(infofile, "Number of gravitating point masses: \t %d\n", numberOfPointmasses);
+    fprintf(infofile, "Disk mass: \t %.20e\n", diskmass);
+    fprintf(infofile, "Total (disk+binary) kinetic energy: \t %.20e\n", totalkineticenergy);
+    fprintf(infofile, "Total (disk+binary) internal energy: \t %.20e\n", totalinnerenergy);
+    fprintf(infofile, "Total (disk+binary) momentum: \t %.20e\n", totalp);
+    fprintf(infofile, "Total momentum in each direction: \t %.20e ", totalpx);
+#if DIM > 1
+    fprintf(infofile, "  %.20e ", totalpy);
+#if DIM == 3
+    fprintf(infofile, "  %.20e ", totalpz);
+#endif
+#endif
+    fprintf(infofile, "\n");
+    fprintf(infofile, "Disk angular momentum:   ");
+    for (d=0; d<DIM; d++)
+        fprintf(infofile, "L[%d] = %.20e \t", d, diskangularmomentum[d]);
+    fprintf(infofile, "\n");
+    fprintf(infofile, "Disk angular momentum: norm(L) = %.20e\n", totalDL);
+#if OUTPUT_GRAV_ENERGY
+    fprintf(infofile, "\n");
+    fprintf(infofile, "Total (disk+binary) grav. energy: \t %.20e\n", totalgravenergy);
+#endif
+#else // general info file for total quantities
     fprintf(infofile, "Total mass: \t %.20e\n", totalmass);
     fprintf(infofile, "Total kinetic energy: \t %.20e\n", totalkineticenergy);
     fprintf(infofile, "Total internal energy: \t %.20e\n", totalinnerenergy);
-    fprintf(infofile, "Total momentum: \t %.20e\n", totalp);
+    fprintf(infofile, "Total  momentum: \t %.20e\n", totalp);
     fprintf(infofile, "Total momentum in each direction: \t %.20e ", totalpx);
 #if DIM > 1
     fprintf(infofile, "  %.20e ", totalpy);
@@ -1597,16 +1917,55 @@ void write_particles_to_file(File file) {
 #endif
     fprintf(infofile, "\n");
     fprintf(infofile, "Total angular momentum:   ");
-    for (d = 0; d < DIM; d++) {
+    for (d=0; d<DIM; d++)
         fprintf(infofile, "L[%d] = %.20e \t", d, totalangularmomentum[d]);
-        totalL += totalangularmomentum[d]*totalangularmomentum[d];
-    }
     fprintf(infofile, "\n");
-    totalL = sqrt(totalL);
     fprintf(infofile, "Total angular momentum: norm(L) = %.20e\n", totalL);
-
+#if OUTPUT_GRAV_ENERGY
     fprintf(infofile, "\n");
+    fprintf(infofile, "Total grav. energy: \t %.20e\n", totalgravenergy);
+#endif
+#endif // GRAVITATING_POINT_MASSES
     fclose(infofile);
+
+    /* append to conserved quantities logfile */
+    if( (conservedquantitiesfile = fopen(param.conservedquantitiesfilename, "a")) == NULL ) {
+        fprintf(stderr, "Ohoh... Cannot open '%s' for appending. Abort...\n", param.conservedquantitiesfilename);
+        exit(1);
+    }
+    fprintf(conservedquantitiesfile, "%26.16le%18d%24d%21d%26.16le%26.16le%26.16le", h5time, numberOfParticles, numberOfParticlesToIgnore, numberOfPointmasses, totalmass, totalkineticenergy, totalinnerenergy);
+#if OUTPUT_GRAV_ENERGY
+    fprintf(conservedquantitiesfile, "%26.16le", totalgravenergy);
+#endif
+    fprintf(conservedquantitiesfile, "%26.16le%26.16le", totalp, totalpx);
+#if DIM > 1
+    fprintf(conservedquantitiesfile, "%26.16le", totalpy);
+#if DIM == 3
+    fprintf(conservedquantitiesfile, "%26.16le", totalpz);
+#endif
+#endif
+#if DIM > 1
+    fprintf(conservedquantitiesfile, "%26.16le%26.16le%26.16le", totalL, totalangularmomentum[0], totalangularmomentum[1]);
+#if DIM == 3
+    fprintf(conservedquantitiesfile, "%26.16le", totalangularmomentum[2]);
+#endif
+#endif
+    fprintf(conservedquantitiesfile, "%26.16le", barycenter_pos[0]);
+#if DIM > 1
+    fprintf(conservedquantitiesfile, "%26.16le", barycenter_pos[1]);
+#if DIM == 3
+    fprintf(conservedquantitiesfile, "%26.16le", barycenter_pos[2]);
+#endif
+#endif
+    fprintf(conservedquantitiesfile, "%26.16le", barycenter_vel[0]);
+#if DIM > 1
+    fprintf(conservedquantitiesfile, "%26.16le", barycenter_vel[1]);
+#if DIM == 3
+    fprintf(conservedquantitiesfile, "%26.16le", barycenter_vel[2]);
+#endif
+#endif
+    fprintf(conservedquantitiesfile, "\n");
+    fclose(conservedquantitiesfile);
 
 #if HDF5IO
     if (param.hdf5output) {
@@ -1660,6 +2019,22 @@ void write_particles_to_file(File file) {
         status = H5Dclose(v_id);
 
 
+        /* the velocities at time of possible accretion */
+        for (i = 0, e = 0; i < numberOfParticles; i++, e += DIM) {
+            x[e] = p_host.vx0[i];
+#if DIM > 1
+            x[e+1] = p_host.vy0[i];
+#if DIM == 3
+            x[e+2] = p_host.vz0[i];
+#endif
+#endif
+        }
+        v_id = H5Dcreate2(file_id, "/v_accreted", H5T_NATIVE_DOUBLE, dataspace_id,
+                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+        status = H5Dwrite(v_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(v_id);
+
         /* the accelerations */
         for (i = 0, e = 0; i < numberOfParticles; i++, e += DIM) {
             x[e] = p_host.ax[i];
@@ -1672,7 +2047,6 @@ void write_particles_to_file(File file) {
         }
         status = H5Dwrite(a_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(a_id);
-
 
         /* the accelerations due to gravity */
         for (i = 0, e = 0; i < numberOfParticles; i++, e += DIM) {
@@ -1753,7 +2127,6 @@ void write_particles_to_file(File file) {
                 x_aneos_phase_flag[i] = -1;
             }
         }
-
         // write them to the output file
         aneos_T_id = H5Dcreate2(file_id, "/aneos_T", H5T_NATIVE_DOUBLE, dataspace_id,
                     H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -1778,6 +2151,77 @@ void write_particles_to_file(File file) {
         free(x_aneos_entropy);
         free(x_aneos_phase_flag);
 #endif
+#if MORE_OUTPUT
+	p_max_id = H5Dcreate2(file_id, "/p_max", H5T_NATIVE_DOUBLE, dataspace_id,
+                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        for (i = 0; i < numberOfParticles; i++)
+            x[i] = p_host.p_max[i];
+
+        status = H5Dwrite(p_max_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(p_max_id);
+
+
+	p_min_id = H5Dcreate2(file_id, "/p_min", H5T_NATIVE_DOUBLE, dataspace_id,
+                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        for (i = 0; i < numberOfParticles; i++)
+            x[i] = p_host.p_min[i];
+
+        status = H5Dwrite(p_min_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(p_min_id);
+
+
+	rho_min_id = H5Dcreate2(file_id, "/rho_min", H5T_NATIVE_DOUBLE, dataspace_id,
+                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        for (i = 0; i < numberOfParticles; i++)
+            x[i] = p_host.rho_min[i];
+
+        status = H5Dwrite(rho_min_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(rho_min_id);
+
+
+	rho_max_id = H5Dcreate2(file_id, "/rho_max", H5T_NATIVE_DOUBLE, dataspace_id,
+                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        for (i = 0; i < numberOfParticles; i++)
+            x[i] = p_host.rho_max[i];
+
+        status = H5Dwrite(rho_max_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(rho_max_id);
+
+	e_min_id = H5Dcreate2(file_id, "/e_min", H5T_NATIVE_DOUBLE, dataspace_id,
+                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        for (i = 0; i < numberOfParticles; i++)
+            x[i] = p_host.e_min[i];
+
+        status = H5Dwrite(e_min_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(e_min_id);
+
+
+	e_max_id = H5Dcreate2(file_id, "/e_max", H5T_NATIVE_DOUBLE, dataspace_id,
+                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        for (i = 0; i < numberOfParticles; i++)
+            x[i] = p_host.e_max[i];
+
+        status = H5Dwrite(e_max_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(e_max_id);
+
+	cs_min_id = H5Dcreate2(file_id, "/cs_min", H5T_NATIVE_DOUBLE, dataspace_id,
+                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        for (i = 0; i < numberOfParticles; i++)
+            x[i] = p_host.cs_min[i];
+
+        status = H5Dwrite(cs_min_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(cs_min_id);
+
+
+	cs_max_id = H5Dcreate2(file_id, "/cs_max", H5T_NATIVE_DOUBLE, dataspace_id,
+                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        for (i = 0; i < numberOfParticles; i++)
+            x[i] = p_host.cs_max[i];
+
+        status = H5Dwrite(cs_max_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(cs_max_id);
+
+#endif
 
         /* sml */
         sml_id = H5Dcreate2(file_id, "/sml", H5T_NATIVE_DOUBLE, dataspace_id,
@@ -1792,6 +2236,16 @@ void write_particles_to_file(File file) {
 
         status = H5Dwrite(sml_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(sml_id);
+#if READ_INITIAL_SML_FROM_PARTICLE_FILE
+        /* sml initial */
+        sml_id = H5Dcreate2(file_id, "/sml_initial", H5T_NATIVE_DOUBLE, dataspace_id,
+                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        for (i = 0; i < numberOfParticles; i++) {
+            x[i] = p_host.h0[i];
+        }
+        status = H5Dwrite(sml_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(sml_id);
+#endif
 
 
 #if JC_PLASTICITY
@@ -2325,6 +2779,19 @@ void write_particles_to_file(File file) {
         status = H5Dclose(rmax_id);
 
         free(x);
+
+        ix = (int *) malloc(sizeof(int) * numberOfPointmasses);
+        flag_id = H5Dcreate2(file_id, "/feels_particles", H5T_NATIVE_INT, dataspace_id,
+                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        for (i = 0; i < numberOfPointmasses; i++)
+            ix[i] = pointmass_host.feels_particles[i];
+
+        status = H5Dwrite(flag_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, ix);
+        status = H5Dclose(flag_id);
+        free(ix);
+
+
+
         status = H5Fclose(file_id);
 #endif // GRAVITATING_POINT_MASSES
 
@@ -2514,8 +2981,10 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     cudaVerify(cudaMemcpy(p_host.y, p_device.y, memorySizeForTree, cudaMemcpyDeviceToHost));
 #endif
     cudaVerify(cudaMemcpy(p_host.vx, p_device.vx, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.vx0, p_device.vx0, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #if DIM > 1
     cudaVerify(cudaMemcpy(p_host.vy, p_device.vy, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.vy0, p_device.vy0, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #endif
     cudaVerify(cudaMemcpy(p_host.ax, p_device.ax, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #if DIM > 1
@@ -2528,6 +2997,7 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
 #if DIM == 3
     cudaVerify(cudaMemcpy(p_host.z, p_device.z, memorySizeForTree, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.vz, p_device.vz, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.vz0, p_device.vz0, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.az, p_device.az, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.g_az, p_device.g_az, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #endif
@@ -2544,7 +3014,16 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     cudaVerify(cudaMemcpy(p_host.noi, p_device.noi, memorySizeForInteractions, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(interactions_host, interactions, memorySizeForInteractions*MAX_NUM_INTERACTIONS, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(childList_host, (void * )childListd, memorySizeForChildren, cudaMemcpyDeviceToHost));
-
+#if MORE_OUTPUT
+    cudaVerify(cudaMemcpy(p_host.p_min, p_device.p_min, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.p_max, p_device.p_max, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.rho_min, p_device.rho_min, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.rho_max, p_device.rho_max, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.e_min, p_device.e_min, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.e_max, p_device.e_max, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.cs_min, p_device.cs_min, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.cs_max, p_device.cs_max, memorySizeForParticles, cudaMemcpyDeviceToHost));
+#endif
 #if PALPHA_POROSITY
     cudaVerify(cudaMemcpy(p_host.pold, p_device.pold, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.alpha_jutzi, p_device.alpha_jutzi, memorySizeForParticles, cudaMemcpyDeviceToHost));
@@ -2609,5 +3088,4 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     rc = pthread_create(&fileIOthread, &attr, write_timestep, (void*)t);
     pthread_attr_destroy(&attr);
     assert(0 == rc);
-
 }

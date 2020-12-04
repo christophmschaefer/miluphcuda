@@ -22,12 +22,13 @@
  */
 #include "velocity.h"
 #include "miluph.h"
+#include "config_parameter.h"
 #include "timeintegration.h"
 #include "parameter.h"
 #include "pressure.h"
 
 
-__global__ void setlocationchanges(int *interactions) 
+__global__ void setlocationchanges(int *interactions)
 {
 
     register int i, inc;
@@ -54,7 +55,3 @@ __global__ void setlocationchanges(int *interactions)
 #endif
     }
 }
-
-
-
-

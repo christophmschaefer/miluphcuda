@@ -24,12 +24,33 @@
 #include "miluph.h"
 #include "soundspeed.h"
 #include "timeintegration.h"
+#include "config_parameter.h"
 #include "kernel.h"
 #include "parameter.h"
 
 extern __device__ SPH_kernel kernel;
 
 
+#if NAVIER_STOKES
+__global__ void calculate_kinematic_viscosity(void)
+{
+
+	int i, inc;
+	inc = blockDim.x * gridDim.x;
+    //Particle Loop
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numRealParticles; i += inc) {
+#if SHAKURA_SUNYAEV_ALPHA
+	    double R = sqrt(p.x[i]*p.x[i] + p.y[i]*p.y[i]);
+	    p_rhs.eta[i] = matalpha_shakura[p_rhs.materialId[i]] * p.cs[i] * p.rho[i] * scale_height * R ;
+#elif CONSTANT_KINEMATIC_VISCOSITY
+	    p_rhs.eta[i] = matnu[p_rhs.materialId[i]] * p.rho[i];
+#else
+	    printf("aaaaaah\n");
+	    assert(0);
+#endif
+    }
+}
+#endif
 
 #if NAVIER_STOKES
 __global__ void calculate_shear_stress_tensor(int *interactions)
@@ -85,8 +106,39 @@ __global__ void calculate_shear_stress_tensor(int *interactions)
 #if (VARIABLE_SML || INTEGRATE_SML || DEAL_WITH_TOO_MANY_INTERACTIONS)
             sml = 0.5*(p.h[i] + p.h[j]);
 #endif
+
+
+#if AVERAGE_KERNELS
+            // get kernel values for this interaction
+            kernel(&W, dWdx, &dWdr, dr, p.h[i]);
+            kernel(&Wj, dWdxj, &dWdrj, dr, p.h[j]);
+# if SHEPARD_CORRECTION
+            W /= p_rhs.shepard_correction[i];
+            Wj /= p_rhs.shepard_correction[j];
+            for (e = 0; e < DIM; e++) {
+                dWdx[e] /= p_rhs.shepard_correction[i];
+                dWdxj[e] /= p_rhs.shepard_correction[j];
+            }
+            dWdr /= p_rhs.shepard_correction[i];
+            dWdrj /= p_rhs.shepard_correction[j];
+# endif
+            W = 0.5 * (W + Wj);
+            dWdr = 0.5 * (dWdr + dWdrj);
+            for (e = 0; e < DIM; e++) {
+                dWdx[e] = 0.5 * (dWdx[e] + dWdxj[e]);
+            }
+#else
             // get kernel values for this interaction
             kernel(&W, dWdx, &dWdr, dr, sml);
+# if SHEPARD_CORRECTION
+            W /= p_rhs.shepard_correction[i];
+            for (e = 0; e < DIM; e++) {
+                dWdx[e] /= p_rhs.shepard_correction[i];
+            }
+            dWdr /= p_rhs.shepard_correction[i];
+# endif
+
+#endif
 
 
 #if TENSORIAL_CORRECTION
@@ -113,7 +165,7 @@ __global__ void calculate_shear_stress_tensor(int *interactions)
                 trace +=  p.m[j]/p.rho[j] * (-dv[e])*dWdx[e] ;
 #endif
             }
-            
+
             for (e = 0; e < DIM; e++) {
                 for (f = 0; f < DIM; f++) {
 # if (SPHEQUATIONS == SPH_VERSION1)
@@ -197,6 +249,14 @@ __global__ void betaviscosity(int *interactions)
 #endif
 
 	       kernel(&W, dWdx, &dWdr, dx, sml);
+#if SHEPARD_CORRECTION
+           W /= p_rhs.shepard_correction[i];
+           for (d = 0; d < DIM; d++) {
+               dWdx[d] /= p_rhs.shepard_correction[i];
+           }
+           dWdr /= p_rhs.shepard_correction[i];
+#endif
+
 	       mj = p.m[j];
 
 	        /* divv */
@@ -260,8 +320,7 @@ __global__ void betaviscosity(int *interactions)
 		if (beta_loc > p.beta_old[i]) {
 			p.beta[i] = beta_loc;
 			p.dbetadt[i] = 0;
-		} else
-		{
+		} else {
 			p.beta[i] = p.beta_old[i];
 			p.dbetadt[i] = (p.beta_old[i] - beta_loc) / tau;
 		}

@@ -24,6 +24,7 @@
 
 #include "parameter.h"
 #include "miluph.h"
+#include "config_parameter.h"
 #include "little_helpers.h"
 
 

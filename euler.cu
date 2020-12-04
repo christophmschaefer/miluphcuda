@@ -167,6 +167,8 @@ void euler()
                             currentTime += param.maxtimestep;
                         }
                         cudaVerifyKernel((integrateEuler<<<numberOfMultiprocessors, NUM_THREADS_EULER_INTEGRATOR>>>()));
+			//step was successful --> do something (e.g. look for min/max pressure...)
+                    	afterIntegrationStep();
                 }
 
                 copyToHostAndWriteToFile(timestep, lastTimestep);

@@ -22,12 +22,13 @@
  */
 
 
-
 #include "plasticity.h"
+#include "config_parameter.h"
 #include "parameter.h"
 #include "miluph.h"
 #include "pressure.h"
 #include "float.h"
+
 
 #if SOLID
 __global__ void plasticity()
@@ -115,14 +116,15 @@ __global__ void plasticity()
 }
 #endif
 
+
+
 #if SOLID
-__global__ void vonMisesPlasticity(void) {
+__global__ void plasticityModel(void) {
     // introduce plastic behaviour by limiting the deviatoric stress
     register int i, inc, d, e;
     register double mises_f, tmp;
     register double I1, J2, sqrt_J2;
-    register double y, y_i, y_M, y_0, ytmp;
-    register double damage;
+    register double y, y_i, y_d, y_M, y_0, y_0_d, damage, e_melt;
     /* drucker prager constants */
     register double A, B;
     double mu_i, mu_d; // coefficients of internal friction
@@ -134,9 +136,10 @@ __global__ void vonMisesPlasticity(void) {
             continue;
         }
 
-        /* second invariant of the stress tensor */
-        J2 = 0;
-        mises_f = 1;
+        mises_f = 1.0;
+
+        /* second invariant of the deviator stress tensor */
+        J2 = 0.0;
 
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
@@ -151,21 +154,18 @@ __global__ void vonMisesPlasticity(void) {
         /* first invariant of the stress tensor */
         I1 = -3.0 * p.p[i];
 
-
 #if MOHR_COULOMB_PLASTICITY
         // mohr coulomb yield criterion
         // matInternalFriction = \mu = tan(matFrictionAngle)
-        y = matCohesion[p_rhs.materialId[i]];
-        if (p.p[i] > 0) {
-            y += matInternalFriction[p_rhs.materialId[i]] * p.p[i];
+        y = matCohesion[p_rhs.materialId[i]] + matInternalFriction[p_rhs.materialId[i]] * p.p[i];
+        if (y < 0.0) {
+            y = 0.0;
         }
+
         // drucker prager like -> compare to sqrt(J2)
         if (J2 > 0) {
             mises_f = y/sqrt_J2;
         }
-
-        if (mises_f > 1)
-            mises_f = 1;
 #elif DRUCKER_PRAGER_PLASTICITY
         A = B = 0;
         // drucker prager constants from mohr-coulomb constants -> 3D!
@@ -174,59 +174,83 @@ __global__ void vonMisesPlasticity(void) {
         B = 2. * sin(matFrictionAngle[p_rhs.materialId[i]]) / (sqrt(3.) * (3. - sin(matFrictionAngle[p_rhs.materialId[i]])));
 
         // yield strength determined by drucker prager condition
-        y = A;
-        if (p.p[i] > 0) {
-            y += 3.0*p.p[i]*B;
+        y = A + 3.0*p.p[i]*B;
+        if (y < 0.0) {
+            y = 0.0;
         }
+
         // drucker prager like -> compare to sqrt(J2)
         if (J2 > 0) {
             mises_f = y/sqrt_J2;
         }
-
-        if (mises_f > 1)
-            mises_f = 1;
-#elif COLLINS_PRESSURE_DEPENDENT_YIELD_STRENGTH
+#elif COLLINS_PLASTICITY
         y_0 = matCohesion[p_rhs.materialId[i]];
         y_M = matYieldStress[p_rhs.materialId[i]];
         mu_i = matInternalFriction[p_rhs.materialId[i]];
-#if FRAGMENTATION
-        mu_d = matInternalFrictionDamaged[p_rhs.materialId[i]];
-#endif
-        // shear strength of the intact material
-        ytmp = y_0;
+
+        // yield strength of intact material, with (constant) cohesion also for p<0
+        y_i = y_0;
         if (p.p[i] > 0) {
-            ytmp += mu_i * p.p[i]
+            y_i += mu_i * p.p[i]
                 / (1 + mu_i * p.p[i]  / (y_M - y_0) );
-        } else {
-            ytmp = y_0;
         }
-#if FRAGMENTATION
+# if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
+        e_melt = matMeltEnergy[p_rhs.materialId[i]];
+        
+        if (p.e[i] >= e_melt) {
+            y_i = 0.0;
+        } else if (p.e[i] > 0.0) {
+            y_i *= ( 1.0 - p.e[i] / e_melt );
+        }
+# endif
+# if FRAGMENTATION
+        y_0_d = matCohesionDamaged[p_rhs.materialId[i]];
+        mu_d = matInternalFrictionDamaged[p_rhs.materialId[i]];
         damage = p.damage_total[i];
-        if (damage > 1) damage = 1.0;
-        // yield strength of damaged material
-        if (p.p[i] > 0) {
-            y = mu_d * p.p[i];
-            /* limit the yield strength of damaged material to the yield strength of intact material */
-            if (damage < 1) {
-                y = (1-damage) * ytmp + damage*y;
-                if (y > ytmp) y = ytmp;
-            }
-        } else {
-            y = y_0;
-        }
-#else
-        y = ytmp;
-#endif
+        if (damage > 1.0) damage = 1.0;
+        if (damage < 0.0) damage = 0.0;
+        
+        // yield strength of damaged material, with the cohesion going (linearly) to zero for p<0
+        y_d = y_0_d + mu_d * p.p[i];
+        if (y_d < 0.0)
+            y_d = 0.0;
+        
+        // the actual yield strength Y is a weighted mean of Y_i and Y_d
+        // (therefore potential melt-energy effects are also included in Y)
+        y = (1.0-damage) * y_i + damage * y_d;
+        
+        // always limit the yield strength to the intact value
+        if (y > y_i)
+            y = y_i;
+# else
+        y = y_i;
+# endif
         // drucker prager like -> compare to sqrt(J2)
         if (J2 > 0) {
             mises_f = y/sqrt_J2;
         }
+#elif COLLINS_PLASTICITY_SIMPLE
+        y_0 = matCohesion[p_rhs.materialId[i]];
+        y_M = matYieldStress[p_rhs.materialId[i]];
+        mu_i = matInternalFriction[p_rhs.materialId[i]];
 
-        if (mises_f > 1)
-            mises_f = 1;
+        // unlike for the regular Collins model, here we let the yield strength decrease to
+        // the first zero for p<0, and set it zero for even greater negative pressure
+        // the zero is at p_0 = -Y_0 (Y_M-Y_0) / (mu_i Y_M)
+        if ( p.p[i] > y_0*(y_0-y_M)/(mu_i*y_M) ) {
+            y = y_0 + mu_i * p.p[i]
+                / (1 + mu_i * p.p[i]  / (y_M - y_0) );
+        } else {
+            y = 0.0;
+        }
+
+        // drucker prager like -> compare to sqrt(J2)
+        if (J2 > 0) {
+            mises_f = y/sqrt_J2;
+        }
 #else // simple von Mises yield criterion without *any* dependency
         y = matYieldStress[p_rhs.materialId[i]];
-#if SIRONO_POROSITY
+# if SIRONO_POROSITY
         // Shear Strength using Sironos Model
         if (matEOS[p_rhs.materialId[i]] == EOS_TYPE_SIRONO) {
             y = sqrt((-1.0) * p.tensile_strength[i] * p.compressive_strength[i]);
@@ -235,16 +259,15 @@ __global__ void vonMisesPlasticity(void) {
             p.shear_strength[i] = DBL_MAX;
             y = p.shear_strength[i];
         }
-#endif
-        // von mises limit like
+# endif
+        // von Mises limit like
         if (J2 > 0) {
             mises_f = y*y/(3*J2);
         }
-
-        if (mises_f > 1)
-            mises_f = 1;
 #endif
-
+        // finally limit the deviatoric stress tensor
+        if (mises_f > 1.0)
+            mises_f = 1.0;
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
                 p.S[stressIndex(i, d, e)] *= mises_f;
@@ -252,10 +275,7 @@ __global__ void vonMisesPlasticity(void) {
         }
     }
 }
-
 #endif
-
-
 
 
 
@@ -275,7 +295,7 @@ __global__ void JohnsonCookPlasticity(void) {
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
 
         J2 = 0;
-        jc_f = 1;
+        jc_f = 0;
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
                 tmp = p.S[stressIndex(i, d, e)];

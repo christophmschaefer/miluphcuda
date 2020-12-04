@@ -67,10 +67,14 @@ __constant__ struct Pointmass pointmass;
 struct Pointmass pointmass_device;
 struct Pointmass rk_pointmass_device[3];
 __constant__ struct Pointmass rk_pointmass[3];
+struct Pointmass rk4_pointmass_device[4];
+__constant__ struct Pointmass rk4_pointmass[4];
 struct Pointmass predictor_pointmass_device;
 __constant__ struct Pointmass predictor_pointmass;
+__constant__ struct Pointmass pointmass_rhs;
 int numberOfPointmasses;
 int memorySizeForPointmasses;
+int integermemorySizeForPointmasses;
 
 
 int restartedRun = FALSE;
@@ -194,8 +198,14 @@ static void print_compile_information(void)
     fprintf(stdout, "\t\t\t Mohr-Coulomb\n");
 #elif DRUCKER_PRAGER_PLASTICITY
     fprintf(stdout, "\t\t\t Drucker-Prager\n");
-#elif COLLINS_PRESSURE_DEPENDENT_YIELD_STRENGTH
-    fprintf(stdout, "\t\t\t Pressure dependent yield strength with cohesion for damaged material\n");
+#elif COLLINS_PLASTICITY
+    fprintf(stdout, "\t\t\t Collins model: pressure dependent yield strength with cohesion for damaged material");
+#if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
+    fprintf(stdout, " including strength reduction based on (single) melt energy");
+#endif
+    fprintf(stdout, "\n");
+#elif COLLINS_PLASTICITY_SIMPLE
+    fprintf(stdout, "\t\t\t Simplified version of Collins model: pressure dependent yield strength irrespective of damage\n");
 #else
     fprintf(stdout, "\t\t\t simple von Mises yield criterion\n");
 #endif
@@ -208,12 +218,19 @@ static void print_compile_information(void)
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Plasticity model from Johnson - Cook:\t   %s\n", yesno);
+    fprintf(stdout, "Consistency switches for the SPH algorithm:\n");
+#if SHEPARD_CORRECTION
+    strcpy(yesno, "yes");
+#else
+    strcpy(yesno, "no");
+#endif
+    fprintf(stdout, "SPH zeroth order consistency (aka Shepard correction):\t  %s\n", yesno);
 #if TENSORIAL_CORRECTION
     strcpy(yesno, "yes");
 #else
     strcpy(yesno, "no");
 #endif
-    fprintf(stdout, "SPH linear consistency for strain rate and rotation rate tensor only:\t  %s\n", yesno);
+    fprintf(stdout, "SPH linear consistency (aka tensorial correction):\t  %s\n", yesno);
 #if ARTIFICIAL_VISCOSITY
     strcpy(yesno, "yes");
 #else
@@ -247,6 +264,11 @@ static void print_compile_information(void)
     fprintf(stdout, "Using variable smoothing:\t no\n");
     fprintf(stdout, "Using fixed smoothing lengths: \t yes\n");
 #endif
+#if AVERAGE_KERNELS
+    fprintf(stdout, "Kernel for interaction is calculated by averaging kernels for each particle: \t W_ij = 0.5 ( W(h_i) + W(h_j) )\n");
+#else
+    fprintf(stdout, "Kernel for interaction is calculated using averaged smooting length: \t W_ij = W(0.5 (h_i + h_j))\n");
+#endif
 #if READ_INITIAL_SML_FROM_PARTICLE_FILE
     fprintf(stdout, "Reading initial smoothing length for each particle.\n");
 #endif
@@ -263,26 +285,24 @@ static void print_compile_information(void)
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "HDF5 i/o:\t  %s\n", yesno);
-    if (param.verbose) {
-        if (param.hdf5output) {
-            strcpy(yesno, "yes");
-        } else {
-            strcpy(yesno, "no");
-        }
-        fprintf(stdout, "using HDF5 output: \t %s \n", yesno);
-        if (param.hdf5input) {
-            strcpy(yesno, "yes");
-        } else {
-            strcpy(yesno, "no");
-        }
-        fprintf(stdout, "using HDF5 input: \t %s \n", yesno);
-        if (param.ascii_output) {
-            strcpy(yesno, "yes");
-        } else {
-            strcpy(yesno, "no");
-        }
-        fprintf(stdout, "using ASCII output: \t %s \n", yesno);
+    if (param.hdf5output) {
+        strcpy(yesno, "yes");
+    } else {
+        strcpy(yesno, "no");
     }
+    fprintf(stdout, "using HDF5 output: \t %s \n", yesno);
+    if (param.hdf5input) {
+        strcpy(yesno, "yes");
+    } else {
+        strcpy(yesno, "no");
+    }
+    fprintf(stdout, "using HDF5 input: \t %s \n", yesno);
+    if (param.ascii_output) {
+        strcpy(yesno, "yes");
+    } else {
+        strcpy(yesno, "no");
+    }
+    fprintf(stdout, "using ASCII output: \t %s \n", yesno);
 
     fprintf(stdout, "implemented equations of state and corresponding eos type entry in material.cfg:\n");
     fprintf(stdout, "EOS_TYPE_IGNORE          \t\t\t %d\n", EOS_TYPE_IGNORE);
@@ -293,27 +313,28 @@ static void print_compile_information(void)
     fprintf(stdout, "EOS_TYPE_REGOLITH        \t\t\t %d\n", EOS_TYPE_REGOLITH);
     fprintf(stdout, "EOS_TYPE_JUTZI           \t\t\t %d\n", EOS_TYPE_JUTZI);
     fprintf(stdout, "EOS_TYPE_JUTZI_MURNAGHAN \t\t\t %d\n", EOS_TYPE_JUTZI_MURNAGHAN);
+	fprintf(stdout, "EOS_TYPE_JUTZI_ANEOS	  \t\t\t %d\n", EOS_TYPE_JUTZI_ANEOS);
     fprintf(stdout, "EOS_TYPE_ANEOS           \t\t\t %d\n", EOS_TYPE_ANEOS);
     fprintf(stdout, "EOS_TYPE_VISCOUS_REGOLITH\t\t\t %d\n", EOS_TYPE_VISCOUS_REGOLITH);
     fprintf(stdout, "EOS_TYPE_IDEAL_GAS       \t\t\t %d\n", EOS_TYPE_IDEAL_GAS);
     fprintf(stdout, "EOS_TYPE_SIRONO          \t\t\t %d\n", EOS_TYPE_SIRONO);
     fprintf(stdout, "EOS_TYPE_EPSILON         \t\t\t %d\n", EOS_TYPE_EPSILON);
     fprintf(stdout, "EOS_TYPE_LOCALLY_ISOTHERMAL_GAS \t\t %d\n", EOS_TYPE_LOCALLY_ISOTHERMAL_GAS);
-
-
 }
+
+
 
 static void format_information(char *name)
 {
     char physics[10];
     int noc = 0;
     int i, j, k;
+
 #if SOLID
     strcpy(physics, "solid");
 #else
     strcpy(physics, "hydro");
 #endif
-
     fprintf(stdout, "Data file format for %s\n", name);
     fprintf(stdout, "dimension = %d\n", DIM);
     fprintf(stdout, "%s version (hydro or solid): %s\n", name, physics);
@@ -534,7 +555,8 @@ static void format_information(char *name)
 
 
 
-void usage(char *name) {
+void usage(char *name)
+{
     fprintf(stderr,
             "Usage %s [options]\n"
             "	sph program, version %s.\n"
@@ -545,6 +567,7 @@ void usage(char *name) {
             "\t-a, --theta\t\t\t Theta Criterion for Barnes-Hut Tree (default: 0.5)\n"
             "\t-A, --no_ascii_output \t\t Disable ASCII output files (default is FALSE).\n"
             "\t-b, --boundary_ratio\t\t Ratio of additional ghost boundary particles (default: 0).\n"
+            "\t-c, --cons_qu_file\t\t Name of logfile for conserved quantities (default: conserved_quantities.log).\n"
             "\t-d, --device_id <int> \t\t Try to use device with id <int> for computation (default: 0).\n"
             "\t-D, --directselfgravity\t\t Calculate selfgravity using direct particle-particle force and not the tree (slower).\n"
             "\t-f, --filename\t\t\t Name of input data file (default: disk.0000).\n"
@@ -556,7 +579,8 @@ void usage(char *name) {
             "\t-H, --hdf5_output \t\t Use hdf5 for output (default is FALSE).\n"
 #endif
             "\t-I, --integrator\t\t Available Integrators are euler (1st order), euler_pc and monaghan_pc (2nd order),\n"
-            "\t\t\t\t\t rk2_adaptive (2nd order with adaptive time step).\n"
+            "\t\t\t\t\t rk2_adaptive (2nd order with adaptive time step) (default),\n"
+            "\t\t\t\t\t heun_rk4 (2nd order for sph coupled with fourth order for nbodys).\n"
             "\t-k, --kernel\t\t\t use kernel function (default: cubic_spline)\n"
             "\t      \t\t\t\t possible values: wendlandc2, wendlandc4, wendlandc6, cubic_spline, quartic_spline, spiky.\n"
             "\t-L, --angular_momentum <value> \t Check for conservation of angular momentum. (default: off)\n"
@@ -581,9 +605,10 @@ void usage(char *name) {
     exit(0);
 }
 
-int main(int argc, char *argv[]) {
-    // default run parameter
-    param.performanceTest = FALSE;
+
+
+int main(int argc, char *argv[])
+{
     numberOfParticles = 0;
     numberOfPointmasses = 0;
     timePerStep = 1.0;
@@ -593,6 +618,8 @@ int main(int argc, char *argv[]) {
     strcpy(configFile, "material.cfg");
     // default integration scheme
     char integrationscheme[255] = "rk2_adaptive";
+    FILE *conservedquantitiesfile;
+    FILE *binarysystemfile;
 
     static struct option opts[] = {
         { "verbose", 0, NULL, 'v' },
@@ -610,15 +637,17 @@ int main(int argc, char *argv[]) {
         { "decouplegravity", 0, NULL, 'g' },
         { "format", 0, NULL, 'Y' },
         { "filename", 1,	NULL, 'f' },
+        { "firsttimestep", 1,	NULL, 'F' },
+        { "cons_qu_file", 1, NULL, 'c' },
         { "angular_momentum", 1,	NULL, 'L' },
         { "kernel", 1,	NULL, 'k' },
-        { "materialconfig", 1, NULL, 'm'},
+        { "materialconfig", 1, NULL, 'm' },
         { "selfgravity", 0, NULL, 's' },
         { "directselfgravity", 0, NULL, 'D' },
         { "help", 0, NULL, 'h' },
         { "information", 0, NULL, 'G' },
         { "integrator", 1, NULL, 'I' },
-        { "boundary_ratio", 0, NULL, 'b'},
+        { "boundary_ratio", 0, NULL, 'b' },
         { NULL, 0, 0, 0 }
     };
 
@@ -626,30 +655,40 @@ int main(int argc, char *argv[]) {
         usage(argv[0]);
     }
 
-
-
+    // default run parameter
     param.hdf5input = FALSE;
     param.hdf5output = FALSE;
     param.restart = FALSE;
     param.ascii_output = TRUE;
     param.maxtimestep = -1;
+    param.firsttimestep = -1;
     param.rk_epsrel = 1e-6;
     param.angular_momentum_check = -1.0;
     strcpy(param.kernel, "cubic_spline");
+    strcpy(param.conservedquantitiesfilename, "conserved_quantities.log");
+    strcpy(param.binarysystemfilename, "binary_system.log");
     param.boundary_ratio = 0;
-
     treeTheta = 0.5; // default theta
     param.selfgravity = FALSE;
     param.directselfgravity = FALSE;
     param.decouplegravity = 0;
+    param.performanceTest = FALSE;
+    param.treeinformation = FALSE;
 
 #if USE_SIGNAL_HANDLER
     signal(SIGINT, signal_handler);
 #endif
 
     int i, c;
-    while ((c = getopt_long(argc, argv, "Q:d:M:b:m:L:k:T:DI:t:a:n:f:b:rXYvhHshVgGA", opts, &i)) != -1) {
+    while ((c = getopt_long(argc, argv, "Q:d:M:b:m:L:k:T:DI:t:a:n:f:F:c:e:b:rXYvhHshVgGA", opts, &i)) != -1) {
         switch (c) {
+            case 'F':
+                param.firsttimestep = atof(optarg);
+                if (param.firsttimestep < 0) {
+                    fprintf(stderr, "Error. First timestep should be > 0.\n");
+                    exit(1);
+                }
+                break;
             case 'M':
                 param.maxtimestep = atof(optarg);
                 if (param.maxtimestep < 0) {
@@ -675,7 +714,7 @@ int main(int argc, char *argv[]) {
                 cudaSetDevice(wanted_device);
                 break;
             case 'g':
-                param.decouplegravity = 1;
+                param.decouplegravity = TRUE;
                 break;
             case 'A':
                 param.ascii_output = FALSE;
@@ -704,6 +743,7 @@ int main(int argc, char *argv[]) {
                 break;
             case 'v':
                 param.verbose = TRUE;
+                param.treeinformation = TRUE;
                 break;
             case 'r':
                 param.restart = TRUE;
@@ -725,6 +765,18 @@ int main(int argc, char *argv[]) {
             case 'f':
                 if (!strcpy(inputFile.name, optarg))
                     exit(1);
+                break;
+            case 'c':
+                if( !strcpy(param.conservedquantitiesfilename, optarg) ) {
+                    fprintf(stderr, "Something's wrong with the name of the logfile for conserved quantities.\n");
+                    exit(1);
+                }
+                break;
+            case 'e':
+                if( !strcpy(param.binarysystemfilename, optarg) ) {
+                    fprintf(stderr, "Something's wrong with the name of the logfile for binary system.\n");
+                    exit(1);
+                }
                 break;
             case 'n':
                 numberOfTimesteps = atoi(optarg);
@@ -772,13 +824,13 @@ int main(int argc, char *argv[]) {
                 exit(0);
             default:
                 usage(argv[0]);
-                exit(0);
+                exit(1);
         }
     }
 
     // get the information about the number of particles in the file
     if ((inputFile.data = fopen(inputFile.name, "r")) == NULL) {
-        fprintf(stderr, "Wtf? File %s not found.\n", inputFile.name);
+        fprintf(stderr, "Error: File %s not found.\n", inputFile.name);
         if (param.hdf5input) {
 #if HDF5IO
             fprintf(stderr, "Hope you know what you're up to and search for a h5 file\n");
@@ -815,10 +867,18 @@ int main(int argc, char *argv[]) {
     } else {
         // reading number of lines in file
         int count = 0;
+        int datacnt = 0;
         char c;
         for (c = getc(inputFile.data); c != EOF; c = getc(inputFile.data)) {
             if (c == '\n') {
+                if (datacnt == 0) {
+                    fprintf(stderr, "Error, found empty line in inputfile %s. This does not work.\n", inputFile.name);
+                    exit(1);
+                }
+                datacnt = 0;
                 count++;
+            } else {
+                datacnt++;
             }
         }
         fprintf(stdout, "Found %d particles in %s.\n", count, inputFile.name);
@@ -881,7 +941,27 @@ int main(int argc, char *argv[]) {
         fclose(inputf);
         numberOfPointmasses = count;
     }
-#endif
+
+# if BINARY_INFO
+    /* create binary system file and write header */
+    if(param.hdf5input){
+        if( (binarysystemfile = fopen(param.binarysystemfilename, "a")) == NULL ) {
+            fprintf(stderr, "Ohoh Merry Xmas... Cannot open '%s' for writing. Abort...\n", param.binarysystemfilename);
+            exit(1);
+        }
+    }
+    else {
+        if( (binarysystemfile = fopen(param.binarysystemfilename, "w")) == NULL ) {
+            fprintf(stderr, "Ohoh Merry Xmas... Cannot open '%s' for writing. Abort...\n", param.binarysystemfilename);
+            exit(1);
+        }
+        fprintf(binarysystemfile, "#         1.time            2.semi-major-axis   3.eccentricity       4.Binary angular momentum");
+        fprintf(binarysystemfile, "\n");
+    }
+    fclose(binarysystemfile);    
+# endif
+
+#endif // GRAVITATING_POINT_MASSES
 
     maxNumberOfParticles = (int) ( (1+param.boundary_ratio) * numberOfParticles);
     numberOfRealParticles = numberOfParticles;
@@ -895,13 +975,6 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "unsetting selfgravity and using directselfgravity.\n");
         param.selfgravity = FALSE;
     }
-
-
-    // check for plasticity model
-#if VON_MISES_PLASTICITY && JC_PLASTICITY
-    fprintf(stderr, "Error: Can't use both Von Mises and Johnson-Cook Plasticity Models at the same time. Decide for one and recompile.\n");
-    exit(1);
-#endif
 
     // choose integrator
     fprintf(stdout, "Integrator information\n");
@@ -918,6 +991,10 @@ int main(int argc, char *argv[]) {
         fprintf(stdout, "using monaghan_pc\n");
         integrator = &predictor_corrector;
         param.integrator_type = MONAGHAN_PC;
+    } else if (0 == strcmp(integrationscheme, "heun_rk4")) {
+        fprintf(stdout, "using heun_rk4\n");
+        integrator = &heun_rk4;
+        param.integrator_type = HEUN_RK4;
     } else if (0 == strcmp(integrationscheme, "euler_pc")) {
         fprintf(stdout, "using euler_pc\n");
         integrator = &predictor_corrector_euler;
@@ -1004,11 +1081,10 @@ int main(int argc, char *argv[]) {
     /* initialise the memory */
     init_allocate_memory();
 
-
     // read particle data from input file
     if (param.verbose) printf("reading input file %s ...\n", inputFile.name);
     if ((inputFile.data = fopen(inputFile.name, "r")) == NULL) {
-        fprintf(stderr, "Wtf? File %s not found.\n", inputFile.name);
+        fprintf(stderr, "Error: File %s not found.\n", inputFile.name);
         if (param.hdf5input) {
             fprintf(stderr, "Hope you know what you're up to and search for a h5 file\n");
             read_particles_from_file(inputFile);
@@ -1028,6 +1104,53 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "copying of childList to device failed\n");
         exit(1);
     }
+
+    /* create conserved quantities logfile and write header */
+    if(param.hdf5input){
+        if( (conservedquantitiesfile = fopen(param.conservedquantitiesfilename, "a")) == NULL ) {
+            fprintf(stderr, "Ohoh... Cannot open '%s' for writing. Abort...\n", param.conservedquantitiesfilename);
+            exit(1);
+        }
+    }
+    else {
+        if( (conservedquantitiesfile = fopen(param.conservedquantitiesfilename, "w")) == NULL ) {
+            fprintf(stderr, "Ohoh... Cannot open '%s' for writing. Abort...\n", param.conservedquantitiesfilename);
+            exit(1);
+        }
+        fprintf(conservedquantitiesfile, " #   1.time                  2.SPH-part-total  3.SPH-part-deactivated 4.grav.point-masses              5.total-mass    6.total-kinetic-energy    7.total-inner-energy      ");
+#if OUTPUT_GRAV_ENERGY
+        fprintf(conservedquantitiesfile, "8.total-grav-energy       ");
+#endif
+        fprintf(conservedquantitiesfile, "total-momentum            total-momentum[x]         ");
+#if DIM > 1
+        fprintf(conservedquantitiesfile, "total-momentum[y]         ");
+#if DIM == 3
+        fprintf(conservedquantitiesfile, "total-momentum[z]         ");
+#endif
+#endif
+#if DIM > 1
+        fprintf(conservedquantitiesfile, "total-angular-mom         total-angular-mom[x]      total-angular-mom[y] ");
+#if DIM == 3
+        fprintf(conservedquantitiesfile, "total-angular-mom[z]      ");
+#endif
+#endif
+        fprintf(conservedquantitiesfile, "barycenter-pos[x]         ");
+#if DIM > 1
+        fprintf(conservedquantitiesfile, "barycenter-pos[y]         ");
+#if DIM == 3
+        fprintf(conservedquantitiesfile, "barycenter-pos[z]         ");
+#endif
+#endif
+        fprintf(conservedquantitiesfile, "barycenter-vel[x]         ");
+#if DIM > 1
+        fprintf(conservedquantitiesfile, "barycenter-vel[y]         ");
+#if DIM == 3
+        fprintf(conservedquantitiesfile, "barycenter-vel[z]         ");
+#endif
+#endif
+        fprintf(conservedquantitiesfile, "\n");
+    }
+    fclose(conservedquantitiesfile);
 
     /* if hdf5 output is enabled and no hdf5 input is set, write the ascii input file to hdf5 */
     if (param.hdf5output && !param.hdf5input) {

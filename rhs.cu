@@ -40,6 +40,7 @@
 #include "viscosity.h"
 #include "artificial_stress.h"
 #include "stress.h"
+#include "damage.h"
 
 extern int flag_force_gravity_calc;
 extern int gravity_index;
@@ -65,10 +66,12 @@ extern __device__ double minz, maxz;
 extern volatile int terminate_flag;
 
 // zero all derivatives
-__global__ void zero_all_derivatives()
+__global__ void zero_all_derivatives(int *interactions)
 {
-    register int i, inc;
-    register int dd;
+    register int i, inc, dd;
+#if SOLID
+    register int ddd;
+#endif
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         p.ax[i] = 0.0;
@@ -81,17 +84,37 @@ __global__ void zero_all_derivatives()
 #if INTEGRATE_SML
         p.dhdt[i] = 0.0;
 #endif
-#if INTEGRATE_DENSITY
         p.drhodt[i] = 0.0;
-#endif
 #if INTEGRATE_ENERGY
         p.dedt[i] = 0.0;
+#endif
+#if SHEPARD_CORRECTION
+        p_rhs.shepard_correction[i] = 1.0;
+#endif
+#if SML_CORRECTION
+        p.sml_omega[i] = 1.0;
 #endif
 #if SOLID
         for (dd = 0; dd < DIM*DIM; dd++) {
             p.dSdt[i*DIM*DIM+dd] = 0.0;
+            p_rhs.sigma[i*DIM*DIM+dd] = 0.0;
+        }
+#if TENSORIAL_CORRECTION
+        for (dd = 0; dd < DIM; dd++) {
+            for (ddd = 0; ddd < DIM; ddd++) {
+                p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+dd*DIM+ddd] = 0.0;
+                if (dd == ddd) {
+                    p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+dd*DIM+ddd] = 1.0;
+                }
+            }
         }
 #endif
+#endif
+        // reset all interactions
+        for (dd = 0; dd < MAX_NUM_INTERACTIONS; dd++) {
+            interactions[i*MAX_NUM_INTERACTIONS + dd] = -1;
+        }
+
 #if FRAGMENTATION
         p.dddt[i] = 0.0;
 #endif
@@ -100,10 +123,13 @@ __global__ void zero_all_derivatives()
 #if GRAVITATING_POINT_MASSES
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i += inc) {
         pointmass.ax[i] = 0.0;
+        pointmass.feedback_ax[i] = 0.0;
 #if DIM > 1
         pointmass.ay[i] = 0.0;
+        pointmass.feedback_ay[i] = 0.0;
 #if DIM > 2
         pointmass.az[i] = 0.0;
+        pointmass.feedback_az[i] = 0.0;
 #endif
 #endif
     }
@@ -123,6 +149,16 @@ void rightHandSide()
     int *movingparticlesPerBlock;
     int maxtreedepth_host = 0;
     int movingparticles_host = 0;
+    int calculate_nbody = 0;
+
+
+#if GRAVITATING_POINT_MASSES
+    if (param.integrator_type == HEUN_RK4) {
+        calculate_nbody = 0;
+    } else {
+        calculate_nbody = 1;
+    }
+#endif
 
 
 #if USE_SIGNAL_HANDLER
@@ -142,7 +178,7 @@ void rightHandSide()
 
     // zero all accelerations
     cudaEventRecord(start, 0);
-    cudaVerifyKernel((zero_all_derivatives<<<numberOfMultiprocessors, NUM_THREADS_256>>>()));
+    cudaVerifyKernel((zero_all_derivatives<<<numberOfMultiprocessors, NUM_THREADS_256>>>(interactions)));
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
@@ -234,7 +270,7 @@ void rightHandSide()
 
 
     // get maximum depth of tree
-    if (param.decouplegravity) {
+    if (param.decouplegravity || param.treeinformation) {
         cudaVerify(cudaMalloc((void**)&treeDepthPerBlock, sizeof(int)*numberOfMultiprocessors));
         if (param.verbose) fprintf(stdout, "Determing depth of tree\n");
         cudaVerifyKernel((getTreeDepth<<<numberOfMultiprocessors, NUM_THREADS_TREEDEPTH>>>(treeDepthPerBlock)));
@@ -252,7 +288,7 @@ void rightHandSide()
     cudaEventRecord(start, 0);
 
 
-#if VARIABLE_SML && !READ_INITIAL_SML_FROM_PARTICLE_FILE
+#if VARIABLE_SML
     // boundary conditions for the smoothing lengths
     if (param.verbose) printf("calling check_sml_boundary\n");
     cudaVerifyKernel((check_sml_boundary<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>()));
@@ -305,6 +341,7 @@ void rightHandSide()
 #endif
 
     time[timerCounter] = 0;
+
 #if !INTEGRATE_DENSITY
     cudaEventRecord(start, 0);
     cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>(
@@ -316,6 +353,19 @@ void rightHandSide()
 #endif
     totalTime += time[timerCounter++];
 
+
+#if SHEPARD_CORRECTION
+    time[timerCounter] = 0;
+    cudaEventRecord(start, 0);
+    cudaVerifyKernel((shepardCorrection<<<numberOfMultiprocessors*4, NUM_THREADS_256>>>( interactions)));
+    cudaVerify(cudaDeviceSynchronize());
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time[timerCounter], start, stop);
+    if (param.verbose) printf("duration shepard correction: %.7f ms\n", time[timerCounter]);
+    totalTime += time[timerCounter++];
+    //cudaVerifyKernel((printTensorialCorrectionMatrix<<<1,1>>>( interactions)));
+#endif
     time[timerCounter] = 0;
     cudaEventRecord(start, 0);
     cudaVerifyKernel((calculateSoundSpeed<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
@@ -424,7 +474,7 @@ void rightHandSide()
 #if VON_MISES_PLASTICITY
     cudaEventRecord(start, 0);
     time[timerCounter] = 0;
-    cudaVerifyKernel((vonMisesPlasticity<<<numberOfMultiprocessors * 4, NUM_THREADS_512>>>()));
+    cudaVerifyKernel((plasticityModel<<<numberOfMultiprocessors * 4, NUM_THREADS_512>>>()));
     cudaVerify(cudaDeviceSynchronize());
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
@@ -456,6 +506,8 @@ void rightHandSide()
     fflush(stdout);
     totalTime += time[timerCounter++];
 #endif
+
+
 #if TENSORIAL_CORRECTION
     time[timerCounter] = 0;
     cudaEventRecord(start, 0);
@@ -466,7 +518,7 @@ void rightHandSide()
     cudaEventElapsedTime(&time[timerCounter], start, stop);
     if (param.verbose) printf("duration tensorial correction: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-    //cudaVerifyKernel((printTensorialCorrectionMatrix<<<1,1>>>( interactions)));
+//    cudaVerifyKernel((printTensorialCorrectionMatrix<<<1,1>>>( interactions)));
 #endif
 #if VISCOUS_REGOLITH
     time[timerCounter] = 0;
@@ -523,6 +575,17 @@ void rightHandSide()
     totalTime += time[timerCounter++];
 #endif
 
+#if NAVIER_STOKES
+    time[timerCounter] = 0;
+    cudaEventRecord(start, 0);
+    cudaVerifyKernel((calculate_kinematic_viscosity<<<numberOfMultiprocessors, NUM_THREADS_256>>>()));
+    cudaVerify(cudaDeviceSynchronize());
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time[timerCounter], start, stop);
+    if (param.verbose) printf("duration calculation kinematic viscosity: %.7f ms\n", time[timerCounter]);
+    totalTime += time[timerCounter++];
+#endif
 
 #if NAVIER_STOKES
     time[timerCounter] = 0;
@@ -565,12 +628,24 @@ void rightHandSide()
     // interaction with the point masses
     time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-    cudaVerifyKernel((gravitation_from_point_masses<<<numberOfMultiprocessors, NUM_THREADS_128>>>()));
+    cudaVerifyKernel((gravitation_from_point_masses<<<numberOfMultiprocessors, NUM_THREADS_128>>>(calculate_nbody)));
     cudaVerify(cudaDeviceSynchronize());
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
     if (param.verbose) printf("duration gravitation from point masses: %.7f ms\n", time[timerCounter]);
+    totalTime += time[timerCounter++];
+#endif
+#if GRAVITATING_POINT_MASSES
+    // back reaction from the disk
+    time[timerCounter] = 0;
+    cudaEventRecord(start, 0);
+    backreaction_from_disk_to_point_masses(calculate_nbody);
+    cudaVerify(cudaDeviceSynchronize());
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time[timerCounter], start, stop);
+    if (param.verbose) printf("duration backreaction from the particles on pointmasses: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
 #endif
 
@@ -665,12 +740,14 @@ void rightHandSide()
     cudaVerifyKernel((setlocationchanges<<<4 * numberOfMultiprocessors, NUM_THREADS_512>>>(interactions)));
 
 
+#if 0 // disabled, cms 2019-12-03: should be sufficient to do this at start of rhs
 #if VARIABLE_SML && !READ_INITIAL_SML_FROM_PARTICLE_FILE
     // boundary conditions for the smoothing lengths
     if (param.verbose) printf("calling check_sml_boundary\n");
     cudaVerifyKernel((check_sml_boundary<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>()));
     cudaVerify(cudaDeviceSynchronize());
 #endif
+#endif // 0
 
     if (param.verbose) fprintf(stdout, "total duration right hand side: %.7f ms\n", totalTime);
 

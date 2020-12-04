@@ -38,7 +38,7 @@ __global__ void calculateDistensionChange()
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         matId = p_rhs.materialId[i];
-        if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN) {
+        if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
             if (p.alpha_jutzi[i] <= 1.0) {
                 p.dalphadt[i] = 0.0;
                 p.alpha_jutzi[i] = 1.0;

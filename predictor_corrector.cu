@@ -25,11 +25,13 @@
 
 #include "predictor_corrector_euler.h"
 #include "timeintegration.h"
+#include "config_parameter.h"
 #include "parameter.h"
 #include "memory_handling.h"
 #include "miluph.h"
 #include "pressure.h"
 #include "rhs.h"
+#include "damage.h"
 #include <float.h>
 
 /* predictor corrector scheme with an initial step of dt/2 and the corrector step with dt */
@@ -38,6 +40,7 @@
 extern __device__ double endTimeD, currentTimeD;
 extern __device__ double substep_currentTimeD;
 extern __device__ double dt;
+extern __device__ double dtmax;
 extern __device__ int blockCount;
 extern __device__ double emin_d;
 extern __device__ double Smin_d;
@@ -350,7 +353,7 @@ __global__ void pressureChangeCheck(double *maxpressureDiffPerBlock)
     int i, j, k, m;
     maxpressureDiff = 0.0;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
-        if (matEOS[p_rhs.materialId[i]] == EOS_TYPE_JUTZI || matEOS[p_rhs.materialId[i]] == EOS_TYPE_JUTZI_MURNAGHAN) {
+        if (matEOS[p_rhs.materialId[i]] == EOS_TYPE_JUTZI || matEOS[p_rhs.materialId[i]] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[p_rhs.materialId[i]] == EOS_TYPE_JUTZI_ANEOS) {
             // cms - 20190626
             // first rhs is called at beginning of timestep with predictor
             // and at the end with p_device
@@ -449,6 +452,9 @@ __global__ void setTimestep(double *forcesPerBlock, double *courantPerBlock, dou
             case (EOS_TYPE_JUTZI):
                 hasEnergy = 1;
                 break;
+			case (EOS_TYPE_JUTZI_ANEOS):
+				hasEnergy = 1;
+				break;
             case (EOS_TYPE_SIRONO):
                 hasEnergy = 1;
                 break;
@@ -477,18 +483,15 @@ __global__ void setTimestep(double *forcesPerBlock, double *courantPerBlock, dou
 #if DIM == 3
         temp += az*az;
 #endif
-            ;
+
         sml = p.h[i];
         temp = sqrt(sml / sqrt(temp));
         forces = min(forces, temp);
         temp = sml / p.cs[i];
         courant = min(courant, temp);
 
-#define CFL 0.7
-
 #if ARTIFICIAL_VISCOSITY
-        temp = CFL  * sml / (p.cs[i] + 1.2 * (matAlpha[matId]) * p.cs[i] + matBeta[matId] *
-                p.muijmax[i]);
+        temp = COURANT * sml / (p.cs[i] + 1.2 * (matAlpha[matId]) * p.cs[i] + matBeta[matId] * p.muijmax[i]);
         dtartvisc = min(dtartvisc, temp);
 #endif
 #if INVISCID_SPH
@@ -656,6 +659,9 @@ __global__ void setTimestep(double *forcesPerBlock, double *courantPerBlock, dou
             dt = min(dt, dtbeta);
 #endif
             dt = min(dt, endTimeD - currentTimeD);
+            if (dt > dtmax) {
+                dt = dtmax;
+            }
             printf("Time Step Information: dt(v and x): %e dtS: %e dte: %e dtrho: %e dtdamage: %e dtalpha: %e dtalpha_epspor: %e dtepsilon_v: %e\n",
                     dtx, dtS, dte, dtrho, dtdamage, dtalpha, dtalpha_epspor, dtepsilon_v);
             printf("time: %e timestep set to %e, integrating until %e \n", currentTimeD, dt, endTimeD);
@@ -859,6 +865,9 @@ void predictor_corrector()
 #endif
             /* get the time and the time step from the gpu */
             cudaVerify(cudaMemcpyFromSymbol(&currentTime, currentTimeD, sizeof(double)));
+	    //step was successful --> do something (e.g. look for min/max pressure...)
+	    afterIntegrationStep();
+
 		} // current time < end time loop
 		// write results
 #if FRAGMENTATION

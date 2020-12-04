@@ -31,9 +31,9 @@
 
 
 #if FRAGMENTATION
-#warning DAMAGE_ACTS_ON_PRINCIPAL_STRESSES is defined in stress.cu
 // if 1, then damage reduces the principal stresses
 // if 0, then p<0 -> (1-d) p and S -> (1-d) S
+// disabled for the time being
 # define DAMAGE_ACTS_ON_PRINCIPAL_STRESSES 0
 #else
 # define DAMAGE_ACTS_ON_PRINCIPAL_STRESSES 0
@@ -41,50 +41,41 @@
 
 
 // principal axes damage does not work for pressure dependent yield strengths
-#if DAMAGE_ACTS_ON_PRINCIPAL_STRESSES && COLLINS_PRESSURE_DEPENDENT_YIELD_STRENGTH
-#error Do not combine DAMAGE_ACTS_ON_PRINCIPAL_STRESSES and COLLINS_PRESSURE_DEPENDENT_YIELD_STRENGTH
+#if DAMAGE_ACTS_ON_PRINCIPAL_STRESSES  &&  ( COLLINS_PLASTICITY || COLLINS_PLASTICITY_SIMPLE )
+#error Do not combine DAMAGE_ACTS_ON_PRINCIPAL_STRESSES and COLLINS_PLASTICITY or COLLINS_PLASTICITY_SIMPLE.
 #endif
 
-#if SOLID
 
+#if SOLID
+// here we set the stress tensor sigma from pressure and deviatoric stress S
+// note, that S was already lowered in plasticity
 __global__ void set_stress_tensor(void)
 {
     register int i, inc, matId;
     int d, e;
     int niters;
     double sigma[DIM][DIM];
+# if DAMAGE_ACTS_ON_PRINCIPAL_STRESSES
     double sigmatmp[DIM][DIM];
     double rotation_matrix[DIM][DIM];
     double main_stresses[DIM];
-    double max_ev;
+# endif
     double damage = 0.0;
-    double stress_damage = 0.0;
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         matId = p_rhs.materialId[i];
         niters = 0;
 
-        // here we set the stress tensor sigma from pressure and deviatoric stress S
-        // note, that S was already lowered in plasticity
-#if FRAGMENTATION
-        damage = pow(p.damage_total[i], DIM);
+# if FRAGMENTATION
+        damage = p.damage_total[i];
         if (damage > 1.0) damage = 1.0;
-        stress_damage = damage;
-
-        // special handling of granular media with pressure dependent yield strengths
-# if COLLINS_PRESSURE_DEPENDENT_YIELD_STRENGTH
-        if (!(damage < 1)) {
-            stress_damage = 0.0;
-        }
-# endif
-#else
+        if (damage < 0.0) damage = 0.0;
+# else
         damage = 0.0;
-        stress_damage = 0.0;
-#endif
+# endif
 
-
-#if DAMAGE_ACTS_ON_PRINCIPAL_STRESSES
+# if DAMAGE_ACTS_ON_PRINCIPAL_STRESSES
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
                 sigmatmp[d][e] = 0.0;
@@ -109,10 +100,18 @@ __global__ void set_stress_tensor(void)
 
         // sigmatmp now holds the stress tensor for particle i with damaged reduced stresses
         copy_matrix(sigmatmp, sigma);
-#else
+# else
+        // assemble stress tensor
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
-                sigma[d][e] = (1.0 - stress_damage) * p.S[stressIndex(i, d, e)];
+#  if COLLINS_PLASTICITY || COLLINS_PLASTICITY_SIMPLE
+                // for the Collins model the damage directly affects S via the yield strength, therefore not (additionally) reduced here
+                sigma[d][e] = p.S[stressIndex(i, d, e)];
+#  else
+                // reduction of S following Grady-Kipp model
+                sigma[d][e] = (1.0 - damage) * p.S[stressIndex(i, d, e)];
+#  endif
+                // the pure pressure part of sigma is always reduced for p < 0
                 if (d == e) { // the trace
                     if (p.p[i] < 0) {
                         sigma[d][e] += - (1.0 - damage) * p.p[i];
@@ -122,8 +121,7 @@ __global__ void set_stress_tensor(void)
                 }
             }
         }
-
-#endif
+# endif
 
         // remember sigma
         for (d = 0; d < DIM; d++) {
@@ -134,4 +132,4 @@ __global__ void set_stress_tensor(void)
 
     }
 }
-#endif
+#endif  // SOLID

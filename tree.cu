@@ -23,13 +23,17 @@
 
 #include "tree.h"
 #include "timeintegration.h"
+#include "config_parameter.h"
 #include "parameter.h"
 #include "miluph.h"
 #include "pressure.h"
 
 
-// lucky number 3
-#define MAX_VARIABLE_SML_ITERATIONS 2
+// do not iterate more than MAX_VARIABLE_SML_ITERATIONS times to get the desired number of interaction partners
+// if VARIABLE_SML and FIXED_NOI is set
+#define MAX_VARIABLE_SML_ITERATIONS 4
+// tolerance value. if found number of interactions is as close as TOLERANCE_WANTED_NUMBER_OF_INTERACTIONS, we stop iterating
+#define TOLERANCE_WANTED_NUMBER_OF_INTERACTIONS 5
 
 
 extern __device__ double dt;
@@ -183,7 +187,8 @@ __global__ void buildTree()
 
 						// throw error if there aren't enough node indices available
 						if (newNodeIndex <= numParticles) {
-							printf("(thread %d): error! not enough nodes. newNodeIndex %d, maxNodeIndex %d, numParticles: %d\n", threadIdx.x, newNodeIndex, maxNodeIndex, numParticles);
+							printf("(thread %d): error during tree creation: not enough nodes. newNodeIndex %d, maxNodeIndex %d, numParticles: %d\n", threadIdx.x, newNodeIndex, maxNodeIndex, numParticles);
+                            assert(0);
 						}
 
 						// the first available free nodeIndex will be the subtree node
@@ -544,7 +549,7 @@ __global__ void knnNeighbourSearch(int *interactions)
         volatile int found = FALSE;
         register int nit = -1;
 
-	    double htmp, htmpold; 
+	    double htmp, htmpold;
         volatile double htmpj;
 
         htmp = p.h[i];
@@ -595,7 +600,7 @@ __global__ void knnNeighbourSearch(int *interactions)
 						    r *= 0.5;
 						    interactionDistance = (r + htmp);
 					    	if (depth >= MAXDEPTH) {
-						    	printf("wtf, maxdepth reached!");
+						    	printf("Error, maxdepth reached! problem in tree during interaction search");
                                 assert(depth < MAXDEPTH);
 						    }
 						    childNumber = 0;
@@ -610,9 +615,8 @@ __global__ void knnNeighbourSearch(int *interactions)
 
             htmpold = htmp;
 //            printf("%d %d %e\n", i, numberOfInteractions, htmp);
-            /* stop if we have the desired number of interaction partners \pm 10 */
-            //if ((nit > MAX_VARIABLE_SML_ITERATIONS || numberOfInteractions == matnoi[p_rhs.materialId[i]] ) && numberOfInteractions < MAX_NUM_INTERACTIONS) {
-            if ((nit > MAX_VARIABLE_SML_ITERATIONS || abs(numberOfInteractions - matnoi[p_rhs.materialId[i]]) < 10 ) && numberOfInteractions < MAX_NUM_INTERACTIONS) {
+            /* stop if we have the desired number of interaction partners \pm TOLERANCE_WANTED_NUMBER_OF_INTERACTIONS */
+            if ((nit > MAX_VARIABLE_SML_ITERATIONS || abs(numberOfInteractions - matnoi[p_rhs.materialId[i]]) < TOLERANCE_WANTED_NUMBER_OF_INTERACTIONS ) && numberOfInteractions < MAX_NUM_INTERACTIONS) {
                 found = TRUE;
                 p.h[i] = htmp;
             } else if (numberOfInteractions >= MAX_NUM_INTERACTIONS) {
@@ -622,7 +626,6 @@ __global__ void knnNeighbourSearch(int *interactions)
                 htmp *= 0.5 *  ( 1.0 + pow( (double) matnoi[p_rhs.materialId[i]]/ (double) numberOfInteractions, 1./DIM));
             } else {
                 /* lower or raise htmp accordingly */
-                //numberOfInteractions = numberOfInteractions > 0 ? numberOfInteractions : 1;
                 if (numberOfInteractions < 1)
                     numberOfInteractions = 1;
 
@@ -713,7 +716,6 @@ start_interaction_search_for_particle:
 
                         smlj = p.h[child];
 
-						//if (d < sml*sml) {
                         // make sure, all interactions are symmetric
 						if (d < sml*sml && d < smlj*smlj) {
                             // check if we are still safe with the current numberOfInteractions
@@ -737,7 +739,7 @@ start_interaction_search_for_particle:
 						r *= 0.5;
 						interactionDistance = (r + sml);
 						if (depth >= MAXDEPTH) {
-							printf("wtf, maxdepth reached!");
+							printf("Error, maxdepth reached!");
                             assert(depth < MAXDEPTH);
 						}
 						childNumber = 0;
@@ -754,7 +756,7 @@ start_interaction_search_for_particle:
 		if (numberOfInteractions >= MAX_NUM_INTERACTIONS) {
             // now, we lower the sml according to the dimension and the ratio
             sml = pow((double) MAX_NUM_INTERACTIONS/(double) numberOfInteractions, 1./DIM) * p.h[i];
-            // and remove another 10%
+            // and remove another 20%
             if (threadIdx.x == 0)
                 printf("WARNING: Maximum number of interactions exceeded: %d / %d, lower sml from %.16f to %.16f\n", numberOfInteractions, MAX_NUM_INTERACTIONS, p.h[i], 0.8*sml);
             p.h[i] = 0.8*sml;
@@ -801,6 +803,7 @@ __global__ void nearNeighbourSearch(int *interactions)
 		numberOfInteractions = 0;
 		r = radius * 0.5; // because we start with root children
         sml = p.h[i];
+        p.noi[i] = 0;
 		interactionDistance = (r + sml);
 
 		do {
@@ -868,7 +871,7 @@ __global__ void nearNeighbourSearch(int *interactions)
 						r *= 0.5;
 						interactionDistance = (r + sml);
 						if (depth >= MAXDEPTH) {
-							printf("wtf, maxdepth reached!");
+							printf("Error, maxdepth reached!");
                             assert(depth < MAXDEPTH);
 						}
 						childNumber = 0;
@@ -906,8 +909,8 @@ __global__ void check_sml_boundary(void)
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         matId = p_rhs.materialId[i];
-        smlmin = matSml[matId] * mat_f_sml_min[matId];
-        smlmax = matSml[matId] * mat_f_sml_max[matId];
+        smlmin = p_rhs.h0[i] * mat_f_sml_min[matId];
+        smlmax = p_rhs.h0[i] * mat_f_sml_max[matId];
         if (p.h[i] < smlmin) {
             p.h[i] = smlmin;
 #if INTEGRATE_SML
@@ -1061,3 +1064,120 @@ __global__ void computationalDomain(
 		}
 	}
 }
+
+#if SML_CORRECTION
+/* redo NeighbourSearch for particular particle only: search for interaction partners */
+__device__ void redo_NeighbourSearch(int particle_id, int *interactions)
+{
+	register int i, inc, nodeIndex, depth, childNumber, child;
+	register double x, y, interactionDistance, dx, dy, r, d;
+	register int currentNodeIndex[MAXDEPTH];
+	register int currentChildNumber[MAXDEPTH];
+	register int numberOfInteractions;
+#if DIM == 3
+	register double z, dz;
+#endif
+    i = particle_id;
+	x = p.x[i];
+	y = p.y[i];
+#if DIM == 3
+	z = p.z[i];
+#endif
+    //printf("1) sml_new > h: noi: %d\n", p.noi[i]);
+
+	double sml; /* smoothing length of particle */
+    double smlj; /* smoothing length of potential interaction partner */
+	// start at root
+	depth = 0;
+	currentNodeIndex[depth] = numNodes - 1;
+	currentChildNumber[depth] = 0;
+	numberOfInteractions = 0;
+	r = radius * 0.5; // because we start with root children
+    sml = p.h[i];
+    p.noi[i] = 0;
+	interactionDistance = (r + sml);
+
+	do {
+		childNumber = currentChildNumber[depth];
+		nodeIndex = currentNodeIndex[depth];
+		while (childNumber < numChildren) {
+			child = childList[childListIndex(nodeIndex, childNumber)];
+			childNumber++;
+			if (child != EMPTY && child != i) {
+				dx = x - p.x[child];
+#if DIM > 1
+				dy = y - p.y[child];
+#if DIM == 3
+				dz = z - p.z[child];
+#endif
+#endif
+
+				if (child < numParticles) {
+                    if (p_rhs.materialId[child] == EOS_TYPE_IGNORE) {
+                        continue;
+                    }
+					d = dx*dx;
+#if DIM > 1
+                    d += dy*dy;
+#if DIM == 3
+					d += dz*dz;
+#endif
+#endif
+                    smlj = p.h[child];
+
+					if (d < sml*sml && d < smlj*smlj) {
+						interactions[i * MAX_NUM_INTERACTIONS + numberOfInteractions] = child;
+						numberOfInteractions++;
+#if TOO_MANY_INTERACTIONS_KILL_PARTICLE
+                        if (numberOfInteractions >= MAX_NUM_INTERACTIONS) {
+                            printf("setting the smoothing length for particle %d to 0!\n", i);
+                            p.h[i] = 0.0;
+                            p.noi[i] = 0;
+                            sml = 0.0;
+                            interactionDistance = 0.0;
+                            p_rhs.materialId[i] = EOS_TYPE_IGNORE;
+                            // continue with next particle by setting depth to -1
+                            // cms 2018-01-19
+                            depth = -1;
+                            break;
+                        }
+#endif
+					}
+				} else if (fabs(dx) < interactionDistance
+#if DIM > 1
+                        && fabs(dy) < interactionDistance
+#if DIM == 3
+						&& fabs(dz) < interactionDistance
+#endif
+#endif
+				) {
+					// put child on stack
+					currentChildNumber[depth] = childNumber;
+					currentNodeIndex[depth] = nodeIndex;
+					depth++;
+					r *= 0.5;
+					interactionDistance = (r + sml);
+					if (depth >= MAXDEPTH) {
+						printf("wtf, maxdepth reached!");
+                        assert(depth < MAXDEPTH);	
+					}
+						childNumber = 0;
+						nodeIndex = child;
+				}
+			}
+		}
+
+		depth--;
+		r *= 2.0;
+		interactionDistance = (r + sml);
+	} while (depth >= 0);
+
+	if (numberOfInteractions >= MAX_NUM_INTERACTIONS) {
+		printf("ERROR: Maximum number of interactions exceeded: %d / %d\n", numberOfInteractions, MAX_NUM_INTERACTIONS);
+#if !TOO_MANY_INTERACTIONS_KILL_PARTICLE
+       // assert(numberOfInteractions < MAX_NUM_INTERACTIONS);
+#endif
+	}
+	p.noi[i] = numberOfInteractions;
+}
+#endif //SML_CORRECTION

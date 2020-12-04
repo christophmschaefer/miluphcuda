@@ -24,13 +24,14 @@
 
 #include "pressure.h"
 #include "parameter.h"
+#include "config_parameter.h"
 #include "miluph.h"
 #include "aneos.h"
 
 __global__ void calculatePressure() {
     register int i, inc, matId;
     register double eta, e, rho, mu, p1, p2;
-	int i_rho, i_e;
+    int i_rho, i_e;
     double pressure;
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
@@ -47,49 +48,49 @@ __global__ void calculatePressure() {
             p.p[i] = p.cs[i]*p.cs[i] * p.rho[i];
         } else if (EOS_TYPE_ISOTHERMAL_GAS == matEOS[matId]) {
             /* this is pure molecular hydrogen at 10 K */
-			p.p[i] = 41255.407 * p.rho[i];
-		} else if (EOS_TYPE_MURNAGHAN == matEOS[matId] || EOS_TYPE_VISCOUS_REGOLITH == matEOS[matId]) {
-			eta = p.rho[i] / matRho0[matId];
-			if (eta < matRhoLimit[matId]) {
-				p.p[i] = 0.0;
-			} else {
-				p.p[i] = (matBulkmodulus[matId]/matN[matId])*(pow(eta, matN[matId]) - 1.0);
-			}
-		} else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
-			rho = p.rho[i];
-			e = p.e[i];
-			eta = rho / matTillRho0[matId];
-			mu = eta - 1.0;
-			if (eta < matRhoLimit[matId] && e < matTillEcv[matId]) {
-				p.p[i] = 0.0;
-			} else {
-				if (e <= matTillEiv[matId] || eta >= 1.0) {
-					p.p[i] = (matTilla[matId] + matTillb[matId]/(e/(eta*eta*matTillE0[matId])+1.0))
-						   * rho * e + matTillA[matId]*mu + matTillB[matId]*mu*mu;
-				} else if (e >= matTillEcv[matId] && eta >= 0.0) {
-					p.p[i] = matTilla[matId]*rho*e + (matTillb[matId]*rho*e/(e/(eta*eta*matTillE0[matId])+1.0)
-						   + matTillA[matId] * mu * exp(-matTillBeta[matId]*(matTillRho0[matId]/rho - 1.0)))
-						   * exp(-matTillAlpha[matId] * (pow(matTillRho0[matId]/rho-1.0, 2)));
-				} else if (e > matTillEiv[matId] && e < matTillEcv[matId]) {
-					// for intermediate states:
-					// weighted average of pressures calculated by expanded
-					// and compressed versions of Tillotson (both evaluated at e)
-					p1 = (matTilla[matId]+matTillb[matId]/(e/(eta*eta*matTillE0[matId])+1.0)) * rho*e
-					   + matTillA[matId]*mu + matTillB[matId]*mu*mu;
-					p2 = matTilla[matId]*rho*e + (matTillb[matId]*rho*e/(e/(eta*eta*matTillE0[matId])+1.0)
-					   + matTillA[matId] * mu * exp(-matTillBeta[matId]*(matTillRho0[matId]/rho -1.0)))
-					   * exp(-matTillAlpha[matId] * (pow(matTillRho0[matId]/rho-1.0, 2)));
-					p.p[i] = ( p1*(matTillEcv[matId]-e) + p2*(e-matTillEiv[matId]) ) / (matTillEcv[matId]-matTillEiv[matId]);
-				} else {
-					printf("\n\nDeep trouble in pressure.\nenergy[%d] = %e\nE_iv = %e, E_cv = %e\n\n", i, e, matTillEiv[matId], matTillEcv[matId]);
-					p.p[i] = 0.0;
-				}
-			}
+            p.p[i] = 41255.407 * p.rho[i];
+        } else if (EOS_TYPE_MURNAGHAN == matEOS[matId] || EOS_TYPE_VISCOUS_REGOLITH == matEOS[matId]) {
+            eta = p.rho[i] / matRho0[matId];
+            if (eta < matRhoLimit[matId]) {
+                p.p[i] = 0.0;
+            } else {
+                p.p[i] = (matBulkmodulus[matId]/matN[matId])*(pow(eta, matN[matId]) - 1.0);
+            }
+        } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
+            rho = p.rho[i];
+            e = p.e[i];
+            eta = rho / matTillRho0[matId];
+            mu = eta - 1.0;
+            if (eta < matRhoLimit[matId] && e < matTillEcv[matId]) {
+                p.p[i] = 0.0;
+            } else {
+                if (e <= matTillEiv[matId] || eta >= 1.0) {
+                    p.p[i] = (matTilla[matId] + matTillb[matId]/(e/(eta*eta*matTillE0[matId])+1.0))
+                        * rho * e + matTillA[matId]*mu + matTillB[matId]*mu*mu;
+                } else if (e >= matTillEcv[matId] && eta >= 0.0) {
+                    p.p[i] = matTilla[matId]*rho*e + (matTillb[matId]*rho*e/(e/(eta*eta*matTillE0[matId])+1.0)
+                        + matTillA[matId] * mu * exp(-matTillBeta[matId]*(matTillRho0[matId]/rho - 1.0)))
+                        * exp(-matTillAlpha[matId] * (pow(matTillRho0[matId]/rho-1.0, 2)));
+                } else if (e > matTillEiv[matId] && e < matTillEcv[matId]) {
+                    // for intermediate states:
+                    // weighted average of pressures calculated by expanded
+                    // and compressed versions of Tillotson (both evaluated at e)
+                    p1 = (matTilla[matId]+matTillb[matId]/(e/(eta*eta*matTillE0[matId])+1.0)) * rho*e
+                        + matTillA[matId]*mu + matTillB[matId]*mu*mu;
+                    p2 = matTilla[matId]*rho*e + (matTillb[matId]*rho*e/(e/(eta*eta*matTillE0[matId])+1.0)
+                        + matTillA[matId] * mu * exp(-matTillBeta[matId]*(matTillRho0[matId]/rho -1.0)))
+                        * exp(-matTillAlpha[matId] * (pow(matTillRho0[matId]/rho-1.0, 2)));
+                    p.p[i] = ( p1*(matTillEcv[matId]-e) + p2*(e-matTillEiv[matId]) ) / (matTillEcv[matId]-matTillEiv[matId]);
+                } else {
+                    printf("\n\nDeep trouble in pressure.\nenergy[%d] = %e\nE_iv = %e, E_cv = %e\n\n", i, e, matTillEiv[matId], matTillEcv[matId]);
+                    p.p[i] = 0.0;
+                }
+            }
         } else if (EOS_TYPE_ANEOS == matEOS[matId]) {
             /* find array-indices just below the actual values of rho and e */
             i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
             i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
-            /* interpolate (bi)linearly to obtain the pressure and other quantities of interest*/
+            /* interpolate (bi)linearly to obtain the pressure */
             p.p[i] = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId]);
 #if SIRONO_POROSITY
         } else if (matEOS[matId] == EOS_TYPE_SIRONO) {
@@ -159,7 +160,7 @@ __global__ void calculatePressure() {
             p.p[i] = pressure;
 #endif
 #if PALPHA_POROSITY
-        } else if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN) {
+        } else if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
             double pressure_solid = 0.0;
             double p_e = matporjutzi_p_elastic[matId];  	/* pressure at which the material switches from elastic to plastic */
             double p_t = matporjutzi_p_transition[matId]; /* pressure indicating a transition */
@@ -262,7 +263,14 @@ __global__ void calculatePressure() {
                 pressure_solid = K_0 / n * (pow(eta, n) - 1.0);
                 p.delpdele[i] = 0.0;
                 p.delpdelrho[i] = K_0 / rho_0 * (pow(eta, n - 1.0));
+            } else if (matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
+                /* find array-indices just below the actual values of rho and e */
+                i_rho = array_index(p.alpha_jutzi[i] * p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
+                i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
+                /* interpolate (bi)linearly to obtain the pressure and dp/drho and dp/de */
+                bilinear_interpolation_from_linearized_plus_derivatives(p.alpha_jutzi[i] * p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], &pressure_solid, &(p.delpdelrho[i]), &(p.delpdele[i]) );
             }
+
             pressure = pressure_solid / p.alpha_jutzi[i]; /* from the P-alpha model */
             /* calculate the derivative dalpha / dpressure */
             double dalphadp_elastic = 0.0;
@@ -371,7 +379,7 @@ __global__ void calculatePressure() {
             printf("No such EOS. %d\n", matEOS[matId]);
         }
 #if PALPHA_POROSITY
-        if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN) {
+        if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
             p.p[i] = pressure;
         } else {
             p.alpha_jutzi_old[i] = p.alpha_jutzi[i];

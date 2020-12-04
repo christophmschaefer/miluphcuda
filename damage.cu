@@ -22,6 +22,7 @@
  */
 #include "damage.h"
 #include "miluph.h"
+#include "config_parameter.h"
 #include "timeintegration.h"
 #include "parameter.h"
 #include "pressure.h"
@@ -41,7 +42,7 @@ __global__ void damageLimit(void) {
         noaf = p.numActiveFlaws[i];
         dmgMax = 1;
         if (noaf < 1 && dmg > 0) {
-            printf("Error, not possible: noaf: %d, dmg %e\n", noaf, dmg);
+            printf("Error, not possible: noaf: %d, dmg %e materialId is %d numFlaws: %d\n", noaf, dmg, p_rhs.materialId[i], p.numFlaws[i]);
             assert(0);
         }
         if (noaf > 0) {
@@ -63,7 +64,7 @@ __global__ void damageLimit(void) {
         } else if (p.damage_porjutzi[i] < 0) {
             p.damage_porjutzi[i] = 0.0;
         }
-        dmg = p.d[i] + p.damage_porjutzi[i];
+        dmg = pow(p.d[i], DIM) + pow(p.damage_porjutzi[i], DIM);
         if (dmg > 1) dmg = 1.0;
 #endif
         p.damage_total[i] = dmg;
