@@ -1,26 +1,33 @@
 #!/bin/bash
 
-#DOXY="doxy"
-#DOXY="/usr/local/Cellar/doxygen/1.8.20/bin/doxygen" 
+DOXY="doxygen"
 BASHDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 DOCSDIR="$BASHDIR/../docs"
 DOXYDIR="$BASHDIR/DoxygenFiles"
 
-#open_index_html=false
-#show_help=false
+VERBOSE=false
 
+# function to display the help
 usage() 
 {
+	echo "This script lets you generate the documentation for miluphcuda!"
+	echo " "
+	echo "Usage:"
+	echo "------------------------------------------------------"
 	echo "[-d | --doxygen]          path to doxygen executable"
 	echo "[-r | --remove]           remove the documentation"
+	echo "[-v | --verbosity]        verbosity"
 	echo "[-h | --help]             show the help"
+	echo "------------------------------------------------------"
 }
 
+# function to create the appropriate folder structure for the documentation
 create_folder_structure()
 {
 	mkdir -p $DOCSDIR/
 }
 
+# function to delete the documentation
 delete_documentation()
 {
 	rm -r $BASHDIR/html/
@@ -28,6 +35,7 @@ delete_documentation()
 	rm -r $DOCSDIR
 }
 
+# function to write the include file for the Doxyfile (doxygen input file)
 write_to_doxygen_inc()
 {	
 	echo "# Generatd by make_doc shell script" > $DOXYDIR/doxyfile.inc
@@ -43,27 +51,23 @@ write_to_doxygen_inc()
 	echo "USE_MDFILE_AS_MAINPAGE = $BASHDIR/Mainpage.md" >> $DOXYDIR/doxyfile.inc
 }
 
+# function to copy the doc/html/ files to the docs/ folder 
 copy_to_docs()
 {
-cp -r $BASHDIR/html/ $DOCSDIR
+cp -r $BASHDIR/html/. $DOCSDIR
 }
 
-
+# parse the command line arguments
 while [ "$1" != "" ]; do
     case $1 in
-	-d | --doxygen )        echo "-d was given"
-				shift
+	-d | --doxygen )        shift
 				DOXY="$1"
 				;;
-	-r | --remove ) 	echo "-r was given"
-				delete_documentation
+	-r | --remove ) 	delete_documentation
 				exit 1
 				;;
-        #-o | --open )           echo "-o was given"
-	#			open_index_html=true
-	#			#shift
-        #                        #filename="$1"
-        #                        ;;
+	-v | --verbose ) 	VERBOSE=true;
+	 			;;	
         -h | --help )           usage
                                 exit 1
                                 ;;
@@ -73,25 +77,39 @@ while [ "$1" != "" ]; do
     shift
 done
 
-# echo "BASHDIR: $BASHDIR"
-# echo "DOCSDIR: $DOCSDIR"
-
-echo "Doxygen executable: $DOXY"
-echo " "
-echo "deleting the (old) documentation ..."
+if [ $VERBOSE = true ]; then
+	echo "Start the documentation generation ..."
+	echo " "
+	echo "The Doxygen executable is set to: $DOXY"
+	echo " "
+	echo "    deleting the (old) documentation ..."
+fi
 delete_documentation
-echo "creating folder structure ..."
+
+if [ $VERBOSE = true ]; then
+	echo "    creating folder structure for the documentation..."
+fi
 create_folder_structure
-echo "writing to doxygen_inc ..."
+
+if [ $VERBOSE = true ]; then
+	echo "    writing to doxygen include file (doxyfile.inc) ..."
+fi
 write_to_doxygen_inc
-echo "create documentation with doxygen (takes some seconds) ..."
+
+if [ $VERBOSE = true ]; then
+	echo "    creating documentation using doxygen ..."
+	echo "    this takes some seconds ..."
+fi
 $DOXY $DOXYDIR/Doxyfile &> $BASHDIR/doxygen.log
-echo "copying html files to docs/ dir"
+
+if [ $VERBOSE = true ]; then
+	echo "    copying generated html files to docs/ directory ..."
+fi
 copy_to_docs
 
-echo " "
-echo "Go to docs/ and open index.html in a browser to see the result!"
+if [ $VERBOSE = true ]; then
+	echo " "
+	echo "Finished the documentation generation!"
+	echo "Go to docs/ and open the index.html file in a browser to see the result!"
+fi
 
-# if [ "$open_index_html" = true ]; then
-#	echo "-o was set"
-# fi

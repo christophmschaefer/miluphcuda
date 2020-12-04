@@ -55,6 +55,7 @@
 # The Documentation is located at the documentation branch!
 doc/html/
 doc/latex/
+doc/doxygen.log
 docs/
 create_doc/
 *.inc
