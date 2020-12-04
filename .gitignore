@@ -1,50 +1,12 @@
-# Prerequisites
-*.d
+# Ignore everything
+*
 
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
+# But not these files...
+!.gitignore
+!doc/
+!docs/
+!README.md
+# etc...
 
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
-
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-
-.idea/
-.DS_Store
+# ...even if they are in subdirectories
+!*/
