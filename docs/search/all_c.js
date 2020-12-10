@@ -131,7 +131,7 @@ var searchData=
   ['maxnumflaws',['maxNumFlaws',['../timeintegration_8h.html#a0a51ab57e18c6bdc7baea94f1359d498',1,'timeintegration.h']]],
   ['maxnumparticles',['maxNumParticles',['../timeintegration_8h.html#a4a761937631aa92a42314bbc2a415e6c',1,'timeintegration.h']]],
   ['maxtimestep',['maxtimestep',['../struct_run_parameter.html#a58df015c16fa18e20bdef15df3371880',1,'RunParameter']]],
-  ['miluphcuda',['Miluphcuda',['../md__home_staneker_miluph_master__r_e_a_d_m_e.html',1,'']]],
+  ['miluphcuda',['Miluphcuda',['../md__home_schaefer_src_miluphcuda_documentation_miluphcuda_master__r_e_a_d_m_e.html',1,'']]],
   ['measuretreechange',['measureTreeChange',['../tree_8h.html#a3dd72b7d09239c038e6d5605d325322e',1,'tree.h']]],
   ['memory_5fhandling_2ecu',['memory_handling.cu',['../memory__handling_8cu.html',1,'']]],
   ['memory_5fhandling_2eh',['memory_handling.h',['../memory__handling_8h.html',1,'']]],
