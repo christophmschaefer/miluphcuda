@@ -1,0 +1,48 @@
+digraph "/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/miluph.h"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=record];
+  Node20 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/miluph.h",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black"];
+  Node20 -> Node21 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node21 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/timeintegration.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$timeintegration_8h.html"];
+  Node21 -> Node22 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node22 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/artificial\l_stress.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$artificial__stress_8h.html"];
+  Node21 -> Node20 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node21 -> Node23 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node23 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/coupled\l_heun_rk4_sph_nbody.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$coupled__heun__rk4__sph__nbody_8h.html"];
+  Node21 -> Node24 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node24 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/euler.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$euler_8h.html"];
+  Node21 -> Node25 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node25 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/plasticity.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$plasticity_8h.html"];
+  Node21 -> Node26 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node26 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/predictor\l_corrector.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$predictor__corrector_8h.html"];
+  Node21 -> Node27 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node27 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/predictor\l_corrector_euler.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$predictor__corrector__euler_8h.html"];
+  Node21 -> Node28 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node28 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/pressure.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$pressure_8h.html"];
+  Node21 -> Node29 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node29 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/rk2adaptive.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$rk2adaptive_8h.html"];
+  Node21 -> Node30 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node30 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/rk4_pointmass.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$rk4__pointmass_8h.html"];
+  Node21 -> Node31 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node31 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/stress.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$stress_8h.html"];
+  Node21 -> Node32 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node32 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/viscosity.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$viscosity_8h.html"];
+  Node20 -> Node33 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node33 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/io.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$io_8h.html"];
+  Node33 -> Node20 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node33 -> Node21 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node33 -> Node34 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node34 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/boundary.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$boundary_8h.html"];
+  Node33 -> Node35 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node35 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/config\l_parameter.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$config__parameter_8h.html"];
+  Node20 -> Node34 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node20 -> Node35 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node20 -> Node23 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node20 -> Node36 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node36 [label="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/little\l_helpers.h",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$little__helpers_8h.html"];
+  Node20 -> Node26 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node20 -> Node27 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node20 -> Node29 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+  Node20 -> Node30 [dir="back",color="midnightblue",fontsize="10",style="solid",fontname="Helvetica"];
+}
