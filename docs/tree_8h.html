@@ -5,7 +5,7 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 	<meta name="generator" content="Doxygen 1.8.13"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1"/>
-	<title>Miluphcuda: /home/schaefer/src/miluphcuda_documentation/miluphcuda_master/tree.h File Reference</title>
+	<title>Miluphcuda: /home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/tree.h File Reference</title>
 	<link href="tabs.css" rel="stylesheet" type="text/css"/>
 	<script type="text/javascript" src="jquery.js"></script>
 	<script type="text/javascript" src="dynsections.js"></script>
@@ -21,7 +21,7 @@
 	<div id="banner">
 		<div class="logo">
 			<span class="subtitle">
-				API Documentation for miluphcuda <!-- /home/schaefer/src/miluphcuda_documentation/miluphcuda_master/tree.h File Reference -->
+				API Documentation for miluphcuda <!-- /home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/tree.h File Reference -->
 			</span>
 			<!-- <span class="search">
 				<input type="text" placeholder="Search" onkeydown="search(this,event);">
@@ -67,15 +67,17 @@ $(function() {
   <div class="summary">
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<div class="title">/home/schaefer/src/miluphcuda_documentation/miluphcuda_master/tree.h File Reference</div>  </div>
+<div class="title">/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/tree.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &quot;<a class="el" href="parameter_8h_source.html">parameter.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for tree.h:</div>
 <div class="dyncontent">
-<div class="center"><img src="tree_8h__incl.png" border="0" usemap="#_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__master_2tree_8h" alt=""/></div>
-<!-- MAP 0 -->
+<div class="center"><img src="tree_8h__incl.png" border="0" usemap="#_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__devel_2tree_8h" alt=""/></div>
+<map name="_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__devel_2tree_8h" id="_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__devel_2tree_8h">
+<area shape="rect" id="node2" href="parameter_8h.html" title="parameter.h" alt="" coords="52,109,143,136"/>
+</map>
 </div>
 </div>
 <p><a href="tree_8h_source.html">Go to the source code of this file.</a></p>
@@ -102,6 +104,8 @@ Functions</h2></td></tr>
 <tr class="separator:adc00c5ba64aaa875dcc3f075d410ae93"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59b57cd8d63b7c9793e441ef1792f03a"><td class="memItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tree_8h.html#a59b57cd8d63b7c9793e441ef1792f03a">check_sml_boundary</a> (void)</td></tr>
 <tr class="separator:a59b57cd8d63b7c9793e441ef1792f03a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9662d454a3cbb46229e8120225ce24d8"><td class="memItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tree_8h.html#a9662d454a3cbb46229e8120225ce24d8">redo_NeighbourSearch</a> (int particle_id, int *<a class="el" href="miluph_8h.html#a6452a9acca23effecb6f5a6e0cd332ec">interactions</a>)</td></tr>
+<tr class="separator:a9662d454a3cbb46229e8120225ce24d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2d1ccf6ae64ed3fb0b0388dfe7575d15"><td class="memItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="tree_8h.html#a2d1ccf6ae64ed3fb0b0388dfe7575d15">computationalDomain</a> (double *minxPerBlock, double *maxxPerBlock, double *minyPerBlock, double *maxyPerBlock)</td></tr>
 <tr class="separator:a2d1ccf6ae64ed3fb0b0388dfe7575d15"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -296,6 +300,34 @@ LICENSE</h1>
 
 </div>
 </div>
+<a id="a9662d454a3cbb46229e8120225ce24d8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9662d454a3cbb46229e8120225ce24d8">&#9670;&nbsp;</a></span>redo_NeighbourSearch()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__device__ void redo_NeighbourSearch </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>particle_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>interactions</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a5d1d94630fd2202ed47880e841ef9181"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5d1d94630fd2202ed47880e841ef9181">&#9670;&nbsp;</a></span>setEmptyMassForInnerNodes()</h2>
 
@@ -335,8 +367,8 @@ LICENSE</h1>
 </div><!-- contents -->
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
-    Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_master/tree.h File Reference<br />
-    Generated on Thu Dec 10 2020 21:54:30 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/tree.h File Reference<br />
+    Generated on Fri Dec 11 2020 16:01:34 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>

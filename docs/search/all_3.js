@@ -2,7 +2,7 @@ var searchData=
 [
   ['damage_2ecu',['damage.cu',['../damage_8cu.html',1,'']]],
   ['damage_2eh',['damage.h',['../damage_8h.html',1,'']]],
-  ['damagelimit',['damageLimit',['../damage_8h.html#a21afcc6e2f3ce13ddaad8f60b8982f75',1,'damageLimit(void):&#160;damage.h'],['../timeintegration_8h.html#a21afcc6e2f3ce13ddaad8f60b8982f75',1,'damageLimit(void):&#160;timeintegration.h']]],
+  ['damagelimit',['damageLimit',['../damage_8h.html#a21afcc6e2f3ce13ddaad8f60b8982f75',1,'damage.h']]],
   ['damagemaxtimestep',['damageMaxTimeStep',['../rk2adaptive_8h.html#a59fa6fb2b980eb0a3939339f8ef758f3',1,'rk2adaptive.h']]],
   ['data',['data',['../struct_file.html#a83f214b7ffa5a30c512396174b039323',1,'File']]],
   ['deal_5fwith_5ftoo_5fmany_5finteractions',['DEAL_WITH_TOO_MANY_INTERACTIONS',['../parameter_8h.html#ae04c60518447e20dc504bed2b41bc6b8',1,'DEAL_WITH_TOO_MANY_INTERACTIONS():&#160;parameter.h'],['../test__cases_2colliding__rings_2parameter_8h.html#ae04c60518447e20dc504bed2b41bc6b8',1,'DEAL_WITH_TOO_MANY_INTERACTIONS():&#160;parameter.h'],['../test__cases_2giant__collision__solid_2parameter_8h.html#ae04c60518447e20dc504bed2b41bc6b8',1,'DEAL_WITH_TOO_MANY_INTERACTIONS():&#160;parameter.h'],['../test__cases_2nakamura_2parameter_8h.html#ae04c60518447e20dc504bed2b41bc6b8',1,'DEAL_WITH_TOO_MANY_INTERACTIONS():&#160;parameter.h'],['../test__cases_2shocktube_2parameter_8h.html#ae04c60518447e20dc504bed2b41bc6b8',1,'DEAL_WITH_TOO_MANY_INTERACTIONS():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#ae04c60518447e20dc504bed2b41bc6b8',1,'DEAL_WITH_TOO_MANY_INTERACTIONS():&#160;parameter.h']]],
@@ -15,12 +15,13 @@ var searchData=
   ['detectvelocityrelaxation',['detectVelocityRelaxation',['../timeintegration_8h.html#a888b4cc7c1dc59101c0c003d9d9a4b41',1,'timeintegration.h']]],
   ['device_5ftools_2ecu',['device_tools.cu',['../device__tools_8cu.html',1,'']]],
   ['device_5ftools_2eh',['device_tools.h',['../device__tools_8h.html',1,'']]],
+  ['dhdt',['dhdt',['../struct_particle.html#a6e25fdafe796b9d51c55ce84ec1d8201',1,'Particle']]],
   ['dim',['DIM',['../parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a',1,'DIM():&#160;parameter.h'],['../test__cases_2colliding__rings_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a',1,'DIM():&#160;parameter.h'],['../test__cases_2giant__collision__solid_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a',1,'DIM():&#160;parameter.h'],['../test__cases_2nakamura_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a',1,'DIM():&#160;parameter.h'],['../test__cases_2shocktube_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a',1,'DIM():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a',1,'DIM():&#160;parameter.h']]],
   ['direct_5fselfgravity',['direct_selfgravity',['../gravity_8h.html#ae5e3b04a91f0dd501c9511cb40bea5cd',1,'gravity.h']]],
   ['directselfgravity',['directselfgravity',['../struct_run_parameter.html#a8c4c8c6d1ee4d3898685dda3ee1a64f8',1,'RunParameter']]],
+  ['divv',['divv',['../struct_particle.html#a66049b7f5dab1e61378eaeec0f3cb6ba',1,'Particle']]],
   ['drhodt',['drhodt',['../struct_particle.html#a80398b24fb1c3d04d13d150e6612fa8a',1,'Particle']]],
   ['drucker_5fprager_5fplasticity',['DRUCKER_PRAGER_PLASTICITY',['../parameter_8h.html#ae9660c23d5c92866b1e5c36ad1006f7a',1,'DRUCKER_PRAGER_PLASTICITY():&#160;parameter.h'],['../test__cases_2colliding__rings_2parameter_8h.html#ae9660c23d5c92866b1e5c36ad1006f7a',1,'DRUCKER_PRAGER_PLASTICITY():&#160;parameter.h'],['../test__cases_2giant__collision__solid_2parameter_8h.html#ae9660c23d5c92866b1e5c36ad1006f7a',1,'DRUCKER_PRAGER_PLASTICITY():&#160;parameter.h'],['../test__cases_2nakamura_2parameter_8h.html#ae9660c23d5c92866b1e5c36ad1006f7a',1,'DRUCKER_PRAGER_PLASTICITY():&#160;parameter.h'],['../test__cases_2shocktube_2parameter_8h.html#ae9660c23d5c92866b1e5c36ad1006f7a',1,'DRUCKER_PRAGER_PLASTICITY():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#ae9660c23d5c92866b1e5c36ad1006f7a',1,'DRUCKER_PRAGER_PLASTICITY():&#160;parameter.h']]],
-  ['dsdt',['dSdt',['../struct_particle.html#aa7da1ac50f504edc248e1b746ae466c1',1,'Particle']]],
   ['dt_5fhost',['dt_host',['../timeintegration_8h.html#a6c3b611212a1cd8118377686486253d8',1,'timeintegration.h']]],
   ['dxdt',['dxdt',['../struct_particle.html#a43d5144a8cdd77c139e1e83d67a9df4e',1,'Particle']]],
   ['dydt',['dydt',['../struct_particle.html#afdb0141f115bf57a530ad057ca8a3a5e',1,'Particle']]]

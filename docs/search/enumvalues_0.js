@@ -1,11 +1,13 @@
 var searchData=
 [
+  ['eos_5ftype_5faccreted',['EOS_TYPE_ACCRETED',['../pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6ca56f330321fc7c4f2926fa8739686e0a4',1,'pressure.h']]],
   ['eos_5ftype_5faneos',['EOS_TYPE_ANEOS',['../pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6caa74700cb522aebd8bab3e1801e28e640',1,'pressure.h']]],
   ['eos_5ftype_5fepsilon',['EOS_TYPE_EPSILON',['../pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6ca1ea345a5d0ef09b5e620d851900d54a9',1,'pressure.h']]],
   ['eos_5ftype_5fideal_5fgas',['EOS_TYPE_IDEAL_GAS',['../pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6ca702d27dfbcdb45b468403a544448b14c',1,'pressure.h']]],
   ['eos_5ftype_5fignore',['EOS_TYPE_IGNORE',['../pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6ca44f285863d20ce9aac5e81298e497ff1',1,'pressure.h']]],
   ['eos_5ftype_5fisothermal_5fgas',['EOS_TYPE_ISOTHERMAL_GAS',['../pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6ca91836d27e4a5f1c4e02931e04e12ab57',1,'pressure.h']]],
   ['eos_5ftype_5fjutzi',['EOS_TYPE_JUTZI',['../pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6cafb4a48b88da8e592a6c33f0719b11043',1,'pressure.h']]],
+  ['eos_5ftype_5fjutzi_5faneos',['EOS_TYPE_JUTZI_ANEOS',['../pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6ca72d0c9a1e5b7ef68c935239330758599',1,'pressure.h']]],
   ['eos_5ftype_5fjutzi_5fmurnaghan',['EOS_TYPE_JUTZI_MURNAGHAN',['../pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6cabdb5a647eb160fb997b5bb67634c12bd',1,'pressure.h']]],
   ['eos_5ftype_5flocally_5fisothermal_5fgas',['EOS_TYPE_LOCALLY_ISOTHERMAL_GAS',['../pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6ca2603e214a79450f54ff467b62ee8c14c',1,'pressure.h']]],
   ['eos_5ftype_5fmurnaghan',['EOS_TYPE_MURNAGHAN',['../pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6ca118d6f358d76756291d3e8e7a4e4d846',1,'pressure.h']]],

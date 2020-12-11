@@ -6,6 +6,5 @@ var searchData=
   ['little_5fhelpers_2ecu',['little_helpers.cu',['../little__helpers_8cu.html',1,'']]],
   ['little_5fhelpers_2eh',['little_helpers.h',['../little__helpers_8h.html',1,'']]],
   ['loadconfigfromfile',['loadConfigFromFile',['../io_8h.html#a5ec360b371f7ac6d5f2cbba38ba5fdd1',1,'io.h']]],
-  ['local_5fstrain',['local_strain',['../struct_particle.html#a7bf0aa6ef21073cca9790128bd482045',1,'Particle']]],
   ['locked',['LOCKED',['../timeintegration_8h.html#a00de8f7e0b615f88335573ba3909583d',1,'timeintegration.h']]]
 ];

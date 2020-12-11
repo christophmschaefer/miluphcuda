@@ -5,7 +5,7 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 	<meta name="generator" content="Doxygen 1.8.13"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1"/>
-	<title>Miluphcuda: /home/schaefer/src/miluphcuda_documentation/miluphcuda_master/viscosity.h File Reference</title>
+	<title>Miluphcuda: /home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/viscosity.h File Reference</title>
 	<link href="tabs.css" rel="stylesheet" type="text/css"/>
 	<script type="text/javascript" src="jquery.js"></script>
 	<script type="text/javascript" src="dynsections.js"></script>
@@ -21,7 +21,7 @@
 	<div id="banner">
 		<div class="logo">
 			<span class="subtitle">
-				API Documentation for miluphcuda <!-- /home/schaefer/src/miluphcuda_documentation/miluphcuda_master/viscosity.h File Reference -->
+				API Documentation for miluphcuda <!-- /home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/viscosity.h File Reference -->
 			</span>
 			<!-- <span class="search">
 				<input type="text" placeholder="Search" onkeydown="search(this,event);">
@@ -67,15 +67,25 @@ $(function() {
   <div class="summary">
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<div class="title">/home/schaefer/src/miluphcuda_documentation/miluphcuda_master/viscosity.h File Reference</div>  </div>
+<div class="title">/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/viscosity.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &quot;<a class="el" href="timeintegration_8h_source.html">timeintegration.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for viscosity.h:</div>
 <div class="dyncontent">
-<div class="center"><img src="viscosity_8h__incl.png" border="0" usemap="#_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__master_2viscosity_8h" alt=""/></div>
-<!-- MAP 0 -->
+<div class="center"><img src="viscosity_8h__incl.png" border="0" usemap="#_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__devel_2viscosity_8h" alt=""/></div>
+<map name="_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__devel_2viscosity_8h" id="_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__devel_2viscosity_8h">
+<area shape="rect" id="node2" href="timeintegration_8h.html" title="timeintegration.h" alt="" coords="477,109,596,136"/>
+<area shape="rect" id="node7" href="parameter_8h.html" title="parameter.h" alt="" coords="1082,259,1173,285"/>
+<area shape="rect" id="node8" href="miluph_8h.html" title="miluph.h" alt="" coords="501,184,572,211"/>
+<area shape="rect" id="node15" href="cuda__utils_8h.html" title="cuda_utils.h" alt="" coords="965,259,1057,285"/>
+<area shape="rect" id="node16" href="io_8h.html" title="io.h" alt="" coords="83,259,126,285"/>
+<area shape="rect" id="node19" href="kernel_8h.html" title="kernel.h" alt="" coords="777,184,845,211"/>
+<area shape="rect" id="node20" href="extrema_8h.html" title="extrema.h" alt="" coords="891,184,971,211"/>
+<area shape="rect" id="node21" href="sinking_8h.html" title="sinking.h" alt="" coords="1006,184,1081,211"/>
+<area shape="rect" id="node18" href="checks_8h.html" title="checks.h" alt="" coords="497,259,571,285"/>
+</map>
 </div>
 </div>
 <p><a href="viscosity_8h_source.html">Go to the source code of this file.</a></p>
@@ -86,6 +96,8 @@ Functions</h2></td></tr>
 <tr class="separator:a2bfa27ba72d5dedf75a624cd871a0346"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a753caadd06df4fc17c916cbb55029193"><td class="memItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="viscosity_8h.html#a753caadd06df4fc17c916cbb55029193">calculate_shear_stress_tensor</a> (int *<a class="el" href="miluph_8h.html#a6452a9acca23effecb6f5a6e0cd332ec">interactions</a>)</td></tr>
 <tr class="separator:a753caadd06df4fc17c916cbb55029193"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f4f7c861289abc110a778820eafdeb2"><td class="memItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="viscosity_8h.html#a5f4f7c861289abc110a778820eafdeb2">calculate_kinematic_viscosity</a> (void)</td></tr>
+<tr class="separator:a5f4f7c861289abc110a778820eafdeb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a09dfbb5ef3cf13f091a4850f1c6e512e"><td class="memItemLeft" align="right" valign="top">__device__ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="viscosity_8h.html#a09dfbb5ef3cf13f091a4850f1c6e512e">sign</a> (double x)</td></tr>
 <tr class="separator:a09dfbb5ef3cf13f091a4850f1c6e512e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2281abce50ff1f2abed346bd1ac2c264"><td class="memItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="viscosity_8h.html#a2281abce50ff1f2abed346bd1ac2c264">multiply</a> (double mat1[][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>], double mat2[][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>], double res[][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>])</td></tr>
@@ -115,6 +127,24 @@ LICENSE</h1>
 <p>miluphcuda is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p>
 <p>miluphcuda is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</p>
 <p>You should have received a copy of the GNU General Public License along with miluphcuda. If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>. </p>
+
+</div>
+</div>
+<a id="a5f4f7c861289abc110a778820eafdeb2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f4f7c861289abc110a778820eafdeb2">&#9670;&nbsp;</a></span>calculate_kinematic_viscosity()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__global__ void calculate_kinematic_viscosity </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -191,8 +221,8 @@ LICENSE</h1>
 </div><!-- contents -->
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
-    Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_master/viscosity.h File Reference<br />
-    Generated on Thu Dec 10 2020 21:54:30 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/viscosity.h File Reference<br />
+    Generated on Fri Dec 11 2020 16:01:34 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>

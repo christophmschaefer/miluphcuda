@@ -5,7 +5,7 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 	<meta name="generator" content="Doxygen 1.8.13"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1"/>
-	<title>Miluphcuda: /home/schaefer/src/miluphcuda_documentation/miluphcuda_master/gravity.h File Reference</title>
+	<title>Miluphcuda: /home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/gravity.h File Reference</title>
 	<link href="tabs.css" rel="stylesheet" type="text/css"/>
 	<script type="text/javascript" src="jquery.js"></script>
 	<script type="text/javascript" src="dynsections.js"></script>
@@ -21,7 +21,7 @@
 	<div id="banner">
 		<div class="logo">
 			<span class="subtitle">
-				API Documentation for miluphcuda <!-- /home/schaefer/src/miluphcuda_documentation/miluphcuda_master/gravity.h File Reference -->
+				API Documentation for miluphcuda <!-- /home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/gravity.h File Reference -->
 			</span>
 			<!-- <span class="search">
 				<input type="text" placeholder="Search" onkeydown="search(this,event);">
@@ -67,15 +67,17 @@ $(function() {
   <div class="summary">
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<div class="title">/home/schaefer/src/miluphcuda_documentation/miluphcuda_master/gravity.h File Reference</div>  </div>
+<div class="title">/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/gravity.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &quot;<a class="el" href="parameter_8h_source.html">parameter.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for gravity.h:</div>
 <div class="dyncontent">
-<div class="center"><img src="gravity_8h__incl.png" border="0" usemap="#_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__master_2gravity_8h" alt=""/></div>
-<!-- MAP 0 -->
+<div class="center"><img src="gravity_8h__incl.png" border="0" usemap="#_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__devel_2gravity_8h" alt=""/></div>
+<map name="_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__devel_2gravity_8h" id="_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__devel_2gravity_8h">
+<area shape="rect" id="node2" href="parameter_8h.html" title="parameter.h" alt="" coords="52,109,143,136"/>
+</map>
 </div>
 </div>
 <p><a href="gravity_8h_source.html">Go to the source code of this file.</a></p>
@@ -88,8 +90,12 @@ Functions</h2></td></tr>
 <tr class="separator:a7ea470f8746206cb9b1dd4e28b6b8e7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a88a683a4afca0afc5834013361148725"><td class="memItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gravity_8h.html#a88a683a4afca0afc5834013361148725">addoldselfgravity</a> ()</td></tr>
 <tr class="separator:a88a683a4afca0afc5834013361148725"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa4658d7d31d636a7997447eeb114d78d"><td class="memItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gravity_8h.html#aa4658d7d31d636a7997447eeb114d78d">gravitation_from_point_masses</a> ()</td></tr>
-<tr class="separator:aa4658d7d31d636a7997447eeb114d78d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5409cb95653aa7810363d6ccf0d4906b"><td class="memItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gravity_8h.html#a5409cb95653aa7810363d6ccf0d4906b">gravitation_from_point_masses</a> (int calculate_nbody)</td></tr>
+<tr class="separator:a5409cb95653aa7810363d6ccf0d4906b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefc20d318f4eb89c76c28594518b6b6b"><td class="memItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gravity_8h.html#aefc20d318f4eb89c76c28594518b6b6b">particles_gravitational_feedback</a> (int n, double *, double *, double *)</td></tr>
+<tr class="separator:aefc20d318f4eb89c76c28594518b6b6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca45c20940674a89aa043f2c4109ffc5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gravity_8h.html#aca45c20940674a89aa043f2c4109ffc5">backreaction_from_disk_to_point_masses</a> (int calculate_nbody)</td></tr>
+<tr class="separator:aca45c20940674a89aa043f2c4109ffc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="a88a683a4afca0afc5834013361148725"></a>
@@ -102,6 +108,24 @@ Functions</h2></td></tr>
           <td class="memname">__global__ void addoldselfgravity </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aca45c20940674a89aa043f2c4109ffc5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aca45c20940674a89aa043f2c4109ffc5">&#9670;&nbsp;</a></span>backreaction_from_disk_to_point_masses()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void backreaction_from_disk_to_point_masses </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>calculate_nbody</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -134,8 +158,8 @@ LICENSE</h1>
 
 </div>
 </div>
-<a id="aa4658d7d31d636a7997447eeb114d78d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa4658d7d31d636a7997447eeb114d78d">&#9670;&nbsp;</a></span>gravitation_from_point_masses()</h2>
+<a id="a5409cb95653aa7810363d6ccf0d4906b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5409cb95653aa7810363d6ccf0d4906b">&#9670;&nbsp;</a></span>gravitation_from_point_masses()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -143,8 +167,49 @@ LICENSE</h1>
         <tr>
           <td class="memname">__global__ void gravitation_from_point_masses </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>calculate_nbody</em></td><td>)</td>
           <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aefc20d318f4eb89c76c28594518b6b6b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aefc20d318f4eb89c76c28594518b6b6b">&#9670;&nbsp;</a></span>particles_gravitational_feedback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__global__ void particles_gravitational_feedback </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -171,8 +236,8 @@ LICENSE</h1>
 </div><!-- contents -->
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
-    Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_master/gravity.h File Reference<br />
-    Generated on Thu Dec 10 2020 21:54:30 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/gravity.h File Reference<br />
+    Generated on Fri Dec 11 2020 16:01:34 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>

@@ -1,6 +1,8 @@
 var searchData=
 [
   ['g_5faneos_5fbulk_5fcs',['g_aneos_bulk_cs',['../aneos_8h.html#a4bcc38a8da7f21928651f47404dddd5b',1,'aneos.h']]],
+  ['g_5faneos_5fcs',['g_aneos_cs',['../aneos_8h.html#ac59a6acbb60986b88b50af5c1b573832',1,'aneos.h']]],
+  ['g_5faneos_5fcs_5flimit',['g_aneos_cs_limit',['../aneos_8h.html#a2697af48a7d2432268b73078cd6a560d',1,'aneos.h']]],
   ['g_5faneos_5fe',['g_aneos_e',['../aneos_8h.html#ae4aed0bf0d6b4f65ced619850567cef4',1,'aneos.h']]],
   ['g_5faneos_5fn_5fe',['g_aneos_n_e',['../aneos_8h.html#a35b8efa33081ab58a0ea288b87c6e524',1,'aneos.h']]],
   ['g_5faneos_5fn_5frho',['g_aneos_n_rho',['../aneos_8h.html#af9bdc82d0f678cba99511a8bc9717281',1,'aneos.h']]],
@@ -14,10 +16,11 @@ var searchData=
   ['g_5flocal_5fcellsize',['g_local_cellsize',['../struct_particle.html#a490be54759ae6343fed13dcccde6c4a6',1,'Particle']]],
   ['g_5fx',['g_x',['../struct_particle.html#a39bafe3ff6d3eaa4765ef0104ad180eb',1,'Particle']]],
   ['g_5fy',['g_y',['../struct_particle.html#a4c0e5b9a50494c37eff75d7eb6c445da',1,'Particle']]],
+  ['get_5fextrema',['get_extrema',['../extrema_8h.html#a53b06bdddc69f6acc7115f07e706b62c',1,'extrema.h']]],
   ['gettreedepth',['getTreeDepth',['../tree_8h.html#a409f6d46534c450659fd202310fa1551',1,'tree.h']]],
   ['ghost_5fboundaries',['GHOST_BOUNDARIES',['../parameter_8h.html#a30232eebf26e43e871b0ee500134242f',1,'GHOST_BOUNDARIES():&#160;parameter.h'],['../test__cases_2colliding__rings_2parameter_8h.html#a30232eebf26e43e871b0ee500134242f',1,'GHOST_BOUNDARIES():&#160;parameter.h'],['../test__cases_2giant__collision__solid_2parameter_8h.html#a30232eebf26e43e871b0ee500134242f',1,'GHOST_BOUNDARIES():&#160;parameter.h'],['../test__cases_2nakamura_2parameter_8h.html#a30232eebf26e43e871b0ee500134242f',1,'GHOST_BOUNDARIES():&#160;parameter.h'],['../test__cases_2shocktube_2parameter_8h.html#a30232eebf26e43e871b0ee500134242f',1,'GHOST_BOUNDARIES():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#a30232eebf26e43e871b0ee500134242f',1,'GHOST_BOUNDARIES():&#160;parameter.h']]],
   ['gravitating_5fpoint_5fmasses',['GRAVITATING_POINT_MASSES',['../parameter_8h.html#a684c685898955bb55d818c81ce139384',1,'GRAVITATING_POINT_MASSES():&#160;parameter.h'],['../test__cases_2colliding__rings_2parameter_8h.html#a684c685898955bb55d818c81ce139384',1,'GRAVITATING_POINT_MASSES():&#160;parameter.h'],['../test__cases_2giant__collision__solid_2parameter_8h.html#a684c685898955bb55d818c81ce139384',1,'GRAVITATING_POINT_MASSES():&#160;parameter.h'],['../test__cases_2nakamura_2parameter_8h.html#a684c685898955bb55d818c81ce139384',1,'GRAVITATING_POINT_MASSES():&#160;parameter.h'],['../test__cases_2shocktube_2parameter_8h.html#a684c685898955bb55d818c81ce139384',1,'GRAVITATING_POINT_MASSES():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#a684c685898955bb55d818c81ce139384',1,'GRAVITATING_POINT_MASSES():&#160;parameter.h']]],
-  ['gravitation_5ffrom_5fpoint_5fmasses',['gravitation_from_point_masses',['../gravity_8h.html#aa4658d7d31d636a7997447eeb114d78d',1,'gravity.h']]],
+  ['gravitation_5ffrom_5fpoint_5fmasses',['gravitation_from_point_masses',['../gravity_8h.html#a5409cb95653aa7810363d6ccf0d4906b',1,'gravity.h']]],
   ['gravity_2ecu',['gravity.cu',['../gravity_8cu.html',1,'']]],
   ['gravity_2eh',['gravity.h',['../gravity_8h.html',1,'']]]
 ];
