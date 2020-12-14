@@ -1,0 +1,224 @@
+--------------------------------
+Reading input parameter file 'spheres_ini.input' ... Done.
+--------------------------------
+Searching for material 'Iron', material type 0, in materialconfiguration file 'material.cfg' ... Found.
+Found Tillotson eos parameters:
+rho_0 = 7800
+A = 1.28e+11
+B = 1.05e+11
+e_0 = 9.5e+06
+e_iv = 2.4e+06
+e_cv = 8.67e+06
+a = 0.5
+b = 1.5
+alpha = 5
+beta = 5
+rho_limit = 0.9
+bulk_modulus = 1.135e+11
+cs = 3814.61 (=sqrt(bulk_modulus/rho_0))
+--------------------------------
+Searching for material 'Granite', material type 1, in materialconfiguration file 'material.cfg' ... Found.
+Found Tillotson eos parameters:
+rho_0 = 2680
+A = 1.8e+10
+B = 1.8e+10
+e_0 = 1.6e+07
+e_iv = 3.5e+06
+e_cv = 1.8e+07
+a = 0.5
+b = 1.3
+alpha = 5
+beta = 5
+rho_limit = 0.9
+bulk_modulus = 5e+10
+cs = 4319.34 (=sqrt(bulk_modulus/rho_0))
+--------------------------------
+Building sphere(s) based on a spherical shell setup generated with SEAGen ...
+
+Calling Python interface to invoke SEAGen, with cmd-line:   ../../spheres_ini//run_SEAGen.py  --SEAGen_dir ../../spheres_ini//SEAGen/ --N_des 4760 --R_total 8.0258553803924518e+05 --R_core 4.0554121475237282e+05 --R_mantle 8.0258553803924518e+05 --outfile projectile.SEAGen -v
+
+#  SEAGen 
+#  https://github.com/jkeger/seagen 
+
+Verbosity 1: Standard printing
+
+> Interpolating profiles to increase radial density 
+> Done interpolating profiles! 
+
+2 layer(s):
+    Outer radius   Mass          Material
+    4.055412e+05   2.79379e+17   0
+    8.025855e+05   1.88614e+18   1
+
+> Divide the profile into shells
+
+==== Layer 1 ====
+
+> Tweak the particle mass to fix the outer boundary
+> Done particle mass tweaking!
+
+6 shells in layer 1
+
+==== Layer 2 ====
+
+> Tweak the number of particles in the first shell to fix the outer boundary
+> Done first-shell particle number tweaking!
+
+6 shells in layer 2
+
+> Done profile division into shells!
+
+==== Particles ====
+
+> Find the values for the particles in each shell
+  No extra values.
+> Done shell particle values!
+
+> Arrange the particles in each shell
+    Shell 1 of 12    Shell 2 of 12    Shell 3 of 12    Shell 4 of 12    Shell 5 of 12    Shell 6 of 12    Shell 7 of 12    Shell 8 of 12    Shell 9 of 12    Shell 10 of 12    Shell 11 of 12    Shell 12 of 12
+> Done particles!
+
+Final number of particles = 6723
+
+> SEAGen done!
+
+Particle volume statistics (computed from SEAGen rho and m):
+    minimum  = 3.20565e+14
+    maximum  = 3.22824e+14
+    mean     = 3.21991e+14
+    median   = 3.21956e+14
+    std.dev. = 2.12696e+11
+
+Calling Python interface to invoke SEAGen, with cmd-line:   ../../spheres_ini//run_SEAGen.py  --SEAGen_dir ../../spheres_ini//SEAGen/ --N_des 45239 --R_total 1.6999982084471202e+06 --R_core 8.6277257100746327e+05 --R_mantle 1.6999982084471202e+06 --outfile target.SEAGen -v
+
+#  SEAGen 
+#  https://github.com/jkeger/seagen 
+
+Verbosity 1: Standard printing
+
+> Interpolating profiles to increase radial density 
+> Done interpolating profiles! 
+
+2 layer(s):
+    Outer radius   Mass          Material
+    8.627726e+05   2.69016e+18   0
+    1.699998e+06   1.78893e+19   1
+
+> Divide the profile into shells
+
+==== Layer 1 ====
+
+> Tweak the particle mass to fix the outer boundary
+> Done particle mass tweaking!
+
+12 shells in layer 1
+
+==== Layer 2 ====
+
+> Tweak the number of particles in the first shell to fix the outer boundary
+> Done first-shell particle number tweaking!
+
+12 shells in layer 2
+
+> Done profile division into shells!
+
+==== Particles ====
+
+> Find the values for the particles in each shell
+  No extra values.
+> Done shell particle values!
+
+> Arrange the particles in each shell
+    Shell 1 of 24    Shell 2 of 24    Shell 3 of 24    Shell 4 of 24    Shell 5 of 24    Shell 6 of 24    Shell 7 of 24    Shell 8 of 24    Shell 9 of 24    Shell 10 of 24    Shell 11 of 24    Shell 12 of 24    Shell 13 of 24    Shell 14 of 24    Shell 15 of 24    Shell 16 of 24    Shell 17 of 24    Shell 18 of 24    Shell 19 of 24    Shell 20 of 24    Shell 21 of 24    Shell 22 of 24    Shell 23 of 24    Shell 24 of 24
+> Done particles!
+
+Final number of particles = 53176
+
+> SEAGen done!
+
+Particle volume statistics (computed from SEAGen rho and m):
+    minimum  = 3.85344e+14
+    maximum  = 3.87924e+14
+    mean     = 3.86941e+14
+    median   = 3.86948e+14
+    std.dev. = 8.41718e+10
+--------------------------------
+Compute initial position via tracing back the analytical orbit from a given v/v_esc and impact angle at "touching ball" distance:
+  The mutual v_esc at "touching ball" distance (2.502584e+06 m) is 2.075560e+03 m/s, the relative velocity (4.151120e+03 m/s) is 2.000000e+00 times this value.
+  This is a hyperbolic orbit with a = 4.170973e+05 m and e = 5.000000e+00.
+  At the desired initial distance (7.507751e+06 m) the mutual v_esc is 1.198325e+03 m/s, the relative velocity (3.789436e+03 m/s) is 3.162278e+00 times this value.
+  (impact angle at this distance = 1.496322e+01 deg)
+----------------------------------------------------------------
+Particle numbers:
+    desired total N = 50000	 actual/final total N = 59899
+    projectile: N_des = 4760	 N = 6723	 N_core = 867	 N_mantle = 5856	 N_shell = 0
+    target:     N_des = 45239	 N = 53176	 N_core = 6953	 N_mantle = 46223	 N_shell = 0
+----------------------------------------------------------------
+Materials:
+    core/mantle/shell:  "Iron"/"Granite"/"Iron"
+    core:   mat. type = 0	 rho_0 = 7800	 cs = 3.814614e+03	 eos = T
+    mantle: mat. type = 1	 rho_0 = 2680	 cs = 4.319342e+03	 eos = T
+    shell:  mat. type = 2	 rho_0 = 7800	 cs = 3.814614e+03	 eos = T
+----------------------------------------------------------------
+Masses:
+    total: desired:      M = 8.076000e+22
+           actual/final: M = 8.076746e+22
+    projectile: desired:      M = 7.342000e+21	 M_core = 2.202600e+21	 M_mantle = 5.139400e+21	 M_shell = 0.000000e+00
+                actual/final: M = 7.341739e+21	 M_core = 2.201713e+21	 M_mantle = 5.140026e+21	 M_shell = -2.673869e+08
+    target: desired:      M = 7.341800e+22	 M_core = 2.202540e+22	 M_mantle = 5.139260e+22	 M_shell = 0.000000e+00
+            actual/final: M = 7.342572e+22	 M_core = 2.203114e+22	 M_mantle = 5.139458e+22	 M_shell = 7.675576e+09
+Mantle/shell mass fractions:
+    projectile: mantle: desired = 0.7	 actual/final = 0.70011
+                 shell: desired = 0	 actual/final = -3.64201e-14
+    target: mantle: desired = 0.7	 actual/final = 0.699953
+             shell: desired = 0	 actual/final = 1.04535e-13
+----------------------------------------------------------------
+Radii:
+    projectile: desired:      R = 8.025855e+05	 R_core = 4.055412e+05	 R_mantle = 8.025855e+05
+                actual/final: R = 8.025855e+05	 R_core = 4.054867e+05	 R_mantle = 8.025855e+05
+    target: desired:      R = 1.699998e+06	 R_core = 8.627726e+05	 R_mantle = 1.699998e+06
+            actual/final: R = 1.699998e+06	 R_core = 8.628474e+05	 R_mantle = 1.699998e+06
+    sum of actual/final radii = 2.502584e+06
+----------------------------------------------------------------
+Geometry:
+    At "touching ball" distance (R_p+R_t = 2.502584e+06):
+        v_imp = 4.151120e+03
+        v_imp/v_esc = 2.000000e+00
+        impact angle = 4.500000e+01 deg
+    At initial distance (ini_dist = 7.507751e+06):
+        ini_vel = -3.789436e+03
+        impact parameter = 1.938493e+06
+        collision timescale (R_p+R_t)/|v_imp| = 602.87 sec
+    projectile position before barycentric correction =    1.9384930345262117e+06   7.2531767818448329e+06   0.0000000000000000e+00
+    Barycentric correction applied (w.r.t. proj + target). Barycenter initially at:
+           x/y/z =   1.7620847023619880e+05   6.5931172064766660e+05  -5.3009962135434586e-03
+        vx/vy/vz =   0.0000000000000000e+00  -3.4445869180363218e+02   0.0000000000000000e+00
+    Final positions and velocities:
+        projectile:  x/y/z =   1.7622845642900129e+06   6.5938650611971663e+06   5.3009962135434586e-03    vx/vy/vz =   0.0000000000000000e+00  -3.4449776705469067e+03   0.0000000000000000e+00
+            target:  x/y/z =  -1.7620847023619880e+05  -6.5931172064766660e+05   5.3009962135434586e-03    vx/vy/vz =   0.0000000000000000e+00   3.4445869180363218e+02   0.0000000000000000e+00
+----------------------------------------------------------------
+Initial particle geometry:
+    SPHERICAL SHELL SETUP with SEAGen
+    mean particle dist. mpd = 8.179833e+04	 sml = 1.717765e+05 ( = mpd * 2.100000e+00 )
+                      ( mpd = MAX(mpd-proj,mpd-targ) = MAX(7.694342e+04,8.179833e+04) )
+----------------------------------------------------------------
+Rotated (by a fixed angle) initial configuration used. Angles (deg):
+    target:     z/y/x =  20  20  20
+    projectile: z/y/x =  -20  -20  -20
+----------------------------------------------------------------
+Initial rotation:
+    None for projectile.
+    None for target.
+----------------------------------------------------------------
+Relaxation technique:
+    Calculate hydrostatic structure and set particle densities/masses accordingly.
+    Calculate and set internal energies following adiabatic compression.
+----------------------------------------------------------------
+Damage model:
+    weibulling core material:  no
+    weibulling mantle material:  no
+    weibulling shell material:  no
+----------------------------------------------------------------
+A courant-like criterion suggests:	 Delta_t < 1.893768e+01
+--------------------------------
+Writing 59899 particles to the output file (for use with miluphcuda in HYDRO runs!) ... Done.

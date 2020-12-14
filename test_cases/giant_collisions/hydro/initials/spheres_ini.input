@@ -1,0 +1,73 @@
+# This is the input parameter file for spheres_ini.
+# 
+# Do not change the descriptors.
+# All units are SI.
+#
+#
+# Approximate total particle number projectile + target:
+N = 50000
+#
+#
+# Masses (combined, and projectile alone):
+M_tot = 8.076e+22
+M_proj = 7.342e21
+#
+#
+# Initial velocity + impact parameter, or alternatively, v/v_esc + impact angle:
+#ini_vel = -500.0
+#impact_par = 500.0e3
+vel_vesc = 2.0
+impact_angle = 45.0
+# NOTE: Set either one of these parameter pairs, not both!
+# Note: 'vel_vesc' is v/v_esc at "touching-ball" distance. Impact angle is in deg, where 0 deg is head-on.
+#       'ini_vel' is of the projectile and in positive y-direction, in a frame where the target is at the origin at rest and the projectile
+#       in the first quadrant of the x-y plane (i.e., set ini_vel < 0 for collision).
+#
+#
+# This times the spheres' "touching-ball" distance (i.e., sum of their radii) sets the initial distance:
+ini_dist_fact = 3.0
+#
+#
+# Mass fractions determining core-mantle-shell structure:
+mantle_proj = 0.7
+shell_proj = 0.0
+mantle_target = 0.7
+shell_target = 0.0
+# Note: Bodies can in general consist of core + mantle + shell, where core mass fractions are computed from mantle and shell mass fractions.
+# NOTE: For single-material scenarios use only the core, for those involving two materials only core + mantle, to avoid problems with material-IDs!
+#
+#
+# Specify materials for core, mantle, and shell:
+core_mat = Iron
+mantle_mat = Granite
+shell_mat = Granite
+# NOTE: If some component is actually not included copy one of the other materials there as dummy!
+#
+#
+# Specify equation of state - either 'A', 'M', 'T', or 'I' (ANEOS, Murnaghan, Tillotson, or Ideal-gas ):
+core_eos = T
+mantle_eos = T
+shell_eos = T
+# NOTE: If some component is actually not included copy one of the others there as dummy!
+#
+#
+# Distribute flaws following the weibull distribution (0/1):
+weibull_core = 0
+weibull_mantle = 0
+weibull_shell = 0
+# Note: This is necessary if you want to model crack growth and fragmentation following the Grady-Kipp damage model.
+#
+#
+# Set initial rotation periods (in sec) and axes. Set period(s) to negative value(s) to omit rotation:
+proj_rot_period = -1.0
+targ_rot_period = -1.0
+proj_rot_axis_x = 0.0
+proj_rot_axis_y = 0.0
+proj_rot_axis_z = 1.0
+targ_rot_axis_x = 0.0
+targ_rot_axis_y = 0.0
+targ_rot_axis_z = 1.0
+# Note: Unless the -N cmd-line flag is used, the relative trajectory of the colliding bodies is always set up
+#       in the x-y plane, with the projectile in the first quadrant and the target in the third quadrant.
+#       The magnitude of the rotation vectors is arbitrary (only their direction is used).
+#
