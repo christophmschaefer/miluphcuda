@@ -1,0 +1,16 @@
+# 
+#    this file is part of 
+#        miluphCUDA
+#    authors and copyright: Sven Riecker, Christoph Schaefer, Samuel Scherrer, Oliver Wandel, Thomas Maindl, Christoph Burger and Janka Werner
+#    mailto: ch.schaefer@uni-tuebingen.de
+#
+#
+# Minimum values for the predictor corrector integrator
+# to avoid tiny timesteps
+# please use double values
+Smin = 1e4
+rhomin = 1e-8
+emin = 1e2
+damagemin = 1e-2
+alphamin = 1e-4
+betamin = 0

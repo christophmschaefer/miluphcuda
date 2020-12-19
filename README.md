@@ -1,6 +1,6 @@
-# Miluphcuda
+# miluphcuda
 
-Miluphcuda is a smoothed particle hydrodynamics code
+miluphcuda is a smoothed particle hydrodynamics code
 
 Check out the [documentation](https://christophmschaefer.github.io/miluphcuda/index.html)!
 
