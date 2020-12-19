@@ -1082,7 +1082,6 @@ int copy_particle_data_to_device()
 #  if DIM > 2
 	cudaVerify(cudaMemcpy(pointmass_device.z, pointmass_host.z, memorySizeForPointmasses, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(pointmass_device.vz, pointmass_host.vz, memorySizeForPointmasses, cudaMemcpyHostToDevice));
-	cudaVerify(cudaMemcpy(pointmass_device.vz0, pointmass_host.vz0, memorySizeForPointmasses, cudaMemcpyHostToDevice));
 #  endif
 # endif
 	cudaVerify(cudaMemcpy(pointmass_device.rmin, pointmass_host.rmin, memorySizeForPointmasses, cudaMemcpyHostToDevice));
