@@ -28,9 +28,23 @@
 
 
 #if SOLID
+/**
+ * @brief Scales the deviatoric stresses for material model `PURE_REGOLITH`.
+ */
 __global__ void plasticity(void);
-__global__ void JohnsonCookPlasticity(void);
+
+/**
+ * @brief Limits the deviatoric stresses for various material models.
+ * @details Here the deviatoric stress tensor is reduced once the yield limit is exceeded, which is either
+ * a simple constant for `VON_MISES_PLASTICITY`, or a more complicated function of pressure, etc. for
+ * `MOHR_COULOMB_PLASTICITY`, `DRUCKER_PRAGER_PLASTICITY`, and `COLLINS_PLASTICITY`.
+ */
 __global__ void plasticityModel(void);
+
+/**
+ * @brief This is the Johnson-Cook plasticity model.
+ */
+__global__ void JohnsonCookPlasticity(void);
 #endif
 
 
