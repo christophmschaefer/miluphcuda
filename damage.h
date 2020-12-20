@@ -21,12 +21,12 @@
  *
  */
 
-
 #ifndef _DAMAGE_H
 #define _DAMAGE_H
+
+/**
+ * @brief Limits the damage to what is supported by the number of activated flaws.
+ */
 __global__ void damageLimit(void);
-
-
-
 
 #endif
