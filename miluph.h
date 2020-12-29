@@ -182,8 +182,8 @@ struct Particle {
 #endif
 
 #if FRAGMENTATION
-    double *d;
-    double *damage_total; // tensile damage + porous damage
+    double *d;             ///< DIM-root of (tensile) damage
+    double *damage_total;  ///< tensile damage + porous damage
     double *dddt;
     int *numFlaws;
     int maxNumFlaws;
