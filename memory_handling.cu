@@ -25,11 +25,12 @@
 #include "memory_handling.h"
 #include "aneos.h"
 
+
 /* allocate memory on the device for pointmasses */
 int allocate_pointmass_memory(struct Pointmass *a, int allocate_immutables)
 {
-
     int rc = 0;
+
 	cudaVerify(cudaMalloc((void**)&a->x, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->vx, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->ax, memorySizeForPointmasses));
@@ -50,8 +51,11 @@ int allocate_pointmass_memory(struct Pointmass *a, int allocate_immutables)
 	cudaVerify(cudaMalloc((void**)&a->rmin, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->rmax, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->feels_particles, integermemorySizeForPointmasses));
+
     return rc;
 }
+
+
 
 /* allocate memory on the device for particles */
 int allocate_particles_memory(struct Particle *a, int allocate_immutables)
@@ -76,7 +80,6 @@ int allocate_particles_memory(struct Particle *a, int allocate_immutables)
 #endif
 
 	cudaVerify(cudaMalloc((void**)&a->drhodt, memorySizeForParticles));
-
 
 #if SOLID
 	cudaVerify(cudaMalloc((void**)&a->S, memorySizeForStress));
@@ -221,7 +224,6 @@ int allocate_particles_memory(struct Particle *a, int allocate_immutables)
 	cudaVerify(cudaMalloc((void**)&a->jc_f, memorySizeForParticles));
 #endif
 
-
 #if DIM > 2
 	cudaVerify(cudaMalloc((void**)&a->z, memorySizeForTree));
 	cudaVerify(cudaMalloc((void**)&a->dzdt, memorySizeForParticles));
@@ -247,6 +249,7 @@ int allocate_particles_memory(struct Particle *a, int allocate_immutables)
 }
 
 
+
 int copy_gravitational_accels_device_to_device(struct Particle *dst, struct Particle *src)
 {
     int rc = 0;
@@ -259,8 +262,9 @@ int copy_gravitational_accels_device_to_device(struct Particle *dst, struct Part
 #endif
 
     return rc;
-
 }
+
+
 
 int copy_pointmass_derivatives_device_to_device(struct Pointmass *dst, struct Pointmass *src)
 {
@@ -278,8 +282,11 @@ int copy_pointmass_derivatives_device_to_device(struct Pointmass *dst, struct Po
     cudaVerify(cudaMemcpy(dst->feedback_az, src->feedback_az, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
 # endif
 #endif
+
     return rc;
 }
+
+
 
 int copy_particles_derivatives_device_to_device(struct Particle *dst, struct Particle *src)
 {
@@ -345,18 +352,23 @@ int copy_particles_derivatives_device_to_device(struct Particle *dst, struct Par
 #endif
 
     return rc;
-
 }
+
+
 
 int copy_pointmass_immutables_device_to_device(struct Pointmass *dst, struct Pointmass *src)
 {
     int rc = 0;
+
     cudaVerify(cudaMemcpy((*dst).m, (*src).m, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy((*dst).feels_particles, (*src).feels_particles, integermemorySizeForPointmasses, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy((*dst).rmin, (*src).rmin, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy((*dst).rmax, (*src).rmax, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
+
     return rc;
 }
+
+
 
 int copy_particles_immutables_device_to_device(struct Particle *dst, struct Particle *src)
 {
@@ -381,6 +393,8 @@ int copy_particles_immutables_device_to_device(struct Particle *dst, struct Part
     return rc;
 }
 
+
+
 int copy_pointmass_variables_device_to_device(struct Pointmass *dst, struct Pointmass *src)
 {
     int rc = 0;
@@ -396,6 +410,7 @@ int copy_pointmass_variables_device_to_device(struct Pointmass *dst, struct Poin
     cudaVerify(cudaMemcpy(dst->vz, src->vz, memorySizeForPointmasses, cudaMemcpyDeviceToDevice));
 # endif
 #endif
+
     return rc;
 }
 
@@ -502,8 +517,12 @@ int copy_particles_variables_device_to_device(struct Particle *dst, struct Parti
     cudaVerify(cudaMemcpy(dst->damage_total, src->damage_total, memorySizeForParticles, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy(dst->numActiveFlaws, src->numActiveFlaws, memorySizeForInteractions, cudaMemcpyDeviceToDevice));
 #endif
+
     return rc;
 }
+
+
+
 /* free runge-kutta memory for pointmasses on the device */
 int free_pointmass_memory(struct Pointmass *a, int free_immutables)
 {
@@ -528,8 +547,11 @@ int free_pointmass_memory(struct Pointmass *a, int free_immutables)
 	cudaVerify(cudaFree(a->feedback_az));
 # endif
 #endif
+
     return rc;
 }
+
+
 
 /* free runge-kutta memory on the device */
 int free_particles_memory(struct Particle *a, int free_immutables)
@@ -543,7 +565,6 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 	cudaVerify(cudaFree(a->ax));
 	cudaVerify(cudaFree(a->g_ax));
 	cudaVerify(cudaFree(a->m));
-
 #if DIM > 1
 	cudaVerify(cudaFree(a->dydt));
 	cudaVerify(cudaFree(a->y));
@@ -553,7 +574,6 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 	cudaVerify(cudaFree(a->ay));
 	cudaVerify(cudaFree(a->g_ay));
 #endif
-
 
 #if XSPH
 	cudaVerify(cudaFree(a->xsphvx));
@@ -700,32 +720,31 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 #endif
 #endif
 
-
     return rc;
-
 }
 
 
-/* allocate memory for tree and basical particle struct */
+
+/* allocate memory for tree and basic particle struct */
 int init_allocate_memory(void)
 {
     int rc = 0;
+
 	numberOfNodes = ceil(2.5 * maxNumberOfParticles);
     if (numberOfNodes < 1024*numberOfMultiprocessors)
         numberOfNodes = 1024*numberOfMultiprocessors;
+
 #define WARPSIZE 32
-    while ((numberOfNodes & (WARPSIZE-1)) != 0) numberOfNodes++;
+    
+    while ((numberOfNodes & (WARPSIZE-1)) != 0)
+        numberOfNodes++;
 
-
-
-
-
-	// allocating memory
 	if (param.verbose) {
         printf("allocating memory for %d particles ...\n", numberOfParticles);
 	    printf("allocating memory for %d pointmasses...\n", numberOfPointmasses);
         fprintf(stdout, "Number of nodes of tree: %d\n", numberOfNodes);
     }
+
 	memorySizeForParticles = maxNumberOfParticles * sizeof(double);
 	memorySizeForPointmasses = numberOfPointmasses * sizeof(double);
 	integermemorySizeForPointmasses = numberOfPointmasses * sizeof(int);
@@ -733,15 +752,29 @@ int init_allocate_memory(void)
 	memorySizeForStress = maxNumberOfParticles * DIM * DIM * sizeof(double);
 	memorySizeForChildren = numberOfChildren * (numberOfNodes-numberOfRealParticles) * sizeof(int);
 	memorySizeForInteractions = maxNumberOfParticles * sizeof(int);
-	cudaVerify(cudaMallocHost((void**)&p_host.x, memorySizeForTree));
+
+    cudaVerify(cudaMallocHost((void**)&p_host.x, memorySizeForTree));
 	cudaVerify(cudaMallocHost((void**)&p_host.vx, memorySizeForParticles));
 	cudaVerify(cudaMallocHost((void**)&p_host.ax, memorySizeForParticles));
+    cudaVerify(cudaMallocHost((void**)&p_host.g_ax, memorySizeForParticles));
 #if DIM > 1
     cudaVerify(cudaMallocHost((void**)&p_host.y, memorySizeForTree));
 	cudaVerify(cudaMallocHost((void**)&p_host.vy, memorySizeForParticles));
 	cudaVerify(cudaMallocHost((void**)&p_host.ay, memorySizeForParticles));
 	cudaVerify(cudaMallocHost((void**)&p_host.g_ay, memorySizeForParticles));
 #endif
+#if DIM > 2
+    cudaVerify(cudaMallocHost((void**)&p_host.z, memorySizeForTree));
+    cudaVerify(cudaMallocHost((void**)&p_host.vz, memorySizeForParticles));
+    cudaVerify(cudaMallocHost((void**)&p_host.az, memorySizeForParticles));
+    cudaVerify(cudaMallocHost((void**)&p_host.g_az, memorySizeForParticles));
+#endif
+    cudaVerify(cudaMallocHost((void**)&p_host.m, memorySizeForTree));
+    cudaVerify(cudaMallocHost((void**)&p_host.h, memorySizeForParticles));
+    cudaVerify(cudaMallocHost((void**)&p_host.rho, memorySizeForParticles));
+    cudaVerify(cudaMallocHost((void**)&p_host.p, memorySizeForParticles));
+    cudaVerify(cudaMallocHost((void**)&p_host.e, memorySizeForParticles));
+    cudaVerify(cudaMallocHost((void**)&p_host.cs, memorySizeForParticles));
 
 #if GRAVITATING_POINT_MASSES
 	cudaVerify(cudaMallocHost((void**)&pointmass_host.x, memorySizeForPointmasses));
@@ -779,14 +812,6 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&pointmass_device.feels_particles, integermemorySizeForPointmasses));
 #endif
 
-	cudaVerify(cudaMallocHost((void**)&p_host.g_ax, memorySizeForParticles));
-	cudaVerify(cudaMallocHost((void**)&p_host.m, memorySizeForTree));
-	cudaVerify(cudaMallocHost((void**)&p_host.h, memorySizeForParticles));
-	cudaVerify(cudaMallocHost((void**)&p_host.rho, memorySizeForParticles));
-	cudaVerify(cudaMallocHost((void**)&p_host.p, memorySizeForParticles));
-	cudaVerify(cudaMallocHost((void**)&p_host.e, memorySizeForParticles));
-	cudaVerify(cudaMallocHost((void**)&p_host.cs, memorySizeForParticles));
-
 #if MORE_OUTPUT
 	cudaVerify(cudaMallocHost((void**)&p_host.p_min, memorySizeForParticles));
 	cudaVerify(cudaMallocHost((void**)&p_host.p_max, memorySizeForParticles));
@@ -803,12 +828,6 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMallocHost((void**)&interactions_host, memorySizeForInteractions*MAX_NUM_INTERACTIONS));
 	cudaVerify(cudaMallocHost((void**)&p_host.materialId, memorySizeForInteractions));
 	cudaVerify(cudaMallocHost((void**)&childList_host, memorySizeForChildren));
-#if DIM > 2
-	cudaVerify(cudaMallocHost((void**)&p_host.z, memorySizeForTree));
-	cudaVerify(cudaMallocHost((void**)&p_host.vz, memorySizeForParticles));
-	cudaVerify(cudaMallocHost((void**)&p_host.az, memorySizeForParticles));
-	cudaVerify(cudaMallocHost((void**)&p_host.g_az, memorySizeForParticles));
-#endif
 
 #if ARTIFICIAL_VISCOSITY
 	cudaVerify(cudaMalloc((void**)&p_device.muijmax, memorySizeForParticles));
@@ -887,12 +906,12 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&p_device.numActiveFlaws, memorySizeForInteractions));
 	cudaVerify(cudaMallocHost((void**)&p_host.flaws, memorySizeForActivationThreshold));
 	cudaVerify(cudaMalloc((void**)&p_device.flaws, memorySizeForActivationThreshold));
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
     cudaVerify(cudaMallocHost((void**)&p_host.damage_porjutzi, memorySizeForParticles));
 	cudaVerify(cudaMallocHost((void**)&p_host.ddamage_porjutzidt, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&p_device.damage_porjutzi, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&p_device.ddamage_porjutzidt, memorySizeForParticles));
-#endif
+# endif
 #endif
 
 	cudaVerify(cudaMalloc((void**)&p_device.h0, memorySizeForParticles));
@@ -901,7 +920,6 @@ int init_allocate_memory(void)
 #if GHOST_BOUNDARIES
 	cudaVerify(cudaMalloc((void**)&p_device.real_partner, memorySizeForInteractions));
 #endif
-
 
 #if PALPHA_POROSITY
 	cudaVerify(cudaMallocHost((void**)&p_host.alpha_jutzi, memorySizeForParticles));
@@ -976,8 +994,6 @@ int init_allocate_memory(void)
     cudaVerify(cudaMallocHost((void**)&p_host.vz0, memorySizeForTree));
 #endif
 
-
-
 #if XSPH
 	cudaVerify(cudaMalloc((void**)&p_device.xsphvx, memorySizeForParticles));
 #if DIM > 1
@@ -1048,10 +1064,10 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMemset(p_device.g_az, 0, memorySizeForParticles));
 #endif
 
-
-
     return rc;
 }
+
+
 
 int copy_particle_data_to_device()
 {
@@ -1157,9 +1173,9 @@ int copy_particle_data_to_device()
 #endif
 	cudaVerify(cudaMemset((void *) childListd, -1, memorySizeForChildren));
 
-
     return rc;
 }
+
 
 
 int free_memory()
