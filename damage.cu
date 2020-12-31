@@ -56,11 +56,13 @@ __global__ void damageLimit(void)
             dmg = 0.0;
         if (nof > 0)
             // note: damage is limited simply via noaf/nof, but 'dmg' is DIM-root of damage...
-            dmgMax = pow( ((double)noaf) / ((double)nof) , 1./DIM);
+            dmgMax = pow( ((double)noaf) / ((double)nof), 1./DIM);
         if (dmg > dmgMax)
             dmg = dmgMax;
 
         p.d[i] = dmg;
+        p.damage_total[i] = pow(dmg, DIM);
+
 #if PALPHA_POROSITY
         if (p.damage_porjutzi[i] > 1.0) {
             p.damage_porjutzi[i] = 1.0;
@@ -68,12 +70,12 @@ __global__ void damageLimit(void)
             p.damage_porjutzi[i] = 0.0;
         }
 
-        // note: from here on 'dmg' is simply the damage, not DIM-root of it
+        // note: from here on 'dmg' is directly the damage (not DIM-root of it)
         dmg = pow(p.d[i], DIM) + pow(p.damage_porjutzi[i], DIM);
         if (dmg > 1.0)
             dmg = 1.0;
-#endif
         p.damage_total[i] = dmg;
+#endif
     }
 }
 #endif

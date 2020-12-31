@@ -2459,20 +2459,18 @@ void write_particles_to_file(File file) {
         status = H5Dwrite(damage_porjutzi_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(damage_porjutzi_id);
 
-
         /* damage total */
         damage_total_id = H5Dcreate2(file_id, "/damage_total", H5T_NATIVE_DOUBLE, dataspace_id,
                 H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
         for (i = 0; i < numberOfParticles; i++) {
             x[i] = pow(p_host.damage_porjutzi[i], DIM) + pow(p_host.d[i], DIM);
-            if (x[i] > 1) x[i] = 1;
+            if (x[i] > 1.0)
+                x[i] = 1.0;
         }
 
         status = H5Dwrite(damage_total_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(damage_total_id);
-
 #endif
-
 
         /* find maximum number of flaws of all particles */
         maxnof = -1;

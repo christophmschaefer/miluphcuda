@@ -183,14 +183,14 @@ struct Particle {
 
 #if FRAGMENTATION
     double *d;             ///< DIM-root of (tensile) damage
-    double *damage_total;  ///< tensile damage + porous damage
+    double *damage_total;  ///< tensile damage + porous damage (directly, not DIM-root)
     double *dddt;
     int *numFlaws;
     int maxNumFlaws;
     int *numActiveFlaws;
     double *flaws;
 #if PALPHA_POROSITY
-    double *damage_porjutzi;
+    double *damage_porjutzi;   ///< DIM-root of porous damage
     double *ddamage_porjutzidt;
 #endif
 #endif
