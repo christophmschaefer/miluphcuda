@@ -20,12 +20,14 @@
  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
 #include "damage.h"
 #include "miluph.h"
 #include "config_parameter.h"
 #include "timeintegration.h"
 #include "parameter.h"
 #include "pressure.h"
+
 
 #if FRAGMENTATION
 __global__ void damageLimit(void)
@@ -35,36 +37,38 @@ __global__ void damageLimit(void)
     volatile double dmg, dmgMax;
 
     inc = blockDim.x * gridDim.x;
-
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE)
             continue;
 
-        dmg = p.d[i];
-        if (dmg < 0.0)
-            dmg = 0.0;
+        dmg = p.d[i];   // note: that's DIM-root of damage
+        nof = p.numFlaws[i];
         noaf = p.numActiveFlaws[i];
-        dmgMax = 1.0;
 
-        if (noaf < 1 && dmg > 0.0) {
-            printf("Error, not possible: noaf: %d, dmg %e materialId is %d numFlaws: %d\n", noaf, dmg, p_rhs.materialId[i], p.numFlaws[i]);
+        if (noaf > nof) {
+            printf("ERROR. Found %d activated flaws, but only %d actual flaws...\n", noaf, nof);
             assert(0);
         }
-        if (noaf > 0) {
-            nof = p.numFlaws[i];
+
+        // limit the damage
+        dmgMax = 1.0;
+        if (dmg < 0.0)
+            dmg = 0.0;
+        if (nof > 0)
+            // note: damage is limited simply via noaf/nof, but 'dmg' is DIM-root of damage...
             dmgMax = pow( ((double)noaf) / ((double)nof) , 1./DIM);
-        }
         if (dmg > dmgMax)
             dmg = dmgMax;
 
         p.d[i] = dmg;
-
 #if PALPHA_POROSITY
         if (p.damage_porjutzi[i] > 1.0) {
             p.damage_porjutzi[i] = 1.0;
         } else if (p.damage_porjutzi[i] < 0.0) {
             p.damage_porjutzi[i] = 0.0;
         }
+
+        // note: from here on 'dmg' is simply the damage, not DIM-root of it
         dmg = pow(p.d[i], DIM) + pow(p.damage_porjutzi[i], DIM);
         if (dmg > 1.0)
             dmg = 1.0;
