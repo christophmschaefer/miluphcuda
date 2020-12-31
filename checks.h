@@ -25,6 +25,23 @@
 #define _CHECKS_H
 
 
+#if MOHR_COLOUMB_PLASTICITY
+# define PLASTICITY
+#endif
+#if DRUCKER_PRAGER_PLASTICITY
+# define PLASTICITY
+#endif
+#if COLLINS_PLASTICITY
+# define PLASTICITY
+#endif
+#if VON_MISES_PLASTICITY
+# define PLASTICITY
+#endif
+#if COLLINS_PLASTICITY_SIMPLE
+# define PLASTICITY
+#endif
+
+
 #if MOHR_COULOMB_PLASTICITY && DRUCKER_PRAGER_PLASTICITY
 #error ERROR. Choose only one of the three available plastic flow rules in parameter.h.
 #endif

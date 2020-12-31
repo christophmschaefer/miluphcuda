@@ -1099,7 +1099,7 @@ void transferMaterialsToGPU()
         }
 #endif
         /* some material checks */
-#if VON_MISES_PLASTICITY
+#if PLASTICITY
         fprintf(stdout, "Using following values for the plasticity model\n");
         fprintf(stdout, "Material No \t yield_stress \t  cohesion \t cohesion_damaged \t friction_angle \t friction_angle_damaged \t melt_energy \n");
         fprintf(stdout, "------------\t--------------\t-----------\t------------------\t----------------\t------------------------\t-------------\n");
