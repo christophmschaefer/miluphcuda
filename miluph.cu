@@ -1077,12 +1077,12 @@ int main(int argc, char *argv[])
     numberOfMultiprocessors = deviceProp.multiProcessorCount;
     if (param.verbose) printf("found cuda device with %d multiprocessors.\n", numberOfMultiprocessors);
 
-
-    /* initialise the memory */
+    // initialise the memory
     init_allocate_memory();
 
     // read particle data from input file
-    if (param.verbose) printf("reading input file %s ...\n", inputFile.name);
+    if (param.verbose)
+        fprintf(stdout, "reading input file %s ...\n", inputFile.name);
     if ((inputFile.data = fopen(inputFile.name, "r")) == NULL) {
         fprintf(stderr, "Error: File %s not found.\n", inputFile.name);
         if (param.hdf5input) {
@@ -1096,8 +1096,9 @@ int main(int argc, char *argv[])
         fclose(inputFile.data);
     }
 
-    /* init some values */
+    // init some values
     init_values();
+
     // copy the particles to the gpu
     copy_particle_data_to_device();
     if (cudaSuccess != cudaMemcpyToSymbol(childList, &childListd, sizeof(void*))) {
@@ -1105,7 +1106,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    /* create conserved quantities logfile and write header */
+    // create conserved quantities logfile and write header
     if(param.hdf5input){
         if( (conservedquantitiesfile = fopen(param.conservedquantitiesfilename, "a")) == NULL ) {
             fprintf(stderr, "Ohoh... Cannot open '%s' for writing. Abort...\n", param.conservedquantitiesfilename);

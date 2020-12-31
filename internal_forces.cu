@@ -57,8 +57,7 @@ __global__ void internalForces(int *interactions) {
     double vxj, vyj, vzj, Sj[DIM*DIM];
 
 #if FRAGMENTATION
-    double di;
-    double di_tensile;
+    double di, di_tensile;  // both are directly the damage (not DIM-root of it)
 #endif
 
 #if ARTIFICIAL_VISCOSITY
@@ -152,6 +151,7 @@ __global__ void internalForces(int *interactions) {
 #if DIM > 2
         az = 0;
 #endif
+
 #if ARTIFICIAL_VISCOSITY
         alpha = matAlpha[matId];
         beta = matBeta[matId];
@@ -175,7 +175,6 @@ __global__ void internalForces(int *interactions) {
                 rdot[d][e] = 0.0;
             }
         }
-
 #endif
         for (d = 0; d < DIM; d++) {
             accels[d] = 0.0;
@@ -183,8 +182,6 @@ __global__ void internalForces(int *interactions) {
             accelshearj[d] = 0.0;
         }
         sml = p.h[i];
-
-
 #if FRAGMENTATION
         di = p.damage_total[i];
         if (di < 0) di = 0;
@@ -958,26 +955,28 @@ __global__ void internalForces(int *interactions) {
 #if ARTIFICIAL_VISCOSITY
             p.muijmax[i] = muijmax;
 #endif
-            double tensileMax = 0;
+
+            double tensileMax = 0.0;
 #if SOLID
             tensileMax = calculateMaxEigenvalue(sigma_i);
             p.local_strain[i] = tensileMax/young;
 #endif
 #if FRAGMENTATION
-            // calculate the damage caused by the strain
-            // 1st: get maximum eigenvalue of sigma_i
-            // 2nd: get local scalar strain out of maximum tensile stress
-            // di = pow(di, DIM); // it is already ^DIM
-            di_tensile = pow(p.d[i], DIM);
-            int n_active = 0;
+            // calculate damage evolution dd/dt...
+            // 1st: get max eigenvalue (max principle stress) of sigma_i
+            // 2nd: get local scalar strain out of max tensile stress
+            di_tensile = pow(p.d[i], DIM);  // because p.d is DIM-root of damage
             if (di_tensile < 1.0) {
-                p.local_strain[i] = ((tensileMax)/((1.0 - di_tensile) * young));
-                // 3rd: calculate evolution of damage
-                // note: ddamagedt**1./DIM is calculated
+                p.local_strain[i] = tensileMax / ((1.0 - di_tensile) * young);
+
+                // 3rd: calculate dd/dt
+                // note: d(d**1/DIM)/dt is calculated
                 // speed of a longitudinal elastic wave, see eg. Melosh, Impact Cratering
                 // crack growth velocity = 0.4 times c_elast
                 double c_g = 0.4 * sqrt((bulk + 4.0 * shear * (1.0 - di_tensile) / 3.0) * 1.0 / p.rho[i]);
+
                 // find number of active flaws
+                int n_active = 0;
                 for (d = 0; d < p.numFlaws[i]; d++) {
                     if (p_rhs.flaws[i*maxNumFlaws+d] < p.local_strain[i]) {
                         n_active++;
@@ -985,7 +984,8 @@ __global__ void internalForces(int *interactions) {
                 }
                 p.numActiveFlaws[i] = max(n_active, p.numActiveFlaws[i]);
                 p.dddt[i] = n_active * c_g / sml1;
-                if (p.dddt[i] < 0) {
+
+                if (p.dddt[i] < 0.0) {
                     printf("error!\n");
                     printf("%e %e %e %d %d %e %e \n", p.x[i], p.y[i], p.damage_total[i], p.numFlaws[i],
                             p.numActiveFlaws[i], p.dddt[i], p.local_strain[i]);
@@ -993,8 +993,7 @@ __global__ void internalForces(int *interactions) {
             } else {
                 // particle already dead
                 p.local_strain[i] = 0.0;
-                n_active = p.numFlaws[i];
-                p.numActiveFlaws[i] = n_active;
+                p.numActiveFlaws[i] = p.numFlaws[i];
                 p.dddt[i] = 0.0;
                 p.d[i] = 1.0;
             }
