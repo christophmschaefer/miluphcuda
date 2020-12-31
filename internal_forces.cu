@@ -956,18 +956,18 @@ __global__ void internalForces(int *interactions) {
             p.muijmax[i] = muijmax;
 #endif
 
+            double tensileMax = 0.0;
 #if SOLID
+            tensileMax = calculateMaxEigenvalue(sigma_i);
             p.local_strain[i] = tensileMax/young;
 #endif
 #if FRAGMENTATION
             // calculate damage evolution dd/dt...
             // 1st: get max eigenvalue (max principle stress) of sigma_i
-            double tensileMax = calculateMaxEigenvalue(sigma_i);
-
             // 2nd: get local scalar strain out of max tensile stress
             di_tensile = pow(p.d[i], DIM);  // because p.d is DIM-root of damage
             if (di_tensile < 1.0) {
-                p.local_strain[i] = ((tensileMax)/((1.0 - di_tensile) * young));
+                p.local_strain[i] = tensileMax / ((1.0 - di_tensile) * young);
 
                 // 3rd: calculate dd/dt
                 // note: d(d**1/DIM)/dt is calculated
