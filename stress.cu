@@ -21,14 +21,11 @@
  *
  */
 
-
-
 #include "stress.h"
 #include "parameter.h"
 #include "miluph.h"
 #include "timeintegration.h"
 #include "linalg.h"
-
 
 #if FRAGMENTATION
 // if 1, then damage reduces the principal stresses
@@ -38,7 +35,6 @@
 #else
 # define DAMAGE_ACTS_ON_PRINCIPAL_STRESSES 0
 #endif
-
 
 // principal axes damage does not work for pressure dependent yield strengths
 #if DAMAGE_ACTS_ON_PRINCIPAL_STRESSES  &&  ( COLLINS_PLASTICITY || COLLINS_PLASTICITY_SIMPLE )
@@ -66,7 +62,6 @@ __global__ void set_stress_tensor(void)
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         matId = p_rhs.materialId[i];
         niters = 0;
-
 # if FRAGMENTATION
         damage = p.damage_total[i];
         if (damage > 1.0) damage = 1.0;
