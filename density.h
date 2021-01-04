@@ -23,6 +23,10 @@
 
 #ifndef _DENSITY_H
 #define _DENSITY_H
+/** 
+ * @brief Calculates the density using the kernel sum. 
+ * @details Only executed if INTEGRATE_DENSITY is 0.
+ */
 __global__ void calculateDensity(int *interactions);
 
 

@@ -52,7 +52,8 @@ write_xdmf_header(xdmfh)
 #wanted_attributes = ['rho', 'p', 'sml', 'e', 'material_type', 'number_of_interactions', 'fragments', 'DIM_root_of_damage']
 #wanted_attributes = ['rho', 'p', 'sml', 'e', 'material_type', 'number_of_interactions', 'alpha_jutzi' ]
 #wanted_attributes = ['rho', 'p', 'sml', 'e', 'material_type', 'number_of_interactions', 'fragments' ]
-wanted_attributes = ['rho', 'p', 'sml', 'e', 'material_type', 'number_of_interactions', 'deviatoric_stress' ]
+#wanted_attributes = ['rho', 'p', 'sml', 'e', 'material_type', 'number_of_interactions', 'deviatoric_stress' ]
+wanted_attributes = ['rho', 'p', 'sml', 'e', 'material_type', 'number_of_interactions', 'deviatoric_stress',  'aneos_T', 'aneos_cs', 'aneos_entropy', 'aneos_phase_flag' ]
 
 for hfile in args.input_files:
     print("Processing %s " % hfile)

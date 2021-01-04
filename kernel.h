@@ -25,7 +25,10 @@
 #define _KERNEL_H
 
 #include "parameter.h"
-
+/**
+ * @brief Calculates b-spline kernel and derivatives for an interaction
+ * 
+ */
 __device__ void fastKernelvalueAndDerivative(
         double &W, double &dWdx
 #if DIM > 1
@@ -44,22 +47,115 @@ __device__ void fastKernelvalueAndDerivative(
 #endif
 );
 
-// function pointer to generic SPH kernel function
-// cuda allows function pointers since Fermi architecture.
-// however, we need a typedef to set the function pointers
+/// function pointer to generic SPH kernel function
+/// cuda allows function pointers since Fermi architecture.
+/// however, we need a typedef to set the function pointers
 typedef void (*SPH_kernel) (double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double h);
+/**
+ * @brief *The* standard cubic b-spline.
+ * 
+ * @param W 
+ * @param dWdx 
+ * @param dWdr 
+ * @param dx 
+ * @param h 
+ * @return __device__ 
+ */
 __device__ void cubic_spline(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double h);
+/**
+ * @brief Spiky kernel. 
+ * @details only implemented for 2D and 3D. 
+ * @param W 
+ * @param dWdx 
+ * @param dWdr 
+ * @param dx 
+ * @param h 
+ * @return __device__ 
+ */
 __device__ void spiky(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double h);
+/**
+ * @brief Quartic spline kernel.
+ * 
+ * @param W 
+ * @param dWdx 
+ * @param dWdr 
+ * @param dx 
+ * @param h 
+ * @return __device__ 
+ */
 __device__ void quartic_spline(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double h);
+/**
+ * @brief Quintic spline kernel.
+ * 
+ * @param W 
+ * @param dWdx 
+ * @param dWdr 
+ * @param dx 
+ * @param h 
+ * @return __device__ 
+ */
 __device__ void quintic_spline(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double h);
+/**
+ * @brief Wendland C2 kernel.
+ * 
+ * @param W 
+ * @param dWdx 
+ * @param dWdr 
+ * @param dx 
+ * @param h 
+ * @return __device__ 
+ */
 __device__ void wendlandc2(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double h);
+/**
+ * @brief Wendland C4 kernel.
+ * 
+ * @param W 
+ * @param dWdx 
+ * @param dWdr 
+ * @param dx 
+ * @param h 
+ * @return __device__ 
+ */
 __device__ void wendlandc4(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double h);
+/**
+ * @brief Wendland C6 kernel.
+ * 
+ * @param W 
+ * @param dWdx 
+ * @param dWdr 
+ * @param dx 
+ * @param h 
+ * @return __device__ 
+ */
 __device__ void wendlandc6(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double h);
-__device__ void kernelvalue(double &W, int particle1, int particle2);
+/**
+ * @brief Calculates the kernel for the tensile instability fix following Monaghan 2000.
+ * 
+ * @param particle1 
+ * @param particle2 
+ * @return __device__ 
+ */
 __device__ double fixTensileInstability( int particle1, int particle2);
+/**
+ * @brief Calculates the tensorial correction factors for linear consistency.
+ * 
+ * @param interactions 
+ * @return __global__ 
+ */
 __global__ void tensorialCorrection(int *interactions);
+/**
+ * @brief Calculates the zeroth order corrections for the kernel sum.
+ * 
+ * @param interactions 
+ * @return __global__ 
+ */
 __global__ void shepardCorrection(int *interactions);
-
+/**
+ * @brief Calculates \nabla \cdot \vec{v} and \nabla \times \vec{v}
+ * 
+ * @param interactions 
+ * @return __global__ 
+ */
 __global__ void CalcDivvandCurlv(int *interactions);
 
 #endif
