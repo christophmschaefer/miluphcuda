@@ -151,7 +151,7 @@ __global__ void tensorialCorrection(int *interactions);
  */
 __global__ void shepardCorrection(int *interactions);
 /**
- * @brief Calculates \nabla \cdot \vec{v} and \nabla \times \vec{v}
+ * @brief Calculates \f$ \nabla \cdot \vec{v} \f$ and \f$ \nabla \times \vec{v} \f$
  * 
  * @param interactions 
  * @return __global__ 

@@ -166,8 +166,8 @@ struct Particle {
 #endif
 
 #if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH || INTEGRATE_ENERGY)
-    double *curlv; ///< \nabla \times \vec{v}
-    double *divv; ///< \nabla \cdot \vec{v}
+    double *curlv; ///< \f$\nabla \times \vec{v}\f$
+    double *divv; ///< \f$ \nabla \cdot \vec{v} \f$
 #endif
 
 #if FRAGMENTATION
