@@ -1,19 +1,14 @@
 var searchData=
 [
-  ['selfgravity',['selfgravity',['../gravity_8h.html#a7ea470f8746206cb9b1dd4e28b6b8e7c',1,'gravity.h']]],
-  ['set_5fintegration_5fparameters',['set_integration_parameters',['../io_8h.html#a00eed732ff15367664201d10fed171ba',1,'io.h']]],
-  ['set_5fstress_5ftensor',['set_stress_tensor',['../stress_8h.html#af15671e840f16bcac37084ff0a6e64f5',1,'stress.h']]],
-  ['setemptymassforinnernodes',['setEmptyMassForInnerNodes',['../tree_8h.html#a5d1d94630fd2202ed47880e841ef9181',1,'tree.h']]],
-  ['setlocationchanges',['setlocationchanges',['../velocity_8h.html#ac1274c83156af2f980c48b049b86dfa5',1,'velocity.h']]],
-  ['setquantitiesfixedvirtualparticles',['setQuantitiesFixedVirtualParticles',['../boundary_8h.html#a5ae98b6a9c0229adbc8ff2b77fa34cb1',1,'boundary.h']]],
-  ['settimestep',['setTimestep',['../predictor__corrector_8h.html#a4d2f2ba6819afac49231653ca3f0ca2a',1,'predictor_corrector.h']]],
-  ['settimestep_5feuler',['setTimestep_euler',['../predictor__corrector__euler_8h.html#a3814a4a56df5c90e98a03679cccb64d8',1,'predictor_corrector_euler.h']]],
-  ['settimestep_5fheun',['setTimestep_heun',['../coupled__heun__rk4__sph__nbody_8h.html#a419e90be993e7d78882e7c299ef3b187',1,'coupled_heun_rk4_sph_nbody.h']]],
-  ['shepardcorrection',['shepardCorrection',['../kernel_8h.html#a8531e5403979e291fe8fea8f359d5415',1,'kernel.h']]],
-  ['sign',['sign',['../viscosity_8h.html#a09dfbb5ef3cf13f091a4850f1c6e512e',1,'viscosity.h']]],
-  ['signal_5fhandler',['signal_handler',['../little__helpers_8h.html#a8804db44b6d4c5752e6de5593562df06',1,'little_helpers.h']]],
-  ['spiky',['spiky',['../kernel_8h.html#aab0a7249efed6c33b6abe4219b3fde50',1,'kernel.h']]],
-  ['stressindex',['stressIndex',['../timeintegration_8h.html#a8d397f459c27d904e86e97572c3de07a',1,'timeintegration.h']]],
-  ['symmetrizeinteractions',['symmetrizeInteractions',['../tree_8h.html#adc00c5ba64aaa875dcc3f075d410ae93',1,'tree.h']]],
-  ['symmetrizestress',['symmetrizeStress',['../timeintegration_8h.html#ac975fd6d71ce6df7f03d462d5394248f',1,'timeintegration.h']]]
+  ['read_5fparticles_5ffrom_5ffile',['read_particles_from_file',['../io_8cu.html#ace12b259be57c81c83b0cb51acc2a9be',1,'read_particles_from_file(File inputFile):&#160;io.cu'],['../io_8h.html#ace12b259be57c81c83b0cb51acc2a9be',1,'read_particles_from_file(File inputFile):&#160;io.cu']]],
+  ['redo_5fneighboursearch',['redo_NeighbourSearch',['../density_8cu.html#a9662d454a3cbb46229e8120225ce24d8',1,'redo_NeighbourSearch(int particle_id, int *interactions):&#160;tree.cu'],['../tree_8cu.html#a9662d454a3cbb46229e8120225ce24d8',1,'redo_NeighbourSearch(int particle_id, int *interactions):&#160;tree.cu'],['../tree_8h.html#a9662d454a3cbb46229e8120225ce24d8',1,'redo_NeighbourSearch(int particle_id, int *interactions):&#160;tree.cu']]],
+  ['rhs_5fpointmass',['rhs_pointmass',['../rk4__pointmass_8cu.html#a9b92bc19490d57bf918cb46b4a810547',1,'rhs_pointmass():&#160;rk4_pointmass.cu'],['../rk4__pointmass_8h.html#a9b92bc19490d57bf918cb46b4a810547',1,'rhs_pointmass():&#160;rk4_pointmass.cu']]],
+  ['righthandside',['rightHandSide',['../rhs_8cu.html#aaa69e1e6250e714b978b8f83f260a28d',1,'rightHandSide():&#160;rhs.cu'],['../rhs_8h.html#a79f2901b84de8677e26895104ee8d410',1,'rightHandSide(void):&#160;rhs.cu']]],
+  ['rk2adaptive',['rk2Adaptive',['../rk2adaptive_8cu.html#a8d37d229e9c2b5972c19177be715137b',1,'rk2Adaptive():&#160;rk2adaptive.cu'],['../rk2adaptive_8h.html#a8d37d229e9c2b5972c19177be715137b',1,'rk2Adaptive():&#160;rk2adaptive.cu'],['../timeintegration_8h.html#ac83bf5e9a92c2318d6ec80dab45cfc6f',1,'rk2Adaptive(void):&#160;rk2adaptive.cu']]],
+  ['rk4_5fintegratefirststep',['rk4_integrateFirstStep',['../rk4__pointmass_8cu.html#a609fb9c59254f0c222aea6915775e7be',1,'rk4_integrateFirstStep():&#160;rk4_pointmass.cu'],['../rk4__pointmass_8h.html#a609fb9c59254f0c222aea6915775e7be',1,'rk4_integrateFirstStep():&#160;rk4_pointmass.cu']]],
+  ['rk4_5fintegratefourthstep',['rk4_integrateFourthStep',['../rk4__pointmass_8cu.html#af22612d5e2a1e625d619bb99d0925f75',1,'rk4_integrateFourthStep():&#160;rk4_pointmass.cu'],['../rk4__pointmass_8h.html#af22612d5e2a1e625d619bb99d0925f75',1,'rk4_integrateFourthStep():&#160;rk4_pointmass.cu']]],
+  ['rk4_5fintegratesecondstep',['rk4_integrateSecondStep',['../rk4__pointmass_8cu.html#a43c91886625271be8cad70bb6e2422b2',1,'rk4_integrateSecondStep():&#160;rk4_pointmass.cu'],['../rk4__pointmass_8h.html#a43c91886625271be8cad70bb6e2422b2',1,'rk4_integrateSecondStep():&#160;rk4_pointmass.cu']]],
+  ['rk4_5fintegratethirdstep',['rk4_integrateThirdStep',['../rk4__pointmass_8cu.html#aeba4b1c9d1763999d42b3da543e67868',1,'rk4_integrateThirdStep():&#160;rk4_pointmass.cu'],['../rk4__pointmass_8h.html#aeba4b1c9d1763999d42b3da543e67868',1,'rk4_integrateThirdStep():&#160;rk4_pointmass.cu']]],
+  ['rk4_5fnbodies',['rk4_nbodies',['../rk4__pointmass_8cu.html#ac9143c681e44a7fffe9e864a23f4ce43',1,'rk4_nbodies():&#160;rk4_pointmass.cu'],['../rk4__pointmass_8h.html#ac9143c681e44a7fffe9e864a23f4ce43',1,'rk4_nbodies():&#160;rk4_pointmass.cu'],['../timeintegration_8h.html#ad9d2f55eb7921701c633496e70717725',1,'rk4_nbodies(void):&#160;rk4_pointmass.cu']]],
+  ['rotate_5fmatrix',['rotate_matrix',['../linalg_8cu.html#a4645103d033d7dc5c15618754fad7e04',1,'rotate_matrix(volatile double m[DIM][DIM], volatile double c, volatile double s, volatile int e, volatile int f):&#160;linalg.cu'],['../linalg_8h.html#a4645103d033d7dc5c15618754fad7e04',1,'rotate_matrix(volatile double m[DIM][DIM], volatile double c, volatile double s, volatile int e, volatile int f):&#160;linalg.cu']]]
 ];

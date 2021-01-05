@@ -64,17 +64,490 @@ $(function() {
 
 </div><!-- top -->
 <div class="header">
+  <div class="summary">
+<a href="#define-members">Macros</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/linalg.cu File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
+<div class="textblock"><code>#include &quot;<a class="el" href="timeintegration_8h_source.html">timeintegration.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="miluph_8h_source.html">miluph.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="parameter_8h_source.html">parameter.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="linalg_8h_source.html">linalg.h</a>&quot;</code><br />
+</div><div class="textblock"><div class="dynheader">
+Include dependency graph for linalg.cu:</div>
+<div class="dyncontent">
+<div class="center"><img src="linalg_8cu__incl.png" border="0" usemap="#_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__devel_2linalg_8cu" alt=""/></div>
+<map name="_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__devel_2linalg_8cu" id="_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__devel_2linalg_8cu">
+<area shape="rect" id="node2" href="timeintegration_8h.html" title="timeintegration.h" alt="" coords="965,109,1084,136"/>
+<area shape="rect" id="node7" href="parameter_8h.html" title="parameter.h" alt="" coords="1238,259,1329,285"/>
+<area shape="rect" id="node8" href="miluph_8h.html" title="miluph.h" alt="" coords="737,184,808,211"/>
+<area shape="rect" id="node22" href="linalg_8h.html" title="linalg.h" alt="" coords="1577,109,1640,136"/>
+<area shape="rect" id="node15" href="cuda__utils_8h.html" title="cuda_utils.h" alt="" coords="907,259,999,285"/>
+<area shape="rect" id="node16" href="io_8h.html" title="io.h" alt="" coords="789,259,831,285"/>
+<area shape="rect" id="node19" href="kernel_8h.html" title="kernel.h" alt="" coords="1433,184,1501,211"/>
+<area shape="rect" id="node20" href="extrema_8h.html" title="extrema.h" alt="" coords="985,184,1065,211"/>
+<area shape="rect" id="node21" href="sinking_8h.html" title="sinking.h" alt="" coords="1089,184,1163,211"/>
+<area shape="rect" id="node18" href="checks_8h.html" title="checks.h" alt="" coords="690,259,765,285"/>
+</map>
+</div>
+</div>
 <p><a href="linalg_8cu_source.html">Go to the source code of this file.</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:a986f2217c83e5fe112bcad9726c52b8e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linalg_8cu.html#a986f2217c83e5fe112bcad9726c52b8e">EPS_JACOBI</a>&#160;&#160;&#160;1e-10</td></tr>
+<tr class="separator:a986f2217c83e5fe112bcad9726c52b8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a986f2217c83e5fe112bcad9726c52b8e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linalg_8cu.html#a986f2217c83e5fe112bcad9726c52b8e">EPS_JACOBI</a>&#160;&#160;&#160;1e-10</td></tr>
+<tr class="separator:a986f2217c83e5fe112bcad9726c52b8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a7bfd4dc8feccfdf93b17adf078b728a3"><td class="memItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linalg_8cu.html#a7bfd4dc8feccfdf93b17adf078b728a3">copy_matrix</a> (double src[<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>], double dst[<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>])</td></tr>
+<tr class="separator:a7bfd4dc8feccfdf93b17adf078b728a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab840a4b933ee3f226652c613c9936ef9"><td class="memItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linalg_8cu.html#ab840a4b933ee3f226652c613c9936ef9">transpose_matrix</a> (double m[<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>])</td></tr>
+<tr class="separator:ab840a4b933ee3f226652c613c9936ef9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e3167823205861c3e20313b183e60e4"><td class="memItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linalg_8cu.html#a8e3167823205861c3e20313b183e60e4">multiply_matrix</a> (double A[<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>], double B[<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>], double C[<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>])</td></tr>
+<tr class="separator:a8e3167823205861c3e20313b183e60e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abdaad85f464e14306a632d3bfbcaaf3b"><td class="memItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linalg_8cu.html#abdaad85f464e14306a632d3bfbcaaf3b">identity_matrix</a> (double A[<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>])</td></tr>
+<tr class="separator:abdaad85f464e14306a632d3bfbcaaf3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4dafeaf0a8b28945534511113dc0b7bf"><td class="memItemLeft" align="right" valign="top">__device__ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linalg_8cu.html#a4dafeaf0a8b28945534511113dc0b7bf">max_Matrix</a> (double M[<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>], int *e, int *f, double *elmax)</td></tr>
+<tr class="separator:a4dafeaf0a8b28945534511113dc0b7bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4645103d033d7dc5c15618754fad7e04"><td class="memItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linalg_8cu.html#a4645103d033d7dc5c15618754fad7e04">rotate_matrix</a> (volatile double m[<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>], volatile double c, volatile double s, volatile int e, volatile int f)</td></tr>
+<tr class="separator:a4645103d033d7dc5c15618754fad7e04"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3fa9133c1c4bcf51f1dc6151e608d5b3"><td class="memItemLeft" align="right" valign="top">__device__ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linalg_8cu.html#a3fa9133c1c4bcf51f1dc6151e608d5b3">calculate_all_eigenvalues</a> (double M[<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>], double eigenvalues[<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>], double v[<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>])</td></tr>
+<tr class="separator:a3fa9133c1c4bcf51f1dc6151e608d5b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7f86ff133d2ee7624a7760a93080c2f"><td class="memItemLeft" align="right" valign="top">__device__ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linalg_8cu.html#ab7f86ff133d2ee7624a7760a93080c2f">calculateMaxEigenvalue</a> (double M[<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="el" href="test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>])</td></tr>
+<tr class="separator:ab7f86ff133d2ee7624a7760a93080c2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7e9ccfd8053141e2aa49bae33ae4771"><td class="memItemLeft" align="right" valign="top">__device__ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linalg_8cu.html#ae7e9ccfd8053141e2aa49bae33ae4771">det2x2</a> (double a, double b, double c, double d)</td></tr>
+<tr class="separator:ae7e9ccfd8053141e2aa49bae33ae4771"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aacc9f38d87c48a936e95a4a81834c928"><td class="memItemLeft" align="right" valign="top">__device__ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="linalg_8cu.html#aacc9f38d87c48a936e95a4a81834c928">invertMatrix</a> (double *m, double *inverted)</td></tr>
+<tr class="separator:aacc9f38d87c48a936e95a4a81834c928"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a986f2217c83e5fe112bcad9726c52b8e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a986f2217c83e5fe112bcad9726c52b8e">&#9670;&nbsp;</a></span>EPS_JACOBI <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define EPS_JACOBI&#160;&#160;&#160;1e-10</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a986f2217c83e5fe112bcad9726c52b8e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a986f2217c83e5fe112bcad9726c52b8e">&#9670;&nbsp;</a></span>EPS_JACOBI <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define EPS_JACOBI&#160;&#160;&#160;1e-10</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="a3fa9133c1c4bcf51f1dc6151e608d5b3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3fa9133c1c4bcf51f1dc6151e608d5b3">&#9670;&nbsp;</a></span>calculate_all_eigenvalues()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__device__ int calculate_all_eigenvalues </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>M</em>[DIM][DIM], </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>eigenvalues</em>[DIM], </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>v</em>[DIM][DIM]&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="linalg_8cu_source.html#l00174">174</a> of file <a class="el" href="linalg_8cu_source.html">linalg.cu</a>.</p>
+<div class="fragment"><div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;                                                                                                          {</div><div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    <span class="keywordtype">int</span> i, j;</div><div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;    <span class="keywordtype">double</span> diagM[<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>] = {0.0, };</div><div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;    <span class="keywordtype">double</span> c, s, t, thta;</div><div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    <span class="keywordtype">double</span> A[<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>];</div><div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;    <span class="keywordtype">double</span> vtmp[<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>];</div><div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;    <span class="keywordtype">int</span> e, f;</div><div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;    <span class="keywordtype">int</span> error;</div><div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;    <span class="keywordtype">double</span> max = -1e300;</div><div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;    <span class="keywordtype">int</span> nit = 0;</div><div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    i = j = e = f = 0;</div><div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;    c = s = t = thta = 0.0;</div><div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;    error = 0;</div><div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;</div><div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="preprocessor">#define EPS_JACOBI 1e-10</span></div><div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;</div><div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++) {</div><div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;        <span class="keywordflow">for</span> (j = 0; j &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; j++) {</div><div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;            diagM[i][j] = M[i][j];</div><div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;            v[i][j] = 0.0;</div><div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;        }</div><div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;        v[i][i] = 1.0;</div><div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    }</div><div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;</div><div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    <span class="keywordflow">do</span> {</div><div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;        nit++;</div><div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;        error = <a class="code" href="linalg_8cu.html#a4dafeaf0a8b28945534511113dc0b7bf">max_Matrix</a>(diagM, &amp;e, &amp;f, &amp;max);</div><div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;        <span class="keywordflow">if</span> (error) {</div><div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;            printf(<span class="stringliteral">&quot;No maximum element found.\n&quot;</span>);</div><div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;        }</div><div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;        <span class="keywordflow">if</span> (max &gt; 0) {</div><div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;            <span class="comment">// rotate matrix</span></div><div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;            thta = (diagM[f][f] - diagM[e][e])/(2*diagM[e][f]);</div><div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;            <span class="keywordflow">if</span> (thta &lt; 0)</div><div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;                t = -1./(fabs(thta) + sqrt(thta*thta+1));</div><div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;            <span class="keywordflow">else</span></div><div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;                t = 1./(fabs(thta) + sqrt(thta*thta+1));</div><div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;            <span class="comment">// the elements of the rotation matrix</span></div><div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;            c = 1./(sqrt(t*t+1));</div><div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;            s = t*c;</div><div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;            <span class="comment">// do diagM&#39; = A^T diagM A</span></div><div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;            <a class="code" href="linalg_8cu.html#a4645103d033d7dc5c15618754fad7e04">rotate_matrix</a>(diagM, c, s, e, f);</div><div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;            <a class="code" href="linalg_8cu.html#abdaad85f464e14306a632d3bfbcaaf3b">identity_matrix</a>(A);</div><div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;            A[e][e] = c;</div><div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;            A[f][f] = c;</div><div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;            A[e][f] = -s;</div><div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;            A[f][e] = s;</div><div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;            <span class="comment">// calculate the eigenvectors</span></div><div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;            <a class="code" href="linalg_8cu.html#a8e3167823205861c3e20313b183e60e4">multiply_matrix</a>(v, A, vtmp);</div><div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;            <a class="code" href="linalg_8cu.html#a7bfd4dc8feccfdf93b17adf078b728a3">copy_matrix</a>(vtmp, v);</div><div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;        }</div><div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;    } <span class="keywordflow">while</span> (max &gt; <a class="code" href="linalg_8cu.html#a986f2217c83e5fe112bcad9726c52b8e">EPS_JACOBI</a>);</div><div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;</div><div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++) {</div><div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;        eigenvalues[i] = diagM[i][i];</div><div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    }</div><div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;    <span class="keywordflow">return</span> nit;</div><div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;}</div><div class="ttc" id="linalg_8cu_html_a7bfd4dc8feccfdf93b17adf078b728a3"><div class="ttname"><a href="linalg_8cu.html#a7bfd4dc8feccfdf93b17adf078b728a3">copy_matrix</a></div><div class="ttdeci">__device__ void copy_matrix(double src[DIM][DIM], double dst[DIM][DIM])</div><div class="ttdef"><b>Definition:</b> <a href="linalg_8cu_source.html#l00032">linalg.cu:32</a></div></div>
+<div class="ttc" id="parameter_8h_html_ac25189db92959bff3c6c2adf4c34b50a"><div class="ttname"><a href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a></div><div class="ttdeci">#define DIM</div><div class="ttdef"><b>Definition:</b> <a href="parameter_8h_source.html#l00030">parameter.h:30</a></div></div>
+<div class="ttc" id="linalg_8cu_html_a4645103d033d7dc5c15618754fad7e04"><div class="ttname"><a href="linalg_8cu.html#a4645103d033d7dc5c15618754fad7e04">rotate_matrix</a></div><div class="ttdeci">__device__ void rotate_matrix(volatile double m[DIM][DIM], volatile double c, volatile double s, volatile int e, volatile int f)</div><div class="ttdef"><b>Definition:</b> <a href="linalg_8cu_source.html#l00131">linalg.cu:131</a></div></div>
+<div class="ttc" id="linalg_8cu_html_a986f2217c83e5fe112bcad9726c52b8e"><div class="ttname"><a href="linalg_8cu.html#a986f2217c83e5fe112bcad9726c52b8e">EPS_JACOBI</a></div><div class="ttdeci">#define EPS_JACOBI</div></div>
+<div class="ttc" id="linalg_8cu_html_abdaad85f464e14306a632d3bfbcaaf3b"><div class="ttname"><a href="linalg_8cu.html#abdaad85f464e14306a632d3bfbcaaf3b">identity_matrix</a></div><div class="ttdeci">__device__ void identity_matrix(double A[DIM][DIM])</div><div class="ttdef"><b>Definition:</b> <a href="linalg_8cu_source.html#l00088">linalg.cu:88</a></div></div>
+<div class="ttc" id="linalg_8cu_html_a8e3167823205861c3e20313b183e60e4"><div class="ttname"><a href="linalg_8cu.html#a8e3167823205861c3e20313b183e60e4">multiply_matrix</a></div><div class="ttdeci">__device__ void multiply_matrix(double A[DIM][DIM], double B[DIM][DIM], double C[DIM][DIM])</div><div class="ttdef"><b>Definition:</b> <a href="linalg_8cu_source.html#l00061">linalg.cu:61</a></div></div>
+<div class="ttc" id="linalg_8cu_html_a4dafeaf0a8b28945534511113dc0b7bf"><div class="ttname"><a href="linalg_8cu.html#a4dafeaf0a8b28945534511113dc0b7bf">max_Matrix</a></div><div class="ttdeci">__device__ int max_Matrix(double M[DIM][DIM], int *e, int *f, double *elmax)</div><div class="ttdef"><b>Definition:</b> <a href="linalg_8cu_source.html#l00104">linalg.cu:104</a></div></div>
+</div><!-- fragment --><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="linalg_8cu_a3fa9133c1c4bcf51f1dc6151e608d5b3_cgraph.png" border="0" usemap="#linalg_8cu_a3fa9133c1c4bcf51f1dc6151e608d5b3_cgraph" alt=""/></div>
+<map name="linalg_8cu_a3fa9133c1c4bcf51f1dc6151e608d5b3_cgraph" id="linalg_8cu_a3fa9133c1c4bcf51f1dc6151e608d5b3_cgraph">
+<area shape="rect" id="node2" href="linalg_8cu.html#a4dafeaf0a8b28945534511113dc0b7bf" title="max_Matrix" alt="" coords="234,5,325,32"/>
+<area shape="rect" id="node3" href="linalg_8cu.html#a4645103d033d7dc5c15618754fad7e04" title="rotate_matrix" alt="" coords="230,56,329,83"/>
+<area shape="rect" id="node4" href="linalg_8cu.html#abdaad85f464e14306a632d3bfbcaaf3b" title="identity_matrix" alt="" coords="226,107,333,133"/>
+<area shape="rect" id="node5" href="linalg_8cu.html#a8e3167823205861c3e20313b183e60e4" title="multiply_matrix" alt="" coords="224,157,335,184"/>
+<area shape="rect" id="node6" href="linalg_8cu.html#a7bfd4dc8feccfdf93b17adf078b728a3" title="copy_matrix" alt="" coords="233,208,326,235"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="ab7f86ff133d2ee7624a7760a93080c2f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab7f86ff133d2ee7624a7760a93080c2f">&#9670;&nbsp;</a></span>calculateMaxEigenvalue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__device__ double calculateMaxEigenvalue </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>M</em>[DIM][DIM]</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="linalg_8cu_source.html#l00242">242</a> of file <a class="el" href="linalg_8cu_source.html">linalg.cu</a>.</p>
+<div class="fragment"><div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;                                                             {</div><div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;    <span class="keywordtype">int</span> i, j;</div><div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;    <span class="keywordtype">double</span> diagM[<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>] = {0.0, };</div><div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;    <span class="keywordtype">double</span> c, s, t, thta;</div><div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;    <span class="keywordtype">int</span> e, f;</div><div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;    <span class="keywordtype">int</span> error;</div><div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    <span class="keywordtype">double</span> max;</div><div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    <span class="keywordtype">double</span> max_ev;</div><div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    <span class="keywordtype">int</span> nit = 0;</div><div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;    i = j = e = f = 0;</div><div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;    c = s = t = thta = 0.0;</div><div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;    max = max_ev = 0;</div><div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;    error = 0;</div><div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;</div><div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;</div><div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;<span class="preprocessor">#define EPS_JACOBI 1e-10</span></div><div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;</div><div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++)</div><div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;        <span class="keywordflow">for</span> (j = 0; j &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; j++)</div><div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;            diagM[i][j] = M[i][j];</div><div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;</div><div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <span class="keywordflow">do</span> {</div><div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;        nit++;</div><div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;        error = <a class="code" href="linalg_8cu.html#a4dafeaf0a8b28945534511113dc0b7bf">max_Matrix</a>(diagM, &amp;e, &amp;f, &amp;max);</div><div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;        <span class="keywordflow">if</span> (error) {</div><div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;            printf(<span class="stringliteral">&quot;No maximum element found.\n&quot;</span>);</div><div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;        }</div><div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;        <span class="keywordflow">if</span> (max &gt; 0) {</div><div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;            <span class="comment">// rotate matrix</span></div><div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;            thta = (diagM[f][f] - diagM[e][e])/(2*diagM[e][f]);</div><div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;            <span class="keywordflow">if</span> (thta &lt; 0)</div><div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;                t = -1./(fabs(thta) + sqrt(thta*thta+1));</div><div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;            <span class="keywordflow">else</span></div><div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;                t = 1./(fabs(thta) + sqrt(thta*thta+1));</div><div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;            <span class="comment">// the elements of the rotation matrix</span></div><div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;            c = 1./(sqrt(t*t+1));</div><div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;            s = t*c;</div><div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;            <span class="comment">// do diagM&#39; = A^T diagM A</span></div><div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;            <a class="code" href="linalg_8cu.html#a4645103d033d7dc5c15618754fad7e04">rotate_matrix</a>(diagM, c, s, e, f);</div><div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;        }</div><div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    } <span class="keywordflow">while</span> (max &gt; <a class="code" href="linalg_8cu.html#a986f2217c83e5fe112bcad9726c52b8e">EPS_JACOBI</a> || nit &lt; 5);</div><div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;</div><div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    max_ev = diagM[0][0];</div><div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    <span class="keywordflow">for</span> (i = 1; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++) {</div><div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;        <span class="keywordflow">if</span> (diagM[i][i] &gt; max_ev) {</div><div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;            max_ev = diagM[i][i];</div><div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;        }</div><div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    }</div><div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    <span class="keywordflow">return</span> max_ev;</div><div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;}</div><div class="ttc" id="parameter_8h_html_ac25189db92959bff3c6c2adf4c34b50a"><div class="ttname"><a href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a></div><div class="ttdeci">#define DIM</div><div class="ttdef"><b>Definition:</b> <a href="parameter_8h_source.html#l00030">parameter.h:30</a></div></div>
+<div class="ttc" id="linalg_8cu_html_a4645103d033d7dc5c15618754fad7e04"><div class="ttname"><a href="linalg_8cu.html#a4645103d033d7dc5c15618754fad7e04">rotate_matrix</a></div><div class="ttdeci">__device__ void rotate_matrix(volatile double m[DIM][DIM], volatile double c, volatile double s, volatile int e, volatile int f)</div><div class="ttdef"><b>Definition:</b> <a href="linalg_8cu_source.html#l00131">linalg.cu:131</a></div></div>
+<div class="ttc" id="linalg_8cu_html_a986f2217c83e5fe112bcad9726c52b8e"><div class="ttname"><a href="linalg_8cu.html#a986f2217c83e5fe112bcad9726c52b8e">EPS_JACOBI</a></div><div class="ttdeci">#define EPS_JACOBI</div></div>
+<div class="ttc" id="linalg_8cu_html_a4dafeaf0a8b28945534511113dc0b7bf"><div class="ttname"><a href="linalg_8cu.html#a4dafeaf0a8b28945534511113dc0b7bf">max_Matrix</a></div><div class="ttdeci">__device__ int max_Matrix(double M[DIM][DIM], int *e, int *f, double *elmax)</div><div class="ttdef"><b>Definition:</b> <a href="linalg_8cu_source.html#l00104">linalg.cu:104</a></div></div>
+</div><!-- fragment --><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="linalg_8cu_ab7f86ff133d2ee7624a7760a93080c2f_cgraph.png" border="0" usemap="#linalg_8cu_ab7f86ff133d2ee7624a7760a93080c2f_cgraph" alt=""/></div>
+<map name="linalg_8cu_ab7f86ff133d2ee7624a7760a93080c2f_cgraph" id="linalg_8cu_ab7f86ff133d2ee7624a7760a93080c2f_cgraph">
+<area shape="rect" id="node2" href="linalg_8cu.html#a4dafeaf0a8b28945534511113dc0b7bf" title="max_Matrix" alt="" coords="220,5,311,32"/>
+<area shape="rect" id="node3" href="linalg_8cu.html#a4645103d033d7dc5c15618754fad7e04" title="rotate_matrix" alt="" coords="216,56,315,83"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="a7bfd4dc8feccfdf93b17adf078b728a3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7bfd4dc8feccfdf93b17adf078b728a3">&#9670;&nbsp;</a></span>copy_matrix()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__device__ void copy_matrix </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>src</em>[DIM][DIM], </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dst</em>[DIM][DIM]&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section author"><dt>Author</dt><dd>Christoph Schaefer <a href="#" onclick="location.href='mai'+'lto:'+'cm.'+'sc'+'hae'+'fe'+'r@g'+'ma'+'il.'+'co'+'m'; return false;">cm.sc<span style="display: none;">.nosp@m.</span>haef<span style="display: none;">.nosp@m.</span>er@gm<span style="display: none;">.nosp@m.</span>ail.<span style="display: none;">.nosp@m.</span>com</a></dd></dl>
+<h1><a class="anchor" id="LICENSE"></a>
+LICENSE</h1>
+<p>Copyright (c) 2019 Christoph Schaefer</p>
+<p>This file is part of miluphcuda.</p>
+<p>miluphcuda is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p>
+<p>miluphcuda is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</p>
+<p>You should have received a copy of the GNU General Public License along with miluphcuda. If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>. </p>
+
+<p class="definition">Definition at line <a class="el" href="linalg_8cu_source.html#l00032">32</a> of file <a class="el" href="linalg_8cu_source.html">linalg.cu</a>.</p>
+<div class="fragment"><div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;{</div><div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <span class="keywordtype">int</span> i, j;</div><div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div><div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++) {</div><div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;        <span class="keywordflow">for</span> (j = 0; j &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; j++) {</div><div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;            dst[i][j] = src[i][j];</div><div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        }</div><div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    }</div><div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;</div><div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;}</div><div class="ttc" id="parameter_8h_html_ac25189db92959bff3c6c2adf4c34b50a"><div class="ttname"><a href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a></div><div class="ttdeci">#define DIM</div><div class="ttdef"><b>Definition:</b> <a href="parameter_8h_source.html#l00030">parameter.h:30</a></div></div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="ae7e9ccfd8053141e2aa49bae33ae4771"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae7e9ccfd8053141e2aa49bae33ae4771">&#9670;&nbsp;</a></span>det2x2()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__device__ double det2x2 </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>a</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>c</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>d</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="linalg_8cu_source.html#l00293">293</a> of file <a class="el" href="linalg_8cu_source.html">linalg.cu</a>.</p>
+<div class="fragment"><div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;                                                                 {</div><div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;    <span class="keywordflow">return</span> a*d-c*b;</div><div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;}</div></div><!-- fragment -->
+</div>
+</div>
+<a id="abdaad85f464e14306a632d3bfbcaaf3b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abdaad85f464e14306a632d3bfbcaaf3b">&#9670;&nbsp;</a></span>identity_matrix()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__device__ void identity_matrix </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>A</em>[DIM][DIM]</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="linalg_8cu_source.html#l00088">88</a> of file <a class="el" href="linalg_8cu_source.html">linalg.cu</a>.</p>
+<div class="fragment"><div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;{</div><div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="keywordtype">int</span> i, j;</div><div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++) {</div><div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        <span class="keywordflow">for</span> (j = 0; j &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; j++) {</div><div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;            A[i][j] = 0.0;</div><div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;        }</div><div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;        A[i][i] = 1.0;</div><div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    }</div><div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;}</div><div class="ttc" id="parameter_8h_html_ac25189db92959bff3c6c2adf4c34b50a"><div class="ttname"><a href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a></div><div class="ttdeci">#define DIM</div><div class="ttdef"><b>Definition:</b> <a href="parameter_8h_source.html#l00030">parameter.h:30</a></div></div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="aacc9f38d87c48a936e95a4a81834c928"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aacc9f38d87c48a936e95a4a81834c928">&#9670;&nbsp;</a></span>invertMatrix()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__device__ int invertMatrix </td>
+          <td>(</td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>m</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>inverted</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="linalg_8cu_source.html#l00297">297</a> of file <a class="el" href="linalg_8cu_source.html">linalg.cu</a>.</p>
+<div class="fragment"><div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;                                                         {</div><div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;    <span class="keywordtype">double</span> det;</div><div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;<span class="preprocessor">#if (DIM == 2)</span></div><div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    <span class="keywordtype">double</span> a, b, c, d;</div><div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;    a = m[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+0];</div><div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;    b = m[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+1];</div><div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;    c = m[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+0];</div><div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;    d = m[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+1];</div><div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;</div><div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;    det = <a class="code" href="linalg_8cu.html#ae7e9ccfd8053141e2aa49bae33ae4771">det2x2</a>(a,b,c,d);</div><div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;  <span class="comment">//  if (det &lt; 1e-8) return -1;</span></div><div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;   <span class="comment">// if (det &lt; 1e-10) det = 1e-10;</span></div><div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;    det = 1./det;</div><div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;</div><div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;    inverted[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+0] = det*d;</div><div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    inverted[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+1] = -det*b;</div><div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;    inverted[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+0] = -det*c;</div><div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;    inverted[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+1] = det*a;</div><div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;<span class="preprocessor">#elif (DIM == 3)</span></div><div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;    det = m[0 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 0] * (m[1 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 1] * m[2 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 2] - m[2 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 1] * m[1 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 2])</div><div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;        - m[0 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 1] * (m[1 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 0] * m[2 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 2] - m[1 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 2] * m[2 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 0])</div><div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;        + m[0 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 2] * (m[1 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 0] * m[2 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 1] - m[1 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 1] * m[2 * <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + 0]);</div><div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;</div><div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;    <span class="comment">// inverse determinante</span></div><div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;</div><div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    <span class="keywordflow">if</span> (det &lt; 1e-8) <span class="keywordflow">return</span> -1;</div><div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    det = 1.0 / det;</div><div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;</div><div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;    inverted[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+0] = (m[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 1] * m[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 2] - m[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 1] * m[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 2]) * det;</div><div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;    inverted[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+1] = (m[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 2] * m[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 1] - m[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 1] * m[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 2]) * det;</div><div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;    inverted[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+2] = (m[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 1] * m[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 2] - m[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 2] * m[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 1]) * det;</div><div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    inverted[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+0] = (m[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 2] * m[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 0] - m[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 0] * m[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 2]) * det;</div><div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;    inverted[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+1] = (m[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 0] * m[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 2] - m[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 2] * m[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 0]) * det;</div><div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    inverted[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+2] = (m[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 0] * m[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 2] - m[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 0] * m[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 2]) * det;</div><div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;    inverted[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+0] = (m[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 0] * m[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 1] - m[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 0] * m[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 1]) * det;</div><div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;    inverted[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+1] = (m[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 0] * m[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 1] - m[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 0] * m[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 1]) * det;</div><div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;    inverted[2*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+2] = (m[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 0] * m[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 1] - m[1*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 0] * m[0*<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+ 1]) * det;</div><div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;<span class="preprocessor">#endif</span></div><div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;</div><div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;    <span class="keywordflow">return</span> 1;</div><div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;}</div><div class="ttc" id="parameter_8h_html_ac25189db92959bff3c6c2adf4c34b50a"><div class="ttname"><a href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a></div><div class="ttdeci">#define DIM</div><div class="ttdef"><b>Definition:</b> <a href="parameter_8h_source.html#l00030">parameter.h:30</a></div></div>
+<div class="ttc" id="linalg_8cu_html_ae7e9ccfd8053141e2aa49bae33ae4771"><div class="ttname"><a href="linalg_8cu.html#ae7e9ccfd8053141e2aa49bae33ae4771">det2x2</a></div><div class="ttdeci">__device__ double det2x2(double a, double b, double c, double d)</div><div class="ttdef"><b>Definition:</b> <a href="linalg_8cu_source.html#l00293">linalg.cu:293</a></div></div>
+</div><!-- fragment --><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="linalg_8cu_aacc9f38d87c48a936e95a4a81834c928_cgraph.png" border="0" usemap="#linalg_8cu_aacc9f38d87c48a936e95a4a81834c928_cgraph" alt=""/></div>
+<map name="linalg_8cu_aacc9f38d87c48a936e95a4a81834c928_cgraph" id="linalg_8cu_aacc9f38d87c48a936e95a4a81834c928_cgraph">
+<area shape="rect" id="node2" href="linalg_8cu.html#ae7e9ccfd8053141e2aa49bae33ae4771" title="det2x2" alt="" coords="144,5,205,32"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="a4dafeaf0a8b28945534511113dc0b7bf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4dafeaf0a8b28945534511113dc0b7bf">&#9670;&nbsp;</a></span>max_Matrix()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__device__ int max_Matrix </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>M</em>[DIM][DIM], </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>e</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>f</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>elmax</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section author"><dt>Author</dt><dd>Christoph Schaefer <a href="#" onclick="location.href='mai'+'lto:'+'cm.'+'sc'+'hae'+'fe'+'r@g'+'ma'+'il.'+'co'+'m'; return false;">cm.sc<span style="display: none;">.nosp@m.</span>haef<span style="display: none;">.nosp@m.</span>er@gm<span style="display: none;">.nosp@m.</span>ail.<span style="display: none;">.nosp@m.</span>com</a></dd></dl>
+<h1><a class="anchor" id="LICENSE"></a>
+LICENSE</h1>
+<p>Copyright (c) 2019 Christoph Schaefer</p>
+<p>This file is part of miluphcuda.</p>
+<p>miluphcuda is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p>
+<p>miluphcuda is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</p>
+<p>You should have received a copy of the GNU General Public License along with miluphcuda. If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>. </p>
+
+<p class="definition">Definition at line <a class="el" href="linalg_8cu_source.html#l00104">104</a> of file <a class="el" href="linalg_8cu_source.html">linalg.cu</a>.</p>
+<div class="fragment"><div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;{</div><div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    <span class="keywordtype">int</span> i, j;</div><div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    <span class="keywordtype">double</span> max = 0.0;</div><div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <span class="keywordtype">int</span> ierror = 1;</div><div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;</div><div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++) {</div><div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;        <span class="keywordflow">for</span> (j = 0; j &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; j++) {</div><div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;            <span class="keywordflow">if</span> (i == j)</div><div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;                <span class="keywordflow">continue</span>;</div><div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;            <span class="keywordflow">if</span> (fabs(M[i][j]) &gt;= max) {</div><div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;                max = fabs(M[i][j]);</div><div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;                *e = i;</div><div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;                *f = j;</div><div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;                ierror = 0;</div><div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;            }</div><div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;        }</div><div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    }</div><div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    *elmax = max;</div><div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    <span class="keywordflow">return</span> ierror;</div><div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;}</div><div class="ttc" id="parameter_8h_html_ac25189db92959bff3c6c2adf4c34b50a"><div class="ttname"><a href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a></div><div class="ttdeci">#define DIM</div><div class="ttdef"><b>Definition:</b> <a href="parameter_8h_source.html#l00030">parameter.h:30</a></div></div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a8e3167823205861c3e20313b183e60e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8e3167823205861c3e20313b183e60e4">&#9670;&nbsp;</a></span>multiply_matrix()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__device__ void multiply_matrix </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>A</em>[DIM][DIM], </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>B</em>[DIM][DIM], </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>C</em>[DIM][DIM]&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="linalg_8cu_source.html#l00061">61</a> of file <a class="el" href="linalg_8cu_source.html">linalg.cu</a>.</p>
+<div class="fragment"><div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;{</div><div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keywordtype">int</span> i, j, k;</div><div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div><div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="keywordtype">double</span> vprime[<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>];</div><div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div><div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++) {</div><div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        <span class="keywordflow">for</span> (j = 0; j &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; j++) {</div><div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;            vprime[i][j] = 0.0;</div><div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        }</div><div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    }</div><div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div><div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++) {</div><div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        <span class="keywordflow">for</span> (j = 0; j &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; j++) {</div><div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;            <span class="keywordflow">for</span> (k = 0; k &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; k++) {</div><div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;                vprime[i][j] += A[i][k]*B[k][j];</div><div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;            }</div><div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        }</div><div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    }</div><div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++) {</div><div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        <span class="keywordflow">for</span> (j = 0; j &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; j++) {</div><div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;            C[i][j] = vprime[i][j];</div><div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;        }</div><div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    }</div><div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;</div><div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;}</div><div class="ttc" id="parameter_8h_html_ac25189db92959bff3c6c2adf4c34b50a"><div class="ttname"><a href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a></div><div class="ttdeci">#define DIM</div><div class="ttdef"><b>Definition:</b> <a href="parameter_8h_source.html#l00030">parameter.h:30</a></div></div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a4645103d033d7dc5c15618754fad7e04"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4645103d033d7dc5c15618754fad7e04">&#9670;&nbsp;</a></span>rotate_matrix()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__device__ void rotate_matrix </td>
+          <td>(</td>
+          <td class="paramtype">volatile double&#160;</td>
+          <td class="paramname"><em>m</em>[DIM][DIM], </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">volatile double&#160;</td>
+          <td class="paramname"><em>c</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">volatile double&#160;</td>
+          <td class="paramname"><em>s</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">volatile int&#160;</td>
+          <td class="paramname"><em>e</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">volatile int&#160;</td>
+          <td class="paramname"><em>f</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="linalg_8cu_source.html#l00131">131</a> of file <a class="el" href="linalg_8cu_source.html">linalg.cu</a>.</p>
+<div class="fragment"><div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;{</div><div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="keywordtype">int</span> i, j;</div><div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    <span class="keyword">volatile</span> <span class="keywordtype">double</span> mprime[<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>];</div><div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;</div><div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    <span class="comment">/* first copy the matrix */</span></div><div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++)</div><div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;        <span class="keywordflow">for</span> (j = 0; j &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; j++)</div><div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;            mprime[i][j] = m[i][j];</div><div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;</div><div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;    <span class="comment">/* now the elements that change */</span></div><div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;    mprime[e][e] = c*c*m[e][e] + s*s*m[f][f] - 2*s*c*m[e][f];</div><div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;    mprime[f][f] = c*c*m[f][f] + s*s*m[e][e] + 2*s*c*m[e][f];</div><div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;    mprime[e][f] = (c*c-s*s)*m[e][f] + s*c*(m[e][e]-m[f][f]);</div><div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;    mprime[f][e] = mprime[e][f];</div><div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;</div><div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;    <span class="comment">/* the other elements in columns and rows e, f*/</span></div><div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;    <span class="comment">/* actually, this is only one in 3D and 0 in 2D */</span></div><div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++) {</div><div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;        <span class="keywordflow">if</span> (i == f || i == e)</div><div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;            <span class="keywordflow">continue</span>;</div><div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;        mprime[e][i] = c*m[i][e] - s*m[i][f];</div><div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;        mprime[i][e] = mprime[e][i];</div><div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;        mprime[f][i] = c*m[i][f] + s*m[i][e];</div><div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;        mprime[i][f] = mprime[f][i];</div><div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    }</div><div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;</div><div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    <span class="comment">/* set the matrix to the rotated one */</span></div><div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++)</div><div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;        <span class="keywordflow">for</span> (j = 0; j &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; j++)</div><div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;            m[i][j] = mprime[i][j];</div><div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;}</div><div class="ttc" id="parameter_8h_html_ac25189db92959bff3c6c2adf4c34b50a"><div class="ttname"><a href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a></div><div class="ttdeci">#define DIM</div><div class="ttdef"><b>Definition:</b> <a href="parameter_8h_source.html#l00030">parameter.h:30</a></div></div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="ab840a4b933ee3f226652c613c9936ef9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab840a4b933ee3f226652c613c9936ef9">&#9670;&nbsp;</a></span>transpose_matrix()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">__device__ void transpose_matrix </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>m</em>[DIM][DIM]</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="linalg_8cu_source.html#l00044">44</a> of file <a class="el" href="linalg_8cu_source.html">linalg.cu</a>.</p>
+<div class="fragment"><div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;{</div><div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keywordtype">int</span> i, j;</div><div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keywordtype">double</span> mt[<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>][<a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>];</div><div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++) {</div><div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        <span class="keywordflow">for</span> (j = 0; j &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; j++) {</div><div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;            mt[j][i] = m[i][j];</div><div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        }</div><div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    }</div><div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; i++) {</div><div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        <span class="keywordflow">for</span> (j = 0; j &lt; <a class="code" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; j++) {</div><div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;            m[i][j] = mt[i][j];</div><div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        }</div><div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    }</div><div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;}</div><div class="ttc" id="parameter_8h_html_ac25189db92959bff3c6c2adf4c34b50a"><div class="ttname"><a href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a></div><div class="ttdeci">#define DIM</div><div class="ttdef"><b>Definition:</b> <a href="parameter_8h_source.html#l00030">parameter.h:30</a></div></div>
+</div><!-- fragment -->
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/linalg.cu File Reference<br />
-    Generated on Mon Jan 4 2021 07:05:07 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Tue Jan 5 2021 07:05:07 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>

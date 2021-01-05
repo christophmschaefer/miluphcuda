@@ -1,7 +1,5 @@
 var searchData=
 [
-  ['max_5fmatrix',['max_Matrix',['../linalg_8h.html#a4dafeaf0a8b28945534511113dc0b7bf',1,'linalg.h']]],
-  ['measuretreechange',['measureTreeChange',['../tree_8h.html#a3dd72b7d09239c038e6d5605d325322e',1,'tree.h']]],
-  ['multiply',['multiply',['../viscosity_8h.html#a2281abce50ff1f2abed346bd1ac2c264',1,'viscosity.h']]],
-  ['multiply_5fmatrix',['multiply_matrix',['../linalg_8h.html#a30aa34d2dedf80793ad3192ee3caa772',1,'linalg.h']]]
+  ['limittimestep',['limitTimestep',['../rk2adaptive_8cu.html#a5308c46b1c3eed7da718f29da03233b5',1,'limitTimestep(double *forcesPerBlock, double *courantPerBlock):&#160;rk2adaptive.cu'],['../rk2adaptive_8h.html#a5308c46b1c3eed7da718f29da03233b5',1,'limitTimestep(double *forcesPerBlock, double *courantPerBlock):&#160;rk2adaptive.cu']]],
+  ['loadconfigfromfile',['loadConfigFromFile',['../io_8cu.html#a5ec360b371f7ac6d5f2cbba38ba5fdd1',1,'loadConfigFromFile(char *configFile):&#160;io.cu'],['../io_8h.html#a5ec360b371f7ac6d5f2cbba38ba5fdd1',1,'loadConfigFromFile(char *configFile):&#160;io.cu']]]
 ];

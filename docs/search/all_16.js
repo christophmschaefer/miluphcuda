@@ -1,11 +1,15 @@
 var searchData=
 [
-  ['wendlandc2',['wendlandc2',['../kernel_8h.html#a242017431bb5b529b4ef7b7384ce5be9',1,'kernel.h']]],
-  ['wendlandc4',['wendlandc4',['../kernel_8h.html#ae4103bb99e622eeaddca79e77a59b43a',1,'kernel.h']]],
-  ['wendlandc6',['wendlandc6',['../kernel_8h.html#a1d584c5f92f2b94b5b79fde28bd191fa',1,'kernel.h']]],
-  ['write_5ffragments_5ffile',['write_fragments_file',['../io_8h.html#aa07a6c422a89a8dca138a979ce31db99',1,'io.h']]],
-  ['write_5fparticles_5fto_5ffile',['write_particles_to_file',['../io_8h.html#a07ed6f675c3146b0fddf941b31f7615a',1,'io.h']]],
-  ['write_5fperformance',['write_performance',['../io_8h.html#a0ded60bcaf7c4f7d1a333657947e0213',1,'io.h']]],
-  ['write_5ftimestep',['write_timestep',['../io_8h.html#af467bf4a377d412a9d822824757615b1',1,'io.h']]],
-  ['write_5ftree_5fto_5ffile',['write_tree_to_file',['../io_8h.html#a36e1bd004d77e5bfd809373a3bdcbaa1',1,'io.h']]]
+  ['variable_5fsml',['VARIABLE_SML',['../parameter_8h.html#a908e2164c823365528caa4263006a2dc',1,'VARIABLE_SML():&#160;parameter.h'],['../test__cases_2colliding__rings_2parameter_8h.html#a908e2164c823365528caa4263006a2dc',1,'VARIABLE_SML():&#160;parameter.h'],['../test__cases_2giant__collisions_2hydro_2parameter_8h.html#a908e2164c823365528caa4263006a2dc',1,'VARIABLE_SML():&#160;parameter.h'],['../test__cases_2giant__collisions_2solid_2parameter_8h.html#a908e2164c823365528caa4263006a2dc',1,'VARIABLE_SML():&#160;parameter.h'],['../test__cases_2nakamura_2parameter_8h.html#a908e2164c823365528caa4263006a2dc',1,'VARIABLE_SML():&#160;parameter.h'],['../test__cases_2shocktube_2parameter_8h.html#a908e2164c823365528caa4263006a2dc',1,'VARIABLE_SML():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#a908e2164c823365528caa4263006a2dc',1,'VARIABLE_SML():&#160;parameter.h']]],
+  ['velocity_2ecu',['velocity.cu',['../velocity_8cu.html',1,'']]],
+  ['velocity_2eh',['velocity.h',['../velocity_8h.html',1,'']]],
+  ['verbose',['verbose',['../struct_run_parameter.html#adab1684f873e6568ba0603d3d17b6611',1,'RunParameter']]],
+  ['viscosity_2ecu',['viscosity.cu',['../viscosity_8cu.html',1,'']]],
+  ['viscosity_2eh',['viscosity.h',['../viscosity_8h.html',1,'']]],
+  ['viscous_5fregolith',['VISCOUS_REGOLITH',['../parameter_8h.html#afce1a1f3fa7a49e5c7976d2524f6759d',1,'VISCOUS_REGOLITH():&#160;parameter.h'],['../test__cases_2colliding__rings_2parameter_8h.html#afce1a1f3fa7a49e5c7976d2524f6759d',1,'VISCOUS_REGOLITH():&#160;parameter.h'],['../test__cases_2giant__collisions_2hydro_2parameter_8h.html#afce1a1f3fa7a49e5c7976d2524f6759d',1,'VISCOUS_REGOLITH():&#160;parameter.h'],['../test__cases_2giant__collisions_2solid_2parameter_8h.html#afce1a1f3fa7a49e5c7976d2524f6759d',1,'VISCOUS_REGOLITH():&#160;parameter.h'],['../test__cases_2nakamura_2parameter_8h.html#afce1a1f3fa7a49e5c7976d2524f6759d',1,'VISCOUS_REGOLITH():&#160;parameter.h'],['../test__cases_2shocktube_2parameter_8h.html#afce1a1f3fa7a49e5c7976d2524f6759d',1,'VISCOUS_REGOLITH():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#afce1a1f3fa7a49e5c7976d2524f6759d',1,'VISCOUS_REGOLITH():&#160;parameter.h']]],
+  ['von_5fmises_5fplasticity',['VON_MISES_PLASTICITY',['../parameter_8h.html#a592a9ce439e10ae6d61f3c9eb3631887',1,'VON_MISES_PLASTICITY():&#160;parameter.h'],['../test__cases_2colliding__rings_2parameter_8h.html#a592a9ce439e10ae6d61f3c9eb3631887',1,'VON_MISES_PLASTICITY():&#160;parameter.h'],['../test__cases_2giant__collisions_2hydro_2parameter_8h.html#a592a9ce439e10ae6d61f3c9eb3631887',1,'VON_MISES_PLASTICITY():&#160;parameter.h'],['../test__cases_2giant__collisions_2solid_2parameter_8h.html#a592a9ce439e10ae6d61f3c9eb3631887',1,'VON_MISES_PLASTICITY():&#160;parameter.h'],['../test__cases_2nakamura_2parameter_8h.html#a592a9ce439e10ae6d61f3c9eb3631887',1,'VON_MISES_PLASTICITY():&#160;parameter.h'],['../test__cases_2shocktube_2parameter_8h.html#a592a9ce439e10ae6d61f3c9eb3631887',1,'VON_MISES_PLASTICITY():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#a592a9ce439e10ae6d61f3c9eb3631887',1,'VON_MISES_PLASTICITY():&#160;parameter.h']]],
+  ['vx',['vx',['../struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7',1,'Particle::vx()'],['../struct_pointmass.html#abed92c37b890d737e368acd354efb4aa',1,'Pointmass::vx()']]],
+  ['vx0',['vx0',['../struct_particle.html#ae47207757a1f422dafdf7e1ee2660a6d',1,'Particle']]],
+  ['vy',['vy',['../struct_particle.html#a899efd3815bd01d50e37c84926b462d2',1,'Particle::vy()'],['../struct_pointmass.html#a1e2a138cc7697a8f665f8d66622b8739',1,'Pointmass::vy()']]],
+  ['vy0',['vy0',['../struct_particle.html#aeb7d0f7383c16f1958d35bdbf200f4b1',1,'Particle']]]
 ];

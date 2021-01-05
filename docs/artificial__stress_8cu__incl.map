@@ -1,0 +1,13 @@
+<map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/artificial_stress.cu" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/artificial_stress.cu">
+<area shape="rect" id="node2" href="$artificial__stress_8h.html" title="artificial_stress.h" alt="" coords="1003,124,1124,151"/>
+<area shape="rect" id="node8" href="$parameter_8h.html" title="parameter.h" alt="" coords="1238,348,1329,375"/>
+<area shape="rect" id="node9" href="$miluph_8h.html" title="miluph.h" alt="" coords="737,273,808,300"/>
+<area shape="rect" id="node23" href="$linalg_8h.html" title="linalg.h" alt="" coords="1577,124,1640,151"/>
+<area shape="rect" id="node3" href="$timeintegration_8h.html" title="timeintegration.h" alt="" coords="965,199,1084,225"/>
+<area shape="rect" id="node16" href="$cuda__utils_8h.html" title="cuda_utils.h" alt="" coords="907,348,999,375"/>
+<area shape="rect" id="node17" href="$io_8h.html" title="io.h" alt="" coords="789,348,831,375"/>
+<area shape="rect" id="node20" href="$kernel_8h.html" title="kernel.h" alt="" coords="1433,273,1501,300"/>
+<area shape="rect" id="node21" href="$extrema_8h.html" title="extrema.h" alt="" coords="985,273,1065,300"/>
+<area shape="rect" id="node22" href="$sinking_8h.html" title="sinking.h" alt="" coords="1089,273,1163,300"/>
+<area shape="rect" id="node19" href="$checks_8h.html" title="checks.h" alt="" coords="690,348,765,375"/>
+</map>

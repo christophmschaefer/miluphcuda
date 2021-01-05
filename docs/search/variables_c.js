@@ -1,17 +1,18 @@
 var searchData=
 [
-  ['p',['p',['../struct_particle.html#af43ccd2d4b0d70c48acbcddedbfa8fe0',1,'Particle::p()'],['../miluph_8h.html#a9c416f8a5261389ba7b66c159c03d53d',1,'p():&#160;miluph.h']]],
-  ['p_5fdevice',['p_device',['../miluph_8h.html#a9de5c2e08c156c001e1b244acb3caf3e',1,'miluph.h']]],
-  ['p_5fhost',['p_host',['../miluph_8h.html#a43f583b42078aa24dd8da16315918b4d',1,'miluph.h']]],
-  ['p_5frhs',['p_rhs',['../miluph_8h.html#aa7123d849e86157036f10deaa6be2558',1,'miluph.h']]],
-  ['param',['param',['../miluph_8h.html#a52ddd705ed657b9eccbcfa25d8bd9d5c',1,'miluph.h']]],
-  ['performancetest',['performanceTest',['../struct_run_parameter.html#af6468853e00cc9e0dad34217d8818bc8',1,'RunParameter']]],
-  ['pointmass',['pointmass',['../miluph_8h.html#a8798c21a7b2043e5155ca22c2b398cf6',1,'miluph.h']]],
-  ['pointmass_5fdevice',['pointmass_device',['../miluph_8h.html#aea5ac75f4380143b585f49ab962ab822',1,'miluph.h']]],
-  ['pointmass_5fhost',['pointmass_host',['../miluph_8h.html#ae8a81884fe1ed60eefa06f22a2ec2f1b',1,'miluph.h']]],
-  ['pointmass_5frhs',['pointmass_rhs',['../miluph_8h.html#a3ab29d473283a2fb4e8e92da8ef9a08a',1,'miluph.h']]],
-  ['predictor',['predictor',['../miluph_8h.html#a6d1c593c1ad5b070b3b40acaad4eda44',1,'miluph.h']]],
-  ['predictor_5fdevice',['predictor_device',['../miluph_8h.html#ad59732ba733939c11cb3db84edfffccd',1,'miluph.h']]],
-  ['predictor_5fpointmass',['predictor_pointmass',['../miluph_8h.html#a199ee8d4374bbb3c3a76b6073e109735',1,'miluph.h']]],
-  ['predictor_5fpointmass_5fdevice',['predictor_pointmass_device',['../miluph_8h.html#a8ffcf340b094bce9bbb25c354cf7e796',1,'miluph.h']]]
+  ['name',['name',['../struct_file.html#a348deeccd6613402baa45359b275ea52',1,'File']]],
+  ['noi',['noi',['../struct_particle.html#a54d63482d07d98baa2e436c0ad4095af',1,'Particle']]],
+  ['numberofchildren',['numberOfChildren',['../miluph_8cu.html#a4c8f9b962957f758f66a7e9a4367d567',1,'numberOfChildren():&#160;miluph.cu'],['../miluph_8h.html#a4c8f9b962957f758f66a7e9a4367d567',1,'numberOfChildren():&#160;miluph.cu']]],
+  ['numberofmaterials',['numberOfMaterials',['../config__parameter_8cu.html#a7f00ec370e9aef040c0b2831da3b71ce',1,'numberOfMaterials():&#160;config_parameter.cu'],['../config__parameter_8h.html#a7f00ec370e9aef040c0b2831da3b71ce',1,'numberOfMaterials():&#160;config_parameter.cu']]],
+  ['numberofmultiprocessors',['numberOfMultiprocessors',['../miluph_8cu.html#ad8a83283303f020de0d8ed12f3478bfa',1,'numberOfMultiprocessors():&#160;miluph.cu'],['../miluph_8h.html#ad8a83283303f020de0d8ed12f3478bfa',1,'numberOfMultiprocessors():&#160;miluph.cu']]],
+  ['numberofnodes',['numberOfNodes',['../miluph_8cu.html#a05037792b8959d7a716948abd0021655',1,'numberOfNodes():&#160;miluph.cu'],['../miluph_8h.html#a05037792b8959d7a716948abd0021655',1,'numberOfNodes():&#160;miluph.cu']]],
+  ['numberofparticles',['numberOfParticles',['../miluph_8cu.html#a0991032076bf439261a04c42163df141',1,'numberOfParticles():&#160;miluph.cu'],['../miluph_8h.html#a0991032076bf439261a04c42163df141',1,'numberOfParticles():&#160;miluph.cu']]],
+  ['numberofpointmasses',['numberOfPointmasses',['../miluph_8cu.html#a5b6a390fce314f1da2360859a60ae27f',1,'numberOfPointmasses():&#160;miluph.cu'],['../miluph_8h.html#a5b6a390fce314f1da2360859a60ae27f',1,'numberOfPointmasses():&#160;miluph.cu']]],
+  ['numberofrealparticles',['numberOfRealParticles',['../miluph_8cu.html#aef84c66ae80d51f0400be806d8b25a02',1,'numberOfRealParticles():&#160;miluph.cu'],['../miluph_8h.html#aef84c66ae80d51f0400be806d8b25a02',1,'numberOfRealParticles():&#160;miluph.cu']]],
+  ['numberoftimesteps',['numberOfTimesteps',['../timeintegration_8cu.html#a228b22ece8bc2bc18f9b4442e3ebf552',1,'numberOfTimesteps():&#160;timeintegration.cu'],['../timeintegration_8h.html#a228b22ece8bc2bc18f9b4442e3ebf552',1,'numberOfTimesteps():&#160;timeintegration.cu']]],
+  ['numchildren',['numChildren',['../config__parameter_8cu.html#acf9cac2ae28ec52fe48fe2381912884a',1,'numChildren():&#160;config_parameter.cu'],['../config__parameter_8h.html#acf9cac2ae28ec52fe48fe2381912884a',1,'numChildren():&#160;config_parameter.cu']]],
+  ['numnodes',['numNodes',['../config__parameter_8cu.html#a404241ccbeab41e353de238c33074e7f',1,'numNodes():&#160;config_parameter.cu'],['../config__parameter_8h.html#a404241ccbeab41e353de238c33074e7f',1,'numNodes():&#160;config_parameter.cu']]],
+  ['numparticles',['numParticles',['../config__parameter_8cu.html#a40d97ea849bd3c92d6762a2c2e55f21f',1,'numParticles():&#160;config_parameter.cu'],['../timeintegration_8h.html#a40d97ea849bd3c92d6762a2c2e55f21f',1,'numParticles():&#160;config_parameter.cu']]],
+  ['numpointmasses',['numPointmasses',['../config__parameter_8cu.html#a5a76fb3c65d0b67efab767b7feea24c3',1,'numPointmasses():&#160;config_parameter.cu'],['../timeintegration_8h.html#a5a76fb3c65d0b67efab767b7feea24c3',1,'numPointmasses():&#160;config_parameter.cu']]],
+  ['numrealparticles',['numRealParticles',['../config__parameter_8cu.html#ad2934c64153fe0ca8d8ae5797b53ec5e',1,'numRealParticles():&#160;config_parameter.cu'],['../config__parameter_8h.html#ad2934c64153fe0ca8d8ae5797b53ec5e',1,'numRealParticles():&#160;config_parameter.cu']]]
 ];

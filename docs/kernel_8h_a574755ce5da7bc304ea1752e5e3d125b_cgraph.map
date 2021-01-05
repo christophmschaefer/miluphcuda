@@ -1,0 +1,6 @@
+<map id="CalcDivvandCurlv" name="CalcDivvandCurlv">
+<area shape="rect" id="node2" href="$kernel_8h.html#a8531e5403979e291fe8fea8f359d5415" title="Calculates the zeroth order corrections for the kernel sum. " alt="" coords="183,5,311,32"/>
+<area shape="rect" id="node3" href="$kernel_8h.html#adfb4edbc8801ad7272d4bfa4e39495c3" title="Calculates the tensorial correction factors for linear consistency. " alt="" coords="181,56,312,83"/>
+<area shape="rect" id="node4" href="$linalg_8cu.html#aacc9f38d87c48a936e95a4a81834c928" title="invertMatrix" alt="" coords="201,107,292,133"/>
+<area shape="rect" id="node5" href="$linalg_8cu.html#ae7e9ccfd8053141e2aa49bae33ae4771" title="det2x2" alt="" coords="360,107,421,133"/>
+</map>

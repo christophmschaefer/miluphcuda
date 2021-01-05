@@ -1,0 +1,13 @@
+<map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/aneos.cu" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/aneos.cu">
+<area shape="rect" id="node4" href="$aneos_8h.html" title="aneos.h" alt="" coords="5,184,73,211"/>
+<area shape="rect" id="node5" href="$parameter_8h.html" title="parameter.h" alt="" coords="283,408,374,435"/>
+<area shape="rect" id="node6" href="$config__parameter_8h.html" title="config_parameter.h" alt="" coords="627,109,761,136"/>
+<area shape="rect" id="node18" href="$timeintegration_8h.html" title="timeintegration.h" alt="" coords="557,259,676,285"/>
+<area shape="rect" id="node10" href="$miluph_8h.html" title="miluph.h" alt="" coords="1167,184,1237,211"/>
+<area shape="rect" id="node16" href="$cuda__utils_8h.html" title="cuda_utils.h" alt="" coords="1540,333,1632,360"/>
+<area shape="rect" id="node17" href="$io_8h.html" title="io.h" alt="" coords="1418,333,1461,360"/>
+<area shape="rect" id="node19" href="$kernel_8h.html" title="kernel.h" alt="" coords="504,333,572,360"/>
+<area shape="rect" id="node20" href="$extrema_8h.html" title="extrema.h" alt="" coords="250,333,330,360"/>
+<area shape="rect" id="node21" href="$sinking_8h.html" title="sinking.h" alt="" coords="405,333,479,360"/>
+<area shape="rect" id="node23" href="$checks_8h.html" title="checks.h" alt="" coords="1090,259,1165,285"/>
+</map>
