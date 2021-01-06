@@ -180,7 +180,7 @@ Functions</h2></td></tr>
 <tr class="memdesc:a8531e5403979e291fe8fea8f359d5415"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculates the zeroth order corrections for the kernel sum.  <a href="#a8531e5403979e291fe8fea8f359d5415">More...</a><br /></td></tr>
 <tr class="separator:a8531e5403979e291fe8fea8f359d5415"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a574755ce5da7bc304ea1752e5e3d125b"><td class="memItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="kernel_8h.html#a574755ce5da7bc304ea1752e5e3d125b">CalcDivvandCurlv</a> (int *<a class="el" href="miluph_8h.html#a6452a9acca23effecb6f5a6e0cd332ec">interactions</a>)</td></tr>
-<tr class="memdesc:a574755ce5da7bc304ea1752e5e3d125b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculates   {v} and   {v}.  <a href="#a574755ce5da7bc304ea1752e5e3d125b">More...</a><br /></td></tr>
+<tr class="memdesc:a574755ce5da7bc304ea1752e5e3d125b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculates <img class="formulaInl" alt="$ \nabla \cdot \vec{v} $" src="form_0.png"/> and <img class="formulaInl" alt="$ \nabla \times \vec{v} $" src="form_1.png"/>.  <a href="#a574755ce5da7bc304ea1752e5e3d125b">More...</a><br /></td></tr>
 <tr class="separator:a574755ce5da7bc304ea1752e5e3d125b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Typedef Documentation</h2>
@@ -218,7 +218,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Calculates   {v} and   {v}. </p>
+<p>Calculates <img class="formulaInl" alt="$ \nabla \cdot \vec{v} $" src="form_0.png"/> and <img class="formulaInl" alt="$ \nabla \times \vec{v} $" src="form_1.png"/>. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">interactions</td><td></td></tr>
@@ -236,11 +236,11 @@ Functions</h2></td></tr>
 <div class="ttc" id="miluph_8cu_html_a9c416f8a5261389ba7b66c159c03d53d"><div class="ttname"><a href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a></div><div class="ttdeci">__constant__ struct Particle p</div><div class="ttdoc">the pointers to the arrays on the device in constant memory </div><div class="ttdef"><b>Definition:</b> <a href="miluph_8cu_source.html#l00051">miluph.cu:51</a></div></div>
 <div class="ttc" id="parameter_8h_html_a173e5a522f62a96b7508f1f4139b2479"><div class="ttname"><a href="parameter_8h.html#a173e5a522f62a96b7508f1f4139b2479">MAX_NUM_INTERACTIONS</a></div><div class="ttdeci">#define MAX_NUM_INTERACTIONS</div><div class="ttdef"><b>Definition:</b> <a href="parameter_8h_source.html#l00174">parameter.h:174</a></div></div>
 <div class="ttc" id="config__parameter_8cu_html_a40d97ea849bd3c92d6762a2c2e55f21f"><div class="ttname"><a href="config__parameter_8cu.html#a40d97ea849bd3c92d6762a2c2e55f21f">numParticles</a></div><div class="ttdeci">__device__ int numParticles</div><div class="ttdef"><b>Definition:</b> <a href="config__parameter_8cu_source.html#l00283">config_parameter.cu:283</a></div></div>
-<div class="ttc" id="struct_particle_html_a66049b7f5dab1e61378eaeec0f3cb6ba"><div class="ttname"><a href="struct_particle.html#a66049b7f5dab1e61378eaeec0f3cb6ba">Particle::divv</a></div><div class="ttdeci">double * divv</div><div class="ttdoc">{v} </div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00170">miluph.h:170</a></div></div>
+<div class="ttc" id="struct_particle_html_a66049b7f5dab1e61378eaeec0f3cb6ba"><div class="ttname"><a href="struct_particle.html#a66049b7f5dab1e61378eaeec0f3cb6ba">Particle::divv</a></div><div class="ttdeci">double * divv</div><div class="ttdoc"> </div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00170">miluph.h:170</a></div></div>
 <div class="ttc" id="struct_particle_html_a18b95a8086a1bd120f3b6e6850152802"><div class="ttname"><a href="struct_particle.html#a18b95a8086a1bd120f3b6e6850152802">Particle::h</a></div><div class="ttdeci">double * h</div><div class="ttdoc">smoothing length of the sph particle </div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00110">miluph.h:110</a></div></div>
 <div class="ttc" id="miluph_8cu_html_a6452a9acca23effecb6f5a6e0cd332ec"><div class="ttname"><a href="miluph_8cu.html#a6452a9acca23effecb6f5a6e0cd332ec">interactions</a></div><div class="ttdeci">int * interactions</div><div class="ttdoc">the array that keeps track and stores all interactions between the particles at a certain timestep ...</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8cu_source.html#l00087">miluph.cu:87</a></div></div>
 <div class="ttc" id="struct_particle_html_a679c91d88b1ce54aec008ff070516add"><div class="ttname"><a href="struct_particle.html#a679c91d88b1ce54aec008ff070516add">Particle::rho</a></div><div class="ttdeci">double * rho</div><div class="ttdoc">the density of the sph particle </div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00115">miluph.h:115</a></div></div>
-<div class="ttc" id="struct_particle_html_ab739b00f347fd824305d5c4b6c503486"><div class="ttname"><a href="struct_particle.html#ab739b00f347fd824305d5c4b6c503486">Particle::curlv</a></div><div class="ttdeci">double * curlv</div><div class="ttdoc">{v} </div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00169">miluph.h:169</a></div></div>
+<div class="ttc" id="struct_particle_html_ab739b00f347fd824305d5c4b6c503486"><div class="ttname"><a href="struct_particle.html#ab739b00f347fd824305d5c4b6c503486">Particle::curlv</a></div><div class="ttdeci">double * curlv</div><div class="ttdoc"> </div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00169">miluph.h:169</a></div></div>
 <div class="ttc" id="struct_particle_html_a244b8b92b755b1be6beaee16efd0cfc7"><div class="ttname"><a href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">Particle::vx</a></div><div class="ttdeci">double * vx</div><div class="ttdoc">the velocity in x-direction. if XSPH is 0, dx/dt  vx </div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00077">miluph.h:77</a></div></div>
 <div class="ttc" id="struct_particle_html_a54d63482d07d98baa2e436c0ad4095af"><div class="ttname"><a href="struct_particle.html#a54d63482d07d98baa2e436c0ad4095af">Particle::noi</a></div><div class="ttdeci">int * noi</div><div class="ttdoc">number of interaction partners of sph particle </div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00246">miluph.h:246</a></div></div>
 <div class="ttc" id="struct_particle_html_ad93c572bcbd802033fa462017b104952"><div class="ttname"><a href="struct_particle.html#ad93c572bcbd802033fa462017b104952">Particle::x</a></div><div class="ttdeci">double * x</div><div class="ttdoc">the x-coordinate of the sph particle </div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00056">miluph.h:56</a></div></div>
@@ -878,7 +878,7 @@ Here is the call graph for this function:</div>
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/kernel.h File Reference<br />
-    Generated on Tue Jan 5 2021 07:05:07 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Wed Jan 6 2021 07:05:09 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>

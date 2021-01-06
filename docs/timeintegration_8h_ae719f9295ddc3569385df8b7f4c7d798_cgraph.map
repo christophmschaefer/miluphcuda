@@ -18,7 +18,7 @@
 <area shape="rect" id="node19" href="$density_8cu.html#a9bb9c9b345cb0f4f95fa62e35644cc37" title="Calculates the density using the kernel sum. " alt="" coords="391,883,509,909"/>
 <area shape="rect" id="node21" href="$kernel_8h.html#a8531e5403979e291fe8fea8f359d5415" title="Calculates the zeroth order corrections for the kernel sum. " alt="" coords="621,959,749,985"/>
 <area shape="rect" id="node22" href="$soundspeed_8cu.html#a843a8fdd8c8728659687aab98307813b" title="calculateSoundSpeed" alt="" coords="611,233,759,260"/>
-<area shape="rect" id="node23" href="$kernel_8cu.html#a574755ce5da7bc304ea1752e5e3d125b" title="Calculates &#160;&#160;{v} and &#160;&#160;{v}. " alt="" coords="386,984,514,1011"/>
+<area shape="rect" id="node23" href="$kernel_8cu.html#a574755ce5da7bc304ea1752e5e3d125b" title="Calculates &#160;and . " alt="" coords="386,984,514,1011"/>
 <area shape="rect" id="node24" href="$kernel_8h.html#adfb4edbc8801ad7272d4bfa4e39495c3" title="Calculates the tensorial correction factors for linear consistency. " alt="" coords="620,1023,751,1049"/>
 <area shape="rect" id="node25" href="$porosity_8h.html#a918dad81cd63090e7989028d74741899" title="calculateCompressiveStrength" alt="" coords="350,1085,550,1112"/>
 <area shape="rect" id="node26" href="$porosity_8h.html#aa2dec2a1b423af3cc5035e4e0ff25b2e" title="calculateTensileStrength" alt="" coords="367,1136,533,1163"/>

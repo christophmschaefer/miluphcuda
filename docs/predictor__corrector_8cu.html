@@ -347,7 +347,7 @@ Here is the call graph for this function:</div>
 <area shape="rect" id="node21" href="density_8cu.html#a9bb9c9b345cb0f4f95fa62e35644cc37" title="Calculates the density using the kernel sum. " alt="" coords="471,864,589,891"/>
 <area shape="rect" id="node22" href="kernel_8h.html#a8531e5403979e291fe8fea8f359d5415" title="Calculates the zeroth order corrections for the kernel sum. " alt="" coords="701,1168,829,1195"/>
 <area shape="rect" id="node23" href="soundspeed_8cu.html#a843a8fdd8c8728659687aab98307813b" title="calculateSoundSpeed" alt="" coords="456,965,604,992"/>
-<area shape="rect" id="node24" href="kernel_8cu.html#a574755ce5da7bc304ea1752e5e3d125b" title="Calculates &#160;&#160;{v} and &#160;&#160;{v}. " alt="" coords="466,1269,594,1296"/>
+<area shape="rect" id="node24" href="kernel_8cu.html#a574755ce5da7bc304ea1752e5e3d125b" title="Calculates &#160;and . " alt="" coords="466,1269,594,1296"/>
 <area shape="rect" id="node25" href="kernel_8h.html#adfb4edbc8801ad7272d4bfa4e39495c3" title="Calculates the tensorial correction factors for linear consistency. " alt="" coords="700,1320,831,1347"/>
 <area shape="rect" id="node26" href="porosity_8h.html#a918dad81cd63090e7989028d74741899" title="calculateCompressiveStrength" alt="" coords="430,1117,630,1144"/>
 <area shape="rect" id="node27" href="porosity_8h.html#aa2dec2a1b423af3cc5035e4e0ff25b2e" title="calculateTensileStrength" alt="" coords="447,1168,613,1195"/>
@@ -520,7 +520,7 @@ Here is the call graph for this function:</div>
 <div class="ttc" id="predictor__corrector_8cu_html_a426db07191c557d04f722b524e1c2750"><div class="ttname"><a href="predictor__corrector_8cu.html#a426db07191c557d04f722b524e1c2750">SAFETY_FIRST</a></div><div class="ttdeci">#define SAFETY_FIRST</div></div>
 <div class="ttc" id="predictor__corrector_8cu_html_a93aa0ff62d8867ed92d404ff98d90647"><div class="ttname"><a href="predictor__corrector_8cu.html#a93aa0ff62d8867ed92d404ff98d90647">betamin_d</a></div><div class="ttdeci">__device__ double betamin_d</div><div class="ttdef"><b>Definition:</b> <a href="config__parameter_8cu_source.html#l00187">config_parameter.cu:187</a></div></div>
 <div class="ttc" id="struct_particle_html_af93d61719325984226e209efbe4c58a2"><div class="ttname"><a href="struct_particle.html#af93d61719325984226e209efbe4c58a2">Particle::muijmax</a></div><div class="ttdeci">double * muijmax</div><div class="ttdoc">value to calculate the time step size for the integrator </div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00188">miluph.h:188</a></div></div>
-<div class="ttc" id="pressure_8h_html_a5a8162808ef47c46eaf46274eab03e6ca72d0c9a1e5b7ef68c935239330758599"><div class="ttname"><a href="pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6ca72d0c9a1e5b7ef68c935239330758599">EOS_TYPE_JUTZI_ANEOS</a></div><div class="ttdoc">locally isothermal gas: p = c_s**2  rho </div><div class="ttdef"><b>Definition:</b> <a href="pressure_8h_source.html#l00047">pressure.h:47</a></div></div>
+<div class="ttc" id="pressure_8h_html_a5a8162808ef47c46eaf46274eab03e6ca72d0c9a1e5b7ef68c935239330758599"><div class="ttname"><a href="pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6ca72d0c9a1e5b7ef68c935239330758599">EOS_TYPE_JUTZI_ANEOS</a></div><div class="ttdoc">locally isothermal gas:  </div><div class="ttdef"><b>Definition:</b> <a href="pressure_8h_source.html#l00047">pressure.h:47</a></div></div>
 <div class="ttc" id="predictor__corrector_8cu_html_a99df46699749a65b0f09dfa7892d14c7"><div class="ttname"><a href="predictor__corrector_8cu.html#a99df46699749a65b0f09dfa7892d14c7">dt</a></div><div class="ttdeci">__device__ double dt</div><div class="ttdef"><b>Definition:</b> <a href="timeintegration_8cu_source.html#l00099">timeintegration.cu:99</a></div></div>
 <div class="ttc" id="pressure_8h_html_a5a8162808ef47c46eaf46274eab03e6caa74700cb522aebd8bab3e1801e28e640"><div class="ttname"><a href="pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6caa74700cb522aebd8bab3e1801e28e640">EOS_TYPE_ANEOS</a></div><div class="ttdoc">Murnaghan EOS with p-alpha model by Jutzi et al. </div><div class="ttdef"><b>Definition:</b> <a href="pressure_8h_source.html#l00041">pressure.h:41</a></div></div>
 <div class="ttc" id="timeintegration_8h_html_ac9ee1a299f9f3013715aa1dc22191283"><div class="ttname"><a href="timeintegration_8h.html#ac9ee1a299f9f3013715aa1dc22191283">NUM_THREADS_LIMITTIMESTEP</a></div><div class="ttdeci">#define NUM_THREADS_LIMITTIMESTEP</div><div class="ttdef"><b>Definition:</b> <a href="timeintegration_8h_source.html#l00105">timeintegration.h:105</a></div></div>
@@ -857,7 +857,7 @@ LICENSE</h1>
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/predictor_corrector.cu File Reference<br />
-    Generated on Tue Jan 5 2021 07:05:08 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Wed Jan 6 2021 07:05:09 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
