@@ -459,7 +459,7 @@ void rightHandSide()
 #endif
 
 
-#if (SYMMETRIC_STRESSTENSOR || FRAGMENTATION || VON_MISES_PLASTICITY || JC_PLASTICITY)
+#if (SYMMETRIC_STRESSTENSOR || FRAGMENTATION || PLASTICITY)
     time[timerCounter] = 0;
     cudaEventRecord(start, 0);
     cudaVerifyKernel((symmetrizeStress<<<4 * numberOfMultiprocessors, NUM_THREADS_512>>>()));
@@ -471,7 +471,7 @@ void rightHandSide()
     totalTime += time[timerCounter++];
 #endif
 
-#if VON_MISES_PLASTICITY
+#if PLASTICITY
     cudaEventRecord(start, 0);
     time[timerCounter] = 0;
     cudaVerifyKernel((plasticityModel<<<numberOfMultiprocessors * 4, NUM_THREADS_512>>>()));
@@ -479,7 +479,7 @@ void rightHandSide()
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    if (param.verbose) printf("duration von mises: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration plasticity: %.7f ms\n", time[timerCounter]);
     cudaEventRecord(start, 0);
     totalTime += time[timerCounter++];
 #endif

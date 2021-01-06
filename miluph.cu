@@ -187,7 +187,7 @@ static void print_compile_information(void)
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Epsilon-alpha porosity model:\t  %s\n", yesno);
-#if VON_MISES_PLASTICITY
+#if PLASTICITY
     strcpy(yesno, "yes");
 #else
     strcpy(yesno, "no");
