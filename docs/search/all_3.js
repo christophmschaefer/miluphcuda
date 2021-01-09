@@ -58,6 +58,7 @@ var searchData=
   ['coupled_5fheun_5frk4_5fsph_5fnbody_2ecu',['coupled_heun_rk4_sph_nbody.cu',['../coupled__heun__rk4__sph__nbody_8cu.html',1,'']]],
   ['coupled_5fheun_5frk4_5fsph_5fnbody_2eh',['coupled_heun_rk4_sph_nbody.h',['../coupled__heun__rk4__sph__nbody_8h.html',1,'']]],
   ['courant',['COURANT',['../timeintegration_8h.html#ad1b157e21bbc35c6d542c1ada7ce3b67',1,'timeintegration.h']]],
+  ['create_2dmaterial_2dconfig_2emd',['CREATE-MATERIAL-CONFIG.md',['../_c_r_e_a_t_e-_m_a_t_e_r_i_a_l-_c_o_n_f_i_g_8md.html',1,'']]],
   ['crushcurve_5fstyle_5fd',['crushcurve_style_d',['../config__parameter_8h.html#a6096dd3bc10b588ce51f2e71358c138e',1,'config_parameter.h']]],
   ['cs',['cs',['../struct_particle.html#abfd4c69742e558917bc06e3941b2fe02',1,'Particle']]],
   ['cs_5fporous',['cs_porous',['../config__parameter_8cu.html#a4a5f509327fb761831aebad8ad410698',1,'cs_porous():&#160;config_parameter.cu'],['../config__parameter_8h.html#a4a5f509327fb761831aebad8ad410698',1,'cs_porous():&#160;config_parameter.cu']]],
