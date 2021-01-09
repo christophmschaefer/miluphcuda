@@ -403,7 +403,7 @@ void rightHandSide()
     time[timerCounter] = 0;
 #endif
 
-#if (SOLID && PURE_REGOLITH)
+#if PURE_REGOLITH
     time[timerCounter] = 0;
     cudaEventRecord(start, 0);
     cudaVerifyKernel((plasticity<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
@@ -483,6 +483,7 @@ void rightHandSide()
     cudaEventRecord(start, 0);
     totalTime += time[timerCounter++];
 #endif
+
 #if JC_PLASTICITY
     cudaEventRecord(start, 0);
     time[timerCounter] = 0;
@@ -494,6 +495,7 @@ void rightHandSide()
     if (param.verbose) printf("duration johnson-cook: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
 #endif
+
 #if FRAGMENTATION
     time[timerCounter] = 0;
     cudaEventRecord(start, 0);
@@ -507,7 +509,6 @@ void rightHandSide()
     totalTime += time[timerCounter++];
 #endif
 
-
 #if TENSORIAL_CORRECTION
     time[timerCounter] = 0;
     cudaEventRecord(start, 0);
@@ -520,6 +521,7 @@ void rightHandSide()
     totalTime += time[timerCounter++];
 //    cudaVerifyKernel((printTensorialCorrectionMatrix<<<1,1>>>( interactions)));
 #endif
+
 #if VISCOUS_REGOLITH
     time[timerCounter] = 0;
     cudaEventRecord(start, 0);
@@ -536,7 +538,6 @@ void rightHandSide()
     cudaVerify(cudaDeviceSynchronize());
     cudaVerifyKernel((calculateXSPHchanges<<<4 * numberOfMultiprocessors, NUM_THREADS_512>>>(interactions)));
 #endif /*XSPH */
-
 
 #if GHOST_BOUNDARIES
     /*
@@ -561,7 +562,6 @@ void rightHandSide()
     if (param.verbose) fprintf(stdout, "starting internalForces\n");
     fflush(stdout);
 #endif
-
 
 #if SOLID
     time[timerCounter] = 0;

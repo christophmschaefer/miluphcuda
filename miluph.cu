@@ -151,24 +151,28 @@ static void print_compile_information(void)
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "using density floor: \t    %s\n", yesno);
+
 #if SOLID
     strcpy(yesno, "yes");
 #else
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Solid mechanics:\t  %s\n", yesno);
+
 #if GRAVITATING_POINT_MASSES
     strcpy(yesno, "yes");
 #else
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Additional point masses: \t %s\n", yesno);
+
 #if FRAGMENTATION
     strcpy(yesno, "yes");
 #else
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Fracture model:\t  %s\n", yesno);
+
 #if PALPHA_POROSITY
     strcpy(yesno, "yes");
 #else
@@ -187,37 +191,46 @@ static void print_compile_information(void)
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Epsilon-alpha porosity model:\t  %s\n", yesno);
+
 #if PLASTICITY
     strcpy(yesno, "yes");
 #else
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Plasticity model:\t  %s", yesno);
-#if VON_MISES_PLASTICITY
 #if MOHR_COULOMB_PLASTICITY
-    fprintf(stdout, "\t\t\t Mohr-Coulomb\n");
+    fprintf(stdout, "\t\t\t Mohr-Coulomb");
+# if VON_MISES_PLASTICITY
+    fprintf(stdout, " + von Mises yield limit");
+# endif
+    fprintf(stdout, "\n");
 #elif DRUCKER_PRAGER_PLASTICITY
-    fprintf(stdout, "\t\t\t Drucker-Prager\n");
+    fprintf(stdout, "\t\t\t Drucker-Prager");
+# if VON_MISES_PLASTICITY
+    fprintf(stdout, " + von Mises yield limit");
+# endif
+    fprintf(stdout, "\n");
 #elif COLLINS_PLASTICITY
     fprintf(stdout, "\t\t\t Collins model: pressure dependent yield strength with cohesion for damaged material");
-#if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
+# if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
     fprintf(stdout, " including strength reduction based on (single) melt energy");
-#endif
+# endif
     fprintf(stdout, "\n");
 #elif COLLINS_PLASTICITY_SIMPLE
     fprintf(stdout, "\t\t\t Simplified version of Collins model: pressure dependent yield strength irrespective of damage\n");
-#else
+#elif VON_MISES_PLASTICITY
     fprintf(stdout, "\t\t\t simple von Mises yield criterion\n");
-#endif
 #else
     fprintf(stdout, "\n");
 #endif
+
 #if JC_PLASTICITY
     strcpy(yesno, "yes");
 #else
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Plasticity model from Johnson - Cook:\t   %s\n", yesno);
+
     fprintf(stdout, "Consistency switches for the SPH algorithm:\n");
 #if SHEPARD_CORRECTION
     strcpy(yesno, "yes");

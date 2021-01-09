@@ -1098,7 +1098,6 @@ void transferMaterialsToGPU()
             fprintf(stdout, "  %d \t\t factor_min %e -> minimum sml %e \t\t factor_max %e -> maximun sml %e \n", i, f_sml_min[i], f_sml_min[i]*sml[i], f_sml_max[i], f_sml_max[i]*sml[i]);
         }
 #endif
-        /* some material checks */
 #if PLASTICITY
         fprintf(stdout, "Using following values for the plasticity model\n");
         fprintf(stdout, "Material No \t yield_stress \t  cohesion \t cohesion_damaged \t friction_angle \t friction_angle_damaged \t melt_energy \n");

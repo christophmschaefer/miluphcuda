@@ -30,7 +30,7 @@
 #include "float.h"
 
 
-#if SOLID
+#if PURE_REGOLITH
 __global__ void plasticity()
 {
     register int i, inc, matId, d, e;
@@ -47,7 +47,6 @@ __global__ void plasticity()
             alpha_phi = matAlphaPhi[matId];
             kc = matCohesionCoefficient[matId];
 
-
 #if DIM == 2
             shear = matShearmodulus[matId];
             bulk = matBulkmodulus[matId];
@@ -56,7 +55,6 @@ __global__ void plasticity()
 #else
             I1 = p.S[stressIndex(i,0,0)] + p.S[stressIndex(i,1,1)] + p.S[stressIndex(i,2,2)];
 #endif
-
 
             //Tension cracking treatment
             //Equation 29, Bui et al., 2008
@@ -71,7 +69,6 @@ __global__ void plasticity()
 #else
             I1 = p.S[stressIndex(i,0,0)] + p.S[stressIndex(i,1,1)] + p.S[stressIndex(i,2,2)];
 #endif
-
 
             //get S
             for (d = 0; d < DIM; d++) {
@@ -96,7 +93,6 @@ __global__ void plasticity()
             sqrt_J2 *= 0.5;
             sqrt_J2 = sqrt(sqrt_J2);
 
-
             //stress-scaling
             //Equation 31, Bui et al., 2008
             if (sqrt_J2 > 0) {
@@ -109,8 +105,6 @@ __global__ void plasticity()
                     p.S[stressIndex(i, d, d)] += I1/3.0;
                 }
             }
-
-
         } //end if (EOS_TYPE_REGOLITH)
     }
 }
@@ -118,7 +112,7 @@ __global__ void plasticity()
 
 
 
-#if SOLID
+#if PLASTICITY
 __global__ void plasticityModel(void) {
     // introduce plastic behaviour by limiting the deviatoric stress
     register int i, inc, d, e;
@@ -155,32 +149,42 @@ __global__ void plasticityModel(void) {
         I1 = -3.0 * p.p[i];
 
 #if MOHR_COULOMB_PLASTICITY
-        // mohr coulomb yield criterion
+        // Mohr-Coulomb yield criterion
         // matInternalFriction = \mu = tan(matFrictionAngle)
         y = matCohesion[p_rhs.materialId[i]] + matInternalFriction[p_rhs.materialId[i]] * p.p[i];
+        
+        // additional von Mises limit if set
+# if VON_MISES_PLASTICITY
+        y = min(y, matYieldStress[p_rhs.materialId[i]]);
+# endif
         if (y < 0.0) {
             y = 0.0;
         }
 
-        // drucker prager like -> compare to sqrt(J2)
-        if (J2 > 0) {
+        // Drucker-Prager-like -> compare to sqrt(J2)
+        if (J2 > 0.0) {
             mises_f = y/sqrt_J2;
         }
 #elif DRUCKER_PRAGER_PLASTICITY
         A = B = 0;
-        // drucker prager constants from mohr-coulomb constants -> 3D!
+        // Drucker-Prager constants from Mohr-Coulomb constants -> 3D!
         A = 6. * matCohesion[p_rhs.materialId[i]] * cos(matFrictionAngle[p_rhs.materialId[i]])
                 / (sqrt(3.) * (3. - sin(matFrictionAngle[p_rhs.materialId[i]])));
         B = 2. * sin(matFrictionAngle[p_rhs.materialId[i]]) / (sqrt(3.) * (3. - sin(matFrictionAngle[p_rhs.materialId[i]])));
 
-        // yield strength determined by drucker prager condition
+        // yield strength determined by Drucker-Prager condition
         y = A + 3.0*p.p[i]*B;
+
+        // additional von Mises limit if set
+# if VON_MISES_PLASTICITY
+        y = min(y, matYieldStress[p_rhs.materialId[i]]);
+# endif
         if (y < 0.0) {
             y = 0.0;
         }
 
-        // drucker prager like -> compare to sqrt(J2)
-        if (J2 > 0) {
+        // Drucker-Prager-like -> compare to sqrt(J2)
+        if (J2 > 0.0) {
             mises_f = y/sqrt_J2;
         }
 #elif COLLINS_PLASTICITY
@@ -225,8 +229,8 @@ __global__ void plasticityModel(void) {
 # else
         y = y_i;
 # endif
-        // drucker prager like -> compare to sqrt(J2)
-        if (J2 > 0) {
+        // Drucker-Prager-like -> compare to sqrt(J2)
+        if (J2 > 0.0) {
             mises_f = y/sqrt_J2;
         }
 #elif COLLINS_PLASTICITY_SIMPLE
@@ -239,13 +243,13 @@ __global__ void plasticityModel(void) {
         // the zero is at p_0 = -Y_0 (Y_M-Y_0) / (mu_i Y_M)
         if ( p.p[i] > y_0*(y_0-y_M)/(mu_i*y_M) ) {
             y = y_0 + mu_i * p.p[i]
-                / (1 + mu_i * p.p[i]  / (y_M - y_0) );
+                / (1.0 + mu_i * p.p[i]  / (y_M - y_0) );
         } else {
             y = 0.0;
         }
 
-        // drucker prager like -> compare to sqrt(J2)
-        if (J2 > 0) {
+        // Drucker-Prager-like -> compare to sqrt(J2)
+        if (J2 > 0.0) {
             mises_f = y/sqrt_J2;
         }
 #else // simple von Mises yield criterion without *any* dependency
@@ -261,8 +265,8 @@ __global__ void plasticityModel(void) {
         }
 # endif
         // von Mises limit like
-        if (J2 > 0) {
-            mises_f = y*y/(3*J2);
+        if (J2 > 0.0) {
+            mises_f = y*y/(3.0*J2);
         }
 #endif
         // finally limit the deviatoric stress tensor
@@ -279,13 +283,11 @@ __global__ void plasticityModel(void) {
 
 
 
-#if SOLID
 #if JC_PLASTICITY
 __global__ void JohnsonCookPlasticity(void) {
     // introduce plastic behaviour by limiting the deviatoric stress
     register int i, inc, d, e;
     register double J2, jc_f, y_0, tmp;
-
     register double y_jc = 0;
     register double T_star = 0;
     register double B, n, m, edot0, C, Tref, Tmelt;
@@ -302,7 +304,6 @@ __global__ void JohnsonCookPlasticity(void) {
                 J2 += tmp*tmp;
             }
         }
-
 
         y_0 = matjc_y0[p_rhs.materialId[i]];
         B = matjc_B[p_rhs.materialId[i]];
@@ -328,14 +329,12 @@ __global__ void JohnsonCookPlasticity(void) {
             T_star = (T - Tref) / (Tmelt - Tref);
         }
 
-
         // Calculating flow stress according to Johnson and Cook
         if (edotp > 0) {
             y_jc = (y_0 + B*(pow(ep,n))) * (1 + C*log(edotp / edot0)) * (1 - pow(T_star,m));
         } else {
             y_jc = y_0;
         }
-
 
         y_jc = y_jc * y_jc;
         J2 = J2 * 1.5;
@@ -353,8 +352,5 @@ __global__ void JohnsonCookPlasticity(void) {
         p.jc_f[i] = jc_f;
         p.edotp[i] = 0.0;
     }
-
 }
-
-#endif // jc_plasticity
 #endif

@@ -23,17 +23,13 @@
 #ifndef _PARAMETER_H
 #define _PARAMETER_H
 
-// helper definitions
-#define SPH_VERSION1 1
-#define SPH_VERSION2 2
 // Dimension of the problem
-#define DIM 2
-#define DEBUG 0
+#define DIM 3
 
 // add additional point masses to the simulation, read from file <filename>.mass
 // format is location velocities mass r_min r_max, where location and velocities are vectors with size DIM and
 // r_min/r_max are min/max distances of sph particles to the bodies before they are taken out of the simulation
-#define GRAVITATING_POINT_MASSES 1
+#define GRAVITATING_POINT_MASSES 0
 
 // sink particles (set point masses to be sink particles)
 #define PARTICLE_ACCRETION 0 // check if particle is bound to one of the sink particles (crossed the accretion radius, rmin); if also UPDATE_SINK_VALUES 1: particle is accreted and ignored afterwards, else: continues orbiting without being accreted
@@ -41,11 +37,11 @@
 
 // integrate the energy equation
 // when setting up a SOLID simulation with Tillotson or ANEOS, it must be set to 1
-#define INTEGRATE_ENERGY 0
+#define INTEGRATE_ENERGY 1
 
 // integrate the continuity equation
 // if set to 0, the density will be calculated using the standard SPH sum \sum_i m_j W_ij
-#define INTEGRATE_DENSITY 0
+#define INTEGRATE_DENSITY 1
 
 // basic physical model:
 // SOLID set to 1 solves continuum mechanics with material strength, and stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
@@ -53,25 +49,28 @@
 #define SOLID 0
 
 // adds viscosity to the Euler equation
-#define NAVIER_STOKES 1
+#define NAVIER_STOKES 0
 // choose between two different viscosity models
-#define SHAKURA_SUNYAEV_ALPHA 1
+#define SHAKURA_SUNYAEV_ALPHA 0
 #define CONSTANT_KINEMATIC_VISCOSITY 0
 
 // damage model following Benz & Asphaug (1995)
 // this needs some preprocessing of the initial particle distribution since activation thresholds have to be distributed among the particles
 #define FRAGMENTATION 0
 
-// SPH stuff
-// here, you have to define which kind of SPH representation you want to solve the
-// momentum and internal energy equation
+// Choose the SPH representation to solve the momentum and internal energy equation:
 // SPH_VERSION1: original version with HYDRO dv_a/dt ~ - (p_a/rho_a**2 + p_b/rho_b**2)  \nabla_a W_ab
 //                                     SOLID dv_a/dt ~ (sigma_a/rho_a**2 + sigma_b/rho_b**2) \nabla_a W_ab
 // SPH_VERSION2: slighty different version with
 //                                     HYDRO dv_a/dt ~ - (p_a+p_b)/(rho_a*rho_b)  \nabla_a W_ab
 //                                     SOLID dv_a/dt ~ (sigma_a+sigma_b)/(rho_a*rho_b)  \nabla_a W_ab
-//  if you do not know what to do, choose SPH_VERSION1
+// If you do not know what to do, choose SPH_VERSION1.
+// helper definitions
+#define SPH_VERSION1 1
+#define SPH_VERSION2 2
+// set SPH equations version here
 #define SPHEQUATIONS SPH_VERSION1
+
 // for the tensile instability fix
 // you do not need this
 #define ARTIFICIAL_STRESS 0
@@ -84,7 +83,6 @@
 // INVISCID SPH (see Cullen & Dehnen paper)
 #define INVISCID_SPH 0
 
-
 // consistency switches
 // for zeroth order consistency
 #define SHEPARD_CORRECTION 0
@@ -92,26 +90,29 @@
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
 #define TENSORIAL_CORRECTION 0
 
-
-// Available plastic flow conditions (if you do not know what this is, choose (1) or nothing):
-// (1) Simple von Mises plasticity with a constant yield strength, where you need in material.cfg:
+// Available plastic flow conditions:
+// (if you do not know what this is, choose (1) or nothing)
+//   (1) Simple von Mises plasticity with a constant yield strength, where you need in material.cfg:
 //          yield_stress =
-// (2) Drucker-Prager yield criterion -> yield strength is given by the condition \sqrt(J_2) + A * I_1 + B = 0
-//     with I_1: first invariant of stress tensor
+#define VON_MISES_PLASTICITY 0
+//   (2) Drucker-Prager (DP) yield criterion -> yield strength is given by the condition \sqrt(J_2) + A * I_1 + B = 0
+//       with I_1: first invariant of stress tensor
 //          J_2: second invariant of stress tensor
-//          A, B: Drucker Prager constants, which are calculated from angle of internal friction and cohesion
-//     in material.cfg you need:
+//          A, B: DP constants, which are calculated from angle of internal friction and cohesion
+//       in material.cfg you need:
 //          friction_angle =
 //          cohesion =
-// Note: Drucker-Prager and Mohr-Coulomb are intended for granular-like materials, therefore
-//       the yield strength simply decreases (linearly) to zero for p<0.
-// (3) Mohr-Coulomb yield criterion
-//     -> yield strength is given by yield_stress = tan(friction_angle) \times pressure + cohesion
-//     in material.cfg you need:
+#define DRUCKER_PRAGER_PLASTICITY 0
+//   (3) Mohr-Coulomb (MC) yield criterion
+//       -> yield strength is given by yield_stress = tan(friction_angle) \times pressure + cohesion
+//       in material.cfg you need:
 //          friction_angle =
 //          cohesion =
-// (4) Pressure dependent yield strength following Collins et al. (2004) and the implementation in Jutzi (2015)
-//     -> yield strength is different for damaged (Y_d) and intact material (Y_i), and averaged mean (Y) in between:
+#define MOHR_COULOMB_PLASTICITY 0
+//       Note: DP and MC are intended for granular-like materials, therefore the yield strength simply decreases (linearly) to zero for p<0.
+//       Note: For DP and MC you can additionally choose (1) to impose an upper limit for the yield stress.
+//   (4) Pressure dependent yield strength following Collins et al. (2004) and the implementation in Jutzi (2015)
+//       -> yield strength is different for damaged (Y_d) and intact material (Y_i), and averaged mean (Y) in between:
 //              Y_i = cohesion + \mu P / (1 + \mu P / (yield_stress - cohesion) )
 //          where *cohesion* is the yield strength for P=0 and *yield_stress* the asymptotic limit for P=\infty
 //          \mu is the coefficient of internal friction (= tan(friction_angle))
@@ -119,35 +120,30 @@
 //          where \mu_d is the coefficient of friction of the *damaged* material
 //              Y = (1-damage)*Y_i + damage*Y_d
 //              Y is limited to <= Y_i
-//     Note: If FRAGMENTATION is not activated only Y_i is used.
-//     For this model, you need the following parameters in material.cfg:
+//       Note: If FRAGMENTATION is not activated only Y_i is used.
+//       For this model, you need the following parameters in material.cfg:
 //          yield_stress =
 //          cohesion =
 //          friction_angle =
 //          cohesion_damaged =
 //          friction_angle_damaged =
-//     If you want to additionally model the influence of some (single) melt energy on the yield
-//     strength, then activate COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY, which adds a factor
-//     (1-e/e_melt) to the yield strength, and include the following in material.cfg:
+//       If you want to additionally model the influence of some (single) melt energy on the yield
+//       strength, then activate COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY, which adds a factor
+//       (1-e/e_melt) to the yield strength, and include the following in material.cfg:
 //          melt_energy =
-// (5) Simplified version of the Collins et al. (2004) model, which uses only the
-//     strength representation for intact material (Y_i), irrespective of damage.
-//     Unlike in (4), Y decreases to zero (following the Y_i function) for p<0.
-//     For this you need in material.cfg:
+#define COLLINS_PLASTICITY 0
+#define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 0
+//   (5) Simplified version of the Collins et al. (2004) model, which uses only the
+//       strength representation for intact material (Y_i), irrespective of damage.
+//       Unlike in (4), Y decreases to zero (following the Y_i function) for p<0.
+//       For this you need in material.cfg:
 //          yield_stress =
 //          cohesion =
 //          friction_angle =
+#define COLLINS_PLASTICITY_SIMPLE 0
 // Note: For (1,2,3) the stress tensor is additionally reduced if FRAGMENTATION is used, for (4,5) not.
 // Note: Units are: [friction angle] = [rad]
 //                  [cohesion] = [Pascal]
-#define VON_MISES_PLASTICITY 0
-//  WARNING: choose only one of the following three options
-//  this will be fixed in a later version of the code
-#define MOHR_COULOMB_PLASTICITY 0
-#define DRUCKER_PRAGER_PLASTICITY 0
-#define COLLINS_PLASTICITY 0
-#define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 0
-#define COLLINS_PLASTICITY_SIMPLE 0
 
 // model regolith as viscous fluid -> experimental setup, only for powerusers
 #define VISCOUS_REGOLITH 0
@@ -156,19 +152,16 @@
 // use Johnson-Cook plasticity model -> experimental setup, only for powerusers
 #define JC_PLASTICITY 0
 
-// porosity models:
-// P-Alpha model implemented following Jutzi (200x)
+// Porosity models:
+// p-alpha model implemented following Jutzi (200x)
 #define PALPHA_POROSITY 0          // pressure depends on distention
 #define STRESS_PALPHA_POROSITY 0 // deviatoric stress is also affected by distention
-//
 // Sirono model modified by Geretshauser (2009/10)
 #define SIRONO_POROSITY 0
 // Epsilon-Alpha model implemented following Wuennemann
 #define EPSALPHA_POROSITY 0
 
-// constants
-// maximum number of activation threshold per particle -> fixed array size, only needed for
-// FRAGMENTATION. if not used, set to 1
+// max number of activation thresholds per particle, only required for FRAGMENTATION, otherwise set to 1
 #define MAX_NUM_FLAWS 1
 // maximum number of interactions per particle -> fixed array size
 #define MAX_NUM_INTERACTIONS 600
@@ -189,7 +182,7 @@
 // if set to 1 and INTEGRATE_DENSITY is 1, the density will not be lower than 1% rho_0 from
 // material.cfg
 // note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions
-#define DENSITY_FLOOR 0 // DENSITY FLOOR sets a minimum density for all particles. the floor density is 1% of the lowest density in material.cfg
+#define DENSITY_FLOOR 1 // DENSITY FLOOR sets a minimum density for all particles. the floor density is 1% of the lowest density in material.cfg
 
 // set p to 0 if p < 0
 #define REAL_HYDRO 0
@@ -239,6 +232,8 @@
 #define MORE_OUTPUT 0   //produce additional output to HDF5 files (p_max, p_min, rho_max, rho_min); only ueful when HDF5IO is set
 #define MORE_ANEOS_OUTPUT 0 // produce additional output to HDF5 files (T, cs, entropy, phase-flag); only useful when HDF5IO is set; set only if you use the ANEOS eos, but currently not supported for porosity+ANEOS
 #define OUTPUT_GRAV_ENERGY 0    // compute and output gravitational energy (at times when output files are written); of all SPH particles (and also w.r.t. gravitating point masses and between them); direct particle-particle summation, not tree; option exists to control costly computation for high particle numbers
-#define BINARY_INFO 1   // generates additional output file (binary_system.log) with info regarding binary system: semi-major axis, eccentricity if GRAVITATING_POINT_MASSES == 1
+#define BINARY_INFO 0   // generates additional output file (binary_system.log) with info regarding binary system: semi-major axis, eccentricity if GRAVITATING_POINT_MASSES == 1
+
+#define DEBUG 0
 
 #endif

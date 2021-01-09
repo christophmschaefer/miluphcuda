@@ -25,69 +25,65 @@
 #define _CHECKS_H
 
 
-#if MOHR_COLOUMB_PLASTICITY
-# define PLASTICITY 1
-#endif
-#if DRUCKER_PRAGER_PLASTICITY
-# define PLASTICITY 1
-#endif
-#if COLLINS_PLASTICITY
-# define PLASTICITY 1
-#endif
-#if VON_MISES_PLASTICITY
-# define PLASTICITY 1
-#endif
-#if COLLINS_PLASTICITY_SIMPLE
+#if VON_MISES_PLASTICITY || MOHR_COLOUMB_PLASTICITY || DRUCKER_PRAGER_PLASTICITY || COLLINS_PLASTICITY || COLLINS_PLASTICITY_SIMPLE
 # define PLASTICITY 1
 #endif
 
-
+#if VON_MISES_PLASTICITY && COLLINS_PLASTICITY
+# error ERROR. You can't choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY at the same time.
+#endif
+#if VON_MISES_PLASTICITY && COLLINS_PLASTICITY_SIMPLE
+# error ERROR. You can't choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY_SIMPLE at the same time.
+#endif
 #if MOHR_COULOMB_PLASTICITY && DRUCKER_PRAGER_PLASTICITY
-#error ERROR. Choose only one of the three available plastic flow rules in parameter.h.
+# error ERROR. You can't choose MOHR_COULOMB_PLASTICITY and DRUCKER_PRAGER_PLASTICITY at the same time.
 #endif
 #if MOHR_COULOMB_PLASTICITY && COLLINS_PLASTICITY
-#error ERROR. Choose only one of the three available plastic flow rules in parameter.h.
+# error ERROR. You can't choose MOHR_COULOMB_PLASTICITY and COLLINS_PLASTICITY at the same time.
 #endif
 #if DRUCKER_PRAGER_PLASTICITY && COLLINS_PLASTICITY
-#error ERROR. Choose only one of the three available plastic flow rules in parameter.h.
+# error ERROR. You can't choose DRUCKER_PRAGER_PLASTICITY and COLLINS_PLASTICITY at the same time.
 #endif
 #if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY && !COLLINS_PLASTICITY
-#error ERROR. You have chosen COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY but not also COLLINS_PLASTICITY in parameter.h. That is not what you want.
+# error ERROR. You have chosen COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY but not also COLLINS_PLASTICITY in parameter.h. That is not what you want.
 #endif
 #if COLLINS_PLASTICITY && COLLINS_PLASTICITY_SIMPLE
-#error ERROR. You have chosen COLLINS_PLASTICITY and also COLLINS_PLASTICITY_SIMPLE in parameter.h. Choose either one, not both.
+# error ERROR. You have chosen COLLINS_PLASTICITY and also COLLINS_PLASTICITY_SIMPLE in parameter.h. Choose either one, not both.
 #endif
 #if COLLINS_PLASTICITY_SIMPLE && COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
-#error ERROR. You have chosen COLLINS_PLASTICITY_SIMPLE and also COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY in parameter.h. This combination is not implemented yet...
+# error ERROR. You have chosen COLLINS_PLASTICITY_SIMPLE and also COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY in parameter.h. This combination is not implemented yet...
 #endif
 
 #if USE_BSPLINE_KERNEL && USE_WENDLAND_KERNEL
-#error specifiy only one kernel
+# error specifiy only one kernel
 #endif
 
 #if VISCOUS_REGOLITH && !SOLID
-#error turn SOLID on when using VISCOUS_REGOLITH
+# error turn SOLID on when using VISCOUS_REGOLITH
 #endif
 
-#if VON_MISES_PLASTICITY && !SOLID
-#error turn SOLID on when using VON_MISES_PLASTICITY
+#if PURE_REGOLITH && !SOLID
+# error turn SOLID on when using PURE_REGOLITH
+#endif
+
+#if PLASTICITY && !SOLID
+# error ERROR. Using a PLASTICITY model is only possible in combination with SOLID...
 #endif
 
 #if JC_PLASTICITY && !SOLID
-#error turn SOLID on when using JC_PLASTICITY
+# error turn SOLID on when using JC_PLASTICITY
 #endif
 
 #if FRAGMENTATION && !SOLID
-#error turn SOLID on when using FRAGMENTATION
+# error turn SOLID on when using FRAGMENTATION
 #endif
 
-#if VON_MISES_PLASTICITY && JC_PLASTICITY
-#error Error: Cannot use both Von Mises and Johnson-Cook Plasticity Models at the same time. Decide for one and recompile.
+#if PLASTICITY && JC_PLASTICITY
+# error Error: Cannot use another PLASTICITY model along with JC_PLASTICITY at the same time. Decide for one and recompile.
 #endif
-
 
 #if SYMMETRIC_STRESSTENSOR && !SOLID
-#error turn SOLID on when using SYMMETRIC_STRESSTENSOR
+# error turn SOLID on when using SYMMETRIC_STRESSTENSOR
 #endif
 
 #if COHESION_FOR_DAMAGED_MATERIAL && !FRAGMENTATION
@@ -100,12 +96,12 @@
 
 #if NAVIER_STOKES
 # if !SHAKURA_SUNYAEV_ALPHA && !CONSTANT_KINEMATIC_VISCOSITY
-#error set either SHAKURA_SUNYAEV_ALPHA or CONSTANT_KINEMATIC_VISCOSITY
-#endif
+#  error set either SHAKURA_SUNYAEV_ALPHA or CONSTANT_KINEMATIC_VISCOSITY
+# endif
 #endif
 
 #if DIM == 1 && PARTICLE_ACCRETION
-#error Particle accretion only if DIM > 1
+# error Particle accretion only if DIM > 1
 #endif
 
 #if ARTIFICIAL_STRESS && !SOLID
