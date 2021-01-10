@@ -62,3 +62,31 @@ Where to find material parameters?
 
 * You can also check the `test_cases/` for example material setups.
 
+--------------------------------
+
+Good to know...
+----------------------------------
+
+The entries in the config file have to match their data type. For example, the ID tag has
+to be an integer value whereas the value for the cohesion has to be given in floating point
+notation:
+
+    cohesion = 1000
+
+will not work but
+
+    cohesion = 1000.0
+
+or
+
+    cohesion = 1e3
+
+are valid entries.
+
+The code prints out all read material parameters if the verbose flag `-v` is used.
+If values are ommitted default values are assumed. Normally, these default values are not what you
+want :ghost:.
+
+
+
+
