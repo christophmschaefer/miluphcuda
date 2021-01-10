@@ -17,7 +17,7 @@
 <area shape="rect" id="node43" href="$rk2adaptive_8cu.html#a7fc5e6003a94d1b86a72334ff19a14ab" title="integrateSecondStep" alt="" coords="197,1405,340,1432"/>
 <area shape="rect" id="node44" href="$rk2adaptive_8cu.html#a6927b6b75fda2ade3605df5545a20c54" title="integrateThirdStep" alt="" coords="205,1056,333,1083"/>
 <area shape="rect" id="node45" href="$rk2adaptive_8h.html#a7ed61b702995d95eba762edca2a045c6" title="alphaMaxTimeStep" alt="" coords="477,1507,612,1533"/>
-<area shape="rect" id="node46" href="$rk2adaptive_8cu.html#ac611b3aab6d349c2c12a81c14f2c9b91" title="checkError" alt="" coords="502,1557,587,1584"/>
+<area shape="rect" id="node46" href="$rk2adaptive_8cu.html#af9ed0fee280786d72885b275377d8da3" title="checkError" alt="" coords="502,1557,587,1584"/>
 <area shape="rect" id="node47" href="$boundary_8cu.html#a44e4bfe25445a2670dad98922f1d2be3" title="BoundaryConditionsAfterIntegratorStep" alt="" coords="144,1456,393,1483"/>
 <area shape="rect" id="node48" href="$timeintegration_8cu.html#a78edde5c20a29ae558ad63db1c2749b5" title="afterIntegrationStep" alt="" coords="201,1507,337,1533"/>
 <area shape="rect" id="node49" href="$memory__handling_8cu.html#a98496f47800965844494c86dc0fe4923" title="free_particles_memory" alt="" coords="191,1557,346,1584"/>
@@ -25,7 +25,7 @@
 <area shape="rect" id="node11" href="$pressure_8cu.html#a4c983e72593c81e8ad8c3da244750599" title="Calculates the pressure for all particles. " alt="" coords="698,31,825,57"/>
 <area shape="rect" id="node12" href="$rhs_8cu.html#a3ce839e17b600b5ff81502b864d95c86" title="zero_all_derivatives" alt="" coords="476,883,613,909"/>
 <area shape="rect" id="node13" href="$boundary_8cu.html#a092ef939062b27aab9bf0369faa630bf" title="BoundaryConditionsBeforeRHS" alt="" coords="441,933,648,960"/>
-<area shape="rect" id="node14" href="$tree_8cu.html#a2d1ccf6ae64ed3fb0b0388dfe7575d15" title="computationalDomain" alt="" coords="471,984,619,1011"/>
+<area shape="rect" id="node14" href="$tree_8cu.html#ad35586f87db125b73735ca74fbe35116" title="computationalDomain" alt="" coords="471,984,619,1011"/>
 <area shape="rect" id="node15" href="$tree_8cu.html#ad2c17b7a6e842835311d5502e30cef6b" title="buildTree" alt="" coords="507,1035,582,1061"/>
 <area shape="rect" id="node16" href="$tree_8cu.html#a409f6d46534c450659fd202310fa1551" title="getTreeDepth" alt="" coords="494,1085,595,1112"/>
 <area shape="rect" id="node17" href="$tree_8cu.html#a59b57cd8d63b7c9793e441ef1792f03a" title="check_sml_boundary" alt="" coords="472,1136,617,1163"/>
@@ -47,5 +47,5 @@
 <area shape="rect" id="node34" href="$xsph_8cu.html#a5cc7201c525d9ef61114cbd52cfea95f" title="calculateXSPHchanges" alt="" coords="465,664,625,691"/>
 <area shape="rect" id="node35" href="$little__helpers_8cu.html#a15ff2f32836f363fb1f5cdfa3a149d1c" title="checkNaNs" alt="" coords="499,715,590,741"/>
 <area shape="rect" id="node36" href="$stress_8h.html#af15671e840f16bcac37084ff0a6e64f5" title="set_stress_tensor" alt="" coords="481,765,608,792"/>
-<area shape="rect" id="node37" href="$viscosity_8cu.html#a5f4f7c861289abc110a778820eafdeb2" title="calculate_kinematic\l_viscosity" alt="" coords="476,817,613,858"/>
+<area shape="rect" id="node37" href="$viscosity_8h.html#a5f4f7c861289abc110a778820eafdeb2" title="calculate_kinematic\l_viscosity" alt="" coords="476,817,613,858"/>
 </map>

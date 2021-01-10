@@ -8,6 +8,5 @@ var searchData=
   ['timeperstep',['timePerStep',['../timeintegration_8cu.html#ab85d10b965ecaf344a12fa36fec94cc5',1,'timePerStep():&#160;timeintegration.cu'],['../timeintegration_8h.html#ab85d10b965ecaf344a12fa36fec94cc5',1,'timePerStep():&#160;timeintegration.cu']]],
   ['treeinformation',['treeinformation',['../struct_run_parameter.html#a1f9e8d4b4bf17b0201de406140d3029f',1,'RunParameter']]],
   ['treemaxdepth',['treeMaxDepth',['../rhs_8cu.html#ac960fdee1afb803800bef22475a21c84',1,'treeMaxDepth():&#160;timeintegration.cu'],['../timeintegration_8cu.html#ac960fdee1afb803800bef22475a21c84',1,'treeMaxDepth():&#160;timeintegration.cu'],['../tree_8cu.html#ac960fdee1afb803800bef22475a21c84',1,'treeMaxDepth():&#160;timeintegration.cu']]],
-  ['treetheta',['treeTheta',['../miluph_8cu.html#a5d095fb4b7849b1d981d6a8d45d5ad88',1,'treeTheta():&#160;miluph.cu'],['../miluph_8h.html#a5d095fb4b7849b1d981d6a8d45d5ad88',1,'treeTheta():&#160;miluph.cu']]],
-  ['tshear',['Tshear',['../struct_particle.html#ac4abc096bc2f2c0ced912cb5ae59a0db',1,'Particle']]]
+  ['treetheta',['treeTheta',['../miluph_8cu.html#a5d095fb4b7849b1d981d6a8d45d5ad88',1,'treeTheta():&#160;miluph.cu'],['../miluph_8h.html#a5d095fb4b7849b1d981d6a8d45d5ad88',1,'treeTheta():&#160;miluph.cu']]]
 ];

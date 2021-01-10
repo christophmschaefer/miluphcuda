@@ -33,7 +33,6 @@ var searchData=
   ['errorvar2',['ERRORVAR2',['../aneos_8h.html#a463f77d82737731301ecb5d79472f49f',1,'aneos.h']]],
   ['errorvar3',['ERRORVAR3',['../aneos_8h.html#a70cf2c9dc88f2c2d491c3a3165ac4926',1,'aneos.h']]],
   ['errorvar4',['ERRORVAR4',['../aneos_8h.html#ab1cbde6cb122496785bb46496b4f4699',1,'aneos.h']]],
-  ['eta',['eta',['../struct_particle.html#aeae2a8c747213c62ac98a21da55439e8',1,'Particle']]],
   ['euler',['EULER',['../miluph_8h.html#adf764cbdea00d65edcd07bb9953ad2b7ab29a294112c9ef5c3c0c7db6363a6d2e',1,'EULER():&#160;miluph.h'],['../euler_8cu.html#ab5588f9c6592f89ee9f4f6b1d79e7d23',1,'euler():&#160;euler.cu'],['../timeintegration_8h.html#ae719f9295ddc3569385df8b7f4c7d798',1,'euler(void):&#160;euler.cu']]],
   ['euler_2ecu',['euler.cu',['../euler_8cu.html',1,'']]],
   ['euler_2eh',['euler.h',['../euler_8h.html',1,'']]],

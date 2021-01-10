@@ -6,5 +6,6 @@ var searchData=
   ['xsph_2ecu',['xsph.cu',['../xsph_8cu.html',1,'']]],
   ['xsph_2eh',['xsph.h',['../xsph_8h.html',1,'']]],
   ['xsphvx',['xsphvx',['../struct_particle.html#aed207bd3dc0b95977e17230978bf4000',1,'Particle']]],
-  ['xsphvy',['xsphvy',['../struct_particle.html#aba65ff96b8318478a4d988740471ec47',1,'Particle']]]
+  ['xsphvy',['xsphvy',['../struct_particle.html#aba65ff96b8318478a4d988740471ec47',1,'Particle']]],
+  ['xsphvz',['xsphvz',['../struct_particle.html#a24bd1ca56ec9a589b4b1b4fd9ef5b4cf',1,'Particle']]]
 ];
