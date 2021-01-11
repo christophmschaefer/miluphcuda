@@ -101,13 +101,20 @@ $(function() {
 <h2>Where to find material parameters? </h2>
 <ul>
 <li>The directory <code>material_data/</code> contains parameters for various materials.</li>
-<li>You can also check the <code>test_cases/</code> for example material setups. </li>
+<li>You can also check the <code>test_cases/</code> for example material setups. <hr/>
+</li>
 </ul>
+<h2>Good to know... </h2>
+<p>The entries in the config file have to match their data type. For example, the ID tag has to be an integer value whereas the value for the cohesion has to be given in floating point notation: </p><pre class="fragment">cohesion = 1000
+</pre><p>will not work but </p><pre class="fragment">cohesion = 1000.0
+</pre><p>or </p><pre class="fragment">cohesion = 1e3
+</pre><p>are valid entries.</p>
+<p>The code prints out all read material parameters if the verbose flag <code>-v</code> is used. If values are ommitted default values are assumed. Normally, these default values are not what you want :ghost:. </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - How to set up the material config file for miluphcuda<br />
-    Generated on Sun Jan 10 2021 07:05:08 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Mon Jan 11 2021 07:05:09 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>

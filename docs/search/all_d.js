@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['miluphcuda',['Miluphcuda',['../index.html',1,'']]],
+  ['miluphcuda',['miluphcuda',['../index.html',1,'']]],
   ['m',['m',['../struct_particle.html#a4c6a2f933fed2fb9355a55ae17ab11a4',1,'Particle::m()'],['../struct_pointmass.html#aab9fff20d20369762e79a0f13f544c0b',1,'Pointmass::m()']]],
   ['main',['main',['../miluph_8cu.html#a0ddf1224851353fc92bfbff6f499fa97',1,'miluph.cu']]],
   ['mainpage_2emd',['Mainpage.md',['../_mainpage_8md.html',1,'']]],

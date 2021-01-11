@@ -5,7 +5,7 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=9"/>
 	<meta name="generator" content="Doxygen 1.8.13"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1"/>
-	<title>Miluphcuda: Miluphcuda</title>
+	<title>Miluphcuda: miluphcuda</title>
 	<link href="tabs.css" rel="stylesheet" type="text/css"/>
 	<script type="text/javascript" src="jquery.js"></script>
 	<script type="text/javascript" src="dynsections.js"></script>
@@ -21,7 +21,7 @@
 	<div id="banner">
 		<div class="logo">
 			<span class="subtitle">
-				API Documentation for miluphcuda <!-- Miluphcuda -->
+				API Documentation for miluphcuda <!-- miluphcuda -->
 			</span>
 			<!-- <span class="search">
 				<input type="text" placeholder="Search" onkeydown="search(this,event);">
@@ -65,14 +65,14 @@ $(function() {
 
 <div class="header">
   <div class="headertitle">
-<div class="title">Miluphcuda </div>  </div>
+<div class="title">miluphcuda </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>Miluphcuda is a smoothed particle hydrodynamics (<b>SPH</b>) code.</p>
+<div class="textblock"><p>miluphcuda is a smoothed particle hydrodynamics (<b>SPH</b>) code.</p>
 <h2>Related pages</h2>
 <ul>
 <li><a href="https://github.com/christophmschaefer/miluphcuda">GitHub repository</a></li>
-<li><a href="miluphcuda_documentation.pdf">Miluphcuda documentation (pdf)</a></li>
+<li><a href="miluphcuda_documentation.pdf">miluphcuda documentation (pdf)</a> mostly outdated :frown:</li>
 </ul>
 <h2>Project structure</h2>
 <ul>
@@ -83,21 +83,30 @@ $(function() {
 <ul>
 <li>miluphcuda is the cuda port of the original miluph code.</li>
 <li>miluphcuda can be used to model fluids and solids.</li>
-<li>miluphcuda runs on single Nvidia GPUs with compute capability 5.0 and higher.</li>
+<li>miluphcuda runs on a single Nvidia GPU with compute capability 5.0 and higher.</li>
 </ul>
+<p>Please see additional the following papers/links</p>
+<ul>
+<li><a href="http://dx.doi.org/10.1051/0004-6361/201528060">A Smooth Particle Hydrodynamics Code to Model Collisions Between Solid, Self-Gravitating Objects</a></li>
+<li><a href="https://www.sciencedirect.com/science/article/abs/pii/S2213133720300640?via%3Dihub">A versatile smoothed particle hydrodynamics code for graphic cards</a></li>
+<li><a href="https://ascl.net/1911.023">ASCL record</a></li>
+</ul>
+<p>Please cite one of these papers and the ASCL record if you use the code.</p>
 <h3>Main features</h3>
 <ul>
 <li>SPH hydro and solid</li>
-<li>self-gravity (via Barnes-Hut tree)</li>
+<li>self-gravity (via Barnes-Hut tree) or direct summation for a small number of particles</li>
 <li>porosity models (P-alpha, epsilon-alpha, Sirono)</li>
+<li>several equation of states (ideal gas, polytropic, Murnaghan, Tillotson, ANEOS and support for tabulated EOS)</li>
 </ul>
 <h2>Developers</h2>
-<p>Christoph M. Schaefer, Sven Riecker, Oliver Wandel, Thomas I. Maindl, Samuel Scherrer, Janka Werner, Christoph Burger, Marius Morlock, Evita Vavilina, Michael Staneker, Maximilian Rutz. </p>
+<p>in somewhat arbitrary order</p>
+<p>Christoph M. Schaefer, Sven Riecker, Oliver Wandel, Thomas I. Maindl, Samuel Scherrer, Janka Werner, Christoph Burger, Marius Morlock, Evita Vavilina, Michael Staneker, Maximilian Rutz, Hugo Audiffren. </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
-    Miluphcuda  - Miluphcuda<br />
-    Generated on Sun Jan 10 2021 07:05:10 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Miluphcuda  - miluphcuda<br />
+    Generated on Mon Jan 11 2021 07:05:10 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
