@@ -4,7 +4,7 @@ Giant Collision test cases for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 14/Dec/2020
+last updated: 12/Jan/2020
 
 -----------------------------------------
 
@@ -15,18 +15,19 @@ The impact angle is 45 deg.
 
 You can choose between two material rheologies:
 
-* *solid* -- includes solid-body physics, the Grady-Kipp fragmentation model, and the Collins plasticity model
 * *hydro* -- simple strengthless bodies
+* *solid* -- includes solid-body physics, the Grady-Kipp fragmentation model, and the Collins plasticity model
 
 The Tillotson EoS is applied to model the thermodynamic response.
 
-The scenarios use ~60k SPH particles, with runtimes around 3h for *solid*, and 1.5h for *hydro* on most current GPUs (benchmarked on a GTX 970).
+The scenarios use ~60k SPH particles, with runtimes around 1.5h for *hydro*, and 3h for *solid* on most current GPUs (benchmarked on a GTX 970).
 
 -----------------------------------------
 
 **To run the test cases:**
 
-1. Compile miluphcuda using the `parameter.h` file from the respective directory (hydro or solid).
+1. Compile miluphcuda using the `parameter.h` file from the respective directory (hydro or solid).  
+   Don't forget to also adapt the Makefile to your system.
 2. Unpack `impact.0000.gz`.
 3. Adapt the start script `run.sh` to your system (path to CUDA libs and to miluphcuda executable) and execute it.
 4. Wait for the simulation to finish (75 output files).
