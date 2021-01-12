@@ -174,7 +174,7 @@
 #define C_GRAVITY_SIMPLE 1.0
 
 //Choose your fighter, beware of units !!
-#define C_GRAVITY C_GRAVITY_SIMPLE
+#define C_GRAVITY C_GRAVITY_SI
 
 // sets a reference density for the ideal gas eos (if used) - 1% of that is used as DENSITY_FLOOR (if activated) of ideal gas
 #define IDEAL_GAS_REFERENCE_RHO 1.0
@@ -198,10 +198,10 @@
 #define VARIABLE_SML 1
 #define FIXED_NOI 0
 #define INTEGRATE_SML 1
-#define READ_INITIAL_SML_FROM_PARTICLE_FILE 1 
+#define READ_INITIAL_SML_FROM_PARTICLE_FILE 1
 
 // correction terms for sml calculation: adds gradient of the smoothing length to continuity equation, equation of motion, internal energy equation
-#define SML_CORRECTION 1    
+#define SML_CORRECTION 1
 
 // if set to 0, h = (h_i + h_j)/2  is used to calculate W_ij
 // if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2
