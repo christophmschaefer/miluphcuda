@@ -69,18 +69,18 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>Christoph Burger <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a></p>
-<p>last updated: 14/Dec/2020 </p><hr/>
+<p>last updated: 12/Jan/2020 </p><hr/>
 <p>These test cases represent a collision of a ~1/10 Moon-mass body with a ~Moon-mass target. Both bodies have a 30 mass% iron core and a 70 mass% rocky mantle. The collision velocity is two times the mutual escape velocity (at the moment of first contact). The impact angle is 45 deg.</p>
 <p>You can choose between two material rheologies:</p>
 <ul>
-<li><em>solid</em> &ndash; includes solid-body physics, the Grady-Kipp fragmentation model, and the Collins plasticity model</li>
 <li><em>hydro</em> &ndash; simple strengthless bodies</li>
+<li><em>solid</em> &ndash; includes solid-body physics, the Grady-Kipp fragmentation model, and the Collins plasticity model</li>
 </ul>
 <p>The Tillotson EoS is applied to model the thermodynamic response.</p>
-<p>The scenarios use ~60k SPH particles, with runtimes around 3h for <em>solid</em>, and 1.5h for <em>hydro</em> on most current GPUs (benchmarked on a GTX 970). </p><hr/>
+<p>The scenarios use ~60k SPH particles, with runtimes around 1.5h for <em>hydro</em>, and 3h for <em>solid</em> on most current GPUs (benchmarked on a GTX 970). </p><hr/>
 <p><b>To run the test cases:</b></p>
 <ol type="1">
-<li>Compile miluphcuda using the <code>parameter.h</code> file from the respective directory (hydro or solid).</li>
+<li>Compile miluphcuda using the <code>parameter.h</code> file from the respective directory (hydro or solid). Don't forget to also adapt the Makefile to your system.</li>
 <li>Unpack <code>impact.0000.gz</code>.</li>
 <li>Adapt the start script <code>run.sh</code> to your system (path to CUDA libs and to miluphcuda executable) and execute it.</li>
 <li>Wait for the simulation to finish (75 output files). <hr/>
@@ -99,7 +99,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - Giant Collision test cases for miluphcuda<br />
-    Generated on Tue Jan 12 2021 07:05:09 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Wed Jan 13 2021 07:05:10 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
