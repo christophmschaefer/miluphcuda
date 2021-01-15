@@ -682,6 +682,7 @@ int main(int argc, char *argv[])
     param.firsttimestep = -1;
     param.rk_epsrel = 1e-6;
     param.angular_momentum_check = -1.0;
+    strcpy(inputFile.name, "disk.0000");
     strcpy(param.kernel, "cubic_spline");
     strcpy(param.conservedquantitiesfilename, "conserved_quantities.log");
     strcpy(param.binarysystemfilename, "binary_system.log");
@@ -781,8 +782,10 @@ int main(int argc, char *argv[])
                 }
                 break;
             case 'f':
-                if (!strcpy(inputFile.name, optarg))
+                if (!strcpy(inputFile.name, optarg)) {
+                    fprintf(stderr, "Something's wrong with the input file.\n");
                     exit(1);
+                }
                 break;
             case 'c':
                 if( !strcpy(param.conservedquantitiesfilename, optarg) ) {
