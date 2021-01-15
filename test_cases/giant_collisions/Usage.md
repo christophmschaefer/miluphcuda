@@ -35,17 +35,20 @@ The scenarios use ~60k SPH particles, with runtimes around 1.5h for *hydro*, and
 
 -----------------------------------------
 
-**To check the results:**
+**Check/visualize the results**
 
-* Visualize the simulation outcome, for example with *Paraview*.
-  You find the latest release at https://www.paraview.org/.  
+* You can visualize the simulation for example with *Paraview*. Find the latest release at https://www.paraview.org/.  
   
   First run
 
         utils/postprocessing/create_xdmf.py
-  and then start Paraview and load the created `*.xdmf` file. 
+  and then start Paraview and load the created `.xdmf` file.  
+  Use `-h` to get usage info for `create_xdmf.py`. Here you can use the options
 
-* Compare your results to the animations in the `results/` directories, which show the interior structure of the colliding bodies (cut views) for various quantities.
+        --output out.xdmf --dim 3 --input_files *.h5
+
+* Compare your results (e.g., visualized with Paraview) to the animations in the `results/` directories,
+  which show the interior structure of the colliding bodies (cut views) for various quantities.
 
 -----------------------------------------
 
