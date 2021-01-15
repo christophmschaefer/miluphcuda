@@ -4,7 +4,7 @@ Giant Collision test cases for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 12/Jan/2020
+last updated: 15/Jan/2020
 
 -----------------------------------------
 
@@ -31,14 +31,20 @@ The scenarios use ~60k SPH particles, with runtimes around 1.5h for *hydro*, and
 2. Unpack `impact.0000.gz`.
 3. Adapt the start script `run.sh` to your system (path to CUDA libs and to miluphcuda executable) and execute it.
 4. Wait for the simulation to finish (75 output files).
+   Output to stdout and stderr is written to `miluphcuda.output` and `miluphcuda.error`, respectively.
 
 -----------------------------------------
 
 **To check the results:**
 
-* Visualize the simulation outcome, for example with Paraview. First run   
-  `utils/postprocessing/create_xdmf.py`  
-  and then load the created *.xdmf file with Paraview.
+* Visualize the simulation outcome, for example with *Paraview*.
+  You find the latest release at https://www.paraview.org/.  
+  
+  First run
+
+        utils/postprocessing/create_xdmf.py
+  and then start Paraview and load the created `*.xdmf` file. 
+
 * Compare your results to the animations in the `results/` directories, which show the interior structure of the colliding bodies (cut views) for various quantities.
 
 -----------------------------------------
