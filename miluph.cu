@@ -601,7 +601,7 @@ void usage(char *name)
             "\t      \t\t\t\t Options: wendlandc2, wendlandc4, wendlandc6, cubic_spline, quartic_spline, spiky.\n"
             "\t-L, --angular_momentum <value> \t Check for conservation of angular momentum (default: off).\n"
             "\t\t\t\t\t Simulation stops once the relative difference between current and initial angular momentum is larger than <value>.\n"
-            "\t-m, --materialconfig <name>\t Name of libconfig file including material config\n"
+            "\t-m, --materialconfig <name>\t Name of libconfig file including material config (default: material.cfg)\n"
             "\t-M, --maxtimestep <value>\t Upper limit for the timestep (rk2_adaptive), or timestep size (euler), respectively.\n"
             "\t-n, --num <int>\t\t\t Number of simulation steps.\n"
             "\t-Q, --precision <value>\t\t Precision of the rk2_adaptive integrator (default: 1e-6).\n"
@@ -678,11 +678,12 @@ int main(int argc, char *argv[])
     param.hdf5output = FALSE;
     param.restart = FALSE;
     param.ascii_output = TRUE;
-    param.maxtimestep = -1;
-    param.firsttimestep = -1;
+    param.maxtimestep = -1.0;
+    param.firsttimestep = -1.0;
     param.rk_epsrel = 1e-6;
     param.angular_momentum_check = -1.0;
     strcpy(inputFile.name, "disk.0000");
+    strcpy(configFile, "material.cfg");
     strcpy(param.kernel, "cubic_spline");
     strcpy(param.conservedquantitiesfilename, "conserved_quantities.log");
     strcpy(param.binarysystemfilename, "binary_system.log");
