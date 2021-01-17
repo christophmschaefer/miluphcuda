@@ -3,21 +3,22 @@
 import h5py
 import sys
 import argparse
+import os
 
 
+# get all *.h5 files in current dir
+h5files = []
+for file in sorted(os.listdir(os.getcwd())):
+    if file.endswith('.h5'):
+        h5files.append(file)
 
-parser = argparse.ArgumentParser(description='Generate xdmf file from .h5 miluph output files for paraview postprocessing.\n Open the generated .xdmf file with paraview.')
+parser = argparse.ArgumentParser(description='Generates xdmf file from .h5 miluphcuda output files for Paraview postprocessing.\n Then open the generated .xdmf file with Paraview.')
 
-parser.add_argument('--output', help='output file name', default='disk.xdmf')
-parser.add_argument('--dim', help='dimension', default='3')
-parser.add_argument('--input_files', nargs='+', help='input file names', default='none')
+parser.add_argument('--output', help='output file name, default is disk.xdmf', default='disk.xdmf')
+parser.add_argument('--dim', help='dimension, default is 3', default='3')
+parser.add_argument('--input_files', nargs='+', help='input file names, default is *.h5', default=h5files)
 
 args = parser.parse_args()
-
-
-if len(sys.argv) < 3:
-    print("Try --help to get a usage.")
-    sys.exit(0);
 
 
 def write_xdmf_header(fh):
@@ -27,7 +28,6 @@ def write_xdmf_header(fh):
 <Grid Name="CellTime" GridType="Collection" CollectionType="Temporal">
 """
     fh.write(header)
-    
 
 
 def write_xdmf_footer(fh):
@@ -43,7 +43,6 @@ xdmfh = open(args.output, 'w')
 
 # write header of xdmf file
 write_xdmf_header(xdmfh)
-
 
 
 # now process input files
