@@ -787,7 +787,7 @@ void read_particles_from_file(File inputFile)
         }
         free(ix);
 
-        /* read damage */
+        /* read damage_tensile */
         damage_id = H5Dopen(file_id, "/DIM_root_of_damage_tensile", H5P_DEFAULT);
         if (damage_id < 0) {
             fprintf(stderr, "Could not find tensile damage information in hdf5 file.  Exiting\n");
@@ -1150,9 +1150,9 @@ void read_particles_from_file(File inputFile)
                 fscanf(inputFile.data, "%s", &iotmp);
             }
 
-            // read in damage
+            // read in (DIM-root of) tensile damage
             if (!fscanf(inputFile.data, "%s", &iotmp)) {
-                fprintf(stderr, "ERROR. Could not read damage from input file.\n");
+                fprintf(stderr, "ERROR. Could not read (DIM-root of) tensile damage from input file.\n");
                 exit(1);
             }
             p_host.d[i] = atof(iotmp);

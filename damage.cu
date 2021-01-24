@@ -41,7 +41,7 @@ __global__ void damageLimit(void)
         if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE)
             continue;
 
-        dmg = p.d[i];   // note: that's DIM-root of damage
+        dmg = p.d[i];   // note: that's DIM-root of tensile damage
         nof = p.numFlaws[i];
         noaf = p.numActiveFlaws[i];
 
@@ -50,7 +50,7 @@ __global__ void damageLimit(void)
             assert(0);
         }
 
-        // limit the damage
+        // limit the tensile damage
         dmgMax = 1.0;
         if (dmg < 0.0)
             dmg = 0.0;
@@ -60,8 +60,8 @@ __global__ void damageLimit(void)
         if (dmg > dmgMax)
             dmg = dmgMax;
 
+        // set (DIM-root of) tensile damage
         p.d[i] = dmg;
-        p.damage_total[i] = pow(dmg, DIM);
 
 #if PALPHA_POROSITY
         if (p.damage_porjutzi[i] > 1.0) {
@@ -70,11 +70,13 @@ __global__ void damageLimit(void)
             p.damage_porjutzi[i] = 0.0;
         }
 
-        // note: from here on 'dmg' is directly the damage (not DIM-root of it)
+        // note: here 'dmg' is the total damage (above it's DIM-root of tensile damage)
         dmg = pow(p.d[i], DIM) + pow(p.damage_porjutzi[i], DIM);
         if (dmg > 1.0)
             dmg = 1.0;
         p.damage_total[i] = dmg;
+#else
+        p.damage_total[i] = pow(dmg, DIM);
 #endif
     }
 }

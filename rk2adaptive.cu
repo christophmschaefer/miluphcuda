@@ -1118,7 +1118,6 @@ __global__ void checkError
 #define MIN_VEL_CHANGE_RK2 1e100
 #define RK2_LOCATION_SAFETY 0.1
 
-#if 1
 #if GRAVITATING_POINT_MASSES
     // pointmasses loop
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
@@ -1147,7 +1146,6 @@ __global__ void checkError
         localMaxVelAbsError = max(localMaxVelAbsError, velAbsErrorTemp);
     }
 #endif // gravitating point masses
-#endif// 0
 
     // particle loop
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {

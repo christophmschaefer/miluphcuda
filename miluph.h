@@ -173,7 +173,7 @@ struct Particle {
 #endif
 
 #if FRAGMENTATION
-    double *d;             ///< DIM-root of (tensile) damage
+    double *d;             ///< DIM-root of tensile damage
     double *damage_total;  ///< tensile damage + porous damage (directly, not DIM-root)
     double *dddt; ///< the time derivative of DIM-root of (tensile) damage
     int *numFlaws; ///< the total number of flaws

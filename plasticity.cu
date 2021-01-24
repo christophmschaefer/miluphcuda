@@ -220,7 +220,7 @@ __global__ void plasticityModel(void) {
             y_d = 0.0;
         
         // the actual yield strength Y is a weighted mean of Y_i and Y_d
-        // (therefore potential melt-energy effects are also included in Y)
+        // (note: therefore potential melt-energy effects are also included in Y)
         y = (1.0-damage) * y_i + damage * y_d;
         
         // always limit the yield strength to the intact value

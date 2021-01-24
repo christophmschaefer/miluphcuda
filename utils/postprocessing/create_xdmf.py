@@ -14,7 +14,7 @@ for file in sorted(os.listdir(os.getcwd())):
 
 parser = argparse.ArgumentParser(description='Generates xdmf file from .h5 miluphcuda output files for Paraview postprocessing.\n Then open the generated .xdmf file with Paraview.')
 
-parser.add_argument('--output', help='output file name, default is disk.xdmf', default='disk.xdmf')
+parser.add_argument('--output', help='output file name, default is paraview.xdmf', default='paraview.xdmf')
 parser.add_argument('--dim', help='dimension, default is 3', default='3')
 parser.add_argument('--input_files', nargs='+', help='input file names, default is *.h5', default=h5files)
 
