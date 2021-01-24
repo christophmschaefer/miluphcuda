@@ -25,6 +25,7 @@
 #include "parameter.h"
 #include "miluph.h"
 #include "linalg.h"
+#include "config_parameter.h"
 
 // transform to principal axes before applying artificial stress
 #define PRINCIPAL_AXES_ARTIFICIAL_STRESS 1
