@@ -4,7 +4,7 @@ Giant Collision test cases for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 15/Jan/2020
+last updated: 31/Jan/2021
 
 -----------------------------------------
 
@@ -57,6 +57,11 @@ The scenarios use ~60k SPH particles, with runtimes around 1.5h for *hydro*, and
 You can easily build on those test cases once you got them running. It is straight-forward to run different scenarios,
 with varying masses, collision parameters, and even material compositions or pre-collision rotation. We use an external
 tool for creating the required initial conditions, which is easy to use. Just drop me an e-mail if you are interested.
+
+You can also run further postprocessing on the results, e.g., to find all collision fragments and
+gravitationally bound aggregates of those. The necessary tools are included in
+
+        miluphcuda/utils/postprocessing/fast_identify_fragments_and_calc_aggregates/
 
 Enjoy!
 
