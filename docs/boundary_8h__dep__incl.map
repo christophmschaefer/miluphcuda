@@ -1,10 +1,10 @@
-<map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/boundary.h" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/boundary.h">
-<area shape="rect" id="node2" href="$boundary_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/boundary.cu" alt="" coords="5,117,211,173"/>
-<area shape="rect" id="node3" href="$config__parameter_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/config\l_parameter.cu" alt="" coords="235,109,419,180"/>
-<area shape="rect" id="node4" href="$internal__forces_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/internal\l_forces.cu" alt="" coords="443,109,627,180"/>
-<area shape="rect" id="node5" href="$rhs_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/rhs.cu" alt="" coords="651,117,835,173"/>
-<area shape="rect" id="node6" href="$rk2adaptive_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/rk2adaptive.cu" alt="" coords="859,117,1077,173"/>
-<area shape="rect" id="node7" href="$rk4__pointmass_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/rk4_pointmass.cu" alt="" coords="1101,117,1339,173"/>
-<area shape="rect" id="node8" href="$test__cases_2viscously__spreading__ring_2boundary_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/test_cases\l/viscously_spreading_ring/boundary.cu" alt="" coords="1362,109,1609,180"/>
-<area shape="rect" id="node9" href="$timeintegration_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/timeintegration.cu" alt="" coords="1632,117,1869,173"/>
+<map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/boundary.h" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/boundary.h">
+<area shape="rect" id="node2" href="$boundary_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/boundary.cu" alt="" coords="5,117,208,173"/>
+<area shape="rect" id="node3" href="$config__parameter_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/config\l_parameter.cu" alt="" coords="232,109,416,180"/>
+<area shape="rect" id="node4" href="$internal__forces_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/internal\l_forces.cu" alt="" coords="440,109,624,180"/>
+<area shape="rect" id="node5" href="$rhs_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/rhs.cu" alt="" coords="648,117,832,173"/>
+<area shape="rect" id="node6" href="$rk2adaptive_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/rk2adaptive.cu" alt="" coords="856,117,1072,173"/>
+<area shape="rect" id="node7" href="$rk4__pointmass_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/rk4_pointmass.cu" alt="" coords="1096,117,1331,173"/>
+<area shape="rect" id="node8" href="$test__cases_2viscously__spreading__ring_2boundary_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/test_cases\l/viscously_spreading_ring/boundary.cu" alt="" coords="1354,109,1601,180"/>
+<area shape="rect" id="node9" href="$timeintegration_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/timeintegration.cu" alt="" coords="1624,117,1859,173"/>
 </map>

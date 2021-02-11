@@ -178,7 +178,7 @@ var searchData=
   ['maxyperblock',['maxyPerBlock',['../rhs_8cu.html#a410bb2804b542c9c4e77139105dc069f',1,'maxyPerBlock():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a410bb2804b542c9c4e77139105dc069f',1,'maxyPerBlock():&#160;timeintegration.cu']]],
   ['maxz',['maxz',['../rhs_8cu.html#a4860073b7ec9e82e90f772b2c337d820',1,'maxz():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a4860073b7ec9e82e90f772b2c337d820',1,'maxz():&#160;timeintegration.cu'],['../tree_8cu.html#a4860073b7ec9e82e90f772b2c337d820',1,'maxz():&#160;timeintegration.cu']]],
   ['maxzperblock',['maxzPerBlock',['../rhs_8cu.html#a6f0565f9be397bc7029e0b821d53fb4e',1,'maxzPerBlock():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a6f0565f9be397bc7029e0b821d53fb4e',1,'maxzPerBlock():&#160;timeintegration.cu']]],
-  ['miluphcuda',['miluphcuda',['../md__home_schaefer_src_miluphcuda_documentation_miluphcuda_devel__r_e_a_d_m_e.html',1,'']]],
+  ['miluphcuda',['miluphcuda',['../md__home_schaefer_src_miluphcuda_documentation_miluphcuda_main__r_e_a_d_m_e.html',1,'']]],
   ['measuretreechange',['measureTreeChange',['../tree_8cu.html#a3dd72b7d09239c038e6d5605d325322e',1,'measureTreeChange(int *movingparticlesPerBlock):&#160;tree.cu'],['../tree_8h.html#a3dd72b7d09239c038e6d5605d325322e',1,'measureTreeChange(int *movingparticlesPerBlock):&#160;tree.cu']]],
   ['memory_5fhandling_2ecu',['memory_handling.cu',['../memory__handling_8cu.html',1,'']]],
   ['memory_5fhandling_2eh',['memory_handling.h',['../memory__handling_8h.html',1,'']]],

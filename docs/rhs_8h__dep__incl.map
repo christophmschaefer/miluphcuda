@@ -1,11 +1,11 @@
-<map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/rhs.h" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/rhs.h">
-<area shape="rect" id="node2" href="$config__parameter_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/config\l_parameter.cu" alt="" coords="5,109,189,180"/>
-<area shape="rect" id="node3" href="$coupled__heun__rk4__sph__nbody_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/coupled\l_heun_rk4_sph_nbody.cu" alt="" coords="213,109,397,180"/>
-<area shape="rect" id="node4" href="$euler_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/euler.cu" alt="" coords="421,117,605,173"/>
-<area shape="rect" id="node5" href="$predictor__corrector_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/predictor\l_corrector.cu" alt="" coords="629,109,813,180"/>
-<area shape="rect" id="node6" href="$predictor__corrector__euler_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/predictor\l_corrector_euler.cu" alt="" coords="837,109,1021,180"/>
-<area shape="rect" id="node7" href="$rhs_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/rhs.cu" alt="" coords="1045,117,1229,173"/>
-<area shape="rect" id="node8" href="$rk2adaptive_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/rk2adaptive.cu" alt="" coords="1253,117,1472,173"/>
-<area shape="rect" id="node9" href="$rk4__pointmass_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/rk4_pointmass.cu" alt="" coords="1496,117,1733,173"/>
-<area shape="rect" id="node10" href="$timeintegration_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/timeintegration.cu" alt="" coords="1757,117,1995,173"/>
+<map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/rhs.h" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/rhs.h">
+<area shape="rect" id="node2" href="$config__parameter_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/config\l_parameter.cu" alt="" coords="5,109,189,180"/>
+<area shape="rect" id="node3" href="$coupled__heun__rk4__sph__nbody_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/coupled\l_heun_rk4_sph_nbody.cu" alt="" coords="213,109,397,180"/>
+<area shape="rect" id="node4" href="$euler_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/euler.cu" alt="" coords="421,117,605,173"/>
+<area shape="rect" id="node5" href="$predictor__corrector_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/predictor\l_corrector.cu" alt="" coords="629,109,813,180"/>
+<area shape="rect" id="node6" href="$predictor__corrector__euler_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/predictor\l_corrector_euler.cu" alt="" coords="837,109,1021,180"/>
+<area shape="rect" id="node7" href="$rhs_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/rhs.cu" alt="" coords="1045,117,1229,173"/>
+<area shape="rect" id="node8" href="$rk2adaptive_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/rk2adaptive.cu" alt="" coords="1253,117,1469,173"/>
+<area shape="rect" id="node9" href="$rk4__pointmass_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/rk4_pointmass.cu" alt="" coords="1493,117,1728,173"/>
+<area shape="rect" id="node10" href="$timeintegration_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/timeintegration.cu" alt="" coords="1752,117,1987,173"/>
 </map>

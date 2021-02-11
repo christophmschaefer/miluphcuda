@@ -1,4 +1,4 @@
-<map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/rk4_pointmass.h" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/rk4_pointmass.h">
+<map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/rk4_pointmass.h" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/rk4_pointmass.h">
 <area shape="rect" id="node2" href="$miluph_8h.html" title="miluph.h" alt="" coords="460,109,531,136"/>
 <area shape="rect" id="node14" href="$timeintegration_8h.html" title="timeintegration.h" alt="" coords="1055,184,1173,211"/>
 <area shape="rect" id="node11" href="$cuda__utils_8h.html" title="cuda_utils.h" alt="" coords="197,259,289,285"/>

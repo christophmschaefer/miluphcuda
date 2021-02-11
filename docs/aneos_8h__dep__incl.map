@@ -1,9 +1,9 @@
-<map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/aneos.h" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_devel/aneos.h">
-<area shape="rect" id="node2" href="$aneos_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/aneos.cu" alt="" coords="5,117,192,173"/>
-<area shape="rect" id="node3" href="$config__parameter_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/config\l_parameter.cu" alt="" coords="216,109,400,180"/>
-<area shape="rect" id="node4" href="$io_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/io.cu" alt="" coords="424,117,608,173"/>
-<area shape="rect" id="node5" href="$memory__handling_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/memory\l_handling.cu" alt="" coords="632,109,816,180"/>
-<area shape="rect" id="node6" href="$pressure_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/pressure.cu" alt="" coords="840,117,1043,173"/>
-<area shape="rect" id="node7" href="$soundspeed_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/soundspeed.cu" alt="" coords="1067,117,1290,173"/>
-<area shape="rect" id="node8" href="$timeintegration_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_devel/timeintegration.cu" alt="" coords="1313,117,1551,173"/>
+<map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/aneos.h" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/aneos.h">
+<area shape="rect" id="node2" href="$aneos_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/aneos.cu" alt="" coords="5,117,189,173"/>
+<area shape="rect" id="node3" href="$config__parameter_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/config\l_parameter.cu" alt="" coords="213,109,397,180"/>
+<area shape="rect" id="node4" href="$io_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/io.cu" alt="" coords="421,117,605,173"/>
+<area shape="rect" id="node5" href="$memory__handling_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/memory\l_handling.cu" alt="" coords="629,109,813,180"/>
+<area shape="rect" id="node6" href="$pressure_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/pressure.cu" alt="" coords="838,117,1037,173"/>
+<area shape="rect" id="node7" href="$soundspeed_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/soundspeed.cu" alt="" coords="1061,117,1280,173"/>
+<area shape="rect" id="node8" href="$timeintegration_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/timeintegration.cu" alt="" coords="1304,117,1539,173"/>
 </map>

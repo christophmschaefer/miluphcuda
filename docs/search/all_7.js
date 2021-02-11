@@ -27,5 +27,5 @@ var searchData=
   ['gravity_2ecu',['gravity.cu',['../gravity_8cu.html',1,'']]],
   ['gravity_2eh',['gravity.h',['../gravity_8h.html',1,'']]],
   ['gravity_5findex',['gravity_index',['../rhs_8cu.html#a65e40618a0b734a702121cda7864cafc',1,'gravity_index():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a65e40618a0b734a702121cda7864cafc',1,'gravity_index():&#160;timeintegration.cu']]],
-  ['giant_20collision_20test_20cases_20for_20miluphcuda',['Giant Collision test cases for miluphcuda',['../md__home_schaefer_src_miluphcuda_documentation_miluphcuda_devel_test_cases_giant_collisions__usage.html',1,'']]]
+  ['giant_20collision_20test_20cases_20for_20miluphcuda',['Giant Collision test cases for miluphcuda',['../md__home_schaefer_src_miluphcuda_documentation_miluphcuda_main_test_cases_giant_collisions__usage.html',1,'']]]
 ];
