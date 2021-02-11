@@ -30,19 +30,19 @@
 #endif
 
 #if VON_MISES_PLASTICITY && COLLINS_PLASTICITY
-# error ERROR. You can't choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY at the same time.
+# error ERROR. You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY at the same time.
 #endif
 #if VON_MISES_PLASTICITY && COLLINS_PLASTICITY_SIMPLE
-# error ERROR. You can't choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY_SIMPLE at the same time.
+# error ERROR. You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY_SIMPLE at the same time.
 #endif
 #if MOHR_COULOMB_PLASTICITY && DRUCKER_PRAGER_PLASTICITY
-# error ERROR. You can't choose MOHR_COULOMB_PLASTICITY and DRUCKER_PRAGER_PLASTICITY at the same time.
+# error ERROR. You cannot choose MOHR_COULOMB_PLASTICITY and DRUCKER_PRAGER_PLASTICITY at the same time.
 #endif
 #if MOHR_COULOMB_PLASTICITY && COLLINS_PLASTICITY
-# error ERROR. You can't choose MOHR_COULOMB_PLASTICITY and COLLINS_PLASTICITY at the same time.
+# error ERROR. You cannot choose MOHR_COULOMB_PLASTICITY and COLLINS_PLASTICITY at the same time.
 #endif
 #if DRUCKER_PRAGER_PLASTICITY && COLLINS_PLASTICITY
-# error ERROR. You can't choose DRUCKER_PRAGER_PLASTICITY and COLLINS_PLASTICITY at the same time.
+# error ERROR. You cannot choose DRUCKER_PRAGER_PLASTICITY and COLLINS_PLASTICITY at the same time.
 #endif
 #if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY && !COLLINS_PLASTICITY
 # error ERROR. You have chosen COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY but not also COLLINS_PLASTICITY in parameter.h. That is not what you want.
@@ -90,7 +90,7 @@
 # error turn on FRAGMENTATION when using COHESION_FOR_DAMAGED_MATERIAL
 #endif
 
-#if SHAKURA_SUNYAEV_ALPHA && CONSTANT_KINEMATIC_VISCOSITY 
+#if SHAKURA_SUNYAEV_ALPHA && CONSTANT_KINEMATIC_VISCOSITY
 # error choose only one viscosity model
 #endif
 
