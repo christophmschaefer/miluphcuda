@@ -321,9 +321,9 @@ void transferMaterialsToGPU()
         fprintf(stdout, "Found disk scale height: %e\n", scale_height_host);
     }
 
+    // read material properties
     materials = config_lookup(&param.config, "materials");
 
-    // read material properties
     if (materials != NULL) {
         int count = config_setting_length(materials);
         int i,j;
@@ -335,7 +335,10 @@ void transferMaterialsToGPU()
         for (i = 0; i < count; ++i) {
             material = config_setting_get_elem(materials, i);
             int ID;
-            config_setting_lookup_int(material, "ID", &ID);
+            if( !config_setting_lookup_int(material, "ID", &ID) ) {
+                fprintf(stderr, "ERROR. Found material without ID in config file...\n");
+                exit(1);
+            }
             if (param.verbose) {
                 fprintf(stdout, "Found material ID: %d\n", ID);
             }
