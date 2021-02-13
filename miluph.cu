@@ -619,7 +619,7 @@ void usage(char *name)
             "\t\t\t\t\t and about the compile time options of the binary.\n\n"
             "Take a deep look at parameter.h. There you find most of the physics and numerics settings.\n\n"
             "More information on github: https://github.com/christophmschaefer/miluphcuda\n\n",
-        VERSION, name);
+        MILUPHCUDA_VERSION, name);
     exit(0);
 }
 

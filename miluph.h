@@ -25,7 +25,7 @@
 #ifndef _MILUPH_H
 #define _MILUPH_H
 
-#define VERSION "devel"
+#define MILUPHCUDA_VERSION "devel"
 
 #define FALSE 0
 #define TRUE 1
