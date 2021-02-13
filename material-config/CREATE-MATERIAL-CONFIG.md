@@ -130,7 +130,7 @@ This list is currently not exhaustive.
         Key     Type    Default     Details
 
         ID      int     none        material ID, has to fit SPH particles' material-type
-                                    in input file, usually 0,1,...
+                                    in input file, have to be 0, 1, 2,...
 
 **Always optional**:
 

@@ -1486,7 +1486,8 @@ int free_memory()
     cudaVerify(cudaFreeHost(p_host.g_az));
 #endif
 
-    if (param.verbose) printf("freeing ANEOS (global) host memory...\n");
+    if (param.verbose)
+        printf("freeing ANEOS (global) host memory...\n");
     free_aneos_memory();
 
     return rc;

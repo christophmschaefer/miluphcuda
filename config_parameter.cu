@@ -102,7 +102,7 @@ double *mat_f_sml_max_d;
 __constant__ double *mat_f_sml_min;
 __constant__ double *mat_f_sml_max;
 
-//begin ANEOS device variables (in global and constant memory)
+// ANEOS device variables (in global and constant memory)
 int *aneos_n_rho_d;
 int *aneos_n_e_d;
 double *aneos_bulk_cs_d;
@@ -125,9 +125,8 @@ __constant__ double *aneos_cs_c;
 __constant__ int *aneos_rho_id_c;
 __constant__ int *aneos_e_id_c;
 __constant__ int *aneos_matrix_id_c;
-//end ANEOS device variables (in global and constant memory)
 
-/* POROUS_JUTZI device variables */
+// PALPHA_POROSITY device variables
 double *matporjutzi_p_elastic_d;
 double *matporjutzi_p_transition_d;
 double *matporjutzi_p_compacted_d;
@@ -140,7 +139,7 @@ double *matcs_porous_d;
 double *matcs_solid_d;
 int *matcrushcurve_style_d;
 
-/* POROUS_SIRONO device variables */
+// SIRONO_POROSITY device variables
 double *matporsirono_K_0_d;
 double *matporsirono_rho_0_d;
 double *matporsirono_rho_s_d;
@@ -151,7 +150,7 @@ double *matporsirono_phimax_d;
 double *matporsirono_phi0_d;
 double *matporsirono_delta_d;
 
-/* EPSALPHA_POROSITY variables */
+// EPSALPHA_POROSITY device variables
 double *matporepsilon_kappa_d;
 double *matporepsilon_alpha_0_d;
 double *matporepsilon_epsilon_e_d;
@@ -168,7 +167,6 @@ double *matjc_Tref_d;
 double *matjc_Tmelt_d;
 double *matCp_d;
 double *matCV_d;
-
 
 /* for the predictor corrector integrator */
 double Smin;
@@ -192,13 +190,10 @@ __device__ int pressureChangeSmallEnough = FALSE;
 
 __device__ double scale_height;
 
-
 __device__ double density_floor_d;
-
 
 double *matYoungModulus_d;
 __constant__ double *matYoungModulus;
-
 
 __constant__ double *matporjutzi_p_elastic;
 __constant__ double *matporjutzi_p_transition;
@@ -211,7 +206,6 @@ __constant__ double *matporjutzi_n2;
 __constant__ double *matcs_porous;
 __constant__ double *matcs_solid;
 __constant__ int *matcrushcurve_style;
-
 
 __constant__ double *matporsirono_K_0;
 __constant__ double *matporsirono_rho_0;
@@ -242,7 +236,6 @@ __constant__ double *matCV;
 __constant__ double *matnu;
 __constant__ double *matalpha_shakura;
 __constant__ double *matzeta;
-
 
 __constant__ double *matSml;
 __constant__ int *matnoi;
@@ -295,10 +288,8 @@ double *sml;
 double *till_rho_0;
 double *bulk_modulus;
 double *cs_porous;
+
 int numberOfMaterials;
-
-
-
 
 
 
@@ -308,14 +299,14 @@ void transferMaterialsToGPU()
     double smallest_rho = 1e30;
     double tmp_dens;
     double scale_height_host;
-    config_setting_t *materials;
-    config_setting_t *disk;
-    disk = config_lookup(&param.config, "disk");
+    config_setting_t *materials, *disk;
 
     // set some stuff for some integrators
     set_integration_parameters();
 
     // read disk properties
+    disk = config_lookup(&param.config, "disk");
+
     if (disk != NULL) {
         config_setting_lookup_float(disk, "scale_height", &scale_height_host);
         fprintf(stdout, "Found disk scale height: %e\n", scale_height_host);
@@ -325,18 +316,17 @@ void transferMaterialsToGPU()
     materials = config_lookup(&param.config, "materials");
 
     if (materials != NULL) {
-        int count = config_setting_length(materials);
+        int numberOfElements = config_setting_length(materials);
         int i,j;
         int maxId = 0;
-        config_setting_t *material;
-        config_setting_t *subset;
+        config_setting_t *material, *subset;
 
-        // find max ID of materials to allocate enough memory for material struct
-        for (i = 0; i < count; ++i) {
+        // find max ID of materials
+        for (i = 0; i < numberOfElements; ++i) {
             material = config_setting_get_elem(materials, i);
             int ID;
             if( !config_setting_lookup_int(material, "ID", &ID) ) {
-                fprintf(stderr, "ERROR. Found material without ID in config file...\n");
+                fprintf(stderr, "Error. Found material without ID in config file...\n");
                 exit(1);
             }
             if (param.verbose) {
@@ -344,17 +334,20 @@ void transferMaterialsToGPU()
             }
             maxId = max(ID, maxId);
         }
+        if( maxId != numberOfElements - 1 ) {
+            fprintf(stderr, "Error. Material-IDs in config file have to be 0, 1, 2,...\n");
+            exit(1);
+        }
 
-        // allocate struct oh god so ugly
-        // yesssss
-        int numberOfElements = maxId + 1;
-        numberOfMaterials = numberOfElements;
+        numberOfMaterials = numberOfElements;   // global, needed externally
+        
+        // allocate memory
         sml = (double*)calloc(numberOfElements,sizeof(double));
         int *eos = (int*)calloc(numberOfElements,sizeof(int));
         int *noi = (int*)calloc(numberOfElements,sizeof(int));
         double *f_sml_min = (double *) calloc(numberOfElements, sizeof(double));
         double *f_sml_max = (double *) calloc(numberOfElements, sizeof(double));
-        // seting some reasonable values for the factor of sml
+        // seting some reasonable values for sml factor
         for (i = 0; i < numberOfMaterials; i++) {
             f_sml_min[i] = 1.0;
             f_sml_max[i] = 1.0;
@@ -439,10 +432,10 @@ void transferMaterialsToGPU()
         double *porjutzi_alpha_t = (double*)calloc(numberOfElements, sizeof(double));
         double *porjutzi_n1 = (double*)calloc(numberOfElements, sizeof(double));
         double *porjutzi_n2 = (double*)calloc(numberOfElements, sizeof(double));
-    		cs_porous = (double*)calloc(numberOfElements, sizeof(double));
-		    double *cs_solid = (double*)calloc(numberOfElements, sizeof(double));
+        cs_porous = (double*)calloc(numberOfElements, sizeof(double));
+        double *cs_solid = (double*)calloc(numberOfElements, sizeof(double));
         double max_abs_pressure_change_host = DBL_MAX;
-		    int *crushcurve_style = (int*)calloc(numberOfElements, sizeof(int));
+        int *crushcurve_style = (int*)calloc(numberOfElements, sizeof(int));
 #endif
 
 #if SIRONO_POROSITY
@@ -481,12 +474,12 @@ void transferMaterialsToGPU()
         double *CV = (double*)calloc(numberOfElements, sizeof(double));
 #endif
 
-        // fill struct
-        for (i = 0; i < count; ++i) {
+        // read material config file
+        for (i = 0; i < numberOfElements; ++i) {
             material = config_setting_get_elem(materials, i);
             int ID;
             config_setting_lookup_int(material, "ID", &ID);
-	          printf("Reading information about material ID %d out of %d in total \n", ID, count);
+	        printf("Reading information about material ID %d out of %d in total \n", ID, numberOfElements);
             config_setting_lookup_float(material, "sml", &sml[ID]);
 #if VARIABLE_SML
 #if FIXED_NOI
@@ -499,12 +492,14 @@ void transferMaterialsToGPU()
 #endif
 
 #if ARTIFICIAL_VISCOSITY
+            // read group artificial_viscosity
             subset = config_setting_get_member(material, "artificial_viscosity");
             config_setting_lookup_float(subset, "alpha", &alpha[ID]);
             config_setting_lookup_float(subset, "beta", &beta[ID]);
 #endif
 
 #if ARTIFICIAL_STRESS
+            // read group artificial_stress
             subset = config_setting_get_member(material, "artificial_stress");
             config_setting_lookup_float(subset, "exponent_tensor", &exponent_tensor[ID]);
             config_setting_lookup_float(subset, "epsilon_stress", &epsilon_stress[ID]);
@@ -522,6 +517,7 @@ void transferMaterialsToGPU()
             config_setting_lookup_float(subset, "nu", &nu[ID]);
 #endif
 
+            // read group eos
             subset = config_setting_get_member(material, "eos");
             config_setting_lookup_int(subset, "type", &eos[ID]);
             config_setting_lookup_float(subset, "polytropic_K", &polytropic_K[ID]);
@@ -605,15 +601,15 @@ void transferMaterialsToGPU()
             config_setting_lookup_float(subset, "porjutzi_alpha_t", &porjutzi_alpha_t[ID]);
             config_setting_lookup_float(subset, "porjutzi_n1", &porjutzi_n1[ID]);
             config_setting_lookup_float(subset, "porjutzi_n2", &porjutzi_n2[ID]);
-      			config_setting_lookup_float(subset, "cs_porous", &cs_porous[ID]);
-      			if (eos[ID] == EOS_TYPE_JUTZI_ANEOS) {
-      				cs_solid[ID] = sqrt(bulk_modulus[ID] / g_aneos_rho_0[ID] / porjutzi_alpha_0[ID]);
-      			} else if (eos[ID] == EOS_TYPE_JUTZI_MURNAGHAN) {
-      				cs_solid[ID] = sqrt(bulk_modulus[ID] / rho_0[ID] / porjutzi_alpha_0[ID]);
-      			} else {
-      				cs_solid[ID] = sqrt(bulk_modulus[ID] / till_rho_0[ID] / porjutzi_alpha_0[ID]);
-      			}
-      			config_setting_lookup_int(subset, "crushcurve_style", &crushcurve_style[ID]);
+            config_setting_lookup_float(subset, "cs_porous", &cs_porous[ID]);
+            if (eos[ID] == EOS_TYPE_JUTZI_ANEOS) {
+                cs_solid[ID] = sqrt(bulk_modulus[ID] / g_aneos_rho_0[ID] / porjutzi_alpha_0[ID]);
+            } else if (eos[ID] == EOS_TYPE_JUTZI_MURNAGHAN) {
+                cs_solid[ID] = sqrt(bulk_modulus[ID] / rho_0[ID] / porjutzi_alpha_0[ID]);
+            } else {
+                cs_solid[ID] = sqrt(bulk_modulus[ID] / till_rho_0[ID] / porjutzi_alpha_0[ID]);
+            }
+            config_setting_lookup_int(subset, "crushcurve_style", &crushcurve_style[ID]);
 #endif
 
 #if SIRONO_POROSITY
@@ -662,10 +658,10 @@ void transferMaterialsToGPU()
             /* internal friction coefficient (normally \mu) is tan of angle of internal friction */
             internal_friction[ID] = tan(friction_angle[ID]);
             internal_friction_damaged[ID] = tan(friction_angle_damaged[ID]);
-
 #if SOLID
             young_modulus[ID] = 9.0*bulk_modulus[ID]*shear_modulus[ID]/(3.0*bulk_modulus[ID]+shear_modulus[ID]);
 #endif
+
 #if JC_PLASTICITY
             config_setting_lookup_float(subset, "jc_y0", &jc_y0[ID]);
             config_setting_lookup_float(subset, "jc_B", &jc_B[ID]);
@@ -728,7 +724,6 @@ void transferMaterialsToGPU()
                 smallest_rho = tmp_dens;
             }
 #endif
-
         }
 
 #if PALPHA_POROSITY
@@ -744,6 +739,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matcs_solid_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matcrushcurve_style_d, numberOfElements*sizeof(int)));
 #endif
+
 #if VARIABLE_SML
         cudaVerify(cudaMalloc((void **)&mat_f_sml_max_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&mat_f_sml_min_d, numberOfElements*sizeof(double)));
@@ -771,7 +767,7 @@ void transferMaterialsToGPU()
 
 #if NAVIER_STOKES
         cudaVerify(cudaMalloc((void **)&matnu_d, numberOfElements*sizeof(double)));
-	      cudaVerify(cudaMalloc((void **)&matalpha_shakura_d, numberOfElements*sizeof(double)));
+	    cudaVerify(cudaMalloc((void **)&matalpha_shakura_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matzeta_d, numberOfElements*sizeof(double)));
 #endif
 
@@ -977,7 +973,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(matexponent_tensor, &matexponent_tensor_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matepsilon_stress, &matepsilon_stress_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matmean_particle_distance, &matmean_particle_distance_d, sizeof(void*)));
-#endif // ARTIFICIAL_STRESS
+#endif
 
 #if PALPHA_POROSITY
         cudaVerify(cudaMemcpy(matporjutzi_p_elastic_d, porjutzi_p_elastic, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
@@ -1300,6 +1296,7 @@ void transferMaterialsToGPU()
             fprintf(stdout, "\n");
         }
 #endif
+
 #if ARTIFICIAL_STRESS
         fprintf(stdout, "Using following parameters for artificial stress\n");
         fprintf(stdout, "Material No \t exponent tensor \t epsilon stress \t mean particle distance \n");
@@ -1307,11 +1304,11 @@ void transferMaterialsToGPU()
         for (i = 0; i < numberOfMaterials; i++) {
             fprintf(stdout, "  %d \t\t %e \t\t %e \t\t %e\n", i, exponent_tensor[i], epsilon_stress[i], mean_particle_distance[i]);
         }
+
         free(exponent_tensor);
         free(epsilon_stress);
         free(mean_particle_distance);
-#endif // ARTIFICIAL_STRESS
-
+#endif
         free(alpha);
         free(nu);
         free(eta);
@@ -1352,7 +1349,7 @@ void transferMaterialsToGPU()
         free(friction_angle);
         free(friction_angle_damaged);
 #if SOLID
-    		free(young_modulus);
+        free(young_modulus);
 #endif
 
 #if PALPHA_POROSITY
@@ -1402,6 +1399,8 @@ void transferMaterialsToGPU()
 #endif
     }
 }
+
+
 
 void cleanupMaterials()
 {
