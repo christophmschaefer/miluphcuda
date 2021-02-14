@@ -94,25 +94,24 @@ __global__ void calculateSoundSpeed()
                 y = (p.e[i]-matTillEiv[matId])/(matTillEcv[matId]-matTillEiv[matId]);
                 cs_sq = cs_e_sq*(1.0-y)+cs_c_sq*y;
             }
-            //check whether soundspeed is smaller than lower limit and if so set it to the lower limit
-            //lower limit can be set in material.cfg or if not set the lower limit is sqrt(A/rho_0)
+            // set sound speed to >= lower limit
             if (cs_sq < matTillcsLimit[matId]*matTillcsLimit[matId]){
                 p.cs[i] = matTillcsLimit[matId];
             } else {
                 p.cs[i] = sqrt(cs_sq);
             }
         } else if (EOS_TYPE_ANEOS == matEOS[matId]) {
-            /* find array-indices just below the actual values of rho and e */
+            // find array-indices just below the actual values of rho and e
             i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
             i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
-            /* interpolate (bi)linearly to obtain the sound speed */
+            // interpolate (bi)linearly to obtain the sound speed
             p.cs[i] = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId]);
-            /* set to lowest allowed value if below; read from materialconfig file or (if not found) 10% of aneos_bulk_cs by default */
+            // set to >= lower limit
             if (p.cs[i] < aneos_cs_limit_c[matId]) {
                 p.cs[i] = aneos_cs_limit_c[matId];
             }
-        } else if (EOS_TYPE_JUTZI_MURNAGHAN == matEOS[matId]) {
 #if PALPHA_POROSITY
+        } else if (EOS_TYPE_JUTZI_MURNAGHAN == matEOS[matId]) {
             //p.cs[i] = sqrt(matBulkmodulus[matId]/matTillRho0[matId]);
 //            if (p.alpha_jutzi[i] > 1.0 && abs(p.dalphadp[i]) > 0) {
 //                if (abs(p.delpdelrho[i]) > 0.0 || abs(p.delpdele[i]) > 0.0) {
@@ -197,16 +196,16 @@ __global__ void calculateSoundSpeed()
             }
 #endif
 #endif // PALPHA_POROSITY
-        } else if (EOS_TYPE_SIRONO == matEOS[matId]) {
 #if SIRONO_POROSITY
+        } else if (EOS_TYPE_SIRONO == matEOS[matId]) {
             if (p.flag_plastic[i] > 0)
                 p.cs[i] = sqrt(p.compressive_strength[i] / p.rho[i]);
             else
                 p.cs[i] = sqrt(p.K[i] / p.rho_0prime[i]);
 #endif
+#if EPSALPHA_POROSITY
         /* Improvements to epsilon-alpha model by Collins et al 2010 */
         } else if (EOS_TYPE_EPSILON == matEOS[matId]) {
-#if EPSALPHA_POROSITY
             double c_s0 = sqrt(matBulkmodulus[matId]/matTillRho0[matId]);
             double c_p0 = sqrt(matBulkmodulus[matId]/(matTillRho0[matId] / matporepsilon_alpha_0[matId]));
             p.cs[i] = c_s0 + (p.alpha_epspor[i] - 1.0) / (matporepsilon_alpha_0[matId] - 1.0) * (c_p0 - c_s0);
@@ -228,7 +227,7 @@ __global__ void initializeSoundspeed()
             p.cs[i] = 0.0; // for gas this will be calculated each step by kernel calculateSoundSpeed
         } else if (EOS_TYPE_ISOTHERMAL_GAS == matEOS[matId]) {
             /* this is pure molecular hydrogen at 10 K */
-            p.cs[i] = 203;
+            p.cs[i] = 203.0;
         } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
             p.cs[i] = sqrt(matBulkmodulus[matId]/matTillRho0[matId]);
         } else if (EOS_TYPE_ANEOS == matEOS[matId]) {

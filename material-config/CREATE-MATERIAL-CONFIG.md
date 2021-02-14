@@ -1,7 +1,7 @@
 How to set up the material config file for miluphcuda
 =====================================================
 
-last updated: 12/Feb/2021
+last updated: 14/Feb/2021
 
 Christoph Burger, Christoph Schäfer  
 christoph.burger@uni-tuebingen.de
@@ -76,7 +76,7 @@ The basic file structure, containing *n* different materials, looks like:
             }
         );
 
-The available/required settings, depending on the used material model(s), are listed and described below.
+The available/required settings depend on the used material model(s), and are listed and described below.
 
 The `material.cfg` file in this directory contains an example setup, comprising several materials and material models.
 
@@ -127,15 +127,41 @@ This list is currently not exhaustive.
 
 **Always mandatory**:
 
-        Key     Type    Default     Details
+        Key         Type    Default     Details
+        _______________________________________
 
-        ID      int     none        material ID, has to fit SPH particles' material-type
-                                    in input file, have to be 0, 1, 2,...
+        ID          int     none        material ID, has to fit SPH particles' material-type
+                                        in input file, IDs have to be 0, 1, 2,...
+        eos.type    int     none        set equation of state for material, for a complete list see
+                                        https://christophmschaefer.github.io/miluphcuda/pressure_8h.html
+                                        or look directly into pressure.h
 
 **Always optional**:
 
         Key     Type    Default     Details
+        ___________________________________
 
         name    str     none        name of material, currently not processed by miluphcuda
 
+**Tillotson EoS**:
+
+To use the Tillotson EoS for some material, set *eos.type = 2*, and the following parameters.
+
+        Key                 Type    Default             Details
+        _______________________________________________________
+
+        eos.till_rho_0      float   0.                  reference density
+        eos.till_A          float   0.
+        eos.till_B          float   0.
+        eos.till_E_0        float   0.
+        eos.till_E_iv       float   0.
+        eos.till_E_cv       float   0.
+        eos.till_a          float   0.
+        eos.till_b          float   0.
+        eos.till_alpha      float   0.
+        eos.till_beta       float   0.
+        eos.rho_limit       float   0.9                 for expanded states with rho/rho_0 < rho_limit
+                                                        the pressure is set to zero (if e < till_E_cv)
+        eos.cs_limit        float   1% of approx.       lower limit for sound speed (in m/s),
+                                    bulk sound speed    default is 1% of sqrt(till_A/till_rho_0)
 

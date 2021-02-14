@@ -25,9 +25,15 @@
 #define _SOUNDSPEED_H
 
 
-
+/**
+ * @brief Compute sound speed depending on equation of state.
+ * @details For materials with constant sound speed it is set in `calculateSoundSpeed()`.
+ */
 __global__ void calculateSoundSpeed(void);
 
+/**
+ * @brief Initialize sound speed for all materials.
+ */
 __global__ void initializeSoundspeed(void);
 
 #endif

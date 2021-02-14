@@ -636,12 +636,18 @@ void transferMaterialsToGPU()
             config_setting_lookup_float(subset, "till_B", &till_B[ID]);
             config_setting_lookup_float(subset, "till_alpha", &till_alpha[ID]);
             config_setting_lookup_float(subset, "till_beta", &till_beta[ID]);
-            //till_csLimit[ID] = sqrt(till_A[ID]/till_rho_0[ID]);
-  	        config_setting_lookup_float(subset, "cs_limit", &till_csLimit[ID]);
-  	        if (till_csLimit[ID] == 0) {
-  		       till_csLimit[ID] = sqrt(till_A[ID]/till_rho_0[ID]);
-  	        }
-            config_setting_lookup_float(subset, "rho_limit", &rho_limit[ID]);
+            // read cs_limit or set default
+  	        if( !config_setting_lookup_float(subset, "cs_limit", &till_csLimit[ID]) ) {
+                if (eos[ID] == EOS_TYPE_TILLOTSON  ||  eos[ID] == EOS_TYPE_JUTZI) {
+  		            till_csLimit[ID] = 0.01 * sqrt(till_A[ID]/till_rho_0[ID]);
+                }
+            }
+            // read rho_limit or set default
+            if( !config_setting_lookup_float(subset, "rho_limit", &rho_limit[ID]) ) {
+                if (eos[ID] == EOS_TYPE_TILLOTSON  ||  eos[ID] == EOS_TYPE_JUTZI) {
+                    rho_limit[ID] = 0.9;
+                }
+            }
             config_setting_lookup_float(subset, "n", &n[ID]);
             config_setting_lookup_float(subset, "cohesion", &cohesion[ID]);
             config_setting_lookup_float(subset, "cohesion_damaged", &cohesion_damaged[ID]);

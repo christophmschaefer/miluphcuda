@@ -42,11 +42,10 @@
 #include "sinking.h"
 #include "config_parameter.h"
 
+
 pthread_t fileIOthread;
 
-
 double L_ini = 0.0;
-
 
 // integration parameters
 __constant__ double b21 = 0.5;
@@ -82,8 +81,6 @@ __constant__ int isRelaxationRun = FALSE;
 __constant__ volatile int *childList;
 int *childListd;
 
-
-
 /* time variables */
 void (*integrator)();
 int startTimestep = 0;
@@ -100,7 +97,6 @@ __device__ double dt;
 __device__ double dtmax;
 __device__ double endTimeD, currentTimeD;
 __device__ double substep_currentTimeD;
-
 
 __device__ int blockCount = 0;
 __device__ volatile int maxNodeIndex;
@@ -120,14 +116,17 @@ __device__ double minz, maxz;
 #endif
 
 
+
 // map [i][j] to [i*DIM*DIM+j] for the tensors
-__device__ int stressIndex(int particleIndex, int row, int col) {
+__device__ int stressIndex(int particleIndex, int row, int col)
+{
     return particleIndex*DIM*DIM+row*DIM+col;
 }
 
 
 #if SOLID
-__global__ void symmetrizeStress(void) {
+__global__ void symmetrizeStress(void)
+{
     register int i, j, k, inc;
     register double val;
     inc = blockDim.x * gridDim.x;
@@ -172,13 +171,11 @@ double calculate_angular_momentum(void)
 #endif
 
     return L;
-
 }
+
 
 void initIntegration()
 {
-
-
     L_ini = calculate_angular_momentum();
     if (param.verbose) {
         fprintf(stdout, "Initial angular momentum is: %.17e\n", L_ini);
@@ -221,6 +218,7 @@ void initIntegration()
     cudaVerifyKernel((initializeSoundspeed<<<numberOfMultiprocessors*4, NUM_THREADS_512>>>()));
 }
 
+
 //this function is called after every successful integration (not only when ouput is generated)
 void afterIntegrationStep(void)
 {
@@ -236,7 +234,6 @@ void afterIntegrationStep(void)
 
 void endIntegration(void)
 {
-
     int rc = pthread_join(fileIOthread, NULL);
     assert(0 == rc);
 
@@ -254,11 +251,6 @@ void endIntegration(void)
 
     cleanupMaterials();
 }
-
-
-
-
-
 
 
 /* just do it */
