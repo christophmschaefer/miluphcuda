@@ -95,8 +95,8 @@ __global__ void calculateSoundSpeed()
                 cs_sq = cs_e_sq*(1.0-y)+cs_c_sq*y;
             }
             // set sound speed to >= lower limit
-            if (cs_sq < matTillcsLimit[matId]*matTillcsLimit[matId]){
-                p.cs[i] = matTillcsLimit[matId];
+            if (cs_sq < matcsLimit[matId]*matcsLimit[matId]){
+                p.cs[i] = matcsLimit[matId];
             } else {
                 p.cs[i] = sqrt(cs_sq);
             }
@@ -107,8 +107,8 @@ __global__ void calculateSoundSpeed()
             // interpolate (bi)linearly to obtain the sound speed
             p.cs[i] = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId]);
             // set to >= lower limit
-            if (p.cs[i] < aneos_cs_limit_c[matId]) {
-                p.cs[i] = aneos_cs_limit_c[matId];
+            if (p.cs[i] < matcsLimit[matId]) {
+                p.cs[i] = matcsLimit[matId];
             }
 #if PALPHA_POROSITY
         } else if (EOS_TYPE_JUTZI_MURNAGHAN == matEOS[matId]) {
@@ -139,8 +139,8 @@ __global__ void calculateSoundSpeed()
             /* interpolate (bi)linearly to obtain the sound speed */
             cs = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId]);
             /* set to lowest allowed value if below; read from materialconfig file or (if not found) 10% of aneos_bulk_cs by default */
-            if (cs < aneos_cs_limit_c[matId]) {
-                cs = aneos_cs_limit_c[matId];
+            if (cs < matcsLimit[matId]) {
+                cs = matcsLimit[matId];
             }
             p.cs[i] = cs + (matcs_porous[matId] - cs) * (p.alpha_jutzi[i] - 1.0) / (matporjutzi_alpha_0[matId] - 1.0);
 #if DEBUG
@@ -183,8 +183,8 @@ __global__ void calculateSoundSpeed()
             }
             //check whether soundspeed is smaller than lower limit and if so set it to the lower limit
             //lower limit can be set in material.cfg or if not set the lower limit is sqrt(A/rho_0)
-            if (cs_sq < matTillcsLimit[matId]*matTillcsLimit[matId]){
-                cs = matTillcsLimit[matId];
+            if (cs_sq < matcsLimit[matId]*matcsLimit[matId]){
+                cs = matcsLimit[matId];
             } else {
                 cs = sqrt(cs_sq);
             }

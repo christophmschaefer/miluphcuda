@@ -33,7 +33,6 @@ extern int *g_aneos_n_rho;
 extern int *g_aneos_n_e;
 extern double *g_aneos_rho_0;
 extern double *g_aneos_bulk_cs;
-extern double *g_aneos_cs_limit;
 extern double **g_aneos_rho;
 extern double **g_aneos_e;
 extern double ***g_aneos_p;

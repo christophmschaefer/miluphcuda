@@ -68,7 +68,7 @@ double *matTillA_d;
 double *matTillB_d;
 double *matTillAlpha_d;
 double *matTillBeta_d;
-double *matTillcsLimit_d;
+double *matcsLimit_d;
 double *matRhoLimit_d;
 double *matN_d;
 double *matCohesion_d;
@@ -106,7 +106,6 @@ __constant__ double *mat_f_sml_max;
 int *aneos_n_rho_d;
 int *aneos_n_e_d;
 double *aneos_bulk_cs_d;
-double *aneos_cs_limit_d;
 double *aneos_rho_d;
 double *aneos_e_d;
 double *aneos_p_d;
@@ -117,7 +116,6 @@ int *aneos_matrix_id_d;
 __constant__ int *aneos_n_rho_c;
 __constant__ int *aneos_n_e_c;
 __constant__ double *aneos_bulk_cs_c;
-__constant__ double *aneos_cs_limit_c;
 __constant__ double *aneos_rho_c;
 __constant__ double *aneos_e_c;
 __constant__ double *aneos_p_c;
@@ -260,7 +258,7 @@ __constant__ double *matTillA;
 __constant__ double *matTillB;
 __constant__ double *matTillAlpha;
 __constant__ double *matTillBeta;
-__constant__ double *matTillcsLimit;
+__constant__ double *matcsLimit;
 __constant__ int *materialId;
 __constant__ double *matRhoLimit;
 __constant__ double *matN;
@@ -373,7 +371,7 @@ void transferMaterialsToGPU()
         double *till_b = (double*)calloc(numberOfElements, sizeof(double));
         double *till_alpha = (double*)calloc(numberOfElements, sizeof(double));
         double *till_beta = (double*)calloc(numberOfElements, sizeof(double));
-        double *till_csLimit = (double*)calloc(numberOfElements, sizeof(double));
+        double *csLimit = (double*)calloc(numberOfElements, sizeof(double));
         // begin of ANEOS allocations in host memory (global variables, defined in 'aneos.cu')
         g_eos_is_aneos = (int*)calloc(numberOfElements, sizeof(int));
         g_aneos_tab_file = (const char**)calloc(numberOfElements, sizeof(const char*));     // not necessary to allocate (and free) mem for individual strings - this should be managed by libconfig
@@ -381,7 +379,6 @@ void transferMaterialsToGPU()
         g_aneos_n_e = (int*)calloc(numberOfElements, sizeof(int));
         g_aneos_rho_0 = (double*)calloc(numberOfElements, sizeof(double));
         g_aneos_bulk_cs = (double*)calloc(numberOfElements, sizeof(double));
-        g_aneos_cs_limit = (double*)calloc(numberOfElements, sizeof(double));
         g_aneos_rho = (double**)calloc(numberOfElements, sizeof(double*));
         g_aneos_e = (double**)calloc(numberOfElements, sizeof(double*));
         g_aneos_p = (double***)calloc(numberOfElements, sizeof(double**));
@@ -538,9 +535,6 @@ void transferMaterialsToGPU()
             config_setting_lookup_int(subset, "n_e", &g_aneos_n_e[ID]);
             config_setting_lookup_float(subset, "aneos_rho_0", &g_aneos_rho_0[ID]);
             config_setting_lookup_float(subset, "aneos_bulk_cs", &g_aneos_bulk_cs[ID]);
-            config_setting_lookup_float(subset, "aneos_cs_limit", &g_aneos_cs_limit[ID]);
-            if( g_aneos_cs_limit[ID] == 0 )     // if it wasn't set in materialconfig file, set default value to 10% of aneos_bulk_cs
-                g_aneos_cs_limit[ID] = 0.1*g_aneos_bulk_cs[ID];
             // end reading ANEOS data from material file to host memory, begin reading ANEOS lookup table to host memory
             if (eos[ID] == EOS_TYPE_ANEOS  ||  eos[ID] == EOS_TYPE_JUTZI_ANEOS) {
                 g_eos_is_aneos[ID] = TRUE;
@@ -637,9 +631,11 @@ void transferMaterialsToGPU()
             config_setting_lookup_float(subset, "till_alpha", &till_alpha[ID]);
             config_setting_lookup_float(subset, "till_beta", &till_beta[ID]);
             // read cs_limit or set default
-  	        if( !config_setting_lookup_float(subset, "cs_limit", &till_csLimit[ID]) ) {
-                if (eos[ID] == EOS_TYPE_TILLOTSON  ||  eos[ID] == EOS_TYPE_JUTZI) {
-  		            till_csLimit[ID] = 0.01 * sqrt(till_A[ID]/till_rho_0[ID]);
+  	        if( !config_setting_lookup_float(subset, "cs_limit", &csLimit[ID]) ) {
+                if( eos[ID] == EOS_TYPE_TILLOTSON  ||  eos[ID] == EOS_TYPE_JUTZI ) {
+  		            csLimit[ID] = 0.01 * sqrt(till_A[ID]/till_rho_0[ID]);
+                } else if( eos[ID] == EOS_TYPE_ANEOS  ||  eos[ID] == EOS_TYPE_JUTZI_ANEOS ) {
+                    csLimit[ID] = 0.01 * g_aneos_bulk_cs[ID];
                 }
             }
             // read rho_limit or set default
@@ -787,7 +783,6 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&aneos_n_rho_d, numberOfElements*sizeof(int)));
         cudaVerify(cudaMalloc((void **)&aneos_n_e_d, numberOfElements*sizeof(int)));
         cudaVerify(cudaMalloc((void **)&aneos_bulk_cs_d, numberOfElements*sizeof(double)));
-        cudaVerify(cudaMalloc((void **)&aneos_cs_limit_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&aneos_rho_d, run_aneos_rho_id*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&aneos_e_d, run_aneos_e_id*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&aneos_p_d, run_aneos_matrix_id*sizeof(double)));
@@ -819,7 +814,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matTillB_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matTillAlpha_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matTillBeta_d, numberOfElements*sizeof(double)));
-        cudaVerify(cudaMalloc((void **)&matTillcsLimit_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matcsLimit_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matRhoLimit_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matN_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matCohesion_d, numberOfElements*sizeof(double)));
@@ -907,7 +902,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpy(matTillB_d, till_B, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matTillAlpha_d, till_alpha, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matTillBeta_d, till_beta, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
-        cudaVerify(cudaMemcpy(matTillcsLimit_d, till_csLimit, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matcsLimit_d, csLimit, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matRhoLimit_d, rho_limit, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matN_d, n, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matCohesion_d, cohesion, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
@@ -921,7 +916,6 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpy(aneos_n_rho_d, g_aneos_n_rho, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(aneos_n_e_d, g_aneos_n_e, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(aneos_bulk_cs_d, g_aneos_bulk_cs, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
-        cudaVerify(cudaMemcpy(aneos_cs_limit_d, g_aneos_cs_limit, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         for (i=0; i<numberOfMaterials; i++) {
             if (eos[i] == EOS_TYPE_ANEOS  ||  eos[i] == EOS_TYPE_JUTZI_ANEOS) {
                 cudaVerify(cudaMemcpy(aneos_rho_d+aneos_rho_id[i], g_aneos_rho[i], g_aneos_n_rho[i]*sizeof(double), cudaMemcpyHostToDevice));
@@ -940,7 +934,6 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(aneos_n_rho_c, &aneos_n_rho_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(aneos_n_e_c, &aneos_n_e_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(aneos_bulk_cs_c, &aneos_bulk_cs_d, sizeof(void*)));
-        cudaVerify(cudaMemcpyToSymbol(aneos_cs_limit_c, &aneos_cs_limit_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(aneos_rho_c, &aneos_rho_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(aneos_e_c, &aneos_e_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(aneos_p_c, &aneos_p_d, sizeof(void*)));
@@ -1067,7 +1060,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(matTillB, &matTillB_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matTillAlpha, &matTillAlpha_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matTillBeta, &matTillBeta_d, sizeof(void*)));
-        cudaVerify(cudaMemcpyToSymbol(matTillcsLimit, &matTillcsLimit_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matcsLimit, &matcsLimit_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matRhoLimit, &matRhoLimit_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matN, &matN_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matCohesion, &matCohesion_d, sizeof(void*)));
@@ -1135,8 +1128,8 @@ void transferMaterialsToGPU()
                 case (EOS_TYPE_TILLOTSON):
                     strcpy(eos_type, "Tillotson");
                     fprintf(stdout, " %s\n", eos_type);
-                    fprintf(stdout, "\t\t EOS params:\t till_rho_0 \t till_A \t till_B \t till_E_0 \t till_E_iv \t till_E_cv \t till_a \t till_b \t till_alpha \t till_beta \t till_csLimit \t rho_limit \n");
-                    fprintf(stdout, "\t\t\t\t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e\n", till_rho_0[i], till_A[i], till_B[i], till_E_0[i], till_E_iv[i], till_E_cv[i], till_a[i], till_b[i], till_alpha[i], till_beta[i], till_csLimit[i], rho_limit[i]);
+                    fprintf(stdout, "\t\t EOS params:\t till_rho_0 \t till_A \t till_B \t till_E_0 \t till_E_iv \t till_E_cv \t till_a \t till_b \t till_alpha \t till_beta \t cs_limit \t rho_limit \n");
+                    fprintf(stdout, "\t\t\t\t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e\n", till_rho_0[i], till_A[i], till_B[i], till_E_0[i], till_E_iv[i], till_E_cv[i], till_a[i], till_b[i], till_alpha[i], till_beta[i], csLimit[i], rho_limit[i]);
                     break;
 #if PALPHA_POROSITY
                 case (EOS_TYPE_JUTZI):
@@ -1345,7 +1338,7 @@ void transferMaterialsToGPU()
         free(till_b);
         free(till_alpha);
         free(till_beta);
-        free(till_csLimit);
+        free(csLimit);
         free(shear_modulus);
         free(yield_stress);
         free(cohesion);
@@ -1414,7 +1407,6 @@ void cleanupMaterials()
     cudaVerify(cudaFree(aneos_n_rho_d));
     cudaVerify(cudaFree(aneos_n_e_d));
     cudaVerify(cudaFree(aneos_bulk_cs_d));
-    cudaVerify(cudaFree(aneos_cs_limit_d));
     cudaVerify(cudaFree(aneos_rho_d));
     cudaVerify(cudaFree(aneos_e_d));
     cudaVerify(cudaFree(aneos_p_d));
@@ -1448,7 +1440,7 @@ void cleanupMaterials()
     cudaVerify(cudaFree(matTillB_d));
     cudaVerify(cudaFree(matTillAlpha_d));
     cudaVerify(cudaFree(matTillBeta_d));
-    cudaVerify(cudaFree(matTillcsLimit_d));
+    cudaVerify(cudaFree(matcsLimit_d));
     cudaVerify(cudaFree(matTillE0_d));
     cudaVerify(cudaFree(matTillEcv_d));
     cudaVerify(cudaFree(matTillEiv_d));
