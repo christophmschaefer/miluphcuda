@@ -4,7 +4,6 @@ var searchData=
   ['velocity_2ecu',['velocity.cu',['../velocity_8cu.html',1,'']]],
   ['velocity_2eh',['velocity.h',['../velocity_8h.html',1,'']]],
   ['verbose',['verbose',['../struct_run_parameter.html#adab1684f873e6568ba0603d3d17b6611',1,'RunParameter']]],
-  ['version',['VERSION',['../miluph_8h.html#a1c6d5de492ac61ad29aec7aa9a436bbf',1,'miluph.h']]],
   ['viscosity_2ecu',['viscosity.cu',['../viscosity_8cu.html',1,'']]],
   ['viscosity_2eh',['viscosity.h',['../viscosity_8h.html',1,'']]],
   ['viscous_5fregolith',['VISCOUS_REGOLITH',['../parameter_8h.html#afce1a1f3fa7a49e5c7976d2524f6759d',1,'VISCOUS_REGOLITH():&#160;parameter.h'],['../test__cases_2colliding__rings_2parameter_8h.html#afce1a1f3fa7a49e5c7976d2524f6759d',1,'VISCOUS_REGOLITH():&#160;parameter.h'],['../test__cases_2giant__collisions_2hydro_2parameter_8h.html#afce1a1f3fa7a49e5c7976d2524f6759d',1,'VISCOUS_REGOLITH():&#160;parameter.h'],['../test__cases_2giant__collisions_2solid_2parameter_8h.html#afce1a1f3fa7a49e5c7976d2524f6759d',1,'VISCOUS_REGOLITH():&#160;parameter.h'],['../test__cases_2nakamura_2parameter_8h.html#afce1a1f3fa7a49e5c7976d2524f6759d',1,'VISCOUS_REGOLITH():&#160;parameter.h'],['../test__cases_2shocktube_2parameter_8h.html#afce1a1f3fa7a49e5c7976d2524f6759d',1,'VISCOUS_REGOLITH():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#afce1a1f3fa7a49e5c7976d2524f6759d',1,'VISCOUS_REGOLITH():&#160;parameter.h']]],

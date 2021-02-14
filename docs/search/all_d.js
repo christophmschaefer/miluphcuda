@@ -190,6 +190,7 @@ var searchData=
   ['memorysizefortree',['memorySizeForTree',['../miluph_8cu.html#a4fc0d3b9311b16ae575855f7ddba7cde',1,'memorySizeForTree():&#160;miluph.cu'],['../miluph_8h.html#a4fc0d3b9311b16ae575855f7ddba7cde',1,'memorySizeForTree():&#160;miluph.cu']]],
   ['miluph_2ecu',['miluph.cu',['../miluph_8cu.html',1,'']]],
   ['miluph_2eh',['miluph.h',['../miluph_8h.html',1,'']]],
+  ['miluphcuda_5fversion',['MILUPHCUDA_VERSION',['../miluph_8h.html#a6101bde74b2bb935495f4d30468e2ac3',1,'miluph.h']]],
   ['min_5fnumber_5fof_5finteractions_5ffor_5ftensorial_5fcorrection_5fto_5fwork',['MIN_NUMBER_OF_INTERACTIONS_FOR_TENSORIAL_CORRECTION_TO_WORK',['../kernel_8cu.html#a5e674cc6c838836326b343ac0b92e7df',1,'kernel.cu']]],
   ['min_5fvel_5fchange_5frk2',['MIN_VEL_CHANGE_RK2',['../rk2adaptive_8cu.html#addc0f5717276dbaa6dd9803a87c36165',1,'rk2adaptive.cu']]],
   ['minx',['minx',['../rhs_8cu.html#a0a2582208a998deeac0c07cea4886ca6',1,'minx():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a0a2582208a998deeac0c07cea4886ca6',1,'minx():&#160;timeintegration.cu'],['../tree_8cu.html#a0a2582208a998deeac0c07cea4886ca6',1,'minx():&#160;timeintegration.cu']]],

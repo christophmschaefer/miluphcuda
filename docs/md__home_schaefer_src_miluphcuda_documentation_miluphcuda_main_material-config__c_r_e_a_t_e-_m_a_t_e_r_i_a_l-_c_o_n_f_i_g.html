@@ -68,25 +68,42 @@ $(function() {
 <div class="title">How to set up the material config file for miluphcuda </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>last updated: 08/Jan/2021</p>
-<p>Christoph Burger <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a> </p><hr/>
+<div class="textblock"><p>last updated: 12/Feb/2021</p>
+<p>Christoph Burger, Christoph Schäfer <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a> </p><hr/>
 <h2>Purpose </h2>
-<p><code>miluphcuda</code> supports simulations comprising multiple materials, and multiple rheologies. Many important settings for the material model and numerics, and especially material parameters, are provided in a structured config file, processed by the <em>libconfig</em> library.</p>
-<p>Check <a href="http://hyperrealm.github.io/libconfig/">http://hyperrealm.github.io/libconfig/</a> for the latest version.</p>
-<p>Note: Important settings for <code>miluphcuda</code> are also set via cmd-line flags, and at compile time in <code>parameter.h</code>. </p><hr/>
+<p>miluphcuda supports multiple materials, and multiple rheologies. Many important settings for the material model, especially material parameters, are parsed in a structured config file, typically named <em>material.cfg</em>. In addition to material parameters, some numerical settings (e.g., for the smoothing length) are also configured via that file.</p>
+<p>The config file is processed by the <em>libconfig</em> library. Check <a href="http://hyperrealm.github.io/libconfig/">http://hyperrealm.github.io/libconfig/</a> for the latest version and documentation.</p>
+<p><b>Note</b>: This file is one of three places where you configure miluphcuda settings. The other two are:</p>
+<ul>
+<li><em>parameter.h</em> (at compile time)</li>
+<li><em>cmd-line flags</em></li>
+</ul>
+<p>The config file is passed to miluphcuda by the <code>-m</code> cmd-line option. </p><hr/>
 <h2><a class="el" href="struct_file.html">File</a> structure </h2>
-<p>The config file (typically named <code>material.cfg</code>) consists of key-value pairs, organized in groups for different materials, equation of state, etc.</p>
-<p>The basic structure of the material config file, containing <code>n</code> different materials, looks like: </p><pre class="fragment">    materials =
+<p>The config file consists of key-value pairs, organized in groups for different materials, equation of state, etc. Groups are blocks enclosed in <code>{...}</code>.</p>
+<p>The basic file structure, containing <em>n</em> different materials, looks like: </p><pre class="fragment">    materials =
     (
         {
             ID = 0
             name = ...
             ...
+
+            eos = {
+                type = ...
+                ...
+                ...
+            }
         },
         {
             ID = 1
             name = ...
             ...
+
+            eos = {
+                type = ...
+                ...
+                ...
+            }
         },
         .
         .
@@ -95,26 +112,47 @@ $(function() {
             ID = n-1
             name = ...
             ...
+
+            eos = {
+                type = ...
+                ...
+                ...
+            }
         }
     );
-</pre><p>The <code>material.cfg</code> file in this directory contains an example setup, comprising several materials and material models. </p><hr/>
+</pre><p>The available/required settings, depending on the used material model(s), are listed and described below.</p>
+<p>The <code>material.cfg</code> file in this directory contains an example setup, comprising several materials and material models.</p>
+<p>Note that, for now, the <code>eos = {...}</code> group regularly contains not only equation-of-state-specific entries, but also further parameters related to the material model. </p><hr/>
 <h2>Where to find material parameters? </h2>
 <ul>
-<li>The directory <code>material_data/</code> contains parameters for various materials.</li>
-<li>You can also check the <code>test_cases/</code> for example material setups. <hr/>
+<li>The <code>material_data/</code> directory contains parameters for various materials.</li>
+<li>You can also check the <code>test_cases/</code> directory for example material setups. <hr/>
 </li>
 </ul>
 <h2>Good to know... </h2>
-<p>The entries in the config file have to match their data type. For example, the ID tag has to be an integer value whereas the value for the cohesion has to be given in floating point notation: </p><pre class="fragment">cohesion = 1000
-</pre><p>will not work but </p><pre class="fragment">cohesion = 1000.0
-</pre><p>or </p><pre class="fragment">cohesion = 1e3
-</pre><p>are valid entries.</p>
-<p>The code prints out all read material parameters if the verbose flag <code>-v</code> is used. If values are ommitted default values are assumed. Normally, these default values are not what you want :ghost:. </p>
-</div></div><!-- contents -->
+<ul>
+<li><p class="startli">The entries in the config file have to match their data type. For example, the ID tag has to be an integer value whereas the value for the cohesion has to be given in floating point notation: </p><pre class="fragment">  cohesion = 1000
+</pre><p class="startli">will not work but </p><pre class="fragment">  cohesion = 1000.0   or   cohesion = 1.0e3
+</pre><p class="startli">are valid entries. The libconfig specs indicate that a period is <em>always</em> mandatory for floats...</p>
+</li>
+<li>The code prints out all read material parameters if the verbose flag <code>-v</code> is used.</li>
+<li>If values are ommitted, default values are assumed (see below). Normally, these default values are not what you want. <hr/>
+</li>
+</ul>
+<h2>Available settings </h2>
+<p>Here, all settings are described, ordered mainly by material model and/or equation of state. For the keys in the following lists, the top level is assumed to be a specific material and subgroups within materials are denoted by dot syntax. For example, <em>ID</em> is on the top level of some material, and <em>eos.type</em> is the key <em>type</em> in the subgroup <em>eos</em>.</p>
+<p>This list is currently not exhaustive.</p>
+<p><b>Always mandatory</b>: </p><pre class="fragment">    Key     Type    Default     Details
+
+    ID      int     none        material ID, has to fit SPH particles' material-type
+                                in input file, have to be 0, 1, 2,...
+</pre><p><b>Always optional</b>: </p><pre class="fragment">    Key     Type    Default     Details
+
+    name    str     none        name of material, currently not processed by miluphcuda</pre> </div></div><!-- contents -->
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - How to set up the material config file for miluphcuda<br />
-    Generated on Sat Feb 13 2021 07:05:11 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Sun Feb 14 2021 07:05:08 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
