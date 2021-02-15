@@ -165,3 +165,25 @@ To use the Tillotson EoS for some material, set *eos.type = 2*, and the followin
         eos.cs_limit        float   1% of approx.       lower limit for sound speed (in m/s),
                                     bulk sound speed    default is 1% of sqrt(till_A/till_rho_0)
 
+**P-alpha porosity**:
+
+The P-alpha porosity model can be used together with several EoS, which all have a distinct *eos.type*
+when used together with the P-alpha model:
+
+* *eos.type = 5* ... P-alpha + Tillotson EoS
+* *eos.type = 6* ... P-alpha + Murnaghan EoS
+* *eos.type = 13* ... P-alpha + ANEOS
+
+in addition to the parameters for the respective EoS, you need the following:
+
+        Key                 Type    Default             Details
+        _______________________________________________________
+
+        ...
+        ...
+        ...
+        eos.cs_porous       float   50% of approx.      sound speed in uncompacted material (in m/s),
+                                    bulk sound speed    the actual sound speed is interpolation between
+                                                        this and the matrix cs, based on distention
+
+

@@ -170,28 +170,24 @@ void init_values(void)
         matId = p_host.materialId[i];
 
 #if MORE_OUTPUT
-
 #if PALPHA_POROSITY
-	p_host.p_max[i] = p_host.p[i];
-	p_host.p_min[i] = p_host.p[i];
+        p_host.p_max[i] = p_host.p[i];
+        p_host.p_min[i] = p_host.p[i];
 #else
-	p_host.p_max[i] = -DBL_MAX;
-	p_host.p_min[i] = DBL_MAX;
+        p_host.p_max[i] = -DBL_MAX;
+        p_host.p_min[i] = DBL_MAX;
 #endif
 #if INTEGRATE_DENSITY
-	p_host.rho_max[i] = p_host.rho[i];
-	p_host.rho_min[i] = p_host.rho[i];
+        p_host.rho_max[i] = p_host.rho[i];
+        p_host.rho_min[i] = p_host.rho[i];
 #else
-	p_host.rho_max[i] = -DBL_MAX;
-	p_host.rho_min[i] = DBL_MAX;
+        p_host.rho_max[i] = -DBL_MAX;
+        p_host.rho_min[i] = DBL_MAX;
 #endif
-
-	p_host.e_max[i] = p_host.e[i];
-	p_host.e_min[i] = p_host.e[i];
-
-	p_host.cs_max[i] = -DBL_MAX;
-	p_host.cs_min[i] = DBL_MAX;
-
+        p_host.e_max[i] = p_host.e[i];
+        p_host.e_min[i] = p_host.e[i];
+        p_host.cs_max[i] = -DBL_MAX;
+        p_host.cs_min[i] = DBL_MAX;
 #endif
 
 #if PALPHA_POROSITY

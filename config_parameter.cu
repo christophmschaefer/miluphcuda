@@ -595,13 +595,19 @@ void transferMaterialsToGPU()
             config_setting_lookup_float(subset, "porjutzi_alpha_t", &porjutzi_alpha_t[ID]);
             config_setting_lookup_float(subset, "porjutzi_n1", &porjutzi_n1[ID]);
             config_setting_lookup_float(subset, "porjutzi_n2", &porjutzi_n2[ID]);
-            config_setting_lookup_float(subset, "cs_porous", &cs_porous[ID]);
-            if (eos[ID] == EOS_TYPE_JUTZI_ANEOS) {
-                cs_solid[ID] = sqrt(bulk_modulus[ID] / g_aneos_rho_0[ID] / porjutzi_alpha_0[ID]);
-            } else if (eos[ID] == EOS_TYPE_JUTZI_MURNAGHAN) {
+            // read cs_porous or set default
+            if( !config_setting_lookup_float(subset, "cs_porous", &cs_porous[ID]) ) {
+                if( eos[ID] == EOS_TYPE_JUTZI ) {
+                    cs_porous[ID] = 0.5 * sqrt(till_A[ID]/till_rho_0[ID]);
+                } else if( eos[ID] == EOS_TYPE_JUTZI_ANEOS ) {
+                    cs_porous[ID] = 0.5 * g_aneos_bulk_cs[ID];
+                } else if( eos[ID] == EOS_TYPE_JUTZI_MURNAGHAN ) {
+                    cs_porous[ID] = 0.5 * sqrt(bulk_modulus[ID]/rho_0[ID]);
+                }
+            }
+            // set cs_solid for p-alpha + Murnaghan EoS, for all other p-alpha EoS the solid sound speed is computed dynamically
+            if (eos[ID] == EOS_TYPE_JUTZI_MURNAGHAN) {
                 cs_solid[ID] = sqrt(bulk_modulus[ID] / rho_0[ID] / porjutzi_alpha_0[ID]);
-            } else {
-                cs_solid[ID] = sqrt(bulk_modulus[ID] / till_rho_0[ID] / porjutzi_alpha_0[ID]);
             }
             config_setting_lookup_int(subset, "crushcurve_style", &crushcurve_style[ID]);
 #endif
@@ -1156,7 +1162,6 @@ void transferMaterialsToGPU()
                     fprintf(stdout, "\t\t\t n1 \t\t %e \n", porjutzi_n1[i]);
                     fprintf(stdout, "\t\t\t n2 \t\t %e \n", porjutzi_n2[i]);
                     fprintf(stdout, "\t\t\t cs_porous \t %e \n", cs_porous[i]);
-                    fprintf(stdout, "\t\t\t cs_solid \t %e \n", cs_solid[i]);
                     fprintf(stdout, "\t\t\t crushcurve_style \t %d \n", crushcurve_style[i]);
                     break;
                 case (EOS_TYPE_JUTZI_ANEOS):
@@ -1182,7 +1187,6 @@ void transferMaterialsToGPU()
                     fprintf(stdout, "\t\t\t n1 \t\t %e \n", porjutzi_n1[i]);
                     fprintf(stdout, "\t\t\t n2 \t\t %e \n", porjutzi_n2[i]);
                     fprintf(stdout, "\t\t\t cs_porous \t %e \n", cs_porous[i]);
-                    fprintf(stdout, "\t\t\t cs_solid \t %e \n", cs_solid[i]);
                     fprintf(stdout, "\t\t\t crushcurve_style \t %d \n", crushcurve_style[i]);
                     break;
 #endif
