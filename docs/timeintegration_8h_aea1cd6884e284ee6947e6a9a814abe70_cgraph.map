@@ -2,6 +2,6 @@
 <area shape="rect" id="node2" href="$timeintegration_8cu.html#a23bfad3595bb82a5587de5b4d033b9ff" title="initIntegration" alt="" coords="163,56,263,83"/>
 <area shape="rect" id="node5" href="$timeintegration_8cu.html#ad3b02a2d886982890c591789d63fc7e1" title="endIntegration" alt="" coords="161,107,265,133"/>
 <area shape="rect" id="node3" href="$timeintegration_8cu.html#aacee04f8bf23d8594794f6952451678c" title="calculate_angular_momentum" alt="" coords="313,5,508,32"/>
-<area shape="rect" id="node4" href="$soundspeed_8cu.html#a2894dc2df81383ee16d93d76da189e4b" title="initializeSoundspeed" alt="" coords="340,56,481,83"/>
+<area shape="rect" id="node4" href="$soundspeed_8cu.html#a2894dc2df81383ee16d93d76da189e4b" title="Initialize sound speed for all materials. " alt="" coords="340,56,481,83"/>
 <area shape="rect" id="node6" href="$config__parameter_8cu.html#aab020a5d4f9d820ea42272a4813e85e7" title="cleanupMaterials" alt="" coords="351,107,471,133"/>
 </map>

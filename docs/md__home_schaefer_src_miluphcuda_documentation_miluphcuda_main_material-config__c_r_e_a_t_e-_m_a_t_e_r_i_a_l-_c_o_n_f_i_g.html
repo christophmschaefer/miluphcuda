@@ -68,7 +68,7 @@ $(function() {
 <div class="title">How to set up the material config file for miluphcuda </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>last updated: 12/Feb/2021</p>
+<div class="textblock"><p>last updated: 14/Feb/2021</p>
 <p>Christoph Burger, Christoph Schäfer <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a> </p><hr/>
 <h2>Purpose </h2>
 <p>miluphcuda supports multiple materials, and multiple rheologies. Many important settings for the material model, especially material parameters, are parsed in a structured config file, typically named <em>material.cfg</em>. In addition to material parameters, some numerical settings (e.g., for the smoothing length) are also configured via that file.</p>
@@ -120,7 +120,7 @@ $(function() {
             }
         }
     );
-</pre><p>The available/required settings, depending on the used material model(s), are listed and described below.</p>
+</pre><p>The available/required settings depend on the used material model(s), and are listed and described below.</p>
 <p>The <code>material.cfg</code> file in this directory contains an example setup, comprising several materials and material models.</p>
 <p>Note that, for now, the <code>eos = {...}</code> group regularly contains not only equation-of-state-specific entries, but also further parameters related to the material model. </p><hr/>
 <h2>Where to find material parameters? </h2>
@@ -142,17 +142,40 @@ $(function() {
 <h2>Available settings </h2>
 <p>Here, all settings are described, ordered mainly by material model and/or equation of state. For the keys in the following lists, the top level is assumed to be a specific material and subgroups within materials are denoted by dot syntax. For example, <em>ID</em> is on the top level of some material, and <em>eos.type</em> is the key <em>type</em> in the subgroup <em>eos</em>.</p>
 <p>This list is currently not exhaustive.</p>
-<p><b>Always mandatory</b>: </p><pre class="fragment">    Key     Type    Default     Details
+<p><b>Always mandatory</b>: </p><pre class="fragment">    Key         Type    Default     Details
+    _______________________________________
 
-    ID      int     none        material ID, has to fit SPH particles' material-type
-                                in input file, have to be 0, 1, 2,...
+    ID          int     none        material ID, has to fit SPH particles' material-type
+                                    in input file, IDs have to be 0, 1, 2,...
+    eos.type    int     none        set equation of state for material, for a complete list see
+                                    https://christophmschaefer.github.io/miluphcuda/pressure_8h.html
+                                    or look directly into pressure.h
 </pre><p><b>Always optional</b>: </p><pre class="fragment">    Key     Type    Default     Details
+    ___________________________________
 
-    name    str     none        name of material, currently not processed by miluphcuda</pre> </div></div><!-- contents -->
+    name    str     none        name of material, currently not processed by miluphcuda
+</pre><p><b>Tillotson EoS</b>:</p>
+<p>To use the Tillotson EoS for some material, set <em>eos.type = 2</em>, and the following parameters. </p><pre class="fragment">    Key                 Type    Default             Details
+    _______________________________________________________
+
+    eos.till_rho_0      float   0.                  reference density
+    eos.till_A          float   0.
+    eos.till_B          float   0.
+    eos.till_E_0        float   0.
+    eos.till_E_iv       float   0.
+    eos.till_E_cv       float   0.
+    eos.till_a          float   0.
+    eos.till_b          float   0.
+    eos.till_alpha      float   0.
+    eos.till_beta       float   0.
+    eos.rho_limit       float   0.9                 for expanded states with rho/rho_0 &lt; rho_limit
+                                                    the pressure is set to zero (if e &lt; till_E_cv)
+    eos.cs_limit        float   1% of approx.       lower limit for sound speed (in m/s),
+                                bulk sound speed    default is 1% of sqrt(till_A/till_rho_0)</pre> </div></div><!-- contents -->
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - How to set up the material config file for miluphcuda<br />
-    Generated on Sun Feb 14 2021 07:05:08 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Mon Feb 15 2021 07:05:08 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
