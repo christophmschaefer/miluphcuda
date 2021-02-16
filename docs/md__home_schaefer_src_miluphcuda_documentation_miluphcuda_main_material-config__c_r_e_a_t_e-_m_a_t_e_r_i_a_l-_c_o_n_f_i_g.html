@@ -171,11 +171,27 @@ $(function() {
     eos.rho_limit       float   0.9                 for expanded states with rho/rho_0 &lt; rho_limit
                                                     the pressure is set to zero (if e &lt; till_E_cv)
     eos.cs_limit        float   1% of approx.       lower limit for sound speed (in m/s),
-                                bulk sound speed    default is 1% of sqrt(till_A/till_rho_0)</pre> </div></div><!-- contents -->
+                                bulk sound speed    default is 1% of sqrt(till_A/till_rho_0)
+</pre><p><b>P-alpha porosity</b>:</p>
+<p>The P-alpha porosity model can be used together with several EoS, which all have a distinct <em>eos.type</em> when used together with the P-alpha model:</p>
+<ul>
+<li><em>eos.type = 5</em> ... P-alpha + Tillotson EoS</li>
+<li><em>eos.type = 6</em> ... P-alpha + Murnaghan EoS</li>
+<li><em>eos.type = 13</em> ... P-alpha + ANEOS</li>
+</ul>
+<p>in addition to the parameters for the respective EoS, you need the following: </p><pre class="fragment">    Key                 Type    Default             Details
+    _______________________________________________________
+
+    ...
+    ...
+    ...
+    eos.cs_porous       float   50% of approx.      sound speed in uncompacted material (in m/s),
+                                bulk sound speed    the actual sound speed is interpolation between
+                                                    this and the matrix cs, based on distention</pre> </div></div><!-- contents -->
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - How to set up the material config file for miluphcuda<br />
-    Generated on Mon Feb 15 2021 07:05:08 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Tue Feb 16 2021 07:05:09 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
