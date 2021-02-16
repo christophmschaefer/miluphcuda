@@ -4,13 +4,13 @@ Giant Collision test cases for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 31/Jan/2021
+last updated: 16/Feb/2021
 
 -----------------------------------------
 
-These test cases represent a collision of a ~1/10 Moon-mass body with a ~Moon-mass target.  
-Both bodies have a 30 mass% iron core and a 70 mass% rocky mantle.  
-The collision velocity is two times the mutual escape velocity (at the moment of first contact).  
+These test cases represent a collision of a ~1/10 Moon-mass body with a ~Moon-mass target.
+Both bodies have a 30 mass% iron core and a 70 mass% rocky mantle.
+The collision velocity is two times the mutual escape velocity (at the moment of first contact).
 The impact angle is 45 deg.
 
 You can choose between two material rheologies:
@@ -20,7 +20,8 @@ You can choose between two material rheologies:
 
 The Tillotson EoS is applied to model the thermodynamic response.
 
-The scenarios use ~60k SPH particles, with runtimes around 1.5h for *hydro*, and 3h for *solid* on most current GPUs (benchmarked on a GTX 970).
+The scenarios use ~60k SPH particles, with runtimes around 1.5h for *hydro*,
+and 3h for *solid* on most current GPUs (benchmarked on a GTX 970).
 
 -----------------------------------------
 
@@ -39,13 +40,11 @@ The scenarios use ~60k SPH particles, with runtimes around 1.5h for *hydro*, and
 
 * You can visualize the simulation for example with *Paraview*. Find the latest release at https://www.paraview.org/.  
   
-  First run
+  First, enter your simulation directory and run
 
         utils/postprocessing/create_xdmf.py
-  and then start Paraview and load the created `.xdmf` file.  
-  Use `-h` to get usage info for `create_xdmf.py`. Here you can use the options
-
-        --output out.xdmf --dim 3 --input_files *.h5
+  which creates an xdmf file (`paraview.xdmf` by default). Then start Paraview and load the created xdmf file.
+  You can use the default cmd-line options, so no need to set anything explicitly.
 
 * Compare your results (e.g., visualized with Paraview) to the animations in the `results/` directories,
   which show the interior structure of the colliding bodies (cut views) for various quantities.
