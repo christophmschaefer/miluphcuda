@@ -69,7 +69,7 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>Christoph Burger <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a></p>
-<p>last updated: 31/Jan/2021 </p><hr/>
+<p>last updated: 16/Feb/2021 </p><hr/>
 <p>These test cases represent a collision of a ~1/10 Moon-mass body with a ~Moon-mass target. Both bodies have a 30 mass% iron core and a 70 mass% rocky mantle. The collision velocity is two times the mutual escape velocity (at the moment of first contact). The impact angle is 45 deg.</p>
 <p>You can choose between two material rheologies:</p>
 <ul>
@@ -89,9 +89,9 @@ $(function() {
 <p><b>Check/visualize the results</b></p>
 <ul>
 <li><p class="startli">You can visualize the simulation for example with <em>Paraview</em>. Find the latest release at <a href="https://www.paraview.org/">https://www.paraview.org/</a>.</p>
-<p class="startli">First run </p><pre class="fragment">  utils/postprocessing/create_xdmf.py
-</pre><p> and then start Paraview and load the created <code>.xdmf</code> file. Use <code>-h</code> to get usage info for <code>create_xdmf.py</code>. Here you can use the options </p><pre class="fragment">  --output out.xdmf --dim 3 --input_files *.h5
-</pre></li>
+<p class="startli">First, enter your simulation directory and run </p><pre class="fragment">  utils/postprocessing/create_xdmf.py
+</pre><p> which creates an xdmf file (<code>paraview.xdmf</code> by default). Then start Paraview and load the created xdmf file. You can use the default cmd-line options, so no need to set anything explicitly.</p>
+</li>
 <li>Compare your results (e.g., visualized with Paraview) to the animations in the <code>results/</code> directories, which show the interior structure of the colliding bodies (cut views) for various quantities. <hr/>
 </li>
 </ul>
@@ -103,7 +103,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - Giant Collision test cases for miluphcuda<br />
-    Generated on Tue Feb 16 2021 07:05:09 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Wed Feb 17 2021 07:05:09 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
