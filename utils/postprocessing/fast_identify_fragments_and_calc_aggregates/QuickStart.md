@@ -11,7 +11,7 @@ calc_aggregates
 ---------------
 ---------------
 
-last updated: 31/Jan/2021
+last updated: 19/Feb/2021
 
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
@@ -47,7 +47,7 @@ For building `fast_identify_fragments` (not for `calc_aggregates`) the HDF5 dev 
 
 fast_identify_fragments
 -----------------------
-This tool identifies _fragments_ in a miluphcuda output file.
+This tool identifies *fragments* in a miluphcuda output file.
 Fragments are defined as clumps of particles separated by up to a smoothing length (sml).
 
 * HDF5 and ASCII miluphcuda output files are supported
@@ -60,17 +60,25 @@ Check
         ./fast_identify_fragments -?
 for details on usage options.
 
+The output is written to a text file, with one line per fragment. Check the file header for the exact format.
+
 
 calc_aggregates
 ---------------
-Based on the output of `fast_identify_fragments` (typically a .frag file),
-this tool computes gravitationally bound collections of fragments, referred to as _aggregates_.
+Based on the output of `fast_identify_fragments`, this tool computes gravitationally bound
+collections of fragments, referred to as *aggregates*.
+The data on fragments is parsed as a text file containing one fragment per line, which is just
+the output file format of `fast_identify_fragments` (typically a .frag file).
 
-The final mass, composition and kinetics of the largest + optionally the second-largest aggregate(s)
-can be computed via an iterative solver.
+It computes the final mass, composition and kinetics of the largest, and optionally also the
+second-largest aggregate(s). Fragments can be only part of one aggregate.
+The procedure is based on an iterative solver, which tests whether fragments are gravitationally bound
+to some aggregate and adds or removes them until convergence for the whole aggregate.
+
 Two, three, or four different materials are currently supported.
 
 Check
 
         ./calc_aggregates -?
 for details on usage options.
+
