@@ -1,7 +1,7 @@
 How to set up the material config file for miluphcuda
 =====================================================
 
-last updated: 14/Feb/2021
+last updated: 19/Feb/2021
 
 Christoph Burger, Christoph Schäfer  
 christoph.burger@uni-tuebingen.de
@@ -78,6 +78,12 @@ The basic file structure, containing *n* different materials, looks like:
 
 The available/required settings depend on the used material model(s), and are listed and described below.
 
+Config files can be conveniently assembled by including external content using:
+
+        @include "<file>"
+
+Include directives can also be nested.
+
 The `material.cfg` file in this directory contains an example setup, comprising several materials and material models.
 
 Note that, for now, the `eos = {...}` group regularly contains not only equation-of-state-specific entries,
@@ -110,7 +116,7 @@ Good to know...
 
 * The code prints out all read material parameters if the verbose flag `-v` is used.
 
-* If values are ommitted, default values are assumed (see below). Normally, these default values are not what you want.
+* If values are ommitted, default values are assumed (see below). Often, these default values are not what you want.
 
 --------------------------------
 
@@ -145,7 +151,11 @@ This list is currently not exhaustive.
 
 **Tillotson EoS**:
 
-To use the Tillotson EoS for some material, set *eos.type = 2*, and the following parameters.
+To use the Tillotson EoS for some material, set
+
+        eos.type = 2
+
+and the following parameters:
 
         Key                 Type    Default             Details
         _______________________________________________________
