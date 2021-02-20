@@ -68,7 +68,7 @@ $(function() {
 <div class="title">How to set up the material config file for miluphcuda </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>last updated: 14/Feb/2021</p>
+<div class="textblock"><p>last updated: 19/Feb/2021</p>
 <p>Christoph Burger, Christoph Schäfer <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a> </p><hr/>
 <h2>Purpose </h2>
 <p>miluphcuda supports multiple materials, and multiple rheologies. Many important settings for the material model, especially material parameters, are parsed in a structured config file, typically named <em>material.cfg</em>. In addition to material parameters, some numerical settings (e.g., for the smoothing length) are also configured via that file.</p>
@@ -121,6 +121,8 @@ $(function() {
         }
     );
 </pre><p>The available/required settings depend on the used material model(s), and are listed and described below.</p>
+<p>Config files can be conveniently assembled by including external content using: </p><pre class="fragment">    @include "&lt;file&gt;"
+</pre><p>Include directives can also be nested.</p>
 <p>The <code>material.cfg</code> file in this directory contains an example setup, comprising several materials and material models.</p>
 <p>Note that, for now, the <code>eos = {...}</code> group regularly contains not only equation-of-state-specific entries, but also further parameters related to the material model. </p><hr/>
 <h2>Where to find material parameters? </h2>
@@ -136,7 +138,7 @@ $(function() {
 </pre><p class="startli">are valid entries. The libconfig specs indicate that a period is <em>always</em> mandatory for floats...</p>
 </li>
 <li>The code prints out all read material parameters if the verbose flag <code>-v</code> is used.</li>
-<li>If values are ommitted, default values are assumed (see below). Normally, these default values are not what you want. <hr/>
+<li>If values are ommitted, default values are assumed (see below). Often, these default values are not what you want. <hr/>
 </li>
 </ul>
 <h2>Available settings </h2>
@@ -155,7 +157,8 @@ $(function() {
 
     name    str     none        name of material, currently not processed by miluphcuda
 </pre><p><b>Tillotson EoS</b>:</p>
-<p>To use the Tillotson EoS for some material, set <em>eos.type = 2</em>, and the following parameters. </p><pre class="fragment">    Key                 Type    Default             Details
+<p>To use the Tillotson EoS for some material, set </p><pre class="fragment">    eos.type = 2
+</pre><p>and the following parameters: </p><pre class="fragment">    Key                 Type    Default             Details
     _______________________________________________________
 
     eos.till_rho_0      float   0.                  reference density
@@ -191,7 +194,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - How to set up the material config file for miluphcuda<br />
-    Generated on Fri Feb 19 2021 07:05:08 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Sat Feb 20 2021 07:05:09 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>

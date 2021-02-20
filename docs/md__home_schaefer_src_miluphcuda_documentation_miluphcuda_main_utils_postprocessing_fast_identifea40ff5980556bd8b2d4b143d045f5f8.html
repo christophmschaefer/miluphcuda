@@ -73,7 +73,7 @@ $(function() {
 <p>and</p>
 <h2>calc_aggregates </h2>
 <hr/>
-<p>last updated: 31/Jan/2021</p>
+<p>last updated: 19/Feb/2021</p>
 <p>Christoph Burger <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a> </p><hr/>
 <h2>Purpose </h2>
 <p>The toolchain consisting of <code>fast_identify_fragments</code> and <code>calc_aggregates</code> is intended for postprocessing miluphcuda` SPH simulations. It allows to identify spatially connected clumps of SPH particles (<em>fragments</em>), and subsequently find gravitationally bound collections of those fragments (<em>aggregates</em>).</p>
@@ -92,16 +92,18 @@ $(function() {
 <p>The tool is based on building and searching an octree with runtimes on the order of seconds, even for large particle numbers.</p>
 <p>Check </p><pre class="fragment">    ./fast_identify_fragments -?
 </pre><p> for details on usage options.</p>
+<p>The output is written to a text file, with one line per fragment. Check the file header for the exact format.</p>
 <h2>calc_aggregates </h2>
-<p>Based on the output of <code>fast_identify_fragments</code> (typically a .frag file), this tool computes gravitationally bound collections of fragments, referred to as <em>aggregates</em>.</p>
-<p>The final mass, composition and kinetics of the largest + optionally the second-largest aggregate(s) can be computed via an iterative solver. Two, three, or four different materials are currently supported.</p>
+<p>Based on the output of <code>fast_identify_fragments</code>, this tool computes gravitationally bound collections of fragments, referred to as <em>aggregates</em>. The data on fragments is parsed as a text file containing one fragment per line, which is just the output file format of <code>fast_identify_fragments</code> (typically a .frag file).</p>
+<p>It computes the final mass, composition and kinetics of the largest, and optionally also the second-largest aggregate(s). Fragments can be only part of one aggregate. The procedure is based on an iterative solver, which tests whether fragments are gravitationally bound to some aggregate and adds or removes them until convergence for the whole aggregate.</p>
+<p>Two, three, or four different materials are currently supported.</p>
 <p>Check </p><pre class="fragment">    ./calc_aggregates -?
 </pre><p> for details on usage options. </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - Quick Start Guide<br />
-    Generated on Fri Feb 19 2021 07:05:08 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Sat Feb 20 2021 07:05:09 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
