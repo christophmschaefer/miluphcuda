@@ -92,22 +92,15 @@
 
 // Available plastic flow conditions:
 // (if you do not know what this is, choose (1) or nothing)
-//   (1) Simple von Mises plasticity with a constant yield strength, where you need in material.cfg:
-//          yield_stress =
+//   (1) Simple von Mises plasticity with a constant yield strength:
 #define VON_MISES_PLASTICITY 0
 //   (2) Drucker-Prager (DP) yield criterion -> yield strength is given by the condition \sqrt(J_2) + A * I_1 + B = 0
 //       with I_1: first invariant of stress tensor
 //          J_2: second invariant of stress tensor
 //          A, B: DP constants, which are calculated from angle of internal friction and cohesion
-//       in material.cfg you need:
-//          friction_angle =
-//          cohesion =
 #define DRUCKER_PRAGER_PLASTICITY 0
 //   (3) Mohr-Coulomb (MC) yield criterion
-//       -> yield strength is given by yield_stress = tan(friction_angle) \times pressure + cohesion
-//       in material.cfg you need:
-//          friction_angle =
-//          cohesion =
+//       -> yield strength is given by yield_stress = tan(friction_angle) \times pressure + cohesion 
 #define MOHR_COULOMB_PLASTICITY 0
 //       Note: DP and MC are intended for granular-like materials, therefore the yield strength simply decreases (linearly) to zero for p<0.
 //       Note: For DP and MC you can additionally choose (1) to impose an upper limit for the yield stress.
@@ -121,29 +114,15 @@
 //              Y = (1-damage)*Y_i + damage*Y_d
 //              Y is limited to <= Y_i
 //       Note: If FRAGMENTATION is not activated only Y_i is used.
-//       For this model, you need the following parameters in material.cfg:
-//          yield_stress =
-//          cohesion =
-//          friction_angle =
-//          cohesion_damaged =
-//          friction_angle_damaged =
-//       If you want to additionally model the influence of some (single) melt energy on the yield
-//       strength, then activate COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY, which adds a factor
-//       (1-e/e_melt) to the yield strength, and include the following in material.cfg:
-//          melt_energy =
+//       If you want to additionally model the influence of some (single) melt energy on the yield strength, then activate
+//       COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY, which adds a factor (1-e/e_melt) to the yield strength.
 #define COLLINS_PLASTICITY 0
 #define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 0
 //   (5) Simplified version of the Collins et al. (2004) model, which uses only the
 //       strength representation for intact material (Y_i), irrespective of damage.
 //       Unlike in (4), Y decreases to zero (following the Y_i function) for p<0.
-//       For this you need in material.cfg:
-//          yield_stress =
-//          cohesion =
-//          friction_angle =
 #define COLLINS_PLASTICITY_SIMPLE 0
 // Note: For (1,2,3) the stress tensor is additionally reduced if FRAGMENTATION is used, for (4,5) not.
-// Note: Units are: [friction angle] = [rad]
-//                  [cohesion] = [Pascal]
 
 // model regolith as viscous fluid -> experimental setup, only for powerusers
 #define VISCOUS_REGOLITH 0

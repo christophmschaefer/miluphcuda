@@ -1,7 +1,7 @@
 How to set up the material config file for miluphcuda
 =====================================================
 
-last updated: 19/Feb/2021
+last updated: 20/Feb/2021
 
 Christoph Burger, Christoph Schäfer  
 christoph.burger@uni-tuebingen.de
@@ -116,7 +116,7 @@ Good to know...
 
 * The code prints out all read material parameters if the verbose flag `-v` is used.
 
-* If values are ommitted, default values are assumed (see below). Often, these default values are not what you want.
+* If values are ommitted, default values are assumed (see below). In most cases, these default values are not what you want.
 
 --------------------------------
 
@@ -128,10 +128,12 @@ For the keys in the following lists, the top level is assumed to be a specific m
 subgroups within materials are denoted by dot syntax. For example, *ID* is on the top level
 of some material, and *eos.type* is the key *type* in the subgroup *eos*.
 
+All units are SI, unless noted otherwise.
+
 This list is currently not exhaustive.
 
 
-**Always mandatory**:
+**Always mandatory**
 
         Key         Type    Default     Details
         _______________________________________
@@ -142,14 +144,18 @@ This list is currently not exhaustive.
                                         https://christophmschaefer.github.io/miluphcuda/pressure_8h.html
                                         or look directly into pressure.h
 
-**Always optional**:
+--------------------------------
+
+**Always optional**
 
         Key     Type    Default     Details
         ___________________________________
 
         name    str     none        name of material, currently not processed by miluphcuda
 
-**Tillotson EoS**:
+--------------------------------
+
+**EoS: Tillotson**
 
 To use the Tillotson EoS for some material, set
 
@@ -175,7 +181,92 @@ and the following parameters:
         eos.cs_limit        float   1% of approx.       lower limit for sound speed (in m/s),
                                     bulk sound speed    default is 1% of sqrt(till_A/till_rho_0)
 
-**P-alpha porosity**:
+--------------------------------
+
+**Plasticity model: von Mises**
+
+The von Mises model constitutes a single, constant yield strength.
+
+You need to set `VON_MISES_PLASTICITY` in parameter.h (at compile time), and in the material config file:
+
+        Key                 Type    Default
+        ___________________________________
+
+        eos.yield_stress    float   0.
+
+--------------------------------
+
+**Plasticity model: Collins**
+
+The Collins model is based on a pressure-dependent yield strength, which also depends on whether
+the material is intact or fragmented (*damaged*). See comments in parameter.h for more details.
+
+You need to set `COLLINS_PLASTICITY` in parameter.h (at compile time), and in the material config file:
+
+        Key                             Type    Default     Details
+        ___________________________________________________________
+
+        eos.cohesion                    float   0.
+        eos.friction_angle              float   0.          in rad
+        eos.cohesion_damaged            float   0.
+        eos.friction_angle_damaged      float   0.          in rad
+        eos.yield_stress                float   0.
+        eos.melt_energy                 float   0.          to use this you need to additionally set
+                                                            COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
+                                                            in parameter.h (see comments there)
+
+--------------------------------
+
+**Plasticity model: Collins simple**
+
+This is a simplified version of the Collins model. See comments in parameter.h for more details.
+
+You need to set `COLLINS_PLASTICITY_SIMPLE` in parameter.h (at compile time), and in the material config file:
+
+        Key                     Type    Default     Details
+        ___________________________________________________
+
+        eos.cohesion            float   0.
+        eos.friction_angle      float   0.          in rad
+        eos.yield_stress        float   0.
+
+--------------------------------
+
+**Plasticity model: Drucker-Prager**
+
+This is a linear dependence of the yield strength on pressure.
+
+You need to set `DRUCKER_PRAGER_PLASTICITY` in parameter.h (at compile time), and in the material config file:
+
+        Key                     Type    Default     Details
+        ___________________________________________________
+        
+        eos.cohesion            float   0.
+        eos.friction_angle      float   0.          in rad
+        eos.yield_stress        float   0.          optional upper limit for the yield strength,
+                                                    where you have to additionally set
+                                                    VON_MISES_PLASTICITY in parameter.h for this
+
+--------------------------------
+
+**Plasticity model: Mohr-Coulomb**
+
+This is a linear dependence of the yield strength on pressure.
+
+You need to set `MOHR_COULOMB_PLASTICITY` in parameter.h (at compile time), and in the material config file:
+
+        Key                     Type    Default     Details
+        ___________________________________________________
+
+        eos.cohesion            float   0.
+        eos.friction_angle      float   0.          in rad
+        eos.yield_stress        float   0.          optional upper limit for the yield strength,
+                                                    where you have to additionally set
+                                                    VON_MISES_PLASTICITY in parameter.h for this
+
+--------------------------------
+
+**Porosity model: P-alpha**
 
 The P-alpha porosity model can be used together with several EoS, which all have a distinct *eos.type*
 when used together with the P-alpha model:
@@ -184,7 +275,7 @@ when used together with the P-alpha model:
 * *eos.type = 6* ... P-alpha + Murnaghan EoS
 * *eos.type = 13* ... P-alpha + ANEOS
 
-in addition to the parameters for the respective EoS, you need the following:
+In addition to the parameters for the respective EoS, you need the following:
 
         Key                 Type    Default             Details
         _______________________________________________________

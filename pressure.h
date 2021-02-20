@@ -33,7 +33,7 @@ enum EquationOfStates {
     EOS_TYPE_IGNORE = -1, /// particle is ignored 
     EOS_TYPE_POLYTROPIC_GAS = 0, /// polytropic EOS for gas, needs polytropic_K and polytropic_gamma in material.cfg file
     EOS_TYPE_MURNAGHAN = 1, /// Murnaghan EOS for solid bodies, see Melosh "Impact Cratering" for reference needs bulk_modulus, rho_0 and n in material.cfg
-    EOS_TYPE_TILLOTSON = 2, /// Tillotson EOS for solid bodies, see Melosh "Impact Cratering" for reference needs alot of parameters in material.cfg: yield_stress till_rho_0 till_A till_B till_E_0 till_E_iv till_E_cv till_a till_b till_alpha till_beta. bulk modulus and shear modulus are needed to calculate the sound speed and the crack growth speed
+    EOS_TYPE_TILLOTSON = 2, /// Tillotson EOS for solid bodies, see Melosh "Impact Cratering" for reference needs alot of parameters in material.cfg: till_rho_0 till_A till_B till_E_0 till_E_iv till_E_cv till_a till_b till_alpha till_beta. bulk modulus and shear modulus are needed to calculate the sound speed and the crack growth speed
     EOS_TYPE_ISOTHERMAL_GAS = 3, /// this is pure molecular hydrogen at 10 K
     EOS_TYPE_REGOLITH = 4, /// The Bui et al. 2008 soil model
     EOS_TYPE_JUTZI = 5, /// Tillotson EOS with p-alpha model by Jutzi et al.
