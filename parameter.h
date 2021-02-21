@@ -155,9 +155,6 @@
 //Choose your fighter, beware of units !!
 #define C_GRAVITY C_GRAVITY_SI
 
-// sets a reference density for the ideal gas eos (if used) - 1% of that is used as DENSITY_FLOOR (if activated) of ideal gas
-#define IDEAL_GAS_REFERENCE_RHO 1.0
-
 // set p to 0 if p < 0
 #define REAL_HYDRO 0
 
