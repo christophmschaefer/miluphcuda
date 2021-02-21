@@ -68,7 +68,7 @@ $(function() {
 <div class="title">How to set up the material config file for miluphcuda </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>last updated: 19/Feb/2021</p>
+<div class="textblock"><p>last updated: 20/Feb/2021</p>
 <p>Christoph Burger, Christoph Schäfer <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a> </p><hr/>
 <h2>Purpose </h2>
 <p>miluphcuda supports multiple materials, and multiple rheologies. Many important settings for the material model, especially material parameters, are parsed in a structured config file, typically named <em>material.cfg</em>. In addition to material parameters, some numerical settings (e.g., for the smoothing length) are also configured via that file.</p>
@@ -138,13 +138,14 @@ $(function() {
 </pre><p class="startli">are valid entries. The libconfig specs indicate that a period is <em>always</em> mandatory for floats...</p>
 </li>
 <li>The code prints out all read material parameters if the verbose flag <code>-v</code> is used.</li>
-<li>If values are ommitted, default values are assumed (see below). Often, these default values are not what you want. <hr/>
+<li>If values are ommitted, default values are assumed (see below). In most cases, these default values are not what you want. <hr/>
 </li>
 </ul>
 <h2>Available settings </h2>
 <p>Here, all settings are described, ordered mainly by material model and/or equation of state. For the keys in the following lists, the top level is assumed to be a specific material and subgroups within materials are denoted by dot syntax. For example, <em>ID</em> is on the top level of some material, and <em>eos.type</em> is the key <em>type</em> in the subgroup <em>eos</em>.</p>
+<p>All units are SI, unless noted otherwise.</p>
 <p>This list is currently not exhaustive.</p>
-<p><b>Always mandatory</b>: </p><pre class="fragment">    Key         Type    Default     Details
+<p><b>Always mandatory</b> </p><pre class="fragment">    Key         Type    Default     Details
     _______________________________________
 
     ID          int     none        material ID, has to fit SPH particles' material-type
@@ -152,11 +153,13 @@ $(function() {
     eos.type    int     none        set equation of state for material, for a complete list see
                                     https://christophmschaefer.github.io/miluphcuda/pressure_8h.html
                                     or look directly into pressure.h
-</pre><p><b>Always optional</b>: </p><pre class="fragment">    Key     Type    Default     Details
+</pre><hr/>
+<p><b>Always optional</b> </p><pre class="fragment">    Key     Type    Default     Details
     ___________________________________
 
     name    str     none        name of material, currently not processed by miluphcuda
-</pre><p><b>Tillotson EoS</b>:</p>
+</pre><hr/>
+<p><b>EoS: Tillotson</b></p>
 <p>To use the Tillotson EoS for some material, set </p><pre class="fragment">    eos.type = 2
 </pre><p>and the following parameters: </p><pre class="fragment">    Key                 Type    Default             Details
     _______________________________________________________
@@ -175,14 +178,67 @@ $(function() {
                                                     the pressure is set to zero (if e &lt; till_E_cv)
     eos.cs_limit        float   1% of approx.       lower limit for sound speed (in m/s),
                                 bulk sound speed    default is 1% of sqrt(till_A/till_rho_0)
-</pre><p><b>P-alpha porosity</b>:</p>
+</pre><hr/>
+<p><b>Plasticity model: von Mises</b></p>
+<p>The von Mises model constitutes a single, constant yield strength.</p>
+<p>You need to set <code>VON_MISES_PLASTICITY</code> in parameter.h (at compile time), and in the material config file: </p><pre class="fragment">    Key                 Type    Default
+    ___________________________________
+
+    eos.yield_stress    float   0.
+</pre><hr/>
+<p><b>Plasticity model: Collins</b></p>
+<p>The Collins model is based on a pressure-dependent yield strength, which also depends on whether the material is intact or fragmented (<em>damaged</em>). See comments in parameter.h for more details.</p>
+<p>You need to set <code>COLLINS_PLASTICITY</code> in parameter.h (at compile time), and in the material config file: </p><pre class="fragment">    Key                             Type    Default     Details
+    ___________________________________________________________
+
+    eos.cohesion                    float   0.
+    eos.friction_angle              float   0.          in rad
+    eos.cohesion_damaged            float   0.
+    eos.friction_angle_damaged      float   0.          in rad
+    eos.yield_stress                float   0.
+    eos.melt_energy                 float   0.          to use this you need to additionally set
+                                                        COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
+                                                        in parameter.h (see comments there)
+</pre><hr/>
+<p><b>Plasticity model: Collins simple</b></p>
+<p>This is a simplified version of the Collins model. See comments in parameter.h for more details.</p>
+<p>You need to set <code>COLLINS_PLASTICITY_SIMPLE</code> in parameter.h (at compile time), and in the material config file: </p><pre class="fragment">    Key                     Type    Default     Details
+    ___________________________________________________
+
+    eos.cohesion            float   0.
+    eos.friction_angle      float   0.          in rad
+    eos.yield_stress        float   0.
+</pre><hr/>
+<p><b>Plasticity model: Drucker-Prager</b></p>
+<p>This is a linear dependence of the yield strength on pressure.</p>
+<p>You need to set <code>DRUCKER_PRAGER_PLASTICITY</code> in parameter.h (at compile time), and in the material config file: </p><pre class="fragment">    Key                     Type    Default     Details
+    ___________________________________________________
+
+    eos.cohesion            float   0.
+    eos.friction_angle      float   0.          in rad
+    eos.yield_stress        float   0.          optional upper limit for the yield strength,
+                                                where you have to additionally set
+                                                VON_MISES_PLASTICITY in parameter.h for this
+</pre><hr/>
+<p><b>Plasticity model: Mohr-Coulomb</b></p>
+<p>This is a linear dependence of the yield strength on pressure.</p>
+<p>You need to set <code>MOHR_COULOMB_PLASTICITY</code> in parameter.h (at compile time), and in the material config file: </p><pre class="fragment">    Key                     Type    Default     Details
+    ___________________________________________________
+
+    eos.cohesion            float   0.
+    eos.friction_angle      float   0.          in rad
+    eos.yield_stress        float   0.          optional upper limit for the yield strength,
+                                                where you have to additionally set
+                                                VON_MISES_PLASTICITY in parameter.h for this
+</pre><hr/>
+<p><b>Porosity model: P-alpha</b></p>
 <p>The P-alpha porosity model can be used together with several EoS, which all have a distinct <em>eos.type</em> when used together with the P-alpha model:</p>
 <ul>
 <li><em>eos.type = 5</em> ... P-alpha + Tillotson EoS</li>
 <li><em>eos.type = 6</em> ... P-alpha + Murnaghan EoS</li>
 <li><em>eos.type = 13</em> ... P-alpha + ANEOS</li>
 </ul>
-<p>in addition to the parameters for the respective EoS, you need the following: </p><pre class="fragment">    Key                 Type    Default             Details
+<p>In addition to the parameters for the respective EoS, you need the following: </p><pre class="fragment">    Key                 Type    Default             Details
     _______________________________________________________
 
     ...
@@ -194,7 +250,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - How to set up the material config file for miluphcuda<br />
-    Generated on Sat Feb 20 2021 07:05:09 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Sun Feb 21 2021 07:05:09 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
