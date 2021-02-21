@@ -1,7 +1,7 @@
 How to set up the material config file for miluphcuda
 =====================================================
 
-last updated: 20/Feb/2021
+last updated: 21/Feb/2021
 
 Christoph Burger, Christoph Schäfer  
 christoph.burger@uni-tuebingen.de
@@ -140,6 +140,7 @@ This list is currently not exhaustive.
 
         ID          int     none        material ID, has to fit SPH particles' material-type
                                         in input file, IDs have to be 0, 1, 2,...
+
         eos.type    int     none        set equation of state for material, for a complete list see
                                         https://christophmschaefer.github.io/miluphcuda/pressure_8h.html
                                         or look directly into pressure.h
@@ -148,10 +149,15 @@ This list is currently not exhaustive.
 
 **Always optional**
 
-        Key     Type    Default     Details
-        ___________________________________
+        Key             Type    Default                             Details
+        ___________________________________________________________________
 
-        name    str     none        name of material, currently not processed by miluphcuda
+        name            str     none                                name of material, currently not
+                                                                    processed by miluphcuda
+
+        density_floor   float   1% of bulk/reference density, or    minimum density (absolute value)
+                                1% of matrix if porous, or          allowed for material
+                                0. for gases
 
 --------------------------------
 
@@ -176,8 +182,10 @@ and the following parameters:
         eos.till_b          float   0.
         eos.till_alpha      float   0.
         eos.till_beta       float   0.
+
         eos.rho_limit       float   0.9                 for expanded states with rho/rho_0 < rho_limit
                                                         the pressure is set to zero (if e < till_E_cv)
+
         eos.cs_limit        float   1% of approx.       lower limit for sound speed (in m/s),
                                     bulk sound speed    default is 1% of sqrt(till_A/till_rho_0)
 
@@ -211,6 +219,7 @@ You need to set `COLLINS_PLASTICITY` in parameter.h (at compile time), and in th
         eos.cohesion_damaged            float   0.
         eos.friction_angle_damaged      float   0.          in rad
         eos.yield_stress                float   0.
+
         eos.melt_energy                 float   0.          to use this you need to additionally set
                                                             COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
                                                             in parameter.h (see comments there)
@@ -243,6 +252,7 @@ You need to set `DRUCKER_PRAGER_PLASTICITY` in parameter.h (at compile time), an
         
         eos.cohesion            float   0.
         eos.friction_angle      float   0.          in rad
+
         eos.yield_stress        float   0.          optional upper limit for the yield strength,
                                                     where you have to additionally set
                                                     VON_MISES_PLASTICITY in parameter.h for this
@@ -260,6 +270,7 @@ You need to set `MOHR_COULOMB_PLASTICITY` in parameter.h (at compile time), and 
 
         eos.cohesion            float   0.
         eos.friction_angle      float   0.          in rad
+
         eos.yield_stress        float   0.          optional upper limit for the yield strength,
                                                     where you have to additionally set
                                                     VON_MISES_PLASTICITY in parameter.h for this
@@ -283,6 +294,7 @@ In addition to the parameters for the respective EoS, you need the following:
         ...
         ...
         ...
+
         eos.cs_porous       float   50% of approx.      sound speed in uncompacted material (in m/s),
                                     bulk sound speed    the actual sound speed is interpolation between
                                                         this and the matrix cs, based on distention

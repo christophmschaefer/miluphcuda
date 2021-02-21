@@ -145,12 +145,6 @@ static void print_compile_information(void)
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Solve Navier-Stokes equation:\t  %s\n", yesno);
-#if DENSITY_FLOOR
-    strcpy(yesno, "yes");
-#else
-    strcpy(yesno, "no");
-#endif
-    fprintf(stdout, "using density floor: \t    %s\n", yesno);
 
 #if SOLID
     strcpy(yesno, "yes");

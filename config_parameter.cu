@@ -78,6 +78,7 @@ double *matFrictionAngleDamaged_d;
 double *matAlphaPhi_d;
 double *matCohesionCoefficient_d;
 double *matMeltEnergy_d;
+double *matDensityFloor_d;
 // viscosity coefficients for Navier-Stokes
 double *matnu_d;
 double *matalpha_shakura_d;
@@ -188,8 +189,6 @@ __device__ int pressureChangeSmallEnough = FALSE;
 
 __device__ double scale_height;
 
-__device__ double density_floor_d;
-
 double *matYoungModulus_d;
 __constant__ double *matYoungModulus;
 
@@ -269,6 +268,7 @@ __constant__ double *matFrictionAngleDamaged;
 __constant__ double *matAlphaPhi;
 __constant__ double *matCohesionCoefficient;
 __constant__ double *matMeltEnergy;
+__constant__ double *matDensityFloor;
 __constant__ double *tensorialCorrectionMatrix;
 __constant__ double *tensorialCorrectiondWdrr;
 __device__ int numParticles;
@@ -294,8 +294,6 @@ int numberOfMaterials;
 void transferMaterialsToGPU()
 {
     double *pc_pointer;
-    double smallest_rho = 1e30;
-    double tmp_dens;
     double scale_height_host;
     config_setting_t *materials, *disk;
 
@@ -309,6 +307,7 @@ void transferMaterialsToGPU()
         config_setting_lookup_float(disk, "scale_height", &scale_height_host);
         fprintf(stdout, "Found disk scale height: %e\n", scale_height_host);
     }
+
 
     // read material properties
     materials = config_lookup(&param.config, "materials");
@@ -339,7 +338,7 @@ void transferMaterialsToGPU()
 
         numberOfMaterials = numberOfElements;   // global, needed externally
         
-        // allocate memory
+        // allocate memory on host
         sml = (double*)calloc(numberOfElements,sizeof(double));
         int *eos = (int*)calloc(numberOfElements,sizeof(int));
         int *noi = (int*)calloc(numberOfElements,sizeof(int));
@@ -413,13 +412,12 @@ void transferMaterialsToGPU()
         double *alpha_phi = (double*)calloc(numberOfElements, sizeof(double));
         double *cohesion_coefficient = (double*)calloc(numberOfElements, sizeof(double));
         double *melt_energy = (double*)calloc(numberOfElements, sizeof(double));
-
+        double *density_floor = (double*)calloc(numberOfElements,sizeof(double));
 #if ARTIFICIAL_STRESS
         double *exponent_tensor = (double*) calloc(numberOfElements, sizeof(double));
         double *epsilon_stress = (double*) calloc(numberOfElements, sizeof(double));
         double *mean_particle_distance = (double*) calloc(numberOfElements, sizeof(double));
 #endif
-
 #if PALPHA_POROSITY
         double *porjutzi_p_elastic = (double*)calloc(numberOfElements, sizeof(double));
         double *porjutzi_p_transition = (double*)calloc(numberOfElements, sizeof(double));
@@ -434,7 +432,6 @@ void transferMaterialsToGPU()
         double max_abs_pressure_change_host = DBL_MAX;
         int *crushcurve_style = (int*)calloc(numberOfElements, sizeof(int));
 #endif
-
 #if SIRONO_POROSITY
         double *porsirono_K_0 = (double*)calloc(numberOfElements, sizeof(double));
         double *porsirono_rho_0 = (double*)calloc(numberOfElements, sizeof(double));
@@ -446,7 +443,6 @@ void transferMaterialsToGPU()
         double *porsirono_phi0 = (double*)calloc(numberOfElements, sizeof(double));
         double *porsirono_delta = (double*)calloc(numberOfElements, sizeof(double));
 #endif
-
 #if EPSALPHA_POROSITY
         double *porepsilon_kappa = (double*)calloc(numberOfElements, sizeof(double));
         double *porepsilon_alpha_0 = (double*)calloc(numberOfElements, sizeof(double));
@@ -454,7 +450,6 @@ void transferMaterialsToGPU()
         double *porepsilon_epsilon_x = (double*)calloc(numberOfElements, sizeof(double));
         double *porepsilon_epsilon_c = (double*)calloc(numberOfElements, sizeof(double));
 #endif
-
 #if SOLID
         double *young_modulus = (double*)calloc(numberOfElements, sizeof(double));
 #endif
@@ -489,22 +484,22 @@ void transferMaterialsToGPU()
 #endif
 
 #if ARTIFICIAL_VISCOSITY
-            // read group artificial_viscosity
+            // read params for artificial_viscosity
             subset = config_setting_get_member(material, "artificial_viscosity");
             config_setting_lookup_float(subset, "alpha", &alpha[ID]);
             config_setting_lookup_float(subset, "beta", &beta[ID]);
 #endif
 
 #if ARTIFICIAL_STRESS
-            // read group artificial_stress
+            // read params for artificial_stress
             subset = config_setting_get_member(material, "artificial_stress");
             config_setting_lookup_float(subset, "exponent_tensor", &exponent_tensor[ID]);
             config_setting_lookup_float(subset, "epsilon_stress", &epsilon_stress[ID]);
             config_setting_lookup_float(subset, "mean_particle_distance", &mean_particle_distance[ID]);
-#endif // ARTIFICIAL_STRESS
+#endif
 
 #if NAVIER_STOKES
-            // params for Navier-Stokes
+            // read params for Navier-Stokes
             subset = config_setting_get_member(material, "physical_viscosity");
             // note nu and eta depend via density
             // nu = eta/rho
@@ -683,57 +678,53 @@ void transferMaterialsToGPU()
             config_setting_lookup_float(subset, "CV", &CV[ID]);
 #endif
 
-#if DENSITY_FLOOR
-            switch (eos[ID]) {
-                case (EOS_TYPE_MURNAGHAN):
-                    tmp_dens = rho_0[ID];
-                    break;
-                case (EOS_TYPE_JUTZI_MURNAGHAN):
-                    tmp_dens = rho_0[ID];
-                    break;
-                case (EOS_TYPE_TILLOTSON):
-                    tmp_dens = till_rho_0[ID];
-                    break;
-                case (EOS_TYPE_JUTZI):
-                    tmp_dens = till_rho_0[ID];
-                    break;
-				        case (EOS_TYPE_JUTZI_ANEOS):
-					          tmp_dens = g_aneos_rho_0[ID];
-					          break;
+            // read density_floor or set default
+            if( !config_setting_lookup_float(material, "density_floor", &density_floor[ID]) ) {
+                switch (eos[ID]) {
+                    case (EOS_TYPE_MURNAGHAN):
+                        density_floor[ID] = rho_0[ID] * 0.01;
+                        break;
+                    case (EOS_TYPE_JUTZI_MURNAGHAN):
+                        density_floor[ID] = rho_0[ID] * 0.01;
+                        break;
+                    case (EOS_TYPE_TILLOTSON):
+                        density_floor[ID] = till_rho_0[ID] * 0.01;
+                        break;
+                    case (EOS_TYPE_JUTZI):
+                        density_floor[ID] = till_rho_0[ID] * 0.01;
+                        break;
+                    case (EOS_TYPE_ANEOS):
+                        density_floor[ID] = g_aneos_rho_0[ID] * 0.01;
+                        break;
+                    case (EOS_TYPE_JUTZI_ANEOS):
+                        density_floor[ID] = g_aneos_rho_0[ID] * 0.01;
+                        break;
 #if SIRONO_POROSITY
-                case (EOS_TYPE_SIRONO):
-                    tmp_dens = porsirono_rho_s[ID];
-                    break;
+                    case (EOS_TYPE_SIRONO):
+                        density_floor[ID] = porsirono_rho_s[ID] * 0.01;
+                        break;
 #endif
-                case (EOS_TYPE_EPSILON):
-                    tmp_dens = till_rho_0[ID];
-                    break;
-                case (EOS_TYPE_ANEOS):
-                    tmp_dens = g_aneos_rho_0[ID];
-                    break;
-                case (EOS_TYPE_VISCOUS_REGOLITH):
-                    tmp_dens = rho_0[ID];
-                    break;
-                case (EOS_TYPE_IDEAL_GAS):
-                    tmp_dens = IDEAL_GAS_REFERENCE_RHO;
-                    break;
-                case (EOS_TYPE_LOCALLY_ISOTHERMAL_GAS):
-                    tmp_dens = IDEAL_GAS_REFERENCE_RHO;
-                    break;
-                case (EOS_TYPE_IGNORE):
-                    fprintf(stdout, ".oOo. Happily ignoring EOS_TYPE_IGNORE .oOo.");
-                    break;
-                default:
-                    fprintf(stderr, "Error: Cannot determine rho0 for material ID %d with EOS_TYPE %d\n",
-                                        ID, eos[ID]);
-                    exit(1);
+                    case (EOS_TYPE_EPSILON):
+                        density_floor[ID] = till_rho_0[ID] * 0.01;
+                        break;
+                    case (EOS_TYPE_VISCOUS_REGOLITH):
+                        density_floor[ID] = rho_0[ID] * 0.01;
+                        break;
+                    case (EOS_TYPE_IDEAL_GAS):
+                        density_floor[ID] = 0.0;
+                        break;
+                    case (EOS_TYPE_LOCALLY_ISOTHERMAL_GAS):
+                        density_floor[ID] = 0.0;
+                        break;
+                    default:
+                        density_floor[ID] = 0.0;
+                        break;
+                }
             }
-            if (tmp_dens < smallest_rho) {
-                smallest_rho = tmp_dens;
-            }
-#endif
-        }
 
+        }  // loop over materials
+
+        // begin memory allocation on device
 #if PALPHA_POROSITY
         cudaVerify(cudaMalloc((void **)&matporjutzi_p_elastic_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matporjutzi_p_transition_d, numberOfElements*sizeof(double)));
@@ -747,12 +738,10 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matcs_solid_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matcrushcurve_style_d, numberOfElements*sizeof(int)));
 #endif
-
 #if VARIABLE_SML
         cudaVerify(cudaMalloc((void **)&mat_f_sml_max_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&mat_f_sml_min_d, numberOfElements*sizeof(double)));
 #endif
-
 #if SIRONO_POROSITY
         cudaVerify(cudaMalloc((void **)&matporsirono_K_0_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matporsirono_rho_0_d, numberOfElements*sizeof(double)));
@@ -764,7 +753,6 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matporsirono_phi0_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matporsirono_delta_d, numberOfElements*sizeof(double)));
 #endif
-
 #if EPSALPHA_POROSITY
         cudaVerify(cudaMalloc((void **)&matporepsilon_kappa_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matporepsilon_alpha_0_d, numberOfElements*sizeof(double)));
@@ -772,19 +760,16 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matporepsilon_epsilon_x_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matporepsilon_epsilon_c_d, numberOfElements*sizeof(double)));
 #endif
-
 #if NAVIER_STOKES
         cudaVerify(cudaMalloc((void **)&matnu_d, numberOfElements*sizeof(double)));
 	    cudaVerify(cudaMalloc((void **)&matalpha_shakura_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matzeta_d, numberOfElements*sizeof(double)));
 #endif
-
 #if ARTIFICIAL_STRESS
         cudaVerify(cudaMalloc((void **)&matexponent_tensor_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matepsilon_stress_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matmean_particle_distance_d, numberOfElements*sizeof(double)));
 #endif
-
         //begin of ANEOS allocations in (global) device memory (everything linearized)
         cudaVerify(cudaMalloc((void **)&aneos_n_rho_d, numberOfElements*sizeof(int)));
         cudaVerify(cudaMalloc((void **)&aneos_n_e_d, numberOfElements*sizeof(int)));
@@ -830,6 +815,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matAlphaPhi_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matCohesionCoefficient_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matMeltEnergy_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matDensityFloor_d, numberOfElements*sizeof(double)));
 #if JC_PLASTICITY
         cudaVerify(cudaMalloc((void **)&matjc_y0_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matjc_B_d, numberOfElements*sizeof(double)));
@@ -918,6 +904,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpy(matAlphaPhi_d, alpha_phi, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matCohesionCoefficient_d, cohesion_coefficient, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matMeltEnergy_d, melt_energy, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matDensityFloor_d, density_floor, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         //begin copying ANEOS data from host to (global) device memory
         cudaVerify(cudaMemcpy(aneos_n_rho_d, g_aneos_n_rho, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(aneos_n_e_d, g_aneos_n_e, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));
@@ -960,12 +947,6 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpy(matCp_d, Cp, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matCV_d, CV, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
 #endif
-#if DENSITY_FLOOR
-        cudaGetSymbolAddress((void **)&pc_pointer, density_floor_d);
-        cudaVerify(cudaMemcpy(pc_pointer, &smallest_rho, sizeof(double), cudaMemcpyHostToDevice));
-        fprintf(stdout, "Using density floor of 1e-2 x %g\n", smallest_rho);
-#endif
-
 #if NAVIER_STOKES
         cudaVerify(cudaMemcpyToSymbol(matnu, &matnu_d, sizeof(void*)));
   	    cudaVerify(cudaMemcpyToSymbol(matalpha_shakura, &matalpha_shakura_d, sizeof(void*)));
@@ -1076,6 +1057,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(matAlphaPhi, &matAlphaPhi_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matCohesionCoefficient, &matCohesionCoefficient_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matMeltEnergy, &matMeltEnergy_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matDensityFloor, &matDensityFloor_d, sizeof(void*)));
 #if JC_PLASTICITY
         cudaVerify(cudaMemcpyToSymbol(matjc_y0, &matjc_y0_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matjc_B, &matjc_B_d, sizeof(void*)));
@@ -1090,10 +1072,10 @@ void transferMaterialsToGPU()
 #endif
 
         fprintf(stdout, "Using following values for sph\n");
-        fprintf(stdout, "Material No \t smoothing length or number of interactions \t alpha \t\t beta\n");
-        fprintf(stdout, "------------\t--------------------------------------------\t-------\t\t-----\n");
+        fprintf(stdout, "Material No \t smoothing length or number of interactions \t density floor \t alpha \t\t beta\n");
+        fprintf(stdout, "------------\t--------------------------------------------\t---------------\t-------\t\t-----\n");
         for (i = 0; i < numberOfMaterials; i++) {
-            fprintf(stdout, "  %d \t\t %e or %d \t\t\t\t %e \t %e \n", i, sml[i], noi[i], alpha[i], beta[i]);
+            fprintf(stdout, "  %d \t\t %e or %d \t %g \t\t\t\t %e \t %e \n", i, sml[i], noi[i], density_floor[i], alpha[i], beta[i]);
         }
 #if VARIABLE_SML
         fprintf(stdout, "Material No \t factor for maximum and minimum smoothing length and corresponding smoothing lengths\n");
@@ -1351,6 +1333,7 @@ void transferMaterialsToGPU()
         free(melt_energy);
         free(friction_angle);
         free(friction_angle_damaged);
+        free(density_floor);
 #if SOLID
         free(young_modulus);
 #endif
@@ -1457,6 +1440,7 @@ void cleanupMaterials()
     cudaVerify(cudaFree(matMeltEnergy_d));
     cudaVerify(cudaFree(matFrictionAngle_d));
     cudaVerify(cudaFree(matFrictionAngleDamaged_d));
+    cudaVerify(cudaFree(matDensityFloor_d));
     cudaVerify(cudaFree(matporjutzi_p_elastic_d));
     cudaVerify(cudaFree(matporjutzi_p_transition_d));
     cudaVerify(cudaFree(matporjutzi_p_compacted_d));
