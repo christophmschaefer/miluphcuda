@@ -43,9 +43,12 @@ and 3h for *solid* on most current GPUs (benchmarked on a GTX 970).
   First, enter the simulation directory and run
 
         utils/postprocessing/create_xdmf.py
-  which creates an xdmf file (`paraview.xdmf` by default).
-  Then start Paraview and load the created xdmf file.
-  You can use the default cmd-line options, so no need to set anything explicitly.
+  which creates an xdmf file (*paraview.xdmf* by default). You can use the default cmd-line options,
+  so no need to set anything explicitly. Then start Paraview and either
+
+    * directly open the created paraview.xdmf and choose settings yourself
+    * load the prepared Paraview state in *paraview.pvsm* (*File -> Load State*), and select
+      the created paraview.xdmf file under *Choose File Names*
 
 * Compare your results (e.g., visualized with Paraview) to the animations in the `results/` directories,
   which show the interior structure of the colliding bodies (cut views) for various quantities.
