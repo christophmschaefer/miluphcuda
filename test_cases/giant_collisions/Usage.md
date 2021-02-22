@@ -4,7 +4,7 @@ Giant Collision test cases for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 16/Feb/2021
+last updated: 22/Feb/2021
 
 -----------------------------------------
 
