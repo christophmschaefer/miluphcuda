@@ -96,7 +96,7 @@ Where to find material parameters?
 
 * The `material_data/` directory contains parameters for various materials.
 
-* You can also check the `test_cases/` directory for example material setups.
+* You can also check the `test_cases/` and `examples/` directories for various material setups.
 
 --------------------------------
 

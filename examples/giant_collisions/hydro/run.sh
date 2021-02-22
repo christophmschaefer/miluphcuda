@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This is the run script for the giant_collisions/solid test case.
+# This is the run script for the giant_collisions/hydro example.
 # If necessary, adapt the paths to the CUDA libs and the miluphcuda executable below, before running it.
 
 # set path to CUDA libs [change if necessary]
