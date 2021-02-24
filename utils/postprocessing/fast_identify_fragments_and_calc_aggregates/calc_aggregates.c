@@ -4,9 +4,9 @@
  *
  * All units are SI
  *
- * last updated: 26/Nov/2020
+ * last updated: 24/Feb/2021
  * 
- * Christoph Burger
+ * Christoph Burger, Áron Suli
  * christoph.burger@uni-tuebingen.de
  */
 
@@ -35,10 +35,13 @@ typedef struct __fragment   // fragment data as read from the *.frag file
     double mat1_frac;
     double mat2_frac;
     double mat3_frac;
-}_fragment;
+} _fragment;
+
 
 int is_bound(_fragment* frag1, _fragment* frag2, int verbose);
 void compute_aggregate(_fragment* frags, int n_frags, int* bound_frags, _fragment* aggregate);
+void print(_fragment** agg, int n_agg, int n_materials, FILE* fout);
+void clear(_fragment* agg);
 
 
 void usage(char* programname)
@@ -48,7 +51,7 @@ void usage(char* programname)
     fprintf(stdout, "\n  Options:\n");
     fprintf(stdout, "    -?               display this message and exit\n");
     fprintf(stdout, "    -f frag-file     specify file containing the 'fast_identify_fragments' output (usually *.frag file)\n");
-    fprintf(stdout, "    -n number_mat    specify number of material types in frag file (2,3 or 4)\n");
+    fprintf(stdout, "    -n number-mat    specify number of material types in frag file (2,3 or 4)\n");
     fprintf(stdout, "    -b               set this to determine whether the two largest fragments are gravitationally bound (mutually)\n");
     fprintf(stdout, "    -g               set this to determine mass, composition and kinetics of the largest aggregate by computing all fragments gravitationally bound to it, by\n");
     fprintf(stdout, "                     starting with all directly bound fragments and then iteratively checking only those anymore (method 1)\n");
@@ -57,6 +60,7 @@ void usage(char* programname)
     fprintf(stdout, "    -a               do both methods 1 and 2\n");
     fprintf(stdout, "    -t               do both methods 1 and 2, first for the largest aggregate, and subsequently also starting with the largest still unbound fragment to\n");
     fprintf(stdout, "                     determine the 2nd largest aggregate (fragments already included in the largest aggregate are always left there)\n");
+    fprintf(stdout, "    -o output-file   optional, in addition to output to stdout: specify output file containing the barycentric coordinates and properties of the computed aggregates\n");
     fprintf(stdout, "    -v               be verbose\n");
     fprintf(stdout, "\n");
 }
@@ -68,6 +72,7 @@ int main(int argc, char* argv[])
     const double eps = 1.0e-6;
     const double G = 6.6741e-11;    // gravitational constant
     char fragfile[PATHLENGTH];
+    char aggfile[PATHLENGTH];       // output file for the results
     FILE *ffl;
     int b_flag = FALSE;
     int g_flag = FALSE;
@@ -90,10 +95,20 @@ int main(int argc, char* argv[])
     double dist, v_rel, v_esc;    // distance, relative velocity and escape velocity between aggregates
     int aggregate_2nd_exists;
     int aggregate_rest_exists;
+
+
+// initialize
+    clear(&aggregate);
+    clear(&aggregate_2nd);
+    clear(&aggregate_rest);
+    clear(&aggregate_all);
     
-    
+    fragfile[0] = '\0';
+    aggfile[0] = '\0';
+
+
 // process command line options
-    while ( ( i = getopt(argc, argv, "?f:n:bgmatv") ) != -1 )	// int-representations of command line options are successively saved in i
+    while ( ( i = getopt(argc, argv, "?f:o:n:bgmatv") ) != -1 )	// int-representations of command line options are successively saved in i
         switch((char)i)
         {
             case '?':
@@ -102,6 +117,9 @@ int main(int argc, char* argv[])
             case 'f':
                 strncpy(fragfile,optarg,PATHLENGTH);
                 break;
+            case 'o':
+				strncpy(aggfile, optarg, PATHLENGTH);
+				break;
             case 'n':
                 n_materials = atoi(optarg);
                 break;
@@ -132,7 +150,7 @@ int main(int argc, char* argv[])
         ERRORTEXT("ERROR! The number of materials in the fragments file has to be 2,3 or 4!\n")
     
     
-// read frag-file
+// read frag file
     if ( (ffl = fopen(fragfile,"r")) == NULL )
         ERRORVAR("FILE ERROR! Cannot open %s for reading!\n",fragfile)
     fscanf(ffl, "%*[^\n]");   // '%*[^\n]' represents the whole first line, '*' means don't save to var, '[^\n]' is regular expression
@@ -164,9 +182,9 @@ int main(int argc, char* argv[])
                 ERRORTEXT("ERROR during memory allocation!\n")
         }
     fclose(ffl);
-    
-    
-// compute whether the 2 largest fragments are gravitationally bound
+
+
+// compute whether the two largest fragments are gravitationally bound
     if( b_flag )
     {
         if( g_flag || m_flag || a_flag || t_flag )
@@ -225,6 +243,7 @@ int main(int argc, char* argv[])
                 fprintf(stdout, "The (current) aggregate has m = %g kg\n", aggregate.mass);
             // update bound_frags w.r.t. this aggregated mass
             if( g_flag )
+            {
                 for(i=0; i<nrf; i++)
                     if( bound_frags[i] == TRUE )
                         if( !is_bound(&aggregate, &frags[i], FALSE) )
@@ -234,7 +253,9 @@ int main(int argc, char* argv[])
                                 fprintf(stdout, "The fragment no. %d, m = %g kg, is not bound to the (current) aggregate, m = %g kg, and left the list of bound fragments.\n", i, frags[i].mass, aggregate.mass);
                             repeat = TRUE;
                         }
+            }
             if( m_flag )
+            {
                 for(i=0; i<nrf; i++)
                     if( bound_frags[i] == FALSE )
                         if( is_bound(&aggregate, &frags[i], FALSE) )
@@ -244,7 +265,9 @@ int main(int argc, char* argv[])
                                 fprintf(stdout, "The fragment no. %d, m = %g kg, is actually bound to the (current) aggregate, m = %g kg, and was added to the list of bound fragments.\n", i, frags[i].mass, aggregate.mass);
                             repeat = TRUE;
                         }
+            }
             if( a_flag || t_flag )
+            {
                 for(i=0; i<nrf; i++)
                     if( is_bound(&aggregate, &frags[i], FALSE) )
                     {
@@ -266,7 +289,8 @@ int main(int argc, char* argv[])
                             repeat = TRUE;
                         }
                     }
-        } // end while( repeat )
+            }
+        }
         
         // compute and print properties of the aggregate (the mass, position and velocity from the last iteration above is still valid)
         if( verbose )
@@ -537,7 +561,7 @@ int main(int argc, char* argv[])
     }
     
     
-// print positions and velocities
+// print positions and velocities to stdout
     if( g_flag || m_flag || a_flag || t_flag )
     {
         if( g_flag || m_flag || a_flag )
@@ -566,9 +590,50 @@ int main(int argc, char* argv[])
         
         fprintf(stdout, "%.16le\t%.16le\t%.16le\t%.16le\t%.16le\t%.16le\n", aggregate_all.x[0], aggregate_all.x[1], aggregate_all.x[2], aggregate_all.v[0], aggregate_all.v[1], aggregate_all.v[2]);
     }
-    
-    
-// compute and print information on kinetics
+
+
+// write results to file (in addition to output to stdout)
+    if (0 < strlen(aggfile))
+    {
+        int n_agg = 2; // largest aggregate + all aggregates
+        if (aggregate_2nd_exists) n_agg++;
+        if (aggregate_rest_exists) n_agg++;
+
+        _fragment** agg = (_fragment**)malloc(n_agg * sizeof(_fragment*));
+        if (NULL == agg)
+        {
+            printf("Error [ln: %d]: memory allocation.\n", __LINE__);
+            exit(EXIT_FAILURE);
+        }
+        int k = 0;
+        agg[k] = &aggregate;
+        if (aggregate_2nd_exists)
+        {
+            k++;
+            agg[k] = &aggregate_2nd;
+        }
+        if (aggregate_rest_exists) 
+        {
+            k++;
+            agg[k] = &aggregate_rest;
+        }
+        k++;
+        agg[k] = &aggregate_all;
+
+        FILE* fagg = fopen(aggfile, "wt");
+        if (NULL == fagg)
+        {
+            printf("Error [ln: %d]: could not open file: %s.\n", __LINE__, aggfile);
+            exit(EXIT_FAILURE);
+        }
+        print(agg, n_agg, n_materials, fagg);
+
+        fclose(fagg);
+        free(agg);
+    }
+
+
+// compute and print information on kinetics to stdout
     if( g_flag || m_flag || a_flag || t_flag )
     {
         if( g_flag || m_flag || a_flag )
@@ -591,8 +656,7 @@ int main(int argc, char* argv[])
                 v_esc = sqrt( 2.0*G*(aggregate.mass+aggregate_2nd.mass)/dist );
                 fprintf(stdout, "%.16le\t%.16le\t%.16le\n", dist, v_rel, v_rel/v_esc);
             }
-            else
-            {
+            else {
                 fprintf(stdout, "-1.0\t-1.0\t-1.0\n");
             }
         }
@@ -610,8 +674,7 @@ int main(int argc, char* argv[])
             v_esc = sqrt( 2.0*G*(aggregate.mass+aggregate_rest.mass)/dist );
             fprintf(stdout, "%.16le\t%.16le\t%.16le\n", dist, v_rel, v_rel/v_esc);
         }
-        else
-        {
+        else {
             fprintf(stdout, "-1.0\t-1.0\t-1.0\n");
         }
         
@@ -630,14 +693,13 @@ int main(int argc, char* argv[])
                 v_esc = sqrt( 2.0*G*(aggregate_2nd.mass+aggregate_rest.mass)/dist );
                 fprintf(stdout, "%.16le\t%.16le\t%.16le\n", dist, v_rel, v_rel/v_esc);
             }
-            else
-            {
+            else {
                 fprintf(stdout, "-1.0\t-1.0\t-1.0\n");
             }
         }
-    }   // end compute and print information on kinetics
-    
-    
+    }
+
+
 // run some consistency checks
     if( g_flag || m_flag || a_flag || t_flag )
     {
@@ -655,30 +717,25 @@ int main(int argc, char* argv[])
             ERRORVAR2("ERROR. Consistency check for masses failed. 'aggregate_all.mass' = %.16le, 'tmp_sum' = %.16le ...\n", aggregate_all.mass, tmp_sum)
         
         // check merged aggregates
-        for(i=0; i<DIM; i++)
-        {
+        for(i=0; i<DIM; i++) {
             tmp_x[i] = aggregate.mass * aggregate.x[i];
             tmp_v[i] = aggregate.mass * aggregate.v[i];
         }
         if( t_flag && aggregate_2nd_exists )
-            for(i=0; i<DIM; i++)
-            {
+            for(i=0; i<DIM; i++) {
                 tmp_x[i] += aggregate_2nd.mass * aggregate_2nd.x[i];
                 tmp_v[i] += aggregate_2nd.mass * aggregate_2nd.v[i];
             }
         if( aggregate_rest_exists )
-            for(i=0; i<DIM; i++)
-            {
+            for(i=0; i<DIM; i++) {
                 tmp_x[i] += aggregate_rest.mass * aggregate_rest.x[i];
                 tmp_v[i] += aggregate_rest.mass * aggregate_rest.v[i];
             }
-        for(i=0; i<DIM; i++)
-        {
+        for(i=0; i<DIM; i++) {
             tmp_x[i] /= tmp_sum;
             tmp_v[i] /= tmp_sum;
         }
-        for(i=0; i<DIM; i++)
-        {
+        for(i=0; i<DIM; i++) {
             if(  (fabs(aggregate_all.x[i] - tmp_x[i]) / fabs(aggregate_all.x[i]) > eps)  ||  (fabs(aggregate_all.v[i] - tmp_v[i]) / fabs(aggregate_all.v[i]) > eps)  )
             {
                 fprintf(stderr, "ERROR. Consistency check for pos. and vel. failed.  (1) 'aggregate_all.x'  (2) 'tmp_x'  (3) 'aggregate_all.v'  (4) 'tmp_v':\n");
@@ -687,10 +744,9 @@ int main(int argc, char* argv[])
                 exit(1);
             }
         }
-    }   // end consistency checks
-    
-    
-// clean up:
+    }
+
+// clean up
     free(frags);
     if( g_flag || m_flag || a_flag || t_flag)
     {
@@ -701,7 +757,6 @@ int main(int argc, char* argv[])
         free(bound_frags_2nd);
     return(0);
 }
-
 
 
 
@@ -744,7 +799,6 @@ int is_bound(_fragment* frag1, _fragment* frag2, int verbose)
 
 
 
-
 void compute_aggregate(_fragment* frags, int n_frags, int* bound_frags, _fragment* aggregate)
 // Computes aggregated mass, and the position and velocity of the center-of-mass according to information in 
 // 'bound_frags' (and stores it all in aggregate). 'frags' is an array of length 'n_frags' and contains information on all fragments.
@@ -771,3 +825,41 @@ void compute_aggregate(_fragment* frags, int n_frags, int* bound_frags, _fragmen
     }
 }
 
+
+
+void print(_fragment** agg, int n_agg, int n_materials, FILE* fout)
+{
+    for(int i = 0; i < n_agg; i++)
+    {
+        for (int j = 0; j < DIM; j++) {
+            fprintf(fout, "%24.16le ", agg[i]->x[j]);
+        }
+        for (int j = 0; j < DIM; j++) {
+            fprintf(fout, "%24.16le ", agg[i]->v[j]);
+        }
+        fprintf(fout, "%24.16le ", agg[i]->mass);
+        fprintf(fout, "%24.16le ", agg[i]->rel_mass);
+        if (1 == n_materials)
+            fprintf(fout, "%24.16le\n", agg[i]->mat0_frac);
+        else if (2 == n_materials)
+            fprintf(fout, "%24.16le %24.16le\n", agg[i]->mat0_frac, agg[i]->mat1_frac);
+        else if (3 == n_materials)
+            fprintf(fout, "%24.16le %24.16le %24.16le\n", agg[i]->mat0_frac, agg[i]->mat1_frac, agg[i]->mat2_frac);
+        else if (4 == n_materials)
+            fprintf(fout, "%24.16le %24.16le %24.16le %24.16le\n", agg[i]->mat0_frac, agg[i]->mat1_frac, agg[i]->mat2_frac, agg[i]->mat3_frac);
+        else
+            fprintf(fout, "\n");
+    }
+}
+
+
+
+void clear(_fragment* agg)
+{
+	for (int j = 0; j < DIM; j++) {
+        agg->x[j] = 0.0;
+        agg->v[j] = 0.0;
+    }
+    agg->mass = agg->rel_mass = 0.0;
+    agg->mat0_frac = agg->mat1_frac = agg->mat2_frac = agg->mat3_frac = 0.0;
+}

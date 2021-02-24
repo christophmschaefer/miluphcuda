@@ -3,7 +3,7 @@
 # set compiler
 CC = gcc
 
-OPT = -O3 -Wall
+OPT = -O3 # -Wall
 
 CFLAGS = -I/usr/include/hdf5/serial/
 LDFLAGS = -lm -L/usr/lib/x86_64-linux-gnu/hdf5/serial/ -lhdf5
