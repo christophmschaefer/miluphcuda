@@ -23,9 +23,7 @@
 #ifndef _PARAMETER_H
 #define _PARAMETER_H
 
-// helper definitions
-#define SPH_VERSION1 1
-#define SPH_VERSION2 2
+
 // Dimension of the problem
 #define DIM 3
 #define DEBUG 0
@@ -58,16 +56,15 @@
 // have to be distributed among the particles
 #define FRAGMENTATION 1
 
-// SPH stuff
-// here, you have to define which kind of SPH representation you want to solve the
-// momentum and internal energy equation
-// SPH_VERSION1: original version with HYDRO dv_a/dt ~ - (p_a/rho_a**2 + p_b/rho_b**2)  \nabla_a W_ab
+// Choose the SPH representation to solve the momentum and energy equation:
+// SPH_EQU_VERSION 1: original version with HYDRO dv_a/dt ~ - (p_a/rho_a**2 + p_b/rho_b**2)  \nabla_a W_ab
 //                                     SOLID dv_a/dt ~ (sigma_a/rho_a**2 + sigma_b/rho_b**2) \nabla_a W_ab
-// SPH_VERSION2: slighty different version with
+// SPH_EQU_VERSION 2: slighty different version with
 //                                     HYDRO dv_a/dt ~ - (p_a+p_b)/(rho_a*rho_b)  \nabla_a W_ab
 //                                     SOLID dv_a/dt ~ (sigma_a+sigma_b)/(rho_a*rho_b)  \nabla_a W_ab
-//  if you do not know what to do, choose SPH_VERSION1
-#define SPHEQUATIONS SPH_VERSION1
+// If you do not know what to do, choose SPH_EQU_VERSION 1.
+#define SPH_EQU_VERSION 1
+
 // for the tensile instability fix
 // you do not need this
 #define ARTIFICIAL_STRESS 0

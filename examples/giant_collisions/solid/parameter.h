@@ -58,18 +58,14 @@
 // this needs some preprocessing of the initial particle distribution since activation thresholds have to be distributed among the particles
 #define FRAGMENTATION 1
 
-// Choose the SPH representation to solve the momentum and internal energy equation:
-// SPH_VERSION1: original version with HYDRO dv_a/dt ~ - (p_a/rho_a**2 + p_b/rho_b**2)  \nabla_a W_ab
+// Choose the SPH representation to solve the momentum and energy equation:
+// SPH_EQU_VERSION 1: original version with HYDRO dv_a/dt ~ - (p_a/rho_a**2 + p_b/rho_b**2)  \nabla_a W_ab
 //                                     SOLID dv_a/dt ~ (sigma_a/rho_a**2 + sigma_b/rho_b**2) \nabla_a W_ab
-// SPH_VERSION2: slighty different version with
+// SPH_EQU_VERSION 2: slighty different version with
 //                                     HYDRO dv_a/dt ~ - (p_a+p_b)/(rho_a*rho_b)  \nabla_a W_ab
 //                                     SOLID dv_a/dt ~ (sigma_a+sigma_b)/(rho_a*rho_b)  \nabla_a W_ab
-// If you do not know what to do, choose SPH_VERSION1.
-// helper definitions
-#define SPH_VERSION1 1
-#define SPH_VERSION2 2
-// set SPH equations version here
-#define SPHEQUATIONS SPH_VERSION1
+// If you do not know what to do, choose SPH_EQU_VERSION 1.
+#define SPH_EQU_VERSION 1
 
 // for the tensile instability fix
 // you do not need this
