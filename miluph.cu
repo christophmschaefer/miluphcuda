@@ -243,10 +243,10 @@ static void print_compile_information(void)
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Using SPH representation of momentum and energy conservation version: \t"
-#if SPHEQUATIONS == SPH_VERSION1
-                        "SPH_VERSION1"
-#elif SPHEQUATIONS == SPH_VERSION2
-                        "SPH_VERSION2"
+#if SPH_EQU_VERSION == 1
+                        "1"
+#elif SPH_EQU_VERSION == 2
+                        "2"
 #endif
                         "\n");
     fprintf(stdout, "Standard SPH artificial viscosity:\t  %s\n", yesno);

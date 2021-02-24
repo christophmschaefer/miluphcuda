@@ -159,25 +159,25 @@ __global__ void calculate_shear_stress_tensor(int *interactions)
 #else
             double trace = 0;
             for (e = 0; e < DIM; e++) {
-# if (SPHEQUATIONS == SPH_VERSION1)
+# if (SPH_EQU_VERSION == 1)
                 trace +=  p.m[j]/p.rho[i] * (-dv[e])*dWdx[e] ;
-# elif (SPHEQUATIONS == SPH_VERSION2)
+# elif (SPH_EQU_VERSION == 2)
                 trace +=  p.m[j]/p.rho[j] * (-dv[e])*dWdx[e] ;
 #endif
             }
 
             for (e = 0; e < DIM; e++) {
                 for (f = 0; f < DIM; f++) {
-# if (SPHEQUATIONS == SPH_VERSION1)
+# if (SPH_EQU_VERSION == 1)
                     p.Tshear[i*DIM*DIM+e*DIM+f] += p.m[j]/p.rho[i] * (-dv[e]*dWdx[f] - dv[f]*dWdx[e]);
-# elif (SPHEQUATIONS == SPH_VERSION2)
+# elif (SPH_EQU_VERSION == 2)
                     p.Tshear[i*DIM*DIM+e*DIM+f] += p.m[j]/p.rho[j] * (-dv[e]*dWdx[f] - dv[f]*dWdx[e]);
 #endif
                     // traceless
                     if (e == f) {
-# if (SPHEQUATIONS == SPH_VERSION1)
+# if (SPH_EQU_VERSION == 1)
                         p.Tshear[i*DIM*DIM+e*DIM+f] -= 2./3 * trace;
-# elif (SPHEQUATIONS == SPH_VERSION2)
+# elif (SPH_EQU_VERSION == 2)
                         p.Tshear[i*DIM*DIM+e*DIM+f] -= 2./3 * trace;
 #endif
                     }

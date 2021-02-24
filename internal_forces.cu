@@ -516,19 +516,19 @@ __global__ void internalForces(int *interactions) {
             for (d = 0; d < DIM; d++) {
                 accelshearj[d] = 0;
                 for (dd = 0; dd < DIM; dd++) {
-# if (SPHEQUATIONS == SPH_VERSION1)
+# if (SPH_EQU_VERSION == 1)
 #  if SML_CORRECTION
                     accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]/(p.sml_omega[j]*p.rho[j]*p.rho[j])+ p.Tshear[stressIndex(i,d,dd)]/(p.sml_omega[i]*p.rho[i]*p.rho[i])) *dWdx[dd];
 #  else
                     accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j]) + p.Tshear[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i])) *dWdx[dd];
-#  endif // SML_CORRECTION
-# elif (SPHEQUATIONS == SPH_VERSION2)
+#  endif
+# elif (SPH_EQU_VERSION == 2)
 #  if SML_CORRECTION
                     accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]+p.Tshear[stressIndex(i,d,dd)])/(p.rho[i]*p.rho[j]) *dWdx[dd];
 #  else
                     accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]+p.Tshear[stressIndex(i,d,dd)])/(p.sml_omega[i]*p.rho[i]*p.sml_omega[j]*p.rho[j]) *dWdx[dd];
-#  endif // SML_CORRECTION
-# endif // SPHEQUATIONS
+#  endif
+# endif // SPH_EQU_VERSION
                 }
             }
 #endif // NAVIER_STOKES
@@ -546,23 +546,23 @@ __global__ void internalForces(int *interactions) {
                     //accelsj[d] = p.m[j] * (sigma_j[d][dd]+sigma_i[d][dd])/(p.rho[i]*p.rho[j]) *dWdx[dd];
 
                     // the same but with tensorial correction
-# if (SPHEQUATIONS == SPH_VERSION1)
+# if (SPH_EQU_VERSION == 1)
                     // warning! look below, the accelsj for each inner loop are added to accels[d]
                     // this is very confusing
 #  if SML_CORRECTION
                     accelsj[d] = p.m[j] * (sigma_j[d][dd]/(p.sml_omega[j]*p.rho[j]*p.rho[j]) + sigma_i[d][dd]/(p.sml_omega[i]*p.rho[i]*p.rho[i])) *dWdx[dd];
 #  else
                     accelsj[d] = p.m[j] * (sigma_j[d][dd]/(p.rho[j]*p.rho[j]) + sigma_i[d][dd]/(p.rho[i]*p.rho[i])) *dWdx[dd];
-#  endif // SML_CORRECTION
-# elif (SPHEQUATIONS == SPH_VERSION2)
+#  endif
+# elif (SPH_EQU_VERSION == 2)
 #  if SML_CORRECTION
                     accelsj[d] = p.m[j] * (sigma_j[d][dd]+sigma_i[d][dd])/(p.sml_omega[i]*p.sml_omega[j]*p.rho[i]*p.rho[j]) *dWdx[dd];
 #  else
                     accelsj[d] = p.m[j] * (sigma_j[d][dd]+sigma_i[d][dd])/(p.rho[i]*p.rho[j]) *dWdx[dd];
-#  endif // SML_CORRECTION
+#  endif
 # else
-# error wrong choice of SPHEQUATIONS settings in parameter.h
-# endif // SPHEQUATIONS
+# error Invalid choice of SPH_EQU_VERSION in parameter.h.
+# endif // SPH_EQU_VERSION
 
                     // the standard formula as also used by Martin Jutzi
                     //accelsj[d] = p.m[j] * (sigma_j[d][dd]/(p.rho[j]*p.rho[j]) + sigma_i[d][dd]/(p.rho[i]*p.rho[i])) *dWdx[dd];
@@ -578,12 +578,12 @@ __global__ void internalForces(int *interactions) {
 // Correction for tensile instability fix according to Monaghan, jcp 159 (2000)
 # if ARTIFICIAL_STRESS
                     double arts_rij;
-#  if (SPHEQUATIONS == SPH_VERSION1)
+#  if (SPH_EQU_VERSION == 1)
                     arts_rij = p_rhs.R[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i])
                               + p_rhs.R[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j]);
-#  elif (SPHEQUATIONS == SPH_VERSION2)
+#  elif (SPH_EQU_VERSION == 2)
                     arts_rij = (p_rhs.R[stressIndex(i,d,dd)] + p_rhs.R[stressIndex(j,d,dd)])/(p.rho[i]*p.rho[j]);
-#  endif // SPHEQUATIONS
+#  endif
                     // add the special artificial stress
                     accels[d] += p.m[j] * arts_rij * artf * dWdx[dd];
 # endif // ARTIFICIAL_STRESS
@@ -595,7 +595,7 @@ __global__ void internalForces(int *interactions) {
                 }
             }
 #else // NOT SOLID
-# if (SPHEQUATIONS == SPH_VERSION1)
+# if (SPH_EQU_VERSION == 1)
 #  if SML_CORRECTION
             for (d = 0; d < DIM; d++) {
                 accelsj[d] =  -p.m[j] * (p.p[i]/(p.sml_omega[i]*p.rho[i]*p.rho[i]) + p.p[j]/(p.sml_omega[j]*p.rho[j]*p.rho[j])) * dWdx[d];
@@ -607,7 +607,7 @@ __global__ void internalForces(int *interactions) {
                 accels[d] += accelsj[d];
             }
 #  endif // SML_CORRECTION
-# elif (SPHEQUATIONS == SPH_VERSION2)
+# elif (SPH_EQU_VERSION == 2)
 #  if SML_CORRECTION
             for (d = 0; d < DIM; d++) {
                 accelsj[d] =  -p.m[j] * ((p.p[i]+p.p[j])/(p.sml_omega[i]*p.rho[i]*p.sml_omega[j]*p.rho[j])) * dWdx[d];
@@ -618,8 +618,8 @@ __global__ void internalForces(int *interactions) {
                 accelsj[d] =  -p.m[j] * ((p.p[i]+p.p[j])/(p.rho[i]*p.rho[j])) * dWdx[d];
                 accels[d] += accelsj[d];
             }
-#  endif // SML_CORRECTION
-# endif // SPHEQUATIONS
+#  endif
+# endif // SPH_EQU_VERSION
 #endif // SOLID
 
 #if NAVIER_STOKES
@@ -704,9 +704,9 @@ __global__ void internalForces(int *interactions) {
 // new implementation cms 2019-05-23
             for (d = 0; d < DIM; d++) {
                 for (dd = 0; dd < DIM; dd++) {
-#  if (SPHEQUATIONS == SPH_VERSION1)
+#  if (SPH_EQU_VERSION == 1)
                     dedt += 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i]) + p_rhs.sigma[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j])) * dv[d] * dWdx[dd];
-#  elif (SPHEQUATIONS == SPH_VERSION2)
+#  elif (SPH_EQU_VERSION == 2)
                     dedt += 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)] + p_rhs.sigma[stressIndex(j,d,dd)])/(p.rho[i]*p.rho[j]) * dv[d] * dWdx[dd];
 #endif
 #if DEBUG
