@@ -10,7 +10,7 @@ LDFLAGS  = -lm
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
 
 #CUDA_DIR    = /usr/local/cuda-9.0
-CUDA_DIR    = /usr/local/cuda-10.0
+CUDA_DIR    = /usr/local/cuda-11.2
 #CUDA_DIR    = /usr/local/cuda
 
 NVCC   = ${CUDA_DIR}/bin/nvcc

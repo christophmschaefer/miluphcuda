@@ -24,7 +24,7 @@
 #define _PARAMETER_H
 
 // Dimension of the problem
-#define DIM 3
+#define DIM 1
 
 // add additional point masses to the simulation, read from file <filename>.mass
 // format is location velocities mass r_min r_max, where location and velocities are vectors with size DIM and
@@ -41,7 +41,7 @@
 
 // integrate the continuity equation
 // if set to 0, the density will be calculated using the standard SPH sum \sum_i m_j W_ij
-#define INTEGRATE_DENSITY 1
+#define INTEGRATE_DENSITY 0
 
 // basic physical model:
 // SOLID set to 1 solves continuum mechanics with material strength, and stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
@@ -143,7 +143,7 @@
 // max number of activation thresholds per particle, only required for FRAGMENTATION, otherwise set to 1
 #define MAX_NUM_FLAWS 1
 // maximum number of interactions per particle -> fixed array size
-#define MAX_NUM_INTERACTIONS 600
+#define MAX_NUM_INTERACTIONS 128
 
 // gravitational constant in SI
 #define C_GRAVITY_SI 6.67408e-11
@@ -166,17 +166,17 @@
 // d sml / dt  = sml/DIM * 1/rho  \nabla velocity
 // if you want to specify an individual initial smoothing length for each particle (instead of the material
 // specific one in material.cfg) in the initial particle file, set READ_INITIAL_SML_FROM_PARTICLE_FILE to 1
-#define VARIABLE_SML 1
+#define VARIABLE_SML 0
 #define FIXED_NOI 0
-#define INTEGRATE_SML 1
-#define READ_INITIAL_SML_FROM_PARTICLE_FILE 1
+#define INTEGRATE_SML 0
+#define READ_INITIAL_SML_FROM_PARTICLE_FILE 0
 
 // correction terms for sml calculation: adds gradient of the smoothing length to continuity equation, equation of motion, internal energy equation
-#define SML_CORRECTION 1
+#define SML_CORRECTION 0
 
 // if set to 0, h = (h_i + h_j)/2  is used to calculate W_ij
 // if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2
-#define AVERAGE_KERNELS 0
+#define AVERAGE_KERNELS 1
 
 
 // important switch: if the simulations yields at some point too many interactions for
@@ -187,7 +187,7 @@
 // important switch: if the simulations yields at some point too many interactions for
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be lowered until
 // the interactions are lower than MAX_NUM_INTERACTIONS
-#define DEAL_WITH_TOO_MANY_INTERACTIONS 1
+#define DEAL_WITH_TOO_MANY_INTERACTIONS 0
 
 // additional smoothing of the velocity field
 // hinders particle penetration

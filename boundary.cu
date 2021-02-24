@@ -99,12 +99,14 @@ __global__ void BoundaryConditionsBeforeRHS(int *interactions)
         
         if (matId == EOS_TYPE_IGNORE) {
             p.ax[i] = 0;
+#if DIM > 1
             p.ay[i] = 0;
-            p.dxdt[i] = 0;
             p.dydt[i] = 0;
-            p.vx[i] = 0;
             p.vy[i] = 0;
-#if DIM == 3
+#endif
+            p.dxdt[i] = 0;
+            p.vx[i] = 0;
+#if DIM > 2
             p.az[i] = 0;
             p.dzdt[i] = 0;
             p.vz[i] = 0;
@@ -121,12 +123,14 @@ __global__ void BoundaryConditionsBeforeRHS(int *interactions)
 
         if (matId == BOUNDARY_PARTICLE_ID) {
             p.ax[i] = 0;
-            p.ay[i] = 0;
-            p.dxdt[i] = 0;
-            p.dydt[i] = 0;
             p.vx[i] = 0;
+            p.dxdt[i] = 0;
+#if DIM > 1
+            p.dydt[i] = 0;
+            p.ay[i] = 0;
             p.vy[i] = 0;
-#if DIM == 3
+#endif
+#if DIM > 2
             p.az[i] = 0;
             p.dzdt[i] = 0;
             p.vz[i] = 0;
@@ -180,12 +184,14 @@ __global__ void BoundaryConditionsAfterRHS(int *interactions)
 
         if (matId == EOS_TYPE_IGNORE) {
             p.ax[i] = 0;
-            p.ay[i] = 0;
             p.dxdt[i] = 0;
-            p.dydt[i] = 0;
             p.vx[i] = 0;
+#if DIM > 1
+            p.dydt[i] = 0;
+            p.ay[i] = 0;
             p.vy[i] = 0;
-#if DIM == 3
+#endif
+#if DIM > 2
             p.az[i] = 0;
             p.dzdt[i] = 0;
             p.vz[i] = 0;
@@ -234,12 +240,14 @@ __global__ void BoundaryConditionsAfterRHS(int *interactions)
 
         if (matId == BOUNDARY_PARTICLE_ID) {
             p.ax[i] = 0;
-            p.ay[i] = 0;
-            p.dxdt[i] = 0;
-            p.dydt[i] = 0;
             p.vx[i] = 0;
+            p.dxdt[i] = 0;
+#if DIM > 1
+            p.dydt[i] = 0;
+            p.ay[i] = 0;
             p.vy[i] = 0;
-#if DIM == 3
+#endif
+#if DIM > 2
             p.az[i] = 0;
             p.dzdt[i] = 0;
             p.vz[i] = 0;
