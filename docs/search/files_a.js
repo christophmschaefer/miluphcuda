@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['parameter_2eh',['parameter.h',['../examples_2giant__collisions_2hydro_2parameter_8h.html',1,'(Global Namespace)'],['../examples_2giant__collisions_2solid_2parameter_8h.html',1,'(Global Namespace)'],['../parameter_8h.html',1,'(Global Namespace)'],['../test__cases_2colliding__rings_2parameter_8h.html',1,'(Global Namespace)'],['../test__cases_2nakamura_2parameter_8h.html',1,'(Global Namespace)'],['../test__cases_2shocktube_2parameter_8h.html',1,'(Global Namespace)'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html',1,'(Global Namespace)']]],
+  ['parameter_2eh',['parameter.h',['../examples_2giant__collisions_2hydro_2parameter_8h.html',1,'(Global Namespace)'],['../examples_2giant__collisions_2solid_2parameter_8h.html',1,'(Global Namespace)'],['../parameter_8h.html',1,'(Global Namespace)'],['../test__cases_2colliding__rings_2parameter_8h.html',1,'(Global Namespace)'],['../test__cases_2gravity__merging_2parameter_8h.html',1,'(Global Namespace)'],['../test__cases_2nakamura_2parameter_8h.html',1,'(Global Namespace)'],['../test__cases_2shocktube_2parameter_8h.html',1,'(Global Namespace)'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html',1,'(Global Namespace)']]],
   ['plasticity_2ecu',['plasticity.cu',['../plasticity_8cu.html',1,'']]],
   ['plasticity_2eh',['plasticity.h',['../plasticity_8h.html',1,'']]],
   ['porosity_2ecu',['porosity.cu',['../porosity_8cu.html',1,'']]],
