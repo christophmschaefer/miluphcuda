@@ -115,7 +115,6 @@ extern __device__ SPH_kernel wendlandc4_p;
 extern __device__ SPH_kernel wendlandc6_p;
 extern __device__ SPH_kernel cubic_spline_p;
 extern __device__ SPH_kernel spiky_p;
-extern __device__ SPH_kernel quartic_spline_p;
 SPH_kernel kernel_h;
 
 
@@ -592,7 +591,7 @@ void usage(char *name)
             "\t\t\t\t\t 'rk2_adaptive' (default, 2nd order with adaptive time step),\n"
             "\t\t\t\t\t 'heun_rk4' (2nd order for sph coupled with fourth order for n-body).\n"
             "\t-k, --kernel <name>\t\t Set kernel function (default: 'cubic_spline').\n"
-            "\t      \t\t\t\t Options: wendlandc2, wendlandc4, wendlandc6, cubic_spline, quartic_spline, spiky.\n"
+            "\t      \t\t\t\t Options: wendlandc2, wendlandc4, wendlandc6, cubic_spline, spiky.\n"
             "\t-L, --angular_momentum <value> \t Check for conservation of angular momentum (default: off).\n"
             "\t\t\t\t\t Simulation stops once the relative difference between current and initial angular momentum is larger than <value>.\n"
             "\t-m, --materialconfig <name>\t Name of libconfig file including material config (default: material.cfg)\n"
@@ -1042,10 +1041,6 @@ int main(int argc, char *argv[])
         fprintf(stdout, "using spiky kernel\n");
         cudaMemcpyFromSymbol(&kernel_h, spiky_p, sizeof(SPH_kernel));
         cudaMemcpyToSymbol(kernel, &kernel_h, sizeof(SPH_kernel));
-    } else if (0 == strcmp(param.kernel, "quartic_spline")) {
-        fprintf(stdout, "using quartic_spline kernel\n");
-        cudaMemcpyFromSymbol(&kernel_h, quartic_spline_p, sizeof(SPH_kernel));
-        cudaMemcpyToSymbol(kernel, &kernel_h, sizeof(SPH_kernel));
     } else {
         fprintf(stderr, "Err. No such kernel function implemented yet: %s.\n", param.kernel);
         exit(1);
@@ -1134,35 +1129,39 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Ohoh... Cannot open '%s' for writing. Abort...\n", param.conservedquantitiesfilename);
             exit(1);
         }
-        fprintf(conservedquantitiesfile, " #   1.time                  2.SPH-part-total  3.SPH-part-deactivated 4.grav.point-masses              5.total-mass    6.total-kinetic-energy    7.total-inner-energy      ");
+        fprintf(conservedquantitiesfile, " # 1:time 2:SPH-part-total 3:SPH-part-deactivated 4:grav.point-masses 5:total-mass 6:total-kinetic-energy 7:total-inner-energy ");
+        int output_cnt = 8;
 #if OUTPUT_GRAV_ENERGY
-        fprintf(conservedquantitiesfile, "8.total-grav-energy       ");
+        fprintf(conservedquantitiesfile, "%d:total-grav-energy ", output_cnt++);
 #endif
-        fprintf(conservedquantitiesfile, "total-momentum            total-momentum[x]         ");
+        fprintf(conservedquantitiesfile, "%d:total-momentum ", output_cnt++);
+        fprintf(conservedquantitiesfile, "%d:total-momentum[x] ", output_cnt++);
 #if DIM > 1
-        fprintf(conservedquantitiesfile, "total-momentum[y]         ");
+        fprintf(conservedquantitiesfile, "%d:total-momentum[y] ", output_cnt++);
 #if DIM == 3
-        fprintf(conservedquantitiesfile, "total-momentum[z]         ");
+        fprintf(conservedquantitiesfile, "%d:total-momentum[z] ", output_cnt++);
 #endif
 #endif
 #if DIM > 1
-        fprintf(conservedquantitiesfile, "total-angular-mom         total-angular-mom[x]      total-angular-mom[y] ");
+        fprintf(conservedquantitiesfile, "%d:total-angular-mom ", output_cnt++);
+        fprintf(conservedquantitiesfile, "%d:total-angular-mom[x] ", output_cnt++);
+        fprintf(conservedquantitiesfile, "%d:total-angular-mom[y] ", output_cnt++);
 #if DIM == 3
-        fprintf(conservedquantitiesfile, "total-angular-mom[z]      ");
+        fprintf(conservedquantitiesfile, "%d:total-angular-mom[z] ", output_cnt++);
 #endif
 #endif
-        fprintf(conservedquantitiesfile, "barycenter-pos[x]         ");
+        fprintf(conservedquantitiesfile, "%d:barycenter-pos[x] ", output_cnt++);
 #if DIM > 1
-        fprintf(conservedquantitiesfile, "barycenter-pos[y]         ");
+        fprintf(conservedquantitiesfile, "%d:barycenter-pos[y] ", output_cnt++);
 #if DIM == 3
-        fprintf(conservedquantitiesfile, "barycenter-pos[z]         ");
+        fprintf(conservedquantitiesfile, "%d:barycenter-pos[z] ", output_cnt++);
 #endif
 #endif
-        fprintf(conservedquantitiesfile, "barycenter-vel[x]         ");
+        fprintf(conservedquantitiesfile, "%d:barycenter-vel[x] ", output_cnt++);
 #if DIM > 1
-        fprintf(conservedquantitiesfile, "barycenter-vel[y]         ");
+        fprintf(conservedquantitiesfile, "%d:barycenter-vel[y] ", output_cnt++);
 #if DIM == 3
-        fprintf(conservedquantitiesfile, "barycenter-vel[z]         ");
+        fprintf(conservedquantitiesfile, "%d:barycenter-vel[z]", output_cnt++);
 #endif
 #endif
         fprintf(conservedquantitiesfile, "\n");
