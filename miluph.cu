@@ -115,7 +115,6 @@ extern __device__ SPH_kernel wendlandc4_p;
 extern __device__ SPH_kernel wendlandc6_p;
 extern __device__ SPH_kernel cubic_spline_p;
 extern __device__ SPH_kernel spiky_p;
-extern __device__ SPH_kernel quartic_spline_p;
 SPH_kernel kernel_h;
 
 
@@ -592,7 +591,7 @@ void usage(char *name)
             "\t\t\t\t\t 'rk2_adaptive' (default, 2nd order with adaptive time step),\n"
             "\t\t\t\t\t 'heun_rk4' (2nd order for sph coupled with fourth order for n-body).\n"
             "\t-k, --kernel <name>\t\t Set kernel function (default: 'cubic_spline').\n"
-            "\t      \t\t\t\t Options: wendlandc2, wendlandc4, wendlandc6, cubic_spline, quartic_spline, spiky.\n"
+            "\t      \t\t\t\t Options: wendlandc2, wendlandc4, wendlandc6, cubic_spline, spiky.\n"
             "\t-L, --angular_momentum <value> \t Check for conservation of angular momentum (default: off).\n"
             "\t\t\t\t\t Simulation stops once the relative difference between current and initial angular momentum is larger than <value>.\n"
             "\t-m, --materialconfig <name>\t Name of libconfig file including material config (default: material.cfg)\n"
@@ -1041,10 +1040,6 @@ int main(int argc, char *argv[])
     } else if (0 == strcmp(param.kernel, "spiky")) {
         fprintf(stdout, "using spiky kernel\n");
         cudaMemcpyFromSymbol(&kernel_h, spiky_p, sizeof(SPH_kernel));
-        cudaMemcpyToSymbol(kernel, &kernel_h, sizeof(SPH_kernel));
-    } else if (0 == strcmp(param.kernel, "quartic_spline")) {
-        fprintf(stdout, "using quartic_spline kernel\n");
-        cudaMemcpyFromSymbol(&kernel_h, quartic_spline_p, sizeof(SPH_kernel));
         cudaMemcpyToSymbol(kernel, &kernel_h, sizeof(SPH_kernel));
     } else {
         fprintf(stderr, "Err. No such kernel function implemented yet: %s.\n", param.kernel);

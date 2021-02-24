@@ -88,10 +88,8 @@ __global__ void calculateDensity(int *interactions) {
             W /= p_rhs.shepard_correction[i];
 #endif
             rho = p.m[i] * W;
-// correction factors for Wendland CX kernels
-            if (kernel == wendlandc2_p) {
-                // these values are for 3D from Dehnen and Aly 2012. aiaiaiaiaiai
-                rho -= rho*0.0294*powf((double) p.noi[i], -0.977);
+            if (rho == 0.0) {
+                printf("rho is %f W: %e \n", rho, W);
             }
             // sph sum for particle i
             for (j = 0; j < p.noi[i]; j++) {
