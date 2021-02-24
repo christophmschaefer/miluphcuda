@@ -1129,35 +1129,39 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Ohoh... Cannot open '%s' for writing. Abort...\n", param.conservedquantitiesfilename);
             exit(1);
         }
-        fprintf(conservedquantitiesfile, " #   1.time                  2.SPH-part-total  3.SPH-part-deactivated 4.grav.point-masses              5.total-mass    6.total-kinetic-energy    7.total-inner-energy      ");
+        fprintf(conservedquantitiesfile, " # 1:time 2:SPH-part-total 3:SPH-part-deactivated 4:grav.point-masses 5:total-mass 6:total-kinetic-energy 7:total-inner-energy ");
+        int output_cnt = 8;
 #if OUTPUT_GRAV_ENERGY
-        fprintf(conservedquantitiesfile, "8.total-grav-energy       ");
+        fprintf(conservedquantitiesfile, "%d:total-grav-energy ", output_cnt++);
 #endif
-        fprintf(conservedquantitiesfile, "total-momentum            total-momentum[x]         ");
+        fprintf(conservedquantitiesfile, "%d:total-momentum ", output_cnt++);
+        fprintf(conservedquantitiesfile, "%d:total-momentum[x] ", output_cnt++);
 #if DIM > 1
-        fprintf(conservedquantitiesfile, "total-momentum[y]         ");
+        fprintf(conservedquantitiesfile, "%d:total-momentum[y] ", output_cnt++);
 #if DIM == 3
-        fprintf(conservedquantitiesfile, "total-momentum[z]         ");
+        fprintf(conservedquantitiesfile, "%d:total-momentum[z] ", output_cnt++);
 #endif
 #endif
 #if DIM > 1
-        fprintf(conservedquantitiesfile, "total-angular-mom         total-angular-mom[x]      total-angular-mom[y] ");
+        fprintf(conservedquantitiesfile, "%d:total-angular-mom ", output_cnt++);
+        fprintf(conservedquantitiesfile, "%d:total-angular-mom[x] ", output_cnt++);
+        fprintf(conservedquantitiesfile, "%d:total-angular-mom[y] ", output_cnt++);
 #if DIM == 3
-        fprintf(conservedquantitiesfile, "total-angular-mom[z]      ");
+        fprintf(conservedquantitiesfile, "%d:total-angular-mom[z] ", output_cnt++);
 #endif
 #endif
-        fprintf(conservedquantitiesfile, "barycenter-pos[x]         ");
+        fprintf(conservedquantitiesfile, "%d:barycenter-pos[x] ", output_cnt++);
 #if DIM > 1
-        fprintf(conservedquantitiesfile, "barycenter-pos[y]         ");
+        fprintf(conservedquantitiesfile, "%d:barycenter-pos[y] ", output_cnt++);
 #if DIM == 3
-        fprintf(conservedquantitiesfile, "barycenter-pos[z]         ");
+        fprintf(conservedquantitiesfile, "%d:barycenter-pos[z] ", output_cnt++);
 #endif
 #endif
-        fprintf(conservedquantitiesfile, "barycenter-vel[x]         ");
+        fprintf(conservedquantitiesfile, "%d:barycenter-vel[x] ", output_cnt++);
 #if DIM > 1
-        fprintf(conservedquantitiesfile, "barycenter-vel[y]         ");
+        fprintf(conservedquantitiesfile, "%d:barycenter-vel[y] ", output_cnt++);
 #if DIM == 3
-        fprintf(conservedquantitiesfile, "barycenter-vel[z]         ");
+        fprintf(conservedquantitiesfile, "%d:barycenter-vel[z]", output_cnt++);
 #endif
 #endif
         fprintf(conservedquantitiesfile, "\n");
