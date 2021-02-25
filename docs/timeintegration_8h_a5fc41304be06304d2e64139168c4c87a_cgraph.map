@@ -20,10 +20,10 @@
 <area shape="rect" id="node50" href="$memory__handling_8cu.html#a0f9affd655eca13484593d5eeec73294" title="free_pointmass_memory" alt="" coords="199,1401,364,1428"/>
 <area shape="rect" id="node11" href="$rhs_8cu.html#a3ce839e17b600b5ff81502b864d95c86" title="zero_all_derivatives" alt="" coords="461,341,599,368"/>
 <area shape="rect" id="node12" href="$boundary_8cu.html#a092ef939062b27aab9bf0369faa630bf" title="BoundaryConditionsBeforeRHS" alt="" coords="427,392,633,419"/>
-<area shape="rect" id="node13" href="$tree_8cu.html#ad35586f87db125b73735ca74fbe35116" title="computationalDomain" alt="" coords="456,443,604,469"/>
+<area shape="rect" id="node13" href="$tree_8cu.html#a03860ee1363c609f70211637036ab443" title="computationalDomain" alt="" coords="456,443,604,469"/>
 <area shape="rect" id="node14" href="$tree_8cu.html#ad2c17b7a6e842835311d5502e30cef6b" title="buildTree" alt="" coords="493,493,567,520"/>
 <area shape="rect" id="node15" href="$tree_8cu.html#a409f6d46534c450659fd202310fa1551" title="getTreeDepth" alt="" coords="479,544,581,571"/>
-<area shape="rect" id="node16" href="$tree_8cu.html#a59b57cd8d63b7c9793e441ef1792f03a" title="check_sml_boundary" alt="" coords="457,595,603,621"/>
+<area shape="rect" id="node16" href="$tree_8h.html#a59b57cd8d63b7c9793e441ef1792f03a" title="check_sml_boundary" alt="" coords="693,679,838,705"/>
 <area shape="rect" id="node17" href="$tree_8h.html#a050f6a7f19647d225c91d9d548ea6c0c" title="knnNeighbourSearch" alt="" coords="459,645,601,672"/>
 <area shape="rect" id="node18" href="$tree_8cu.html#a17108361cf7fb6aceec797277720fea1" title="nearNeighbourSearch\l_modify_sml" alt="" coords="457,697,603,738"/>
 <area shape="rect" id="node19" href="$tree_8cu.html#a479b902754e4995b95be63d446ec9506" title="nearNeighbourSearch" alt="" coords="457,763,603,789"/>

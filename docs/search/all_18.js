@@ -5,7 +5,5 @@ var searchData=
   ['xsph',['XSPH',['../examples_2giant__collisions_2hydro_2parameter_8h.html#af07f1752d895f5c82c7e916848b68af0',1,'XSPH():&#160;parameter.h'],['../examples_2giant__collisions_2solid_2parameter_8h.html#af07f1752d895f5c82c7e916848b68af0',1,'XSPH():&#160;parameter.h'],['../parameter_8h.html#af07f1752d895f5c82c7e916848b68af0',1,'XSPH():&#160;parameter.h'],['../test__cases_2colliding__rings_2parameter_8h.html#af07f1752d895f5c82c7e916848b68af0',1,'XSPH():&#160;parameter.h'],['../test__cases_2gravity__merging_2parameter_8h.html#af07f1752d895f5c82c7e916848b68af0',1,'XSPH():&#160;parameter.h'],['../test__cases_2nakamura_2parameter_8h.html#af07f1752d895f5c82c7e916848b68af0',1,'XSPH():&#160;parameter.h'],['../test__cases_2shocktube_2parameter_8h.html#af07f1752d895f5c82c7e916848b68af0',1,'XSPH():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#af07f1752d895f5c82c7e916848b68af0',1,'XSPH():&#160;parameter.h']]],
   ['xsph_2ecu',['xsph.cu',['../xsph_8cu.html',1,'']]],
   ['xsph_2eh',['xsph.h',['../xsph_8h.html',1,'']]],
-  ['xsphvx',['xsphvx',['../struct_particle.html#aed207bd3dc0b95977e17230978bf4000',1,'Particle']]],
-  ['xsphvy',['xsphvy',['../struct_particle.html#aba65ff96b8318478a4d988740471ec47',1,'Particle']]],
-  ['xsphvz',['xsphvz',['../struct_particle.html#a24bd1ca56ec9a589b4b1b4fd9ef5b4cf',1,'Particle']]]
+  ['xsphvx',['xsphvx',['../struct_particle.html#aed207bd3dc0b95977e17230978bf4000',1,'Particle']]]
 ];

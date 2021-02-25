@@ -1,4 +1,21 @@
 var searchData=
 [
-  ['quartic_5fspline_5fp',['quartic_spline_p',['../kernel_8cu.html#ae15e886692f9a6093470e04ff86c6b04',1,'quartic_spline_p():&#160;kernel.cu'],['../miluph_8cu.html#ae15e886692f9a6093470e04ff86c6b04',1,'quartic_spline_p():&#160;kernel.cu']]]
+  ['radius',['radius',['../gravity_8cu.html#ad08932ed6e233d1eb2588cc52975d91a',1,'radius():&#160;timeintegration.cu'],['../timeintegration_8cu.html#ad08932ed6e233d1eb2588cc52975d91a',1,'radius():&#160;timeintegration.cu'],['../tree_8cu.html#ad08932ed6e233d1eb2588cc52975d91a',1,'radius():&#160;timeintegration.cu']]],
+  ['relaxedperblock',['relaxedPerBlock',['../config__parameter_8cu.html#aabf2d912c2289161729037f032f7832e',1,'relaxedPerBlock():&#160;config_parameter.cu'],['../timeintegration_8h.html#aabf2d912c2289161729037f032f7832e',1,'relaxedPerBlock():&#160;config_parameter.cu']]],
+  ['reset_5fmovingparticles',['reset_movingparticles',['../rhs_8cu.html#ab8b2eb210d62fd332cd2c0ac4e8647df',1,'reset_movingparticles():&#160;timeintegration.cu'],['../timeintegration_8cu.html#ab8b2eb210d62fd332cd2c0ac4e8647df',1,'reset_movingparticles():&#160;timeintegration.cu'],['../tree_8cu.html#ab8b2eb210d62fd332cd2c0ac4e8647df',1,'reset_movingparticles():&#160;timeintegration.cu']]],
+  ['restart',['restart',['../struct_run_parameter.html#aed4fd879f7fb81e11eafa2cb571badc6',1,'RunParameter']]],
+  ['restartedrun',['restartedRun',['../miluph_8cu.html#ac2181c08064123d55cc01a6b99278766',1,'restartedRun():&#160;miluph.cu'],['../miluph_8h.html#ac2181c08064123d55cc01a6b99278766',1,'restartedRun():&#160;miluph.cu']]],
+  ['rho',['rho',['../struct_particle.html#a679c91d88b1ce54aec008ff070516add',1,'Particle']]],
+  ['rhomin',['rhomin',['../config__parameter_8cu.html#a76820fd6a7048a4c4197ef2a83c6ff44',1,'rhomin():&#160;config_parameter.cu'],['../io_8cu.html#a76820fd6a7048a4c4197ef2a83c6ff44',1,'rhomin():&#160;config_parameter.cu']]],
+  ['rhomin_5fd',['rhomin_d',['../config__parameter_8cu.html#ad582eac2194aaf3d9165ecb54a56a4b5',1,'rhomin_d():&#160;config_parameter.cu'],['../coupled__heun__rk4__sph__nbody_8cu.html#ad582eac2194aaf3d9165ecb54a56a4b5',1,'rhomin_d():&#160;config_parameter.cu'],['../predictor__corrector_8cu.html#ad582eac2194aaf3d9165ecb54a56a4b5',1,'rhomin_d():&#160;config_parameter.cu'],['../predictor__corrector__euler_8cu.html#ad582eac2194aaf3d9165ecb54a56a4b5',1,'rhomin_d():&#160;config_parameter.cu']]],
+  ['rk',['rk',['../miluph_8cu.html#a4a6c73e833d232244b849c1e8156329e',1,'rk():&#160;miluph.cu'],['../miluph_8h.html#a4a6c73e833d232244b849c1e8156329e',1,'rk():&#160;miluph.cu']]],
+  ['rk4_5fpointmass',['rk4_pointmass',['../miluph_8cu.html#aba2e824b8039fa97c4dbd8896c0348e7',1,'rk4_pointmass():&#160;miluph.cu'],['../miluph_8h.html#aba2e824b8039fa97c4dbd8896c0348e7',1,'rk4_pointmass():&#160;miluph.cu']]],
+  ['rk4_5fpointmass_5fdevice',['rk4_pointmass_device',['../miluph_8cu.html#a48de72118cf166e5fe057dbe49778931',1,'rk4_pointmass_device():&#160;miluph.cu'],['../miluph_8h.html#a48de72118cf166e5fe057dbe49778931',1,'rk4_pointmass_device():&#160;miluph.cu']]],
+  ['rk_5fdevice',['rk_device',['../miluph_8cu.html#ad14f5c9f5d1b53b977aede013407bb27',1,'rk_device():&#160;miluph.cu'],['../miluph_8h.html#ad14f5c9f5d1b53b977aede013407bb27',1,'rk_device():&#160;miluph.cu']]],
+  ['rk_5fepsrel',['rk_epsrel',['../struct_run_parameter.html#a50efe63001714405bea22595bcb8c2ac',1,'RunParameter']]],
+  ['rk_5fepsrel_5fd',['rk_epsrel_d',['../rk2adaptive_8cu.html#a0ef10e599aed748090165aca4ad40fee',1,'rk2adaptive.cu']]],
+  ['rk_5fpointmass',['rk_pointmass',['../miluph_8cu.html#a50749133e014ae2cc306ea78084cffd9',1,'rk_pointmass():&#160;miluph.cu'],['../miluph_8h.html#a50749133e014ae2cc306ea78084cffd9',1,'rk_pointmass():&#160;miluph.cu']]],
+  ['rk_5fpointmass_5fdevice',['rk_pointmass_device',['../miluph_8cu.html#aacd189a1104a14b8bd9fa8f34653678c',1,'rk_pointmass_device():&#160;miluph.cu'],['../miluph_8h.html#aacd189a1104a14b8bd9fa8f34653678c',1,'rk_pointmass_device():&#160;miluph.cu']]],
+  ['rmax',['rmax',['../struct_pointmass.html#a66b7cf77e93a25037dfd1db0a873774f',1,'Pointmass']]],
+  ['rmin',['rmin',['../struct_pointmass.html#a06d075a5c4a01722f7830651b159887b',1,'Pointmass']]]
 ];

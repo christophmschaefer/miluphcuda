@@ -15,13 +15,12 @@ var searchData=
   ['dedt',['dedt',['../struct_particle.html#a07b0d28672df8667f4bf7201319ae037',1,'Particle']]],
   ['density_2ecu',['density.cu',['../density_8cu.html',1,'']]],
   ['density_2eh',['density.h',['../density_8h.html',1,'']]],
-  ['density_5ffloor',['DENSITY_FLOOR',['../test__cases_2colliding__rings_2parameter_8h.html#aa2c517ac5cae8e0b853b1f64abc9f523',1,'DENSITY_FLOOR():&#160;parameter.h'],['../test__cases_2nakamura_2parameter_8h.html#aa2c517ac5cae8e0b853b1f64abc9f523',1,'DENSITY_FLOOR():&#160;parameter.h'],['../test__cases_2shocktube_2parameter_8h.html#aa2c517ac5cae8e0b853b1f64abc9f523',1,'DENSITY_FLOOR():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#aa2c517ac5cae8e0b853b1f64abc9f523',1,'DENSITY_FLOOR():&#160;parameter.h']]],
+  ['density_5ffloor',['DENSITY_FLOOR',['../test__cases_2colliding__rings_2parameter_8h.html#aa2c517ac5cae8e0b853b1f64abc9f523',1,'DENSITY_FLOOR():&#160;parameter.h'],['../test__cases_2nakamura_2parameter_8h.html#aa2c517ac5cae8e0b853b1f64abc9f523',1,'DENSITY_FLOOR():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#aa2c517ac5cae8e0b853b1f64abc9f523',1,'DENSITY_FLOOR():&#160;parameter.h']]],
   ['depth',['depth',['../struct_particle.html#ab1770b2d516b9a7afb34712b44ab2d9d',1,'Particle']]],
   ['det2x2',['det2x2',['../linalg_8cu.html#ae7e9ccfd8053141e2aa49bae33ae4771',1,'linalg.cu']]],
   ['detectvelocityrelaxation',['detectVelocityRelaxation',['../timeintegration_8h.html#a888b4cc7c1dc59101c0c003d9d9a4b41',1,'timeintegration.h']]],
   ['device_5ftools_2ecu',['device_tools.cu',['../device__tools_8cu.html',1,'']]],
   ['device_5ftools_2eh',['device_tools.h',['../device__tools_8h.html',1,'']]],
-  ['dhdt',['dhdt',['../struct_particle.html#a6e25fdafe796b9d51c55ce84ec1d8201',1,'Particle']]],
   ['dim',['DIM',['../examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a',1,'DIM():&#160;parameter.h'],['../examples_2giant__collisions_2solid_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a',1,'DIM():&#160;parameter.h'],['../parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a',1,'DIM():&#160;parameter.h'],['../test__cases_2colliding__rings_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a',1,'DIM():&#160;parameter.h'],['../test__cases_2gravity__merging_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a',1,'DIM():&#160;parameter.h'],['../test__cases_2nakamura_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a',1,'DIM():&#160;parameter.h'],['../test__cases_2shocktube_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a',1,'DIM():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a',1,'DIM():&#160;parameter.h']]],
   ['direct_5fselfgravity',['direct_selfgravity',['../gravity_8cu.html#ae5e3b04a91f0dd501c9511cb40bea5cd',1,'direct_selfgravity():&#160;gravity.cu'],['../gravity_8h.html#ae5e3b04a91f0dd501c9511cb40bea5cd',1,'direct_selfgravity():&#160;gravity.cu']]],
   ['directselfgravity',['directselfgravity',['../struct_run_parameter.html#a8c4c8c6d1ee4d3898685dda3ee1a64f8',1,'RunParameter']]],
@@ -35,7 +34,5 @@ var searchData=
   ['dtmax',['dtmax',['../coupled__heun__rk4__sph__nbody_8cu.html#a53b2449dab54a247254bbb7809f73eb8',1,'dtmax():&#160;timeintegration.cu'],['../predictor__corrector_8cu.html#a53b2449dab54a247254bbb7809f73eb8',1,'dtmax():&#160;timeintegration.cu'],['../predictor__corrector__euler_8cu.html#a53b2449dab54a247254bbb7809f73eb8',1,'dtmax():&#160;timeintegration.cu'],['../rk2adaptive_8cu.html#a53b2449dab54a247254bbb7809f73eb8',1,'dtmax():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a53b2449dab54a247254bbb7809f73eb8',1,'dtmax():&#160;timeintegration.cu']]],
   ['dtnewalphacheck',['dtNewAlphaCheck',['../rk2adaptive_8cu.html#ae7a7e6a780bb6e738ac1e940d8270540',1,'dtNewAlphaCheck():&#160;timeintegration.cu'],['../timeintegration_8cu.html#ae7a7e6a780bb6e738ac1e940d8270540',1,'dtNewAlphaCheck():&#160;timeintegration.cu']]],
   ['dtnewerrorcheck',['dtNewErrorCheck',['../rk2adaptive_8cu.html#a7aca55223414b7a0a352dba6178b180f',1,'dtNewErrorCheck():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a7aca55223414b7a0a352dba6178b180f',1,'dtNewErrorCheck():&#160;timeintegration.cu']]],
-  ['dxdt',['dxdt',['../struct_particle.html#a43d5144a8cdd77c139e1e83d67a9df4e',1,'Particle']]],
-  ['dydt',['dydt',['../struct_particle.html#afdb0141f115bf57a530ad057ca8a3a5e',1,'Particle']]],
-  ['dzdt',['dzdt',['../struct_particle.html#a051c0efdd7e746f942bee567ae19aa51',1,'Particle']]]
+  ['dxdt',['dxdt',['../struct_particle.html#a43d5144a8cdd77c139e1e83d67a9df4e',1,'Particle']]]
 ];

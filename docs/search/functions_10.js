@@ -1,7 +1,7 @@
 var searchData=
 [
   ['read_5fparticles_5ffrom_5ffile',['read_particles_from_file',['../io_8cu.html#ace12b259be57c81c83b0cb51acc2a9be',1,'read_particles_from_file(File inputFile):&#160;io.cu'],['../io_8h.html#ace12b259be57c81c83b0cb51acc2a9be',1,'read_particles_from_file(File inputFile):&#160;io.cu']]],
-  ['redo_5fneighboursearch',['redo_NeighbourSearch',['../density_8cu.html#a9662d454a3cbb46229e8120225ce24d8',1,'redo_NeighbourSearch(int particle_id, int *interactions):&#160;tree.cu'],['../tree_8cu.html#a9662d454a3cbb46229e8120225ce24d8',1,'redo_NeighbourSearch(int particle_id, int *interactions):&#160;tree.cu'],['../tree_8h.html#a9662d454a3cbb46229e8120225ce24d8',1,'redo_NeighbourSearch(int particle_id, int *interactions):&#160;tree.cu']]],
+  ['redo_5fneighboursearch',['redo_NeighbourSearch',['../tree_8h.html#a9662d454a3cbb46229e8120225ce24d8',1,'tree.h']]],
   ['rhs_5fpointmass',['rhs_pointmass',['../rk4__pointmass_8cu.html#a9b92bc19490d57bf918cb46b4a810547',1,'rhs_pointmass():&#160;rk4_pointmass.cu'],['../rk4__pointmass_8h.html#a9b92bc19490d57bf918cb46b4a810547',1,'rhs_pointmass():&#160;rk4_pointmass.cu']]],
   ['righthandside',['rightHandSide',['../rhs_8cu.html#aaa69e1e6250e714b978b8f83f260a28d',1,'rightHandSide():&#160;rhs.cu'],['../rhs_8h.html#a79f2901b84de8677e26895104ee8d410',1,'rightHandSide(void):&#160;rhs.cu']]],
   ['rk2adaptive',['rk2Adaptive',['../rk2adaptive_8cu.html#a8d37d229e9c2b5972c19177be715137b',1,'rk2Adaptive():&#160;rk2adaptive.cu'],['../rk2adaptive_8h.html#a8d37d229e9c2b5972c19177be715137b',1,'rk2Adaptive():&#160;rk2adaptive.cu'],['../timeintegration_8h.html#ac83bf5e9a92c2318d6ec80dab45cfc6f',1,'rk2Adaptive(void):&#160;rk2adaptive.cu']]],
