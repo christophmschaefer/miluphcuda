@@ -42,8 +42,6 @@ extern double *bulk_modulus;
 extern double *cs_porous;
 extern double *till_rho_0;
 
-extern int numberOfMaterials;
-
 extern double *matporjutzi_p_elastic_d;
 extern double *matporjutzi_p_transition_d;
 extern double *matporjutzi_p_compacted_d;
@@ -248,6 +246,11 @@ extern __constant__ int numChildren;
 extern __constant__ int numNodes;
 extern __constant__ int maxNumFlaws;
 extern __constant__ double theta; // tree theta
+
+extern int numberOfMaterials;
+
+extern double grav_const;
+extern __device__ double gravConst;
 
 
 void transferMaterialsToGPU();

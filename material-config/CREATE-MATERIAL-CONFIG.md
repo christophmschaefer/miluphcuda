@@ -1,7 +1,7 @@
 How to set up the material config file for miluphcuda
 =====================================================
 
-last updated: 21/Feb/2021
+last updated: 28/Feb/2021
 
 Christoph Burger, Christoph Schäfer  
 christoph.burger@uni-tuebingen.de
@@ -34,7 +34,14 @@ File structure
 The config file consists of key-value pairs, organized in groups for different materials,
 equation of state, etc. Groups are blocks enclosed in `{...}`.
 
+The group *global* contains settings affecting all materials.
+Settings for individual materials are organized in the list *materials*.
+
 The basic file structure, containing *n* different materials, looks like:
+
+        global = {
+            ...
+        }
 
         materials =
         (
@@ -118,15 +125,30 @@ Good to know...
 
 * If values are ommitted, default values are assumed (see below). In most cases, these default values are not what you want.
 
+
 --------------------------------
 
-Available settings
-------------------
+Global settings
+-------------------------
 
-Here, all settings are described, ordered mainly by material model and/or equation of state.
-For the keys in the following lists, the top level is assumed to be a specific material and
-subgroups within materials are denoted by dot syntax. For example, *ID* is on the top level
-of some material, and *eos.type* is the key *type* in the subgroup *eos*.
+The group *global* (see file structure above) contains options affecting all materials:
+
+        Key         Type    Default         Details
+        ___________________________________________
+
+        c_gravity   float   6.67408e-11     grav. constant, determining code units (default is SI),
+                                            check material_data/grav-const.cfg for some options
+
+
+--------------------------------
+
+Individual material settings
+----------------------------
+
+Here, all settings for individual materials are described, ordered mainly by material model and/or
+equation of state. For the keys in the following lists, the top level is assumed to be a specific material
+and subgroups within materials are denoted by dot syntax. For example, *ID* is on the top level of some material,
+and *eos.type* is the key *type* in the subgroup *eos*. (See above for the overall file structure.)
 
 All units are SI, unless noted otherwise.
 
