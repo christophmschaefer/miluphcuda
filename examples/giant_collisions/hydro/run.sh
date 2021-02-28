@@ -7,8 +7,8 @@
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64/:$LD_LIBRARY_PATH
 
 # set path to miluphcuda executable [change if necessary]
-MC=../../miluphcuda_01Jan2021/miluphcuda
+MC=../../../miluphcuda
 
-# miluphcuda command line
+# miluphcuda cmd line
 $MC -v -A -f impact.0000 -g -H -I rk2_adaptive -Q 1e-4 -m material.cfg -M 5.0 -n 75 -t 100.0 -s 1>miluphcuda.output 2>miluphcuda.error &
 
