@@ -289,25 +289,33 @@ double *cs_porous;
 
 int numberOfMaterials;
 
+double grav_const;
+__device__ double gravConst;
+
 
 
 void transferMaterialsToGPU()
 {
     double *pc_pointer;
     double scale_height_host;
-    config_setting_t *materials, *disk;
+    config_setting_t *global, *materials, *disk;
 
     // set some stuff for some integrators
     set_integration_parameters();
 
+    // read global properties
+    grav_const = 6.67408e-11;   // default in SI
+    global = config_lookup(&param.config, "global");
+    if( global != NULL ) {
+        config_setting_lookup_float(global, "c_gravity", &grav_const);
+    }
+
     // read disk properties
     disk = config_lookup(&param.config, "disk");
-
     if (disk != NULL) {
         config_setting_lookup_float(disk, "scale_height", &scale_height_host);
         fprintf(stdout, "Found disk scale height: %e\n", scale_height_host);
     }
-
 
     // read material properties
     materials = config_lookup(&param.config, "materials");
@@ -337,7 +345,7 @@ void transferMaterialsToGPU()
         }
 
         numberOfMaterials = numberOfElements;   // global, needed externally
-        
+
         // allocate memory on host
         sml = (double*)calloc(numberOfElements,sizeof(double));
         int *eos = (int*)calloc(numberOfElements,sizeof(int));
@@ -833,6 +841,10 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpy(matYoungModulus_d, young_modulus, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpyToSymbol(matYoungModulus, &matYoungModulus_d, sizeof(void*)));
 #endif
+
+        cudaGetSymbolAddress((void **)&pc_pointer, gravConst);
+        cudaMemcpy(pc_pointer, &grav_const, sizeof(double), cudaMemcpyHostToDevice);
+
         cudaGetSymbolAddress((void **)&pc_pointer, scale_height);
         cudaMemcpy(pc_pointer, &scale_height_host, sizeof(double), cudaMemcpyHostToDevice);
 
@@ -1072,6 +1084,7 @@ void transferMaterialsToGPU()
 #endif
 
         fprintf(stdout, "Using following values for sph\n");
+        fprintf(stdout, "  grav-constant = %e\n", grav_const);
         fprintf(stdout, "Material No \t smoothing length or number of interactions \t density floor \t alpha \t\t beta\n");
         fprintf(stdout, "------------\t--------------------------------------------\t---------------\t-------\t\t-----\n");
         for (i = 0; i < numberOfMaterials; i++) {

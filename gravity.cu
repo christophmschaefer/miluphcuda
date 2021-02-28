@@ -114,11 +114,11 @@ __device__ void get_acceleration_by_particle(int n, double *ax, double *ay, doub
         rrr = smlcubed;
     }
     if (r < pointmass.rmax[n]) {
-        *ax = -C_GRAVITY * p.m[i] * dr[0]/(rrr);
+        *ax = -gravConst * p.m[i] * dr[0]/(rrr);
 #if DIM > 1
-        *ay = -C_GRAVITY * p.m[i] * dr[1]/(rrr);
+        *ay = -gravConst * p.m[i] * dr[1]/(rrr);
 #if DIM > 2
-        *az = -C_GRAVITY * p.m[i] * dr[2]/(rrr);
+        *az = -gravConst * p.m[i] * dr[2]/(rrr);
 #endif
 #endif
     } else {
@@ -252,11 +252,11 @@ __global__ void gravitation_from_point_masses(int calculate_nbody)
                 }
                 r = sqrt(r);
                 rrr = r*r*r;
-                pointmass.ax[i] += C_GRAVITY * pointmass.m[j] * dr[0]/(rrr);
+                pointmass.ax[i] += gravConst * pointmass.m[j] * dr[0]/(rrr);
     #if DIM > 1
-                pointmass.ay[i] += C_GRAVITY * pointmass.m[j] * dr[1]/(rrr);
+                pointmass.ay[i] += gravConst * pointmass.m[j] * dr[1]/(rrr);
     #if DIM > 2
-                pointmass.az[i] += C_GRAVITY * pointmass.m[j] * dr[2]/(rrr);
+                pointmass.az[i] += gravConst * pointmass.m[j] * dr[2]/(rrr);
     #endif
     #endif
             }
@@ -291,11 +291,11 @@ __global__ void gravitation_from_point_masses(int calculate_nbody)
 	    	    rrr = smlcubed;
 	        }
             if (r < pointmass.rmax[j]) {
-                p.ax[i] += C_GRAVITY * pointmass.m[j] * dr[0]/(rrr);
+                p.ax[i] += gravConst * pointmass.m[j] * dr[0]/(rrr);
 #if DIM > 1
-                p.ay[i] += C_GRAVITY * pointmass.m[j] * dr[1]/(rrr);
+                p.ay[i] += gravConst * pointmass.m[j] * dr[1]/(rrr);
 #if DIM > 2
-                p.az[i] += C_GRAVITY * pointmass.m[j] * dr[2]/(rrr);
+                p.az[i] += gravConst * pointmass.m[j] * dr[2]/(rrr);
 #endif
 #endif
             } else {
@@ -353,7 +353,7 @@ __global__ void direct_selfgravity()
                 dist += dx[d]*dx[d];
             }
             dist = sqrt(dist);
-		    f = C_GRAVITY * p.m[j]; // / (distance*distance*distance);
+		    f = gravConst * p.m[j]; // / (distance*distance*distance);
 		    f /= dist > sml ? (dist*dist*dist) : (sml*sml*sml);
             for (d = 0; d < DIM; d++) {
                 a_grav[d] -= f*dx[d];
@@ -452,7 +452,7 @@ __global__ void selfgravity()
 					if (child < numParticles || distance * thetasq > cellsize[depth]) {
 						distance = sqrt(distance);
                         //distance += 1e10;
-						f = C_GRAVITY * p.m[child]; // / (distance*distance*distance);
+						f = gravConst * p.m[child]; // / (distance*distance*distance);
 						f /= distance > sml ? (distance*distance*distance) : (sml*sml*sml);
            //             f = 0.0;
 						ax += f*dx;

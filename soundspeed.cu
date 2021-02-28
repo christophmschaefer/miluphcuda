@@ -58,7 +58,7 @@ __global__ void calculateSoundSpeed()
                 m_com += pointmass.m[j];
             }
 
-            double vkep = sqrt(C_GRAVITY * m_com/distance);
+            double vkep = sqrt(gravConst * m_com/distance);
             p.cs[i] = vkep * scale_height;
         } else if (EOS_TYPE_IDEAL_GAS == matEOS[matId]) {
             p.cs[i] = sqrt(matPolytropicGamma[matId] * p.p[i] / p.rho[i]);

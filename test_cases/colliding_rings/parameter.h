@@ -162,16 +162,6 @@
 // maximum number of interactions per particle -> fixed array size
 #define MAX_NUM_INTERACTIONS 180
 
-// gravitational constant in SI
-#define C_GRAVITY_SI 6.67408e-11
-// gravitational constant in AU
-#define C_GRAVITY_AU 3.96425141E-14
-// set G to 1
-#define C_GRAVITY_SIMPLE 1.0
-
-//Choose your fighter, beware of units !!
-#define C_GRAVITY C_GRAVITY_SI
-
 // sets a reference density for the ideal gas eos (if used) - 1% of that is used as DENSITY_FLOOR (if activated) of ideal gas
 #define IDEAL_GAS_REFERENCE_RHO 1.0
 

@@ -1392,6 +1392,8 @@ void read_particles_from_file(File inputFile)
     } /* ! param.hdf5input */
 }
 
+
+
 void write_particles_to_file(File file) {
 
     char h5filename[256];
@@ -1712,7 +1714,7 @@ void write_particles_to_file(File file) {
                     dist += pow(p_host.z[i]-p_host.z[j],2);
 #endif
 #endif
-                    totalgravenergy -= C_GRAVITY * p_host.m[i] * p_host.m[j] / sqrt(dist);
+                    totalgravenergy -= grav_const * p_host.m[i] * p_host.m[j] / sqrt(dist);
                 }
             }
         }
@@ -1729,7 +1731,7 @@ void write_particles_to_file(File file) {
                     dist += pow(p_host.z[i]-pointmass_host.z[j],2);
 #endif
 #endif
-                    totalgravenergy -= C_GRAVITY * p_host.m[i] * pointmass_host.m[j] / sqrt(dist);
+                    totalgravenergy -= grav_const * p_host.m[i] * pointmass_host.m[j] / sqrt(dist);
                 }
             }
         }
@@ -1743,7 +1745,7 @@ void write_particles_to_file(File file) {
                 dist += pow(pointmass_host.z[i]-pointmass_host.z[j],2);
 #endif
 #endif
-                totalgravenergy -= C_GRAVITY * pointmass_host.m[i] * pointmass_host.m[j] / sqrt(dist);
+                totalgravenergy -= grav_const * pointmass_host.m[i] * pointmass_host.m[j] / sqrt(dist);
             }
         }
     }
@@ -1854,8 +1856,8 @@ void write_particles_to_file(File file) {
     h = sqrt(h_x*h_x + h_y*h_y + h_z*h_z);
 #endif // DIM == 3
 
-    a_binary = 1 / ( 2 / distance - velocity*velocity / (C_GRAVITY*(pointmass_host.m[0] + pointmass_host.m[1])) );   // semi-major axis of binary system
-    ecc = sqrt( 1 - h*h / (C_GRAVITY*(pointmass_host.m[0] + pointmass_host.m[1])*a_binary) );    // eccentricity of binary system
+    a_binary = 1 / ( 2 / distance - velocity*velocity / (grav_const*(pointmass_host.m[0] + pointmass_host.m[1])) );   // semi-major axis of binary system
+    ecc = sqrt( 1 - h*h / (grav_const*(pointmass_host.m[0] + pointmass_host.m[1])*a_binary) );    // eccentricity of binary system
 
     /* write binary system file*/
     if( (binarysystemfile = fopen(param.binarysystemfilename, "a")) == NULL ) {

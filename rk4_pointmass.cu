@@ -29,6 +29,7 @@
 #include "rhs.h"
 #include "pressure.h"
 #include "boundary.h"
+#include "config_parameter.h"
 
 extern __device__ double dt;
 
@@ -122,11 +123,11 @@ __global__ void rhs_pointmass()
             }
             r = sqrt(r);
             rrr = r*r*r;
-            pointmass.ax[i] += C_GRAVITY * pointmass.m[j] * dr[0]/(rrr);
+            pointmass.ax[i] += gravConst * pointmass.m[j] * dr[0]/(rrr);
 #if DIM > 1
-            pointmass.ay[i] += C_GRAVITY * pointmass.m[j] * dr[1]/(rrr);
+            pointmass.ay[i] += gravConst * pointmass.m[j] * dr[1]/(rrr);
 #if DIM > 2
-            pointmass.az[i] += C_GRAVITY * pointmass.m[j] * dr[2]/(rrr);
+            pointmass.az[i] += gravConst * pointmass.m[j] * dr[2]/(rrr);
 #endif
 #endif
         }
