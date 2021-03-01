@@ -68,7 +68,7 @@ $(function() {
 <div class="title">How to set up the material config file for miluphcuda </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>last updated: 21/Feb/2021</p>
+<div class="textblock"><p>last updated: 28/Feb/2021</p>
 <p>Christoph Burger, Christoph Schäfer <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a> </p><hr/>
 <h2>Purpose </h2>
 <p>miluphcuda supports multiple materials, and multiple rheologies. Many important settings for the material model, especially material parameters, are parsed in a structured config file, typically named <em>material.cfg</em>. In addition to material parameters, some numerical settings (e.g., for the smoothing length) are also configured via that file.</p>
@@ -81,7 +81,12 @@ $(function() {
 <p>The config file is passed to miluphcuda by the <code>-m</code> cmd-line option. </p><hr/>
 <h2><a class="el" href="struct_file.html">File</a> structure </h2>
 <p>The config file consists of key-value pairs, organized in groups for different materials, equation of state, etc. Groups are blocks enclosed in <code>{...}</code>.</p>
-<p>The basic file structure, containing <em>n</em> different materials, looks like: </p><pre class="fragment">    materials =
+<p>The group <em>global</em> contains settings affecting all materials. Settings for individual materials are organized in the list <em>materials</em>.</p>
+<p>The basic file structure, containing <em>n</em> different materials, looks like: </p><pre class="fragment">    global = {
+        ...
+    }
+
+    materials =
     (
         {
             ID = 0
@@ -138,11 +143,18 @@ $(function() {
 </pre><p class="startli">are valid entries. The libconfig specs indicate that a period is <em>always</em> mandatory for floats...</p>
 </li>
 <li>The code prints out all read material parameters if the verbose flag <code>-v</code> is used.</li>
-<li>If values are ommitted, default values are assumed (see below). In most cases, these default values are not what you want. <hr/>
-</li>
+<li>If values are ommitted, default values are assumed (see below). In most cases, these default values are not what you want.</li>
 </ul>
-<h2>Available settings </h2>
-<p>Here, all settings are described, ordered mainly by material model and/or equation of state. For the keys in the following lists, the top level is assumed to be a specific material and subgroups within materials are denoted by dot syntax. For example, <em>ID</em> is on the top level of some material, and <em>eos.type</em> is the key <em>type</em> in the subgroup <em>eos</em>.</p>
+<hr/>
+<h2>Global settings </h2>
+<p>The group <em>global</em> (see file structure above) contains options affecting all materials: </p><pre class="fragment">    Key         Type    Default         Details
+    ___________________________________________
+
+    c_gravity   float   6.67408e-11     grav. constant, determining code units (default is SI),
+                                        check material_data/grav-const.cfg for some options
+</pre><hr/>
+<h2>Individual material settings </h2>
+<p>Here, all settings for individual materials are described, ordered mainly by material model and/or equation of state. For the keys in the following lists, the top level is assumed to be a specific material and subgroups within materials are denoted by dot syntax. For example, <em>ID</em> is on the top level of some material, and <em>eos.type</em> is the key <em>type</em> in the subgroup <em>eos</em>. (See above for the overall file structure.)</p>
 <p>All units are SI, unless noted otherwise.</p>
 <p>This list is currently not exhaustive.</p>
 <p><b>Always mandatory</b> </p><pre class="fragment">    Key         Type    Default     Details
@@ -262,7 +274,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - How to set up the material config file for miluphcuda<br />
-    Generated on Sun Feb 28 2021 07:05:11 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Mon Mar 1 2021 07:05:12 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>

@@ -15,7 +15,7 @@ var searchData=
   ['dedt',['dedt',['../struct_particle.html#a07b0d28672df8667f4bf7201319ae037',1,'Particle']]],
   ['density_2ecu',['density.cu',['../density_8cu.html',1,'']]],
   ['density_2eh',['density.h',['../density_8h.html',1,'']]],
-  ['density_5ffloor',['DENSITY_FLOOR',['../test__cases_2colliding__rings_2parameter_8h.html#aa2c517ac5cae8e0b853b1f64abc9f523',1,'DENSITY_FLOOR():&#160;parameter.h'],['../test__cases_2nakamura_2parameter_8h.html#aa2c517ac5cae8e0b853b1f64abc9f523',1,'DENSITY_FLOOR():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#aa2c517ac5cae8e0b853b1f64abc9f523',1,'DENSITY_FLOOR():&#160;parameter.h']]],
+  ['density_5ffloor',['DENSITY_FLOOR',['../test__cases_2colliding__rings_2parameter_8h.html#aa2c517ac5cae8e0b853b1f64abc9f523',1,'DENSITY_FLOOR():&#160;parameter.h'],['../test__cases_2viscously__spreading__ring_2parameter_8h.html#aa2c517ac5cae8e0b853b1f64abc9f523',1,'DENSITY_FLOOR():&#160;parameter.h']]],
   ['depth',['depth',['../struct_particle.html#ab1770b2d516b9a7afb34712b44ab2d9d',1,'Particle']]],
   ['det2x2',['det2x2',['../linalg_8cu.html#ae7e9ccfd8053141e2aa49bae33ae4771',1,'linalg.cu']]],
   ['detectvelocityrelaxation',['detectVelocityRelaxation',['../timeintegration_8h.html#a888b4cc7c1dc59101c0c003d9d9a4b41',1,'timeintegration.h']]],
