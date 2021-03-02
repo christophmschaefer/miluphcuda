@@ -519,7 +519,10 @@ void transferMaterialsToGPU()
 
             // read group eos
             subset = config_setting_get_member(material, "eos");
-            config_setting_lookup_int(subset, "type", &eos[ID]);
+            if( !config_setting_lookup_int(subset, "type", &eos[ID]) ) {
+                fprintf(stderr, "ERROR. Each material needs an eos.type in the material config file.\n");
+                exit(EXIT_FAILURE);
+            }
             config_setting_lookup_float(subset, "polytropic_K", &polytropic_K[ID]);
             config_setting_lookup_float(subset, "polytropic_gamma", &polytropic_gamma[ID]);
             config_setting_lookup_float(subset, "bulk_modulus", &bulk_modulus[ID]);
