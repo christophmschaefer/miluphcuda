@@ -1,7 +1,7 @@
 How to set up the material config file for miluphcuda
 =====================================================
 
-last updated: 28/Feb/2021
+last updated: 04/Mar/2021
 
 Christoph Burger, Christoph Schäfer  
 christoph.burger@uni-tuebingen.de
@@ -296,6 +296,21 @@ You need to set `MOHR_COULOMB_PLASTICITY` in parameter.h (at compile time), and 
         eos.yield_stress        float   0.          optional upper limit for the yield strength,
                                                     where you have to additionally set
                                                     VON_MISES_PLASTICITY in parameter.h for this
+
+--------------------------------
+
+**Fragmentation model: Grady-Kipp**
+
+To activate the Grady-Kipp model set `FRAGMENTATION` in parameter.h (at compile time).
+This is currently only possible globally for all materials at once.
+
+        Key                         Type    Default     Details
+        _______________________________________________________
+
+        fragmentation.weibull_k     float   none        not processed by miluphcuda, needed
+                                                        only for some preprocessing tools
+        fragmentation.weibull_m     float   none        not processed by miluphcuda, needed
+                                                        only for some preprocessing tools
 
 --------------------------------
 
