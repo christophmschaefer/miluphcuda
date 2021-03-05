@@ -1,7 +1,7 @@
 How to set up the material config file for miluphcuda
 =====================================================
 
-last updated: 04/Mar/2021
+last updated: 05/Mar/2021
 
 Christoph Burger, Christoph Schäfer  
 christoph.burger@uni-tuebingen.de
@@ -301,16 +301,15 @@ You need to set `MOHR_COULOMB_PLASTICITY` in parameter.h (at compile time), and 
 
 **Fragmentation model: Grady-Kipp**
 
-To activate the Grady-Kipp model set `FRAGMENTATION` in parameter.h (at compile time).
-This is currently only possible globally for all materials at once.
+To activate the Grady-Kipp model set `FRAGMENTATION` in parameter.h (at compile time). This is currently
+only possible globally for all materials at once.
+The following parameters are currently only needed for some pre-processing tools.
 
         Key                         Type    Default     Details
         _______________________________________________________
 
-        fragmentation.weibull_k     float   none        not processed by miluphcuda, needed
-                                                        only for some preprocessing tools
-        fragmentation.weibull_m     float   none        not processed by miluphcuda, needed
-                                                        only for some preprocessing tools
+        fragmentation.weibull_k     float   none        not processed by miluphcuda
+        fragmentation.weibull_m     float   none        not processed by miluphcuda
 
 --------------------------------
 
