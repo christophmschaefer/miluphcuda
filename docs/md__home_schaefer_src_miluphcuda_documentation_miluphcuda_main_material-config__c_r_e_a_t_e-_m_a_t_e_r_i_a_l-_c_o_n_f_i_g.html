@@ -68,7 +68,7 @@ $(function() {
 <div class="title">How to set up the material config file for miluphcuda </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>last updated: 28/Feb/2021</p>
+<div class="textblock"><p>last updated: 05/Mar/2021</p>
 <p>Christoph Burger, Christoph Schäfer <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a> </p><hr/>
 <h2>Purpose </h2>
 <p>miluphcuda supports multiple materials, and multiple rheologies. Many important settings for the material model, especially material parameters, are parsed in a structured config file, typically named <em>material.cfg</em>. In addition to material parameters, some numerical settings (e.g., for the smoothing length) are also configured via that file.</p>
@@ -254,6 +254,13 @@ $(function() {
                                                 where you have to additionally set
                                                 VON_MISES_PLASTICITY in parameter.h for this
 </pre><hr/>
+<p><b>Fragmentation model: Grady-Kipp</b></p>
+<p>To activate the Grady-Kipp model set <code>FRAGMENTATION</code> in parameter.h (at compile time). This is currently only possible globally for all materials at once. The following parameters are currently only needed for some pre-processing tools. </p><pre class="fragment">    Key                         Type    Default     Details
+    _______________________________________________________
+
+    fragmentation.weibull_k     float   none        not processed by miluphcuda
+    fragmentation.weibull_m     float   none        not processed by miluphcuda
+</pre><hr/>
 <p><b>Porosity model: P-alpha</b></p>
 <p>The P-alpha porosity model can be used together with several EoS, which all have a distinct <em>eos.type</em> when used together with the P-alpha model:</p>
 <ul>
@@ -274,7 +281,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - How to set up the material config file for miluphcuda<br />
-    Generated on Fri Mar 5 2021 07:05:13 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Sat Mar 6 2021 07:05:14 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
