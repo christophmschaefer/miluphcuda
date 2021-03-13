@@ -165,6 +165,14 @@ static void print_compile_information(void)
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Fracture model:\t  %s\n", yesno);
+#if FRAGMENTATION
+# if DAMAGE_ACTS_ON_S
+    strcpy(yesno, "yes");
+# else
+    strcpy(yesno, "no");
+# endif
+    fprintf(stdout, "Damage acts on S tensor:\t  %s\n", yesno);
+#endif
 
 #if PALPHA_POROSITY
     strcpy(yesno, "yes");

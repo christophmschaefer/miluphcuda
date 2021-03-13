@@ -29,6 +29,7 @@
 # define PLASTICITY 1
 #endif
 
+// checks for plasticity models
 #if VON_MISES_PLASTICITY && COLLINS_PLASTICITY
 # error ERROR. You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY at the same time.
 #endif
@@ -78,16 +79,16 @@
 # error turn SOLID on when using FRAGMENTATION
 #endif
 
+#if DAMAGE_ACTS_ON_S && !FRAGMENTATION
+# error ERROR. You set DAMAGE_ACTS_ON_S but not FRAGMENTATION in parameter.h. Not working...
+#endif
+
 #if PLASTICITY && JC_PLASTICITY
 # error Error: Cannot use another PLASTICITY model along with JC_PLASTICITY at the same time. Decide for one and recompile.
 #endif
 
 #if SYMMETRIC_STRESSTENSOR && !SOLID
 # error turn SOLID on when using SYMMETRIC_STRESSTENSOR
-#endif
-
-#if COHESION_FOR_DAMAGED_MATERIAL && !FRAGMENTATION
-# error turn on FRAGMENTATION when using COHESION_FOR_DAMAGED_MATERIAL
 #endif
 
 #if SHAKURA_SUNYAEV_ALPHA && CONSTANT_KINEMATIC_VISCOSITY
@@ -112,6 +113,10 @@
 # if FIXED_NOI && INTEGRATE_SML
 #  error use VARIABLE_SML only with FIXED_NOI or INTEGRATE_SML
 # endif
+#endif
+
+#if STRESS_PALPHA_POROSITY && !PALPHA_POROSITY
+# error ERROR. You set STRESS_PALPHA_POROSITY but not PALPHA_POROSITY in parameter.h.
 #endif
 
 

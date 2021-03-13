@@ -782,8 +782,7 @@ __global__ void internalForces(int *interactions) {
         for (d = 0; d < DIM; d++) {
             for (dd = 0; dd < DIM; dd++) {
                 double Stmp = p.S[stressIndex(i,d,dd)];
-// for the Collins model the damage directly affects S via the yield strength, therefore not (additionally) reduced here
-#  if FRAGMENTATION && !COLLINS_PLASTICITY && !COLLINS_PLASTICITY_SIMPLE
+#  if FRAGMENTATION && DAMAGE_ACTS_ON_S
                 Stmp *= (1.0-di);
 #  endif
                 dedt += Stmp / p.rho[i] * edot[d][dd];
@@ -900,20 +899,17 @@ __global__ void internalForces(int *interactions) {
                         p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,d,f)] * rdot[e][f];
                         p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,e,f)] * rdot[d][f];
                     }
-#if PALPHA_POROSITY
-# if STRESS_PALPHA_POROSITY
-#  if FRAGMENTATION
+#if PALPHA_POROSITY && STRESS_PALPHA_POROSITY
                     if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
                         p.dSdt[stressIndex(i,d,e)] = p.f[i] / p.alpha_jutzi[i] * p.dSdt[stressIndex(i,d,e)]
-                                                            - 1.0 / (p.alpha_jutzi[i]*p.alpha_jutzi[i]) * (1-di)*p.S[stressIndex(i,d,e)] * p.dalphadt[i];
-                    }
-#  else
-                    if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN|| matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
-                        p.dSdt[stressIndex(i,d,e)] = p.f[i] / p.alpha_jutzi[i] * p.dSdt[stressIndex(i,d,e)]
-                                                            - 1.0 / (p.alpha_jutzi[i]*p.alpha_jutzi[i]) * p.S[stressIndex(i,d,e)] * p.dalphadt[i];
-                    }
-#  endif
+                                                            - 1.0 / (p.alpha_jutzi[i]*p.alpha_jutzi[i])
+# if FRAGMENTATION && DAMAGE_ACTS_ON_S
+                                                            * (1-di)*p.S[stressIndex(i,d,e)]
+# else
+                                                            * p.S[stressIndex(i,d,e)]
 # endif
+                                                            * p.dalphadt[i];
+                    }
 #endif
                 }
             }
@@ -986,9 +982,9 @@ __global__ void internalForces(int *interactions) {
                 p.dddt[i] = n_active * c_g / sml1;
 
                 if (p.dddt[i] < 0.0) {
-                    printf("error!\n");
-                    printf("%e %e %e %d %d %e %e \n", p.x[i], p.y[i], p.damage_total[i], p.numFlaws[i],
-                            p.numActiveFlaws[i], p.dddt[i], p.local_strain[i]);
+                    printf("ERROR. Found dd/dt < 0 for:\n");
+                    printf("x: %e\t y: %e\t damage_total: %e\t numFlaws: %d\t numActiveFlaws: %d\t dddt: %e\t local_strain: %e\n",
+                            p.x[i], p.y[i], p.damage_total[i], p.numFlaws[i], p.numActiveFlaws[i], p.dddt[i], p.local_strain[i]);
                 }
             } else {
                 // particle already dead
