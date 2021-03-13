@@ -62,6 +62,10 @@
 # error turn SOLID on when using VISCOUS_REGOLITH
 #endif
 
+#if KLEY_VISCOSITY && !NAVIER_STOKES
+# error turn on NAVIER_STOKES when using KLEY_VISCOSITY
+#endif
+
 #if PURE_REGOLITH && !SOLID
 # error turn SOLID on when using PURE_REGOLITH
 #endif

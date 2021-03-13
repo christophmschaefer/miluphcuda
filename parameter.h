@@ -53,6 +53,8 @@
 // choose between two different viscosity models
 #define SHAKURA_SUNYAEV_ALPHA 0
 #define CONSTANT_KINEMATIC_VISCOSITY 0
+// artificial bulk viscosity according to Schaefer et al. (2004)
+#define KLEY_VISCOSITY 0
 
 // damage model following Benz & Asphaug (1995)
 // this needs some preprocessing of the initial particle distribution since activation thresholds have to be distributed among the particles

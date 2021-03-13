@@ -120,6 +120,7 @@ __global__ void internalForces(int *interactions) {
 
 #if NAVIER_STOKES
     double eta;
+    double zetaij;
 #endif
 
     double vvnablaW;
@@ -367,7 +368,7 @@ __global__ void internalForces(int *interactions) {
 #endif
 #endif
 
-#if ARTIFICIAL_VISCOSITY
+#if ARTIFICIAL_VISCOSITY || KLEY_VISCOSITY
             rr = 0.0;
             vr = 0.0;
             for (e = 0; e < DIM; e++) {
@@ -531,6 +532,20 @@ __global__ void internalForces(int *interactions) {
 # endif // SPH_EQU_VERSION
                 }
             }
+#if KLEY_VISCOSITY //artificial bulk viscosity with f=0.5
+            zetaij = 0.0;
+            if (vr < 0) { // only for approaching particles
+                zetaij = -0.5 * (0.25*(p.h[i] + p.h[j])*(p.h[i]+p.h[j])) * (p.rho[i]+p.rho[j])*0.5 * (p_rhs.divv[i] + p_rhs.divv[j])*0.5;
+            }
+            for (d = 0; d < DIM; d++) {
+# if (SPH_EQU_VERSION == 1)
+                accelshearj[d] += zetaij * p.m[j] * (p_rhs.divv[i] + p_rhs.divv[j]) /(p.rho[i]*p.rho[j]) * dWdx[d];
+# elif (SPH_EQU_VERSION == 2)
+                accelshearj[d] += zetaij * p.m[j] * (p_rhs.divv[i]/(p.rho[i]*p.rho[i]) + p_rhs.divv[j]/(p.rho[j]*p.rho[j])) * dWdx[d];
+# endif
+            }
+#endif // KLEY_VISCOSITY
+
 #endif // NAVIER_STOKES
 
 
