@@ -29,34 +29,42 @@
 # define PLASTICITY 1
 #endif
 
+
 // checks for plasticity models
 #if VON_MISES_PLASTICITY && COLLINS_PLASTICITY
 # error ERROR. You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY at the same time.
 #endif
+
 #if VON_MISES_PLASTICITY && COLLINS_PLASTICITY_SIMPLE
 # error ERROR. You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY_SIMPLE at the same time.
 #endif
+
 #if MOHR_COULOMB_PLASTICITY && DRUCKER_PRAGER_PLASTICITY
 # error ERROR. You cannot choose MOHR_COULOMB_PLASTICITY and DRUCKER_PRAGER_PLASTICITY at the same time.
 #endif
+
 #if MOHR_COULOMB_PLASTICITY && COLLINS_PLASTICITY
 # error ERROR. You cannot choose MOHR_COULOMB_PLASTICITY and COLLINS_PLASTICITY at the same time.
 #endif
+
 #if DRUCKER_PRAGER_PLASTICITY && COLLINS_PLASTICITY
 # error ERROR. You cannot choose DRUCKER_PRAGER_PLASTICITY and COLLINS_PLASTICITY at the same time.
 #endif
+
 #if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY && !COLLINS_PLASTICITY
 # error ERROR. You have chosen COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY but not also COLLINS_PLASTICITY in parameter.h. That is not what you want.
 #endif
+
 #if COLLINS_PLASTICITY && COLLINS_PLASTICITY_SIMPLE
 # error ERROR. You have chosen COLLINS_PLASTICITY and also COLLINS_PLASTICITY_SIMPLE in parameter.h. Choose either one, not both.
 #endif
+
 #if COLLINS_PLASTICITY_SIMPLE && COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
 # error ERROR. You have chosen COLLINS_PLASTICITY_SIMPLE and also COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY in parameter.h. This combination is not implemented yet...
 #endif
 
-#if USE_BSPLINE_KERNEL && USE_WENDLAND_KERNEL
-# error specifiy only one kernel
+#if COLLINS_PLASTICITY && DAMAGE_ACTS_ON_S
+# error ERROR. You chose COLLINS_PLASTICITY and also DAMAGE_ACTS_ON_S in parameter.h. Not a good idea.
 #endif
 
 #if VISCOUS_REGOLITH && !SOLID
@@ -75,6 +83,12 @@
 # error turn SOLID on when using JC_PLASTICITY
 #endif
 
+#if PLASTICITY && JC_PLASTICITY
+# error Error: Cannot use another PLASTICITY model along with JC_PLASTICITY at the same time. Decide for one and recompile.
+#endif
+
+
+// checks for fragmentation model
 #if FRAGMENTATION && !SOLID
 # error turn SOLID on when using FRAGMENTATION
 #endif
@@ -83,10 +97,8 @@
 # error ERROR. You set DAMAGE_ACTS_ON_S but not FRAGMENTATION in parameter.h. Not working...
 #endif
 
-#if PLASTICITY && JC_PLASTICITY
-# error Error: Cannot use another PLASTICITY model along with JC_PLASTICITY at the same time. Decide for one and recompile.
-#endif
 
+// misc checks
 #if SYMMETRIC_STRESSTENSOR && !SOLID
 # error turn SOLID on when using SYMMETRIC_STRESSTENSOR
 #endif
@@ -103,6 +115,10 @@
 
 #if DIM == 1 && PARTICLE_ACCRETION
 # error Particle accretion only if DIM > 1
+#endif
+
+#if USE_BSPLINE_KERNEL && USE_WENDLAND_KERNEL
+# error specifiy only one kernel
 #endif
 
 #if ARTIFICIAL_STRESS && !SOLID
