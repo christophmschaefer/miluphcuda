@@ -66,8 +66,8 @@ __global__ void calculate_shear_stress_tensor(int *interactions)
         double dr[DIM];
         double r;
         double sml;
-        double dWdr, W;
-        double dWdx[DIM];
+        double dWdr, dWdrj, W, Wj;
+        double dWdx[DIM], dWdxj[DIM];
 
         for (k = 0; k < DIM*DIM; k++) {
             p.Tshear[i*DIM*DIM+k] = 0.0;

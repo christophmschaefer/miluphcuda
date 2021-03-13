@@ -24,7 +24,7 @@
 #define _PARAMETER_H
 
 // Dimension of the problem
-#define DIM 1
+#define DIM 2
 
 // add additional point masses to the simulation, read from file <filename>.mass
 // format is location velocities mass r_min r_max, where location and velocities are vectors with size DIM and
