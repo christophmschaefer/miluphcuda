@@ -56,9 +56,12 @@
 // artificial bulk viscosity according to Schaefer et al. (2004)
 #define KLEY_VISCOSITY 0
 
-// damage model following Benz & Asphaug (1995)
-// this needs some preprocessing of the initial particle distribution since activation thresholds have to be distributed among the particles
+// This is the damage model following Benz & Asphaug (1995). Set FRAGMENTATION to activate it.
+// The damage acts always on pressure, but only on deviator stresses if DAMAGE_ACTS_ON_S is
+// activated too, which is an important switch depending on the plasticity model (see comments there).
+// Note: The damage model needs distribution of activation thresholds in the input file.
 #define FRAGMENTATION 0
+#define DAMAGE_ACTS_ON_S 0
 
 // Choose the SPH representation to solve the momentum and energy equation:
 // SPH_EQU_VERSION 1: original version with HYDRO dv_a/dt ~ - (p_a/rho_a**2 + p_b/rho_b**2)  \nabla_a W_ab
@@ -112,15 +115,20 @@
 //              Y = (1-damage)*Y_i + damage*Y_d
 //              Y is limited to <= Y_i
 //       Note: If FRAGMENTATION is not activated only Y_i is used.
+//             DAMAGE_ACTS_ON_S is not allowed for this model, since the limiting of S already depends on damage.
 //       If you want to additionally model the influence of some (single) melt energy on the yield strength, then activate
 //       COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY, which adds a factor (1-e/e_melt) to the yield strength.
 #define COLLINS_PLASTICITY 0
 #define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 0
 //   (5) Simplified version of the Collins et al. (2004) model, which uses only the
 //       strength representation for intact material (Y_i), irrespective of damage.
-//       Unlike in (4), Y decreases to zero (following the Y_i function) for p<0.
+//       Unlike in (4), Y decreases to zero (following a linear yield strength curve) for p<0.
+//       In addition, negative pressures are limited to the pressure corresponding to
+//       yield strength = 0 (i.e., are set to this value when they get more negative).
 #define COLLINS_PLASTICITY_SIMPLE 0
-// Note: For (1,2,3) the stress tensor is additionally reduced if FRAGMENTATION is used, for (4,5) not.
+// Note: The deviator stress tensor is additionally reduced by FRAGMENTATION (i.e., damage) only if
+//       DAMAGE_ACTS_ON_S is set. For most plasticity models it depends on the use case whether this
+//       is desired, only for COLLINS_PLASTICITY it is not reasonable (and therefore not allowed).
 
 // model regolith as viscous fluid -> experimental setup, only for powerusers
 #define VISCOUS_REGOLITH 0

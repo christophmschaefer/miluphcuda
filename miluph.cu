@@ -165,6 +165,14 @@ static void print_compile_information(void)
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Fracture model:\t  %s\n", yesno);
+#if FRAGMENTATION
+# if DAMAGE_ACTS_ON_S
+    strcpy(yesno, "yes");
+# else
+    strcpy(yesno, "no");
+# endif
+    fprintf(stdout, "Damage acts on S tensor:\t  %s\n", yesno);
+#endif
 
 #if PALPHA_POROSITY
     strcpy(yesno, "yes");
@@ -204,7 +212,7 @@ static void print_compile_information(void)
 # endif
     fprintf(stdout, "\n");
 #elif COLLINS_PLASTICITY
-    fprintf(stdout, "\t\t\t Collins model: pressure dependent yield strength with cohesion for damaged material");
+    fprintf(stdout, "\t\t\t Collins model: pressure dependent yield strength with friction model for damaged material");
 # if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
     fprintf(stdout, " including strength reduction based on (single) melt energy");
 # endif
