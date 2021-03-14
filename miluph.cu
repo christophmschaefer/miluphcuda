@@ -212,7 +212,7 @@ static void print_compile_information(void)
 # endif
     fprintf(stdout, "\n");
 #elif COLLINS_PLASTICITY
-    fprintf(stdout, "\t\t\t Collins model: pressure dependent yield strength with cohesion for damaged material");
+    fprintf(stdout, "\t\t\t Collins model: pressure dependent yield strength with friction model for damaged material");
 # if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
     fprintf(stdout, " including strength reduction based on (single) melt energy");
 # endif

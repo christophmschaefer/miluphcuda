@@ -120,7 +120,9 @@
 #define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 0
 //   (5) Simplified version of the Collins et al. (2004) model, which uses only the
 //       strength representation for intact material (Y_i), irrespective of damage.
-//       Unlike in (4), Y decreases to zero (following the Y_i function) for p<0.
+//       Unlike in (4), Y decreases to zero (following a linear yield strength curve) for p<0.
+//       In addition, negative pressures are limited to the pressure corresponding to
+//       yield strength = 0 (i.e., are set to this value when they get more negative).
 #define COLLINS_PLASTICITY_SIMPLE 0
 // Note: The deviator stress tensor is additionally reduced by FRAGMENTATION (i.e., damage) only if
 //       DAMAGE_ACTS_ON_S is set. For most plasticity models it depends on the use case whether this
