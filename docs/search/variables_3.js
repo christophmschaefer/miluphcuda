@@ -15,5 +15,6 @@ var searchData=
   ['dtmax',['dtmax',['../coupled__heun__rk4__sph__nbody_8cu.html#a53b2449dab54a247254bbb7809f73eb8',1,'dtmax():&#160;timeintegration.cu'],['../predictor__corrector_8cu.html#a53b2449dab54a247254bbb7809f73eb8',1,'dtmax():&#160;timeintegration.cu'],['../predictor__corrector__euler_8cu.html#a53b2449dab54a247254bbb7809f73eb8',1,'dtmax():&#160;timeintegration.cu'],['../rk2adaptive_8cu.html#a53b2449dab54a247254bbb7809f73eb8',1,'dtmax():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a53b2449dab54a247254bbb7809f73eb8',1,'dtmax():&#160;timeintegration.cu']]],
   ['dtnewalphacheck',['dtNewAlphaCheck',['../rk2adaptive_8cu.html#ae7a7e6a780bb6e738ac1e940d8270540',1,'dtNewAlphaCheck():&#160;timeintegration.cu'],['../timeintegration_8cu.html#ae7a7e6a780bb6e738ac1e940d8270540',1,'dtNewAlphaCheck():&#160;timeintegration.cu']]],
   ['dtnewerrorcheck',['dtNewErrorCheck',['../rk2adaptive_8cu.html#a7aca55223414b7a0a352dba6178b180f',1,'dtNewErrorCheck():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a7aca55223414b7a0a352dba6178b180f',1,'dtNewErrorCheck():&#160;timeintegration.cu']]],
-  ['dxdt',['dxdt',['../struct_particle.html#a43d5144a8cdd77c139e1e83d67a9df4e',1,'Particle']]]
+  ['dxdt',['dxdt',['../struct_particle.html#a43d5144a8cdd77c139e1e83d67a9df4e',1,'Particle']]],
+  ['dydt',['dydt',['../struct_particle.html#afdb0141f115bf57a530ad057ca8a3a5e',1,'Particle']]]
 ];

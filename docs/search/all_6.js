@@ -1,8 +1,9 @@
 var searchData=
 [
   ['false',['FALSE',['../miluph_8h.html#aa93f0eb578d23995850d61f7d61c55c1',1,'miluph.h']]],
-  ['fastkernelvalueandderivative',['fastKernelvalueAndDerivative',['../kernel_8h.html#adeae41efaf54b734138b044f47df8125',1,'kernel.h']]],
+  ['fastkernelvalueandderivative',['fastKernelvalueAndDerivative',['../kernel_8h.html#a8bb5da029e8f5558454e05cb737ccd21',1,'kernel.h']]],
   ['feedback_5fax',['feedback_ax',['../struct_pointmass.html#af4b054c1d3f160aa49e87d2b7d0e84aa',1,'Pointmass']]],
+  ['feedback_5fay',['feedback_ay',['../struct_pointmass.html#a44658e1e4bbca304c5b608e3aeeea107',1,'Pointmass']]],
   ['feels_5fparticles',['feels_particles',['../struct_pointmass.html#a79507509ce00a29a5901aaab266e8a0d',1,'Pointmass']]],
   ['file',['File',['../struct_file.html',1,'File'],['../io_8h.html#ada7f073b56163c95376dd2bcabff6d8d',1,'File():&#160;io.h']]],
   ['fileiothread',['fileIOthread',['../io_8cu.html#a4d9ec4074cd7c3eb5a0fa1b18d7fdbd3',1,'fileIOthread():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a4d9ec4074cd7c3eb5a0fa1b18d7fdbd3',1,'fileIOthread():&#160;timeintegration.cu']]],

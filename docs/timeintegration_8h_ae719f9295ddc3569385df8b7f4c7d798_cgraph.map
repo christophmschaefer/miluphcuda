@@ -7,7 +7,7 @@
 <area shape="rect" id="node5" href="$pressure_8cu.html#a4c983e72593c81e8ad8c3da244750599" title="Calculates the pressure for all particles. " alt="" coords="622,56,749,83"/>
 <area shape="rect" id="node8" href="$rhs_8cu.html#a3ce839e17b600b5ff81502b864d95c86" title="zero_all_derivatives" alt="" coords="381,461,519,488"/>
 <area shape="rect" id="node9" href="$boundary_8cu.html#a092ef939062b27aab9bf0369faa630bf" title="BoundaryConditionsBeforeRHS" alt="" coords="347,512,553,539"/>
-<area shape="rect" id="node10" href="$tree_8cu.html#a03860ee1363c609f70211637036ab443" title="computationalDomain" alt="" coords="376,781,524,808"/>
+<area shape="rect" id="node10" href="$tree_8cu.html#a2d1ccf6ae64ed3fb0b0388dfe7575d15" title="computationalDomain" alt="" coords="376,781,524,808"/>
 <area shape="rect" id="node13" href="$tree_8cu.html#ad2c17b7a6e842835311d5502e30cef6b" title="buildTree" alt="" coords="413,613,487,640"/>
 <area shape="rect" id="node14" href="$tree_8cu.html#a409f6d46534c450659fd202310fa1551" title="getTreeDepth" alt="" coords="399,933,501,960"/>
 <area shape="rect" id="node15" href="$tree_8h.html#a59b57cd8d63b7c9793e441ef1792f03a" title="check_sml_boundary" alt="" coords="613,781,758,808"/>
