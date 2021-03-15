@@ -255,7 +255,8 @@ $(function() {
                                                 VON_MISES_PLASTICITY in parameter.h for this
 </pre><hr/>
 <p><b>Fragmentation model: Grady-Kipp</b></p>
-<p>To activate the Grady-Kipp model set <code>FRAGMENTATION</code> in parameter.h (at compile time). This is currently only possible globally for all materials at once. The following parameters are currently only needed for some pre-processing tools. </p><pre class="fragment">    Key                         Type    Default     Details
+<p>To activate the full Grady-Kipp model set <code>FRAGMENTATION</code> and <code>DAMAGE_ACTS_ON_S</code> in parameter.h (at compile time). This is currently only possible globally for all materials at once. Whether you want <code>DAMAGE_ACTS_ON_S</code> depends mainly on the desired interaction with the plasticity model (see comments in parameter.h).</p>
+<p>The following parameters are currently only needed for some pre-processing tools. </p><pre class="fragment">    Key                         Type    Default     Details
     _______________________________________________________
 
     fragmentation.weibull_k     float   none        not processed by miluphcuda
@@ -281,7 +282,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - How to set up the material config file for miluphcuda<br />
-    Generated on Sun Mar 14 2021 07:05:12 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Mon Mar 15 2021 07:05:12 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
