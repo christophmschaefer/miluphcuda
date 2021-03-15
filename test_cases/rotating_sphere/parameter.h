@@ -86,7 +86,7 @@
 
 // consistency switches
 // for zeroth order consistency
-#define SHEPARD_CORRECTION 0
+#define SHEPARD_CORRECTION 1
 // for linear consistency
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
 #define TENSORIAL_CORRECTION 1
