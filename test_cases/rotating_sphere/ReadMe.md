@@ -7,7 +7,8 @@ implementation works.
 How to run it:
 1. copy parameter.h to the root source directory of miluphcuda (usually cp parameter.h ../../)
 2. compile 
-3. start the run.sh in this directory
+3. copy the binary to this directory
+4. start run.sh in this directory
 
 The initial particle distribution is a solid sphere with R=1, rotating with omega_z=2 pi /100 c_s/R, where c_s denotes the
 sound speed, which is set to 1.
