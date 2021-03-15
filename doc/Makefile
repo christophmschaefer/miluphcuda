@@ -1,0 +1,5 @@
+all:
+	pdflatex miluphcuda_documentation
+	bibtex miluphcuda_documentation
+	pdflatex miluphcuda_documentation
+	pdflatex miluphcuda_documentation

@@ -1,0 +1,20 @@
+backend             : Agg
+text.latex.preamble : \usepackage{amsmath} \usepackage{siunitx} \usepackage{xfrac}
+legend.numpoints    : 2
+legend.frameon      : True
+xtick.labelsize: 16
+ytick.labelsize: 16
+font.size: 15
+figure.autolayout: True
+#figure.figsize: 7.2,4.45
+axes.titlesize : 16
+axes.labelsize : 17
+lines.linewidth : 2
+lines.markersize : 6
+legend.fontsize: 13
+font.family        : serif
+font.serif         : Times, Palatino, New Century Schoolbook, Bookman, Computer Modern Roman
+font.sans-serif    : Helvetica, Avant Garde, Computer Modern Sans serif
+font.cursive       : Zapf Chancery
+font.monospace     : Courier, Computer Modern Typewriter
+text.usetex        : true
