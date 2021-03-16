@@ -119,14 +119,11 @@ struct Particle {
     double *p; ///< the pressure of the particle
     double *e; ///< the specific internal energy of the particle
 
-<<<<<<< HEAD
 #if DISPH
     double *q; ///< basic quantity of DISPH
     double *U; ///< basic quantity of DISPH
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if MORE_OUTPUT
     double *p_min; ///< the smallest pressure that the particle is exerted during the simulation
     double *p_max; ///< the highest pressure that the particle is exerted during the simulation
@@ -141,13 +138,10 @@ struct Particle {
     double *dedt; ///< the time derivative of the specific internal energy of the particle
 #endif
 
-<<<<<<< HEAD
 #if DISPH
     double *dUdt; ///< the time derivative of the basic quantity U in DISPH
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if NAVIER_STOKES
     double *Tshear; ///< the viscous stress tensor for the Navier-Stokes equation. this is the traceless tensor, given by \sigma = \eta T + \zeta \nabla \cdot \vec{v}, and since we do not store \nabla \cdot \vec{v} for each particle, we store it here
     double *eta; ///< the viscosity coefficient

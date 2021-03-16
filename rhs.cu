@@ -88,12 +88,11 @@ __global__ void zero_all_derivatives(int *interactions)
 #if INTEGRATE_ENERGY
         p.dedt[i] = 0.0;
 #endif
-<<<<<<< HEAD
+
 #if DISPH
         p.dUdt[i] = 0.0;
 #endif
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
 #if SHEPARD_CORRECTION
         p_rhs.shepard_correction[i] = 1.0;
 #endif
@@ -350,13 +349,8 @@ void rightHandSide()
 
 #if !INTEGRATE_DENSITY
     cudaEventRecord(start, 0);
-<<<<<<< HEAD
-    cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>(
-                    interactions)));
-=======
     // cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>( interactions)));
     cudaVerifyKernel((calculateDensity<<<1,1>>>( interactions)));
->>>>>>> e584e9e456af9bc659413824335eb67544847775
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);

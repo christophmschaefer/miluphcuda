@@ -132,7 +132,6 @@ static void print_compile_information(void)
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Solve energy equation:\t  %s\n", yesno);
-<<<<<<< HEAD
 
 #if DISPH
     strcpy(yesno, "yes");
@@ -141,8 +140,6 @@ static void print_compile_information(void)
 #endif
     fprintf(stdout, "Solve DISPH equations:\t  %s\n", yesno);
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if INTEGRATE_DENSITY
     strcpy(yesno, "yes");
 #else
@@ -176,8 +173,7 @@ static void print_compile_information(void)
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Fracture model:\t  %s\n", yesno);
-<<<<<<< HEAD
-=======
+
 #if FRAGMENTATION
 # if DAMAGE_ACTS_ON_S
     strcpy(yesno, "yes");
@@ -186,7 +182,6 @@ static void print_compile_information(void)
 # endif
     fprintf(stdout, "Damage acts on S tensor:\t  %s\n", yesno);
 #endif
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 
 #if PALPHA_POROSITY
     strcpy(yesno, "yes");
@@ -226,11 +221,9 @@ static void print_compile_information(void)
 # endif
     fprintf(stdout, "\n");
 #elif COLLINS_PLASTICITY
-<<<<<<< HEAD
-    fprintf(stdout, "\t\t\t Collins model: pressure dependent yield strength with cohesion for damaged material");
-=======
+
     fprintf(stdout, "\t\t\t Collins model: pressure dependent yield strength with friction model for damaged material");
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
 # if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
     fprintf(stdout, " including strength reduction based on (single) melt energy");
 # endif
@@ -388,15 +381,14 @@ static void format_information(char *name)
     noc++;   /* e */
     fprintf(stdout, "%d:energy ", noc);
 #endif
-<<<<<<< HEAD
+
 #if DISPH
 	noc++;   /* q */
     fprintf(stdout, "%d:q ", noc);
     noc++;   /* U */
     fprintf(stdout, "%d:U ", noc);
 #endif
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
 #if READ_INITIAL_SML_FROM_PARTICLE_FILE
     noc++; /* smoothing length */
     fprintf(stdout, "%d:smoothing length ", noc);
@@ -483,15 +475,14 @@ static void format_information(char *name)
     fprintf(stdout, "%d:energy ", noc);
     noc++; /* sml */
 #endif
-<<<<<<< HEAD
+
 #if DISPH
 	fprintf(stdout, "%d:q ", noc);
     noc++;   /* e */
     fprintf(stdout, "%d:U ", noc);
     noc++; /* U */
 #endif
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
     fprintf(stdout, "%d:smoothing length ", noc);
     noc++; /* number of interaction partners */
     fprintf(stdout, "%d:number of interaction partners ", noc);

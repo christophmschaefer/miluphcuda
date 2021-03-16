@@ -219,7 +219,7 @@ __global__ void BoundaryConditionsAfterRHS(int *interactions)
 #endif
 
 //        p.az[i] -= 9.81;
-
+		p.ay[i] -= 9.81;
 
         /* let's stick to the ground */
 

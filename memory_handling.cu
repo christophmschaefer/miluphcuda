@@ -75,13 +75,10 @@ int allocate_particles_memory(struct Particle *a, int allocate_immutables)
 	cudaVerify(cudaMalloc((void**)&a->dedt, memorySizeForParticles));
 #endif
 
-<<<<<<< HEAD
 #if DISPH
     cudaVerify(cudaMalloc((void**)&a->dUdt, memorySizeForParticles));
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if ARTIFICIAL_VISCOSITY
 	cudaVerify(cudaMalloc((void**)&a->muijmax, memorySizeForParticles));
 #endif
@@ -210,14 +207,12 @@ int allocate_particles_memory(struct Particle *a, int allocate_immutables)
 	cudaVerify(cudaMalloc((void**)&a->cs, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&a->noi, memorySizeForInteractions));
 	cudaVerify(cudaMalloc((void**)&a->depth, memorySizeForInteractions));
-<<<<<<< HEAD
+
 #if DISPH
     cudaVerify(cudaMalloc((void**)&a->q, memorySizeForParticles));
     cudaVerify(cudaMalloc((void**)&a->U, memorySizeForParticles));
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if MORE_OUTPUT
 	cudaVerify(cudaMalloc((void**)&a->p_min, memorySizeForParticles));
     cudaVerify(cudaMalloc((void**)&a->p_max, memorySizeForParticles));
@@ -348,13 +343,10 @@ int copy_particles_derivatives_device_to_device(struct Particle *dst, struct Par
     cudaVerify(cudaMemcpy(dst->dedt, src->dedt, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
 
-<<<<<<< HEAD
 #if DISPH
     cudaVerify(cudaMemcpy(dst->dUdt, src->dUdt, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if SOLID
     cudaVerify(cudaMemcpy(dst->dSdt, src->dSdt, memorySizeForStress, cudaMemcpyDeviceToDevice));
 #endif
@@ -459,14 +451,11 @@ int copy_particles_variables_device_to_device(struct Particle *dst, struct Parti
 
     cudaVerify(cudaMemcpy(dst->rho, src->rho, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 
-<<<<<<< HEAD
 #if DISPH
     cudaVerify(cudaMemcpy(dst->q, src->q, memorySizeForParticles, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy(dst->U, src->U, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
     cudaVerify(cudaMemcpy(dst->h, src->h, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 
 #if INTEGRATE_ENERGY
@@ -618,15 +607,12 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 	cudaVerify(cudaFree(a->cs));
 	cudaVerify(cudaFree(a->noi));
 	cudaVerify(cudaFree(a->depth));
-<<<<<<< HEAD
 
 #if DISPH
     cudaVerify(cudaFree(a->q));
     cudaVerify(cudaFree(a->U));
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if MORE_OUTPUT
 	cudaVerify(cudaFree(a->p_min));
 	cudaVerify(cudaFree(a->p_max));
@@ -678,14 +664,11 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 #if INTEGRATE_ENERGY
 	cudaVerify(cudaFree(a->dedt));
 #endif
-<<<<<<< HEAD
 
 #if DISPH
     cudaVerify(cudaFree(a->dUdt));
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if GHOST_BOUNDARIES
 	cudaVerify(cudaFree(a->real_partner));
 #endif
@@ -823,14 +806,11 @@ int init_allocate_memory(void)
     cudaVerify(cudaMallocHost((void**)&p_host.e, memorySizeForParticles));
     cudaVerify(cudaMallocHost((void**)&p_host.cs, memorySizeForParticles));
 
-<<<<<<< HEAD
 #if DISPH
     cudaVerify(cudaMallocHost((void**)&p_host.q, memorySizeForParticles));
     cudaVerify(cudaMallocHost((void**)&p_host.U, memorySizeForParticles));
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if GRAVITATING_POINT_MASSES
 	cudaVerify(cudaMallocHost((void**)&pointmass_host.x, memorySizeForPointmasses));
 	cudaVerify(cudaMallocHost((void**)&pointmass_host.vx, memorySizeForPointmasses));
@@ -914,14 +894,11 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&p_device.dedt, memorySizeForParticles));
 #endif
 
-<<<<<<< HEAD
 #if DISPH
     cudaVerify(cudaMallocHost((void**)&p_host.dUdt, memorySizeForParticles));
     cudaVerify(cudaMalloc((void**)&p_device.dUdt, memorySizeForParticles));
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 	cudaVerify(cudaMallocHost((void**)&p_host.drhodt, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&p_device.drhodt, memorySizeForParticles));
 
@@ -1091,14 +1068,11 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&p_device.materialId, memorySizeForInteractions));
 	cudaVerify(cudaMalloc((void**)&p_device.materialId0, memorySizeForInteractions));
 
-<<<<<<< HEAD
 #if DISPH
     cudaVerify(cudaMalloc((void**)&p_device.q, memorySizeForParticles));
     cudaVerify(cudaMalloc((void**)&p_device.U, memorySizeForParticles));
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if MORE_OUTPUT
 	cudaVerify(cudaMalloc((void**)&p_device.p_min, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&p_device.p_max, memorySizeForParticles));
@@ -1181,15 +1155,12 @@ int copy_particle_data_to_device()
 	cudaVerify(cudaMemcpy(p_device.cs, p_host.cs, memorySizeForParticles, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.m, p_host.m, memorySizeForTree, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.rho, p_host.rho, memorySizeForParticles, cudaMemcpyHostToDevice));
-<<<<<<< HEAD
 
 #if DISPH
     cudaVerify(cudaMemcpy(p_device.q, p_host.q, memorySizeForParticles, cudaMemcpyHostToDevice));
     cudaVerify(cudaMemcpy(p_device.U, p_host.U, memorySizeForParticles, cudaMemcpyHostToDevice));
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if INTEGRATE_ENERGY
 	cudaVerify(cudaMemcpy(p_device.e, p_host.e, memorySizeForParticles, cudaMemcpyHostToDevice));
 #endif
@@ -1348,15 +1319,12 @@ int free_memory()
 	cudaVerify(cudaFree(p_device.e));
 	cudaVerify(cudaFree(p_device.cs));
 	cudaVerify(cudaFree(p_device.noi));
-<<<<<<< HEAD
 
 #if DISPH
     cudaVerify(cudaFree(p_device.q));
     cudaVerify(cudaFree(p_device.U));
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if MORE_OUTPUT
 	cudaVerify(cudaFree(p_device.p_min));
     cudaVerify(cudaFree(p_device.p_max));
@@ -1406,14 +1374,11 @@ int free_memory()
 	cudaVerify(cudaFree(p_device.dedt));
 #endif
 
-<<<<<<< HEAD
 #if DISPH
     cudaVerify(cudaFreeHost(p_host.dUdt));
     cudaVerify(cudaFree(p_device.dUdt));
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 	cudaVerify(cudaFreeHost(p_host.drhodt));
 	cudaVerify(cudaFree(p_device.drhodt));
 
@@ -1529,15 +1494,12 @@ int free_memory()
 	cudaVerify(cudaFreeHost(p_host.depth));
 	cudaVerify(cudaFreeHost(p_host.materialId));
 	cudaVerify(cudaFreeHost(childList_host));
-<<<<<<< HEAD
 
 #if DISPH
     cudaVerify(cudaFreeHost(p_host.q));
     cudaVerify(cudaFreeHost(p_host.U));
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if MORE_OUTPUT
 	cudaVerify(cudaFreeHost(p_host.p_min));
 	cudaVerify(cudaFreeHost(p_host.p_max));

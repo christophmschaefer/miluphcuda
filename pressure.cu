@@ -50,24 +50,19 @@ __global__ void calculatePressure() {
             /* this is pure molecular hydrogen at 10 K */
             p.p[i] = 41255.407 * p.rho[i];
         } else if (EOS_TYPE_MURNAGHAN == matEOS[matId] || EOS_TYPE_VISCOUS_REGOLITH == matEOS[matId]) {
-<<<<<<< HEAD
+
             #if DISPH // for liquid eos only
                 eta = p.q[i]*p.m[i]/p.U[i] / matRho0[matId];
             #else
                 eta = p.rho[i] / matRho0[matId];
             #endif // DISPH
-=======
-            eta = p.rho[i] / matRho0[matId];
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
             if (eta < matRhoLimit[matId]) {
                 p.p[i] = 0.0;
             } else {
                 p.p[i] = (matBulkmodulus[matId]/matN[matId])*(pow(eta, matN[matId]) - 1.0);
             }
-<<<<<<< HEAD
-            
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
         } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
             rho = p.rho[i];
             e = p.e[i];

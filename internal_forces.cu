@@ -110,13 +110,10 @@ __global__ void internalForces(int *interactions) {
     double dedt;
 #endif
 
-<<<<<<< HEAD
 #if DISPH
     double dUdt;
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
     double dvx;
 #if DIM > 1
     double dvy;
@@ -127,10 +124,8 @@ __global__ void internalForces(int *interactions) {
 
 #if NAVIER_STOKES
     double eta;
-<<<<<<< HEAD
-=======
+
     double zetaij;
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #endif
 
     double vvnablaW;
@@ -174,14 +169,13 @@ __global__ void internalForces(int *interactions) {
 #if INTEGRATE_ENERGY
         dedt = 0;
 #endif
-<<<<<<< HEAD
+
 
 #if DISPH
         dUdt = 0;
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
 #if INTEGRATE_SML
         p.dhdt[i] = 0.0;
 #endif
@@ -243,14 +237,12 @@ __global__ void internalForces(int *interactions) {
 #if INTEGRATE_ENERGY
         p.dedt[i] = 0.0;
 #endif
-<<<<<<< HEAD
+
 
 #if DISPH
         p.dUdt[i] = 0.0;
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if INTEGRATE_SML
         p.dhdt[i] = 0.0;
 #endif
@@ -394,11 +386,9 @@ __global__ void internalForces(int *interactions) {
 #endif
 #endif
 
-<<<<<<< HEAD
-#if ARTIFICIAL_VISCOSITY
-=======
+
 #if ARTIFICIAL_VISCOSITY || KLEY_VISCOSITY
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
             rr = 0.0;
             vr = 0.0;
             for (e = 0; e < DIM; e++) {
@@ -562,8 +552,7 @@ __global__ void internalForces(int *interactions) {
 # endif // SPH_EQU_VERSION
                 }
             }
-<<<<<<< HEAD
-=======
+
 #if KLEY_VISCOSITY //artificial bulk viscosity with f=0.5
             zetaij = 0.0;
             if (vr < 0) { // only for approaching particles
@@ -578,7 +567,6 @@ __global__ void internalForces(int *interactions) {
             }
 #endif // KLEY_VISCOSITY
 
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #endif // NAVIER_STOKES
 
 
@@ -643,7 +631,7 @@ __global__ void internalForces(int *interactions) {
                 }
             }
 #else // NOT SOLID
-<<<<<<< HEAD
+
 
 #if DISPH   // only true for liquid eos
             for (d = 0; d < DIM; d++) {
@@ -653,8 +641,6 @@ __global__ void internalForces(int *interactions) {
 #else
 
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 # if (SPH_EQU_VERSION == 1)
 #  if SML_CORRECTION
             for (d = 0; d < DIM; d++) {
@@ -680,10 +666,9 @@ __global__ void internalForces(int *interactions) {
             }
 #  endif
 # endif // SPH_EQU_VERSION
-<<<<<<< HEAD
+
 #endif // DISPH
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
 #endif // SOLID
 
 #if NAVIER_STOKES
@@ -752,7 +737,7 @@ __global__ void internalForces(int *interactions) {
 # endif
 #endif // INTEGRATE_SML
 
-<<<<<<< HEAD
+
 
 
 
@@ -784,21 +769,16 @@ __global__ void internalForces(int *interactions) {
 
 
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if INTEGRATE_ENERGY
 # if ARTIFICIAL_VISCOSITY
             if (!isRelaxationRun) {
 #  if SML_CORRECTION
                 dedt += p.m[j] * vvnablaW;
 #  else
-<<<<<<< HEAD
-    
+
             dedt += 0.5 * p.m[j] * pij * vvnablaW;
     
-=======
-                dedt += 0.5 * p.m[j] * pij * vvnablaW;
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
 #  endif // SML_CORRECTION
             }
 # endif
@@ -861,16 +841,13 @@ __global__ void internalForces(int *interactions) {
 #endif // SML_CORRECTION
 
 
-<<<<<<< HEAD
+
 
 #if DISPH
         p.dUdt[i] = dUdt;
 #endif // DISPH
 
 
-
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if INTEGRATE_ENERGY
 # if SOLID
         double ptmp = 0;
@@ -896,12 +873,9 @@ __global__ void internalForces(int *interactions) {
         for (d = 0; d < DIM; d++) {
             for (dd = 0; dd < DIM; dd++) {
                 double Stmp = p.S[stressIndex(i,d,dd)];
-<<<<<<< HEAD
-// for the Collins model the damage directly affects S via the yield strength, therefore not (additionally) reduced here
-#  if FRAGMENTATION && !COLLINS_PLASTICITY && !COLLINS_PLASTICITY_SIMPLE
-=======
+
+
 #  if FRAGMENTATION && DAMAGE_ACTS_ON_S
->>>>>>> e584e9e456af9bc659413824335eb67544847775
                 Stmp *= (1.0-di);
 #  endif
                 dedt += Stmp / p.rho[i] * edot[d][dd];
@@ -1018,22 +992,7 @@ __global__ void internalForces(int *interactions) {
                         p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,d,f)] * rdot[e][f];
                         p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,e,f)] * rdot[d][f];
                     }
-<<<<<<< HEAD
-#if PALPHA_POROSITY
-# if STRESS_PALPHA_POROSITY
-#  if FRAGMENTATION
-                    if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
-                        p.dSdt[stressIndex(i,d,e)] = p.f[i] / p.alpha_jutzi[i] * p.dSdt[stressIndex(i,d,e)]
-                                                            - 1.0 / (p.alpha_jutzi[i]*p.alpha_jutzi[i]) * (1-di)*p.S[stressIndex(i,d,e)] * p.dalphadt[i];
-                    }
-#  else
-                    if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN|| matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
-                        p.dSdt[stressIndex(i,d,e)] = p.f[i] / p.alpha_jutzi[i] * p.dSdt[stressIndex(i,d,e)]
-                                                            - 1.0 / (p.alpha_jutzi[i]*p.alpha_jutzi[i]) * p.S[stressIndex(i,d,e)] * p.dalphadt[i];
-                    }
-#  endif
-# endif
-=======
+
 #if PALPHA_POROSITY && STRESS_PALPHA_POROSITY
                     if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
                         p.dSdt[stressIndex(i,d,e)] = p.f[i] / p.alpha_jutzi[i] * p.dSdt[stressIndex(i,d,e)]
@@ -1045,7 +1004,6 @@ __global__ void internalForces(int *interactions) {
 # endif
                                                             * p.dalphadt[i];
                     }
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #endif
                 }
             }
@@ -1118,15 +1076,10 @@ __global__ void internalForces(int *interactions) {
                 p.dddt[i] = n_active * c_g / sml1;
 
                 if (p.dddt[i] < 0.0) {
-<<<<<<< HEAD
-                    printf("error!\n");
-                    printf("%e %e %e %d %d %e %e \n", p.x[i], p.y[i], p.damage_total[i], p.numFlaws[i],
-                            p.numActiveFlaws[i], p.dddt[i], p.local_strain[i]);
-=======
+
                     printf("ERROR. Found dd/dt < 0 for:\n");
                     printf("x: %e\t y: %e\t damage_total: %e\t numFlaws: %d\t numActiveFlaws: %d\t dddt: %e\t local_strain: %e\n",
                             p.x[i], p.y[i], p.damage_total[i], p.numFlaws[i], p.numActiveFlaws[i], p.dddt[i], p.local_strain[i]);
->>>>>>> e584e9e456af9bc659413824335eb67544847775
                 }
             } else {
                 // particle already dead

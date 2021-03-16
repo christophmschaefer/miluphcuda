@@ -234,13 +234,12 @@ void read_particles_from_file(File inputFile)
 # if INTEGRATE_ENERGY
     hid_t e_id;
 # endif
-<<<<<<< HEAD
+
 # if DISPH
 	hid_t q_id;
     hid_t U_id;
 # endif
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
     hid_t time_id;
 # if VARIABLE_SML || READ_INITIAL_SML_FROM_PARTICLE_FILE
     hid_t sml_id;
@@ -706,7 +705,7 @@ void read_particles_from_file(File inputFile)
         free(x);
 # endif
 
-<<<<<<< HEAD
+
 # if DISPH
         /* read q */
         q_id = H5Dopen(file_id, "/q", H5P_DEFAULT);
@@ -724,8 +723,6 @@ void read_particles_from_file(File inputFile)
         free(x);
 # endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 # if INTEGRATE_ENERGY
         /* read internal energies */
         e_id = H5Dopen(file_id, "/e", H5P_DEFAULT);
@@ -743,7 +740,6 @@ void read_particles_from_file(File inputFile)
         free(x);
 # endif
 
-<<<<<<< HEAD
 
 # if DISPH
         /* read internal energies */
@@ -762,9 +758,6 @@ void read_particles_from_file(File inputFile)
         free(x);
 # endif
 
-
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
         /* read material types */
         mtype_id = H5Dopen(file_id, "/material_type", H5P_DEFAULT);
         if (mtype_id < 0) {
@@ -1119,7 +1112,6 @@ void read_particles_from_file(File inputFile)
             columns++;
 #endif
 
-<<<<<<< HEAD
 #if DISPH
             // read in q
             if (!fscanf(inputFile.data, "%s", &iotmp))
@@ -1128,8 +1120,6 @@ void read_particles_from_file(File inputFile)
             columns++;
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if INTEGRATE_ENERGY
             // read in energy
             if (!fscanf(inputFile.data, "%s", &iotmp))
@@ -1138,7 +1128,6 @@ void read_particles_from_file(File inputFile)
             columns++;
 #endif
 
-<<<<<<< HEAD
 #if DISPH
             // read in U
             if (!fscanf(inputFile.data, "%s", &iotmp))
@@ -1147,8 +1136,6 @@ void read_particles_from_file(File inputFile)
             columns++;
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if READ_INITIAL_SML_FROM_PARTICLE_FILE
             // read in smoothing length
             if (!fscanf(inputFile.data, "%s", &iotmp))
@@ -1511,11 +1498,7 @@ void write_particles_to_file(File file) {
 #if HDF5IO
     /* hdf5 related stuff */
     hid_t file_id;
-<<<<<<< HEAD
     hid_t x_id, v_id, m_id, rho_id, q_id, U_id, e_id, sml_id, noi_id, mtype_id;
-=======
-    hid_t x_id, v_id, m_id, rho_id, e_id, sml_id, noi_id, mtype_id;
->>>>>>> e584e9e456af9bc659413824335eb67544847775
     hid_t a_id;
     hid_t g_a_id;
 #if MORE_ANEOS_OUTPUT
@@ -1548,12 +1531,11 @@ void write_particles_to_file(File file) {
 #if INTEGRATE_ENERGY
     hid_t dedt_id;
 #endif
-<<<<<<< HEAD
+
 #if DISPH
     hid_t dUdt_id;
 #endif
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
 #if JC_PLASTICITY
     hid_t ep_id, T_id;
 #endif
@@ -1626,13 +1608,12 @@ void write_particles_to_file(File file) {
 #if INTEGRATE_ENERGY
             fprintf(file.data, "%e\t", p_host.e[i]);
 #endif
-<<<<<<< HEAD
+
 #if DISPH
 			fprintf(file.data, "%q\t", p_host.q[i]);
             fprintf(file.data, "%U\t", p_host.U[i]);
 #endif
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
             fprintf(file.data, "%.6le\t", p_host.h[i]);
             fprintf(file.data, "%d\t", p_host.noi[i]);
             fprintf(file.data, "%d\t", p_host.materialId[i]);
@@ -2192,7 +2173,7 @@ void write_particles_to_file(File file) {
         status = H5Dwrite(e_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(e_id);
 
-<<<<<<< HEAD
+
 		#if DISPH
 	        /* q */
 	        q_id = H5Dcreate2(file_id, "/q", H5T_NATIVE_DOUBLE, dataspace_id,
@@ -2213,8 +2194,7 @@ void write_particles_to_file(File file) {
 	        status = H5Dclose(U_id);
         #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
 #if MORE_ANEOS_OUTPUT
         // compute ANEOS quantities
         int aneos_i_rho, aneos_i_e;
@@ -2743,7 +2723,7 @@ void write_particles_to_file(File file) {
         free(x);
 #endif
 
-<<<<<<< HEAD
+
 #if DISPH
         /* change of U */
         x = (double *) malloc(sizeof(double) * numberOfParticles);
@@ -2757,8 +2737,6 @@ void write_particles_to_file(File file) {
         free(x);
 #endif
 
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if FRAGMENTATION
         /* change of damage */
         x = (double *) malloc(sizeof(double) * numberOfParticles);
@@ -3130,7 +3108,6 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     cudaVerify(cudaMemcpy(p_host.m, p_device.m, memorySizeForTree, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.depth, p_device.depth, memorySizeForInteractions, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.rho, p_device.rho, memorySizeForParticles, cudaMemcpyDeviceToHost));
-<<<<<<< HEAD
 
 #if DISPH
 	cudaVerify(cudaMemcpy(p_host.q, p_device.q, memorySizeForParticles, cudaMemcpyDeviceToHost));
@@ -3140,11 +3117,6 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     cudaVerify(cudaMemcpy(p_host.drhodt, p_device.drhodt, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #endif
 
-=======
-#if INTEGRATE_DENSITY
-    cudaVerify(cudaMemcpy(p_host.drhodt, p_device.drhodt, memorySizeForParticles, cudaMemcpyDeviceToHost));
-#endif
->>>>>>> e584e9e456af9bc659413824335eb67544847775
     cudaVerify(cudaMemcpy(p_host.h, p_device.h, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.materialId, p_device.materialId, memorySizeForInteractions, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.p, p_device.p, memorySizeForParticles, cudaMemcpyDeviceToHost));
@@ -3189,13 +3161,12 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     cudaVerify(cudaMemcpy(p_host.e, p_device.e, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.dedt, p_device.dedt, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #endif
-<<<<<<< HEAD
+
 #if DISPH
     cudaVerify(cudaMemcpy(p_host.U, p_device.U, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.dUdt, p_device.dUdt, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #endif
-=======
->>>>>>> e584e9e456af9bc659413824335eb67544847775
+
 #if JC_PLASTICITY
     cudaVerify(cudaMemcpy(p_host.ep, p_device.ep, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.T, p_device.T, memorySizeForParticles, cudaMemcpyDeviceToHost));
