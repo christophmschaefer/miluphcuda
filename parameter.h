@@ -180,7 +180,7 @@
 // see Morris and Monaghan 1984
 #define XSPH 0
 
-// only works with the liquid equation of state!!
+// only works with the liquid equation of state!
 #define DISPH 1
 
 // boundaries EXPERIMENTAL, please do not use this....
