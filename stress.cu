@@ -99,12 +99,20 @@ __global__ void set_stress_tensor(void)
         // assemble stress tensor
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
+<<<<<<< HEAD
 #  if COLLINS_PLASTICITY || COLLINS_PLASTICITY_SIMPLE
                 // for the Collins model the damage directly affects S via the yield strength, therefore not (additionally) reduced here
                 sigma[d][e] = p.S[stressIndex(i, d, e)];
 #  else
                 // reduction of S following Grady-Kipp model
                 sigma[d][e] = (1.0 - damage) * p.S[stressIndex(i, d, e)];
+=======
+#  if DAMAGE_ACTS_ON_S
+                // reduction of S following Grady-Kipp model
+                sigma[d][e] = (1.0 - damage) * p.S[stressIndex(i, d, e)];
+#  else
+                sigma[d][e] = p.S[stressIndex(i, d, e)];
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #  endif
                 // the pure pressure part of sigma is always reduced for p < 0
                 if (d == e) { // the trace

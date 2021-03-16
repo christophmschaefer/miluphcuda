@@ -57,6 +57,10 @@
 // damage model following Benz & Asphaug (1995)
 // this needs some preprocessing of the initial particle distribution since activation thresholds have to be distributed among the particles
 #define FRAGMENTATION 1
+<<<<<<< HEAD
+=======
+#define DAMAGE_ACTS_ON_S 0
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 
 // Choose the SPH representation to solve the momentum and energy equation:
 // SPH_EQU_VERSION 1: original version with HYDRO dv_a/dt ~ - (p_a/rho_a**2 + p_b/rho_b**2)  \nabla_a W_ab

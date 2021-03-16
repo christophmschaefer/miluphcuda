@@ -62,9 +62,13 @@ __global__ void integrateEuler(void)
 #if INTEGRATE_ENERGY
             p.e[i] += dt * p.dedt[i];
 #endif
+<<<<<<< HEAD
 #if DISPH
             p.U[i] += dt * p.dUdt[i];
 #endif
+=======
+
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if PALPHA_POROSITY
             p.alpha_jutzi[i] += dt * p.dalphadt[i];
 #endif

@@ -32,7 +32,11 @@
 
 // for interaction partners less than this value, the tensorial correction matrix
 // will be set to the identity matrix (-> disabling the correction factors)
+<<<<<<< HEAD
 #define MIN_NUMBER_OF_INTERACTIONS_FOR_TENSORIAL_CORRECTION_TO_WORK 12
+=======
+#define MIN_NUMBER_OF_INTERACTIONS_FOR_TENSORIAL_CORRECTION_TO_WORK 0
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 
 
 #define DEBUG_LINALG 0

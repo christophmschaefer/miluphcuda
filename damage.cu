@@ -80,4 +80,8 @@ __global__ void damageLimit(void)
 #endif
     }
 }
+<<<<<<< HEAD
 #endif
+=======
+#endif  // FRAGMENTATION
+>>>>>>> e584e9e456af9bc659413824335eb67544847775

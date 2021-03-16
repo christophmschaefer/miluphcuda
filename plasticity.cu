@@ -125,6 +125,10 @@ __global__ void plasticityModel(void) {
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+<<<<<<< HEAD
+=======
+
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
         // VISCOUS_REGOLITH is treated in timeintegration.cu when \sigma is calculated
         if (matEOS[p_rhs.materialId[i]] == EOS_TYPE_VISCOUS_REGOLITH) {
             continue;
@@ -192,9 +196,15 @@ __global__ void plasticityModel(void) {
         y_M = matYieldStress[p_rhs.materialId[i]];
         mu_i = matInternalFriction[p_rhs.materialId[i]];
 
+<<<<<<< HEAD
         // yield strength of intact material, with (constant) cohesion also for p<0
         y_i = y_0;
         if (p.p[i] > 0) {
+=======
+        // yield strength of intact material, with constant cohesion for p<0
+        y_i = y_0;
+        if (p.p[i] > 0.0) {
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
             y_i += mu_i * p.p[i]
                 / (1 + mu_i * p.p[i]  / (y_M - y_0) );
         }
@@ -220,7 +230,11 @@ __global__ void plasticityModel(void) {
             y_d = 0.0;
         
         // the actual yield strength Y is a weighted mean of Y_i and Y_d
+<<<<<<< HEAD
         // (note: therefore potential melt-energy effects are also included in Y)
+=======
+        // note: therefore potential melt-energy effects are also included in Y
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
         y = (1.0-damage) * y_i + damage * y_d;
         
         // always limit the yield strength to the intact value
@@ -238,16 +252,43 @@ __global__ void plasticityModel(void) {
         y_M = matYieldStress[p_rhs.materialId[i]];
         mu_i = matInternalFriction[p_rhs.materialId[i]];
 
+<<<<<<< HEAD
         // unlike for the regular Collins model, here we let the yield strength decrease to
         // the first zero for p<0, and set it zero for even greater negative pressure
         // the zero is at p_0 = -Y_0 (Y_M-Y_0) / (mu_i Y_M)
         if ( p.p[i] > y_0*(y_0-y_M)/(mu_i*y_M) ) {
             y = y_0 + mu_i * p.p[i]
                 / (1.0 + mu_i * p.p[i]  / (y_M - y_0) );
+=======
+        // unlike for the regular Collins model, here we let the yield strength decrease to zero for p<0,
+        // following a linear decline for p<0, where the slope is mu_i, and the zero at -y_0/mu_i
+        if( p.p[i] > 0.0 ) {
+            y = y_0 + mu_i * p.p[i]
+                / (1.0 + mu_i * p.p[i]  / (y_M - y_0) );
+        } else if( p.p[i] > -y_0 / mu_i ) {
+            y = y_0 + p.p[i] * mu_i;
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
         } else {
             y = 0.0;
         }
 
+<<<<<<< HEAD
+=======
+        // let the yield strength decrease to zero for p<0 following the regular Y_i curve,
+        // where the zero is at p_0 = -Y_0 (Y_M-Y_0) / (mu_i Y_M)
+//        if ( p.p[i] > y_0*(y_0-y_M)/(mu_i*y_M) ) {
+//            y = y_0 + mu_i * p.p[i]
+//                / (1.0 + mu_i * p.p[i]  / (y_M - y_0) );
+//        } else {
+//            y = 0.0;
+//        }
+
+        // also limit negative pressures to value at zero of yield strength curve
+        // (zero is at -y_0/mu_i if assumed linear for p<0)
+        if( p.p[i] < -y_0 / mu_i)
+            p.p[i] = -y_0 / mu_i;
+
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
         // Drucker-Prager-like -> compare to sqrt(J2)
         if (J2 > 0.0) {
             mises_f = y/sqrt_J2;

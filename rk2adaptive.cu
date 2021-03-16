@@ -559,9 +559,12 @@ __global__ void integrateFirstStep(void)
 #if INTEGRATE_ENERGY
         rk[RKFIRST].e[i] = rk[RKSTART].e[i] + dt * b21 * rk[RKSTART].dedt[i];
 #endif
+<<<<<<< HEAD
 #if DISPH
         rk[RKFIRST].U[i] = rk[RKSTART].U[i] + dt * b21 * rk[RKSTART].dUdt[i];
 #endif
+=======
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if FRAGMENTATION
         rk[RKFIRST].d[i] = rk[RKSTART].d[i] + dt * b21 * rk[RKSTART].dddt[i];
         rk[RKFIRST].numActiveFlaws[i] = rk[RKSTART].numActiveFlaws[i];
@@ -670,9 +673,12 @@ __global__ void integrateSecondStep(void)
 #if INTEGRATE_ENERGY
         rk[RKSECOND].e[i] = rk[RKSTART].e[i] + dt * (b31 * rk[RKSTART].dedt[i] + b32 * rk[RKFIRST].dedt[i]);
 #endif
+<<<<<<< HEAD
 #if DISPH
         rk[RKSECOND].U[i] = rk[RKSTART].U[i] + dt * (b31 * rk[RKSTART].dUdt[i] + b32 * rk[RKFIRST].dUdt[i]);
 #endif
+=======
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if FRAGMENTATION
         rk[RKSECOND].d[i] = rk[RKSTART].d[i] + dt * (b31 * rk[RKSTART].dddt[i] + b32 * rk[RKFIRST].dddt[i]);
         rk[RKSECOND].numActiveFlaws[i] = rk[RKFIRST].numActiveFlaws[i];
@@ -800,6 +806,7 @@ __global__ void integrateThirdStep(void)
                + c2 * rk[RKFIRST].dedt[i]
                + c3 * rk[RKSECOND].dedt[i]);
 #endif
+<<<<<<< HEAD
 
 #if DISPH
         p.U[i] = rk[RKSTART].U[i] + dt/6.0 *
@@ -811,6 +818,8 @@ __global__ void integrateThirdStep(void)
                + c3 * rk[RKSECOND].dUdt[i]);
 #endif
 
+=======
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if PALPHA_POROSITY
         double dp = rk[RKSECOND].p[i] - rk[RKSTART].p[i];
 #endif

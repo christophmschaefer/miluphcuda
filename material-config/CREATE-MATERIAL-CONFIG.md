@@ -301,8 +301,15 @@ You need to set `MOHR_COULOMB_PLASTICITY` in parameter.h (at compile time), and 
 
 **Fragmentation model: Grady-Kipp**
 
+<<<<<<< HEAD
 To activate the Grady-Kipp model set `FRAGMENTATION` in parameter.h (at compile time). This is currently
 only possible globally for all materials at once.
+=======
+To activate the full Grady-Kipp model set `FRAGMENTATION` and `DAMAGE_ACTS_ON_S` in parameter.h (at compile time).
+This is currently only possible globally for all materials at once.
+Whether you want `DAMAGE_ACTS_ON_S` depends mainly on the desired interaction with the plasticity model (see comments in parameter.h).
+
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 The following parameters are currently only needed for some pre-processing tools.
 
         Key                         Type    Default     Details

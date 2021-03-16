@@ -24,7 +24,11 @@
 #define _PARAMETER_H
 
 // Dimension of the problem
+<<<<<<< HEAD
 #define DIM 2
+=======
+#define DIM 3
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 
 // add additional point masses to the simulation, read from file <filename>.mass
 // format is location velocities mass r_min r_max, where location and velocities are vectors with size DIM and
@@ -41,22 +45,42 @@
 
 // integrate the continuity equation
 // if set to 0, the density will be calculated using the standard SPH sum \sum_i m_j W_ij
+<<<<<<< HEAD
 #define INTEGRATE_DENSITY 0
+=======
+#define INTEGRATE_DENSITY 1
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 
 // basic physical model:
 // SOLID set to 1 solves continuum mechanics with material strength, and stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
 // SOLID set to 0 solves only the Euler equation, and there is only (scalar) pressure
+<<<<<<< HEAD
 #define SOLID 0
+=======
+#define SOLID 1
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 
 // adds viscosity to the Euler equation
 #define NAVIER_STOKES 0
 // choose between two different viscosity models
 #define SHAKURA_SUNYAEV_ALPHA 0
 #define CONSTANT_KINEMATIC_VISCOSITY 0
+<<<<<<< HEAD
 
 // damage model following Benz & Asphaug (1995)
 // this needs some preprocessing of the initial particle distribution since activation thresholds have to be distributed among the particles
 #define FRAGMENTATION 0
+=======
+// artificial bulk viscosity according to Schaefer et al. (2004)
+#define KLEY_VISCOSITY 0
+
+// This is the damage model following Benz & Asphaug (1995). Set FRAGMENTATION to activate it.
+// The damage acts always on pressure, but only on deviator stresses if DAMAGE_ACTS_ON_S is
+// activated too, which is an important switch depending on the plasticity model (see comments there).
+// Note: The damage model needs distribution of activation thresholds in the input file.
+#define FRAGMENTATION 0
+#define DAMAGE_ACTS_ON_S 0
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 
 // Choose the SPH representation to solve the momentum and energy equation:
 // SPH_EQU_VERSION 1: original version with HYDRO dv_a/dt ~ - (p_a/rho_a**2 + p_b/rho_b**2)  \nabla_a W_ab
@@ -74,7 +98,11 @@
 // standard SPH alpha/beta viscosity
 #define ARTIFICIAL_VISCOSITY 1
 // Balsara switch: lowers the artificial viscosity in regions without shocks
+<<<<<<< HEAD
 #define BALSARA_SWITCH 1
+=======
+#define BALSARA_SWITCH 0
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 
 // INVISCID SPH (see Cullen & Dehnen paper)
 #define INVISCID_SPH 0
@@ -84,7 +112,11 @@
 #define SHEPARD_CORRECTION 0
 // for linear consistency
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
+<<<<<<< HEAD
 #define TENSORIAL_CORRECTION 0
+=======
+#define TENSORIAL_CORRECTION 1
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 
 // Available plastic flow conditions:
 // (if you do not know what this is, choose (1) or nothing)
@@ -110,15 +142,29 @@
 //              Y = (1-damage)*Y_i + damage*Y_d
 //              Y is limited to <= Y_i
 //       Note: If FRAGMENTATION is not activated only Y_i is used.
+<<<<<<< HEAD
+=======
+//             DAMAGE_ACTS_ON_S is not allowed for this model, since the limiting of S already depends on damage.
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 //       If you want to additionally model the influence of some (single) melt energy on the yield strength, then activate
 //       COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY, which adds a factor (1-e/e_melt) to the yield strength.
 #define COLLINS_PLASTICITY 0
 #define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 0
 //   (5) Simplified version of the Collins et al. (2004) model, which uses only the
 //       strength representation for intact material (Y_i), irrespective of damage.
+<<<<<<< HEAD
 //       Unlike in (4), Y decreases to zero (following the Y_i function) for p<0.
 #define COLLINS_PLASTICITY_SIMPLE 0
 // Note: For (1,2,3) the stress tensor is additionally reduced if FRAGMENTATION is used, for (4,5) not.
+=======
+//       Unlike in (4), Y decreases to zero (following a linear yield strength curve) for p<0.
+//       In addition, negative pressures are limited to the pressure corresponding to
+//       yield strength = 0 (i.e., are set to this value when they get more negative).
+#define COLLINS_PLASTICITY_SIMPLE 0
+// Note: The deviator stress tensor is additionally reduced by FRAGMENTATION (i.e., damage) only if
+//       DAMAGE_ACTS_ON_S is set. For most plasticity models it depends on the use case whether this
+//       is desired, only for COLLINS_PLASTICITY it is not reasonable (and therefore not allowed).
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 
 // model regolith as viscous fluid -> experimental setup, only for powerusers
 #define VISCOUS_REGOLITH 0
@@ -142,7 +188,11 @@
 #define MAX_NUM_INTERACTIONS 128
 
 // set p to 0 if p < 0
+<<<<<<< HEAD
 #define REAL_HYDRO 1
+=======
+#define REAL_HYDRO 0
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 
 // if set to 1, the smoothing length is not fixed for each material type
 // choose either FIXED_NOI for a fixed number of interaction partners following
@@ -180,17 +230,27 @@
 // see Morris and Monaghan 1984
 #define XSPH 0
 
+<<<<<<< HEAD
 // only works with the liquid equation of state!!
 #define DISPH 1
 
 // boundaries EXPERIMENTAL, please do not use this....
 #define BOUNDARY_PARTICLE_ID 2
+=======
+// boundaries EXPERIMENTAL, please do not use this....
+#define BOUNDARY_PARTICLE_ID -1
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #define GHOST_BOUNDARIES 0
 // note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions
 
 // IO options
+<<<<<<< HEAD
 #define HDF5IO 0    // use HDF5 (needs libhdf5-dev and libhdf5)
 #define MORE_OUTPUT 0  //produce additional output to HDF5 files (p_max, p_min, rho_max, rho_min); only ueful when HDF5IO is set
+=======
+#define HDF5IO 1    // use HDF5 (needs libhdf5-dev and libhdf5)
+#define MORE_OUTPUT 0   //produce additional output to HDF5 files (p_max, p_min, rho_max, rho_min); only ueful when HDF5IO is set
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #define MORE_ANEOS_OUTPUT 0 // produce additional output to HDF5 files (T, cs, entropy, phase-flag); only useful when HDF5IO is set; set only if you use the ANEOS eos, but currently not supported for porosity+ANEOS
 #define OUTPUT_GRAV_ENERGY 0    // compute and output gravitational energy (at times when output files are written); of all SPH particles (and also w.r.t. gravitating point masses and between them); direct particle-particle summation, not tree; option exists to control costly computation for high particle numbers
 #define BINARY_INFO 0   // generates additional output file (binary_system.log) with info regarding binary system: semi-major axis, eccentricity if GRAVITATING_POINT_MASSES == 1

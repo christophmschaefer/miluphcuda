@@ -29,6 +29,7 @@
 # define PLASTICITY 1
 #endif
 
+<<<<<<< HEAD
 #if VON_MISES_PLASTICITY && COLLINS_PLASTICITY
 # error ERROR. You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY at the same time.
 #endif
@@ -50,18 +51,62 @@
 #if COLLINS_PLASTICITY && COLLINS_PLASTICITY_SIMPLE
 # error ERROR. You have chosen COLLINS_PLASTICITY and also COLLINS_PLASTICITY_SIMPLE in parameter.h. Choose either one, not both.
 #endif
+=======
+
+// checks for plasticity models
+#if VON_MISES_PLASTICITY && COLLINS_PLASTICITY
+# error ERROR. You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY at the same time.
+#endif
+
+#if VON_MISES_PLASTICITY && COLLINS_PLASTICITY_SIMPLE
+# error ERROR. You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY_SIMPLE at the same time.
+#endif
+
+#if MOHR_COULOMB_PLASTICITY && DRUCKER_PRAGER_PLASTICITY
+# error ERROR. You cannot choose MOHR_COULOMB_PLASTICITY and DRUCKER_PRAGER_PLASTICITY at the same time.
+#endif
+
+#if MOHR_COULOMB_PLASTICITY && COLLINS_PLASTICITY
+# error ERROR. You cannot choose MOHR_COULOMB_PLASTICITY and COLLINS_PLASTICITY at the same time.
+#endif
+
+#if DRUCKER_PRAGER_PLASTICITY && COLLINS_PLASTICITY
+# error ERROR. You cannot choose DRUCKER_PRAGER_PLASTICITY and COLLINS_PLASTICITY at the same time.
+#endif
+
+#if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY && !COLLINS_PLASTICITY
+# error ERROR. You have chosen COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY but not also COLLINS_PLASTICITY in parameter.h. That is not what you want.
+#endif
+
+#if COLLINS_PLASTICITY && COLLINS_PLASTICITY_SIMPLE
+# error ERROR. You have chosen COLLINS_PLASTICITY and also COLLINS_PLASTICITY_SIMPLE in parameter.h. Choose either one, not both.
+#endif
+
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if COLLINS_PLASTICITY_SIMPLE && COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
 # error ERROR. You have chosen COLLINS_PLASTICITY_SIMPLE and also COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY in parameter.h. This combination is not implemented yet...
 #endif
 
+<<<<<<< HEAD
 #if USE_BSPLINE_KERNEL && USE_WENDLAND_KERNEL
 # error specifiy only one kernel
+=======
+#if COLLINS_PLASTICITY && DAMAGE_ACTS_ON_S
+# error ERROR. You chose COLLINS_PLASTICITY and also DAMAGE_ACTS_ON_S in parameter.h. Not a good idea.
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #endif
 
 #if VISCOUS_REGOLITH && !SOLID
 # error turn SOLID on when using VISCOUS_REGOLITH
 #endif
 
+<<<<<<< HEAD
+=======
+#if KLEY_VISCOSITY && !NAVIER_STOKES
+# error turn on NAVIER_STOKES when using KLEY_VISCOSITY
+#endif
+
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if PURE_REGOLITH && !SOLID
 # error turn SOLID on when using PURE_REGOLITH
 #endif
@@ -74,22 +119,43 @@
 # error turn SOLID on when using JC_PLASTICITY
 #endif
 
-#if FRAGMENTATION && !SOLID
-# error turn SOLID on when using FRAGMENTATION
-#endif
-
+<<<<<<< HEAD
+=======
 #if PLASTICITY && JC_PLASTICITY
 # error Error: Cannot use another PLASTICITY model along with JC_PLASTICITY at the same time. Decide for one and recompile.
 #endif
 
+
+// checks for fragmentation model
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
+#if FRAGMENTATION && !SOLID
+# error turn SOLID on when using FRAGMENTATION
+#endif
+
+<<<<<<< HEAD
+#if PLASTICITY && JC_PLASTICITY
+# error Error: Cannot use another PLASTICITY model along with JC_PLASTICITY at the same time. Decide for one and recompile.
+#endif
+
+=======
+#if DAMAGE_ACTS_ON_S && !FRAGMENTATION
+# error ERROR. You set DAMAGE_ACTS_ON_S but not FRAGMENTATION in parameter.h. Not working...
+#endif
+
+
+// misc checks
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if SYMMETRIC_STRESSTENSOR && !SOLID
 # error turn SOLID on when using SYMMETRIC_STRESSTENSOR
 #endif
 
+<<<<<<< HEAD
 #if COHESION_FOR_DAMAGED_MATERIAL && !FRAGMENTATION
 # error turn on FRAGMENTATION when using COHESION_FOR_DAMAGED_MATERIAL
 #endif
 
+=======
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if SHAKURA_SUNYAEV_ALPHA && CONSTANT_KINEMATIC_VISCOSITY
 # error choose only one viscosity model
 #endif
@@ -104,6 +170,13 @@
 # error Particle accretion only if DIM > 1
 #endif
 
+<<<<<<< HEAD
+=======
+#if USE_BSPLINE_KERNEL && USE_WENDLAND_KERNEL
+# error specifiy only one kernel
+#endif
+
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if ARTIFICIAL_STRESS && !SOLID
 # error turn off ARTIFICIAL_STRESS when running pure hydro
 #endif
@@ -114,5 +187,12 @@
 # endif
 #endif
 
+<<<<<<< HEAD
+=======
+#if STRESS_PALPHA_POROSITY && !PALPHA_POROSITY
+# error ERROR. You set STRESS_PALPHA_POROSITY but not PALPHA_POROSITY in parameter.h.
+#endif
+
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 
 #endif

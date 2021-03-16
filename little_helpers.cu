@@ -81,11 +81,14 @@ __global__ void checkNaNs(int *interactions)
 #if INTEGRATE_ENERGY
         assert(!isnan(p.dedt[i]));
 #endif
+<<<<<<< HEAD
 #if DISPH
         assert(!isnan(p.q[i]));
         assert(!isnan(p.U[i]));
         assert(!isnan(p.dUdt[i]));
 #endif
+=======
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if INTEGRATE_DENSITY
         assert(!isnan(p.drhodt[i]));
 #endif

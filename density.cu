@@ -49,11 +49,14 @@ __global__ void calculateDensity(int *interactions) {
     double rho;
     double sml;
     double tolerance;
+<<<<<<< HEAD
 
 #if DISPH
     double q;
 #endif 
 
+=======
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #if SML_CORRECTION
     double dhdrho, sml_omega,sml_omega_sum, r;
     double f, df, h_new, h_init, rho_h;
@@ -93,9 +96,12 @@ __global__ void calculateDensity(int *interactions) {
             W /= p_rhs.shepard_correction[i];
 #endif
             rho = p.m[i] * W;
+<<<<<<< HEAD
         #if DISPH
             q = p.U[i]*W;
         #endif 
+=======
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
             if (rho == 0.0) {
                 printf("rho is %f W: %e \n", rho, W);
             }
@@ -146,9 +152,12 @@ __global__ void calculateDensity(int *interactions) {
                 sml_omega_sum += p.m[ip] * (-1) * (DIM * W/sml + (r / sml) * dWdr);
 #endif // SML_CORRECTION
                 rho += p.m[ip] * W;
+<<<<<<< HEAD
             #if DISPH
                 q += p.U[ip]*W;
             #endif
+=======
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
             }
 #if SML_CORRECTION
             rho_h = p.m[i] * pow(double(h_fact / p.h[i]), DIM);
@@ -206,8 +215,11 @@ __global__ void calculateDensity(int *interactions) {
         } while (tolerance > 1e-3 && cnt < 10);       
         // write to global memory
         p.rho[i] = rho;
+<<<<<<< HEAD
         #if DISPH
         	p.q[i] = q;
         #endif
+=======
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
     }
 }

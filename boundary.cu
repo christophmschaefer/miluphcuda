@@ -217,8 +217,9 @@ __global__ void BoundaryConditionsAfterRHS(int *interactions)
         p.ax[i] -= 1.327474512e+20 * p.x[i] / distance;
         p.ay[i] -= 1.327474512e+20 * p.y[i] / distance;
 #endif
-            
-	  p.ay[i] -= 9.81;
+
+//        p.az[i] -= 9.81;
+
 
         /* let's stick to the ground */
 

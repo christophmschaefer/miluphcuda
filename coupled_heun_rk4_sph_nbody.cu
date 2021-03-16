@@ -113,7 +113,11 @@ __global__ void CorrectorStep_heun()
         p.dTdt[i] = 0.5*(predictor.dTdt[i] + p.dTdt[i]);
 #endif
 #if FRAGMENTATION
+<<<<<<< HEAD
 #if PALPHA_POROSITY
+=======
+# if PALPHA_POROSITY
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 //        if (p.drhodt[i] > 0 && predictor.p[i] > predictor.pold[i]) {
 		if (predictor.p[i] > predictor.pold[i]) {
             p.damage_porjutzi[i] = p.damage_porjutzi[i] + dt/2 *(predictor.ddamage_porjutzidt[i] + p.ddamage_porjutzidt[i]);
@@ -121,7 +125,11 @@ __global__ void CorrectorStep_heun()
             p.d[i] = p.d[i];
             p.damage_porjutzi[i] = p.damage_porjutzi[i];
         }
+<<<<<<< HEAD
 #endif
+=======
+# endif
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
         p.numActiveFlaws[i] = predictor.numActiveFlaws[i];
 #endif
         // change drhodt after PALPHA_POROSITY
@@ -228,7 +236,11 @@ __global__ void PredictorStep_heun()
 #if FRAGMENTATION
         predictor.d[i] = p.d[i] + dt * p.dddt[i];
         predictor.numActiveFlaws[i] = p.numActiveFlaws[i];
+<<<<<<< HEAD
 #if PALPHA_POROSITY
+=======
+# if PALPHA_POROSITY
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
         predictor.damage_porjutzi[i] = p.damage_porjutzi[i] + dt * p.ddamage_porjutzidt[i];
         // cms 2019-06-25
         // pressuremaxchange function will compare predictor.p - predictor.pold and
@@ -236,7 +248,11 @@ __global__ void PredictorStep_heun()
         // step
         //predictor.p[i] = p.p[i];
         predictor.pold[i] = p.p[i];
+<<<<<<< HEAD
 #endif
+=======
+# endif
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
 #endif
 #if SIRONO_POROSITY
         predictor.rho_0prime[i] = p.rho_0prime[i];
@@ -482,9 +498,14 @@ __global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock
             dtdamage = min(temp, dtdamage);
         }
 #endif
+<<<<<<< HEAD
 
 
     }
+=======
+    }
+
+>>>>>>> e584e9e456af9bc659413824335eb67544847775
     i = threadIdx.x;
     sharedForces[i] = forces;
     sharedCourant[i] = courant;
