@@ -1,5 +1,4 @@
 <map id="PredictorStep_heun" name="PredictorStep_heun">
-<area shape="rect" id="node2" href="$timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a" title="stressIndex" alt="" coords="239,29,330,56"/>
-<area shape="rect" id="node4" href="$coupled__heun__rk4__sph__nbody_8h.html#a0cb2ea539e9f6322c5cbb6fb9c70c651" title="pressureChangeCheck_heun" alt="" coords="189,80,380,107"/>
-<area shape="rect" id="node3" href="$timeintegration_8h.html#ac975fd6d71ce6df7f03d462d5394248f" title="symmetrizeStress" alt="" coords="428,29,556,56"/>
+<area shape="rect" id="node2" href="$timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a" title="stressIndex" alt="" coords="239,5,330,32"/>
+<area shape="rect" id="node3" href="$coupled__heun__rk4__sph__nbody_8h.html#a0cb2ea539e9f6322c5cbb6fb9c70c651" title="pressureChangeCheck_heun" alt="" coords="189,56,380,83"/>
 </map>

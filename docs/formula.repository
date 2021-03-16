@@ -1,4 +1,3 @@
 \form#0:$ \nabla \cdot \vec{v} $
 \form#1:$ \nabla \times \vec{v} $
-\form#2:$\nabla \times \vec{v}$
-\form#3:$ p = c_s^2 \times \varrho $
+\form#2:$ p = c_s^2 \times \varrho $

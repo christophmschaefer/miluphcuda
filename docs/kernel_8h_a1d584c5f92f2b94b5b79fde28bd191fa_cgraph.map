@@ -1,3 +1,5 @@
 <map id="wendlandc6" name="wendlandc6">
 <area shape="rect" id="node2" href="$kernel_8h.html#ac08dd7ddfda91dd3c7337df6fdb6244b" title="Calculates the kernel for the tensile instability fix following Monaghan 2000. " alt="" coords="144,5,279,32"/>
+<area shape="rect" id="node3" href="$kernel_8h.html#a574755ce5da7bc304ea1752e5e3d125b" title="Calculates &#160;and . " alt="" coords="147,56,275,83"/>
+<area shape="rect" id="node4" href="$kernel_8h.html#a8531e5403979e291fe8fea8f359d5415" title="Calculates the zeroth order corrections for the kernel sum. " alt="" coords="147,107,275,133"/>
 </map>

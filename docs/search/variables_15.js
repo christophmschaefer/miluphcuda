@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['y',['y',['../struct_particle.html#a512aa631bf082567c98c8c26cf48950a',1,'Particle::y()'],['../struct_pointmass.html#a529f44eeb434351945ab40b7f39cf5cc',1,'Pointmass::y()']]],
-  ['y0',['y0',['../struct_particle.html#a2939e60dc3d4c5f57c28fd57b8b6f067',1,'Particle']]]
+  ['z',['z',['../struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa',1,'Particle::z()'],['../struct_pointmass.html#a74f56f36996385a1cf8f6046936099d9',1,'Pointmass::z()']]],
+  ['z0',['z0',['../struct_particle.html#aef890f19294f6bc2ab49d2a9873c26e6',1,'Particle']]]
 ];

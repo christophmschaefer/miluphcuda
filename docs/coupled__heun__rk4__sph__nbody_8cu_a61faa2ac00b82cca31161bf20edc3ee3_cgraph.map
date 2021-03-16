@@ -1,4 +1,3 @@
 <map id="CorrectorStep_heun" name="CorrectorStep_heun">
-<area shape="rect" id="node2" href="$timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a" title="stressIndex" alt="" coords="192,29,283,56"/>
-<area shape="rect" id="node3" href="$timeintegration_8h.html#ac975fd6d71ce6df7f03d462d5394248f" title="symmetrizeStress" alt="" coords="331,29,459,56"/>
+<area shape="rect" id="node2" href="$timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a" title="stressIndex" alt="" coords="192,5,283,32"/>
 </map>

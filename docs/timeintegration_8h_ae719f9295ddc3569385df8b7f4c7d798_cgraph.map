@@ -7,7 +7,7 @@
 <area shape="rect" id="node5" href="$pressure_8cu.html#a4c983e72593c81e8ad8c3da244750599" title="Calculates the pressure for all particles. " alt="" coords="622,56,749,83"/>
 <area shape="rect" id="node8" href="$rhs_8cu.html#a3ce839e17b600b5ff81502b864d95c86" title="zero_all_derivatives" alt="" coords="381,461,519,488"/>
 <area shape="rect" id="node9" href="$boundary_8cu.html#a092ef939062b27aab9bf0369faa630bf" title="BoundaryConditionsBeforeRHS" alt="" coords="347,512,553,539"/>
-<area shape="rect" id="node10" href="$tree_8cu.html#a2d1ccf6ae64ed3fb0b0388dfe7575d15" title="computationalDomain" alt="" coords="376,781,524,808"/>
+<area shape="rect" id="node10" href="$tree_8cu.html#ad35586f87db125b73735ca74fbe35116" title="computationalDomain" alt="" coords="376,781,524,808"/>
 <area shape="rect" id="node13" href="$tree_8cu.html#ad2c17b7a6e842835311d5502e30cef6b" title="buildTree" alt="" coords="413,613,487,640"/>
 <area shape="rect" id="node14" href="$tree_8cu.html#a409f6d46534c450659fd202310fa1551" title="getTreeDepth" alt="" coords="399,933,501,960"/>
 <area shape="rect" id="node15" href="$tree_8h.html#a59b57cd8d63b7c9793e441ef1792f03a" title="check_sml_boundary" alt="" coords="613,781,758,808"/>
@@ -16,20 +16,20 @@
 <area shape="rect" id="node18" href="$tree_8cu.html#a479b902754e4995b95be63d446ec9506" title="nearNeighbourSearch" alt="" coords="377,731,523,757"/>
 <area shape="rect" id="node19" href="$tree_8cu.html#a5d1d94630fd2202ed47880e841ef9181" title="setEmptyMassForInnerNodes" alt="" coords="352,1035,548,1061"/>
 <area shape="rect" id="node20" href="$density_8cu.html#a9bb9c9b345cb0f4f95fa62e35644cc37" title="Calculates the density using the kernel sum. " alt="" coords="391,883,509,909"/>
-<area shape="rect" id="node21" href="$kernel_8h.html#a8531e5403979e291fe8fea8f359d5415" title="Calculates the zeroth order corrections for the kernel sum. " alt="" coords="621,1111,749,1137"/>
+<area shape="rect" id="node21" href="$kernel_8h.html#a8531e5403979e291fe8fea8f359d5415" title="Calculates the zeroth order corrections for the kernel sum. " alt="" coords="386,1085,514,1112"/>
 <area shape="rect" id="node22" href="$soundspeed_8cu.html#a843a8fdd8c8728659687aab98307813b" title="Compute sound speed depending on equation of state. " alt="" coords="611,323,759,349"/>
-<area shape="rect" id="node23" href="$kernel_8cu.html#a574755ce5da7bc304ea1752e5e3d125b" title="Calculates &#160;and . " alt="" coords="386,1136,514,1163"/>
-<area shape="rect" id="node24" href="$kernel_8h.html#adfb4edbc8801ad7272d4bfa4e39495c3" title="Calculates the tensorial correction factors for linear consistency. " alt="" coords="620,1175,751,1201"/>
-<area shape="rect" id="node25" href="$porosity_8h.html#a918dad81cd63090e7989028d74741899" title="calculateCompressiveStrength" alt="" coords="350,1237,550,1264"/>
-<area shape="rect" id="node26" href="$porosity_8h.html#aa2dec2a1b423af3cc5035e4e0ff25b2e" title="calculateTensileStrength" alt="" coords="367,1288,533,1315"/>
-<area shape="rect" id="node27" href="$tree_8cu.html#a2d67dae7a7571beb2ec412b04de92583" title="calculateCentersOfMass" alt="" coords="367,563,533,589"/>
-<area shape="rect" id="node28" href="$viscosity_8h.html#a2bfa27ba72d5dedf75a624cd871a0346" title="betaviscosity" alt="" coords="401,1339,499,1365"/>
-<area shape="rect" id="node29" href="$timeintegration_8h.html#ac975fd6d71ce6df7f03d462d5394248f" title="symmetrizeStress" alt="" coords="386,1389,514,1416"/>
-<area shape="rect" id="node30" href="$damage_8h.html#a21afcc6e2f3ce13ddaad8f60b8982f75" title="Limits the damage to what is supported by the number of activated flaws. " alt="" coords="402,1440,498,1467"/>
+<area shape="rect" id="node23" href="$kernel_8h.html#a574755ce5da7bc304ea1752e5e3d125b" title="Calculates &#160;and . " alt="" coords="386,1136,514,1163"/>
+<area shape="rect" id="node24" href="$porosity_8h.html#a918dad81cd63090e7989028d74741899" title="calculateCompressiveStrength" alt="" coords="350,1187,550,1213"/>
+<area shape="rect" id="node25" href="$porosity_8h.html#aa2dec2a1b423af3cc5035e4e0ff25b2e" title="calculateTensileStrength" alt="" coords="367,1237,533,1264"/>
+<area shape="rect" id="node26" href="$tree_8cu.html#a2d67dae7a7571beb2ec412b04de92583" title="calculateCentersOfMass" alt="" coords="367,563,533,589"/>
+<area shape="rect" id="node27" href="$viscosity_8h.html#a2bfa27ba72d5dedf75a624cd871a0346" title="betaviscosity" alt="" coords="401,1288,499,1315"/>
+<area shape="rect" id="node28" href="$timeintegration_8cu.html#ac975fd6d71ce6df7f03d462d5394248f" title="symmetrizeStress" alt="" coords="386,1339,514,1365"/>
+<area shape="rect" id="node29" href="$damage_8h.html#a21afcc6e2f3ce13ddaad8f60b8982f75" title="Limits the damage to what is supported by the number of activated flaws. " alt="" coords="402,1389,498,1416"/>
+<area shape="rect" id="node30" href="$kernel_8cu.html#adfb4edbc8801ad7272d4bfa4e39495c3" title="Calculates the tensorial correction factors for linear consistency. " alt="" coords="385,1440,515,1467"/>
 <area shape="rect" id="node31" href="$internal__forces_8h.html#a68f70b7adeb9ebbf8eebae040bfd803c" title="calculatedeviatoricStress" alt="" coords="601,1516,769,1543"/>
 <area shape="rect" id="node32" href="$xsph_8cu.html#a5cc7201c525d9ef61114cbd52cfea95f" title="calculateXSPHchanges" alt="" coords="370,1592,530,1619"/>
 <area shape="rect" id="node33" href="$little__helpers_8cu.html#a15ff2f32836f363fb1f5cdfa3a149d1c" title="checkNaNs" alt="" coords="405,1643,495,1669"/>
-<area shape="rect" id="node34" href="$stress_8h.html#af15671e840f16bcac37084ff0a6e64f5" title="set_stress_tensor" alt="" coords="387,1693,513,1720"/>
+<area shape="rect" id="node34" href="$stress_8cu.html#af15671e840f16bcac37084ff0a6e64f5" title="set_stress_tensor" alt="" coords="387,1693,513,1720"/>
 <area shape="rect" id="node35" href="$viscosity_8h.html#a5f4f7c861289abc110a778820eafdeb2" title="calculate_kinematic\l_viscosity" alt="" coords="381,1745,519,1786"/>
 <area shape="rect" id="node36" href="$viscosity_8h.html#a753caadd06df4fc17c916cbb55029193" title="calculate_shear_stress\l_tensor" alt="" coords="372,1810,528,1851"/>
 <area shape="rect" id="node37" href="$internal__forces_8cu.html#a31671c77ed0ca3452ac84cb46f84af00" title="internalForces" alt="" coords="398,1541,502,1568"/>
