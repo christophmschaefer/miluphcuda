@@ -4,7 +4,7 @@
 Generates xdmf file from .h5 miluphcuda output files for Paraview postprocessing.
 
 Authors: Christoph Schäfer, Christoph Burger
-Last updated: 16/Feb/2021
+Last updated: 17/Mar/2021
 
 """
 
@@ -107,8 +107,9 @@ if __name__ == "__main__":
 
 
     # now process input files
+    n_processed = 0
     for hfile in args.input_files:
-        print("Processing %s " % hfile)
+        print("Processing {}".format(hfile), end='\r')
 
         try: 
             f = h5py.File(hfile, 'r')
@@ -160,10 +161,14 @@ if __name__ == "__main__":
                 xdmfh.write('</DataItem>\n')
                 xdmfh.write('</Attribute>\n')
         xdmfh.write('</Grid>\n')
+
         f.close()
+        n_processed += 1
 
     # write footnote of xdmf file
     write_xdmf_footer(xdmfh)
 
     xdmfh.close()
+
+    print("Done. Processed {} files.\n".format(n_processed) )
 
