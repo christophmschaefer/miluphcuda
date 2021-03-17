@@ -142,7 +142,7 @@
 #define MAX_NUM_INTERACTIONS 128
 
 // set p to 0 if p < 0
-#define REAL_HYDRO 1
+#define REAL_HYDRO 0
 
 // if set to 1, the smoothing length is not fixed for each material type
 // choose either FIXED_NOI for a fixed number of interaction partners following

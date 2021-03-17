@@ -1610,8 +1610,8 @@ void write_particles_to_file(File file) {
 #endif
 
 #if DISPH
-			fprintf(file.data, "%q\t", p_host.q[i]);
-            fprintf(file.data, "%U\t", p_host.U[i]);
+			fprintf(file.data, "%e\t", p_host.q[i]);
+            fprintf(file.data, "%e\t", p_host.U[i]);
 #endif
 
             fprintf(file.data, "%.6le\t", p_host.h[i]);

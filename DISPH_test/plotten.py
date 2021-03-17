@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-n = 15000
+n = 128
 N = 25**2*2
-dn = 10
+dn = 1
 real_n = int(n/dn)
 
 for i in range(real_n):
