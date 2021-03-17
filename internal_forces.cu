@@ -525,9 +525,9 @@ __global__ void internalForces(int *interactions) {
 #  endif
 # elif (SPH_EQU_VERSION == 2)
 #  if SML_CORRECTION
-                    accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]+p.Tshear[stressIndex(i,d,dd)])/(p.rho[i]*p.rho[j]) *dWdx[dd];
-#  else
                     accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]+p.Tshear[stressIndex(i,d,dd)])/(p.sml_omega[i]*p.rho[i]*p.sml_omega[j]*p.rho[j]) *dWdx[dd];
+#  else
+                    accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]+p.Tshear[stressIndex(i,d,dd)])/(p.rho[i]*p.rho[j]) *dWdx[dd];
 #  endif
 # endif // SPH_EQU_VERSION
                 }
