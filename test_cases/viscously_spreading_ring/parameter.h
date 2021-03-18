@@ -28,6 +28,14 @@
 #define DIM 2
 #define DEBUG 0
 
+// Basic physical model, choose one of the following:
+// SOLID solves continuum mechanics with material strength, and stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
+// HYDRO solves only the Euler equation, and there is only (scalar) pressure
+#define SOLID 0
+#define HYDRO 1
+// set additionally p to 0 if p < 0
+#define REAL_HYDRO 0
+
 // physics
 // add additional point masses to the simulation
 // read from file <filename>.mass
@@ -47,8 +55,6 @@
 // if set to 0, there is only pressure
 #define INTEGRATE_DENSITY 0
 
-// physical models: solid is continuum mechanics, if not set, only the Euler equation is solved
-#define SOLID 0
 // adds viscosity to the Euler equation
 #define NAVIER_STOKES 1
 // damage model following Benz & Asphaug 1995
@@ -158,9 +164,6 @@
 // material.cfg
 // note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions
 #define DENSITY_FLOOR 0 // DENSITY FLOOR sets a minimum density for all particles. the floor density is 1% of the lowest density in material.cfg
-
-// set p to 0 if p < 0
-#define REAL_HYDRO 0
 
 
 // produces additional output to HDF5 files (T, cs, entropy); only useful when HDF5IO is set; set only if you use the ANEOS eos

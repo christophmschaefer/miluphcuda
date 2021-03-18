@@ -26,6 +26,14 @@
 // Dimension of the problem
 #define DIM 2
 
+// Basic physical model, choose one of the following:
+// SOLID solves continuum mechanics with material strength, and stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
+// HYDRO solves only the Euler equation, and there is only (scalar) pressure
+#define SOLID 1
+#define HYDRO 0
+// set additionally p to 0 if p < 0
+#define REAL_HYDRO 0
+
 // add additional point masses to the simulation, read from file <filename>.mass
 // format is location velocities mass r_min r_max, where location and velocities are vectors with size DIM and
 // r_min/r_max are min/max distances of sph particles to the bodies before they are taken out of the simulation
@@ -42,11 +50,6 @@
 // integrate the continuity equation
 // if set to 0, the density will be calculated using the standard SPH sum \sum_i m_j W_ij
 #define INTEGRATE_DENSITY 1
-
-// basic physical model:
-// SOLID set to 1 solves continuum mechanics with material strength, and stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
-// SOLID set to 0 solves only the Euler equation, and there is only (scalar) pressure
-#define SOLID 1
 
 // adds viscosity to the Euler equation
 #define NAVIER_STOKES 0
@@ -170,9 +173,6 @@
 // material.cfg
 // note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions
 #define DENSITY_FLOOR 0 // DENSITY FLOOR sets a minimum density for all particles. the floor density is 1% of the lowest density in material.cfg
-
-// set p to 0 if p < 0
-#define REAL_HYDRO 0
 
 // if set to 1, the smoothing length is not fixed for each material type
 // choose either FIXED_NOI for a fixed number of interaction partners following

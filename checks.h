@@ -30,41 +30,46 @@
 #endif
 
 
+// basic checks
+#if (!SOLID && !HYDRO) || (SOLID && HYDRO)
+# error Choose either SOLID or HYDRO in parameter.h.
+#endif
+
 // checks for plasticity models
 #if VON_MISES_PLASTICITY && COLLINS_PLASTICITY
-# error ERROR. You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY at the same time.
+# error You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY at the same time.
 #endif
 
 #if VON_MISES_PLASTICITY && COLLINS_PLASTICITY_SIMPLE
-# error ERROR. You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY_SIMPLE at the same time.
+# error You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY_SIMPLE at the same time.
 #endif
 
 #if MOHR_COULOMB_PLASTICITY && DRUCKER_PRAGER_PLASTICITY
-# error ERROR. You cannot choose MOHR_COULOMB_PLASTICITY and DRUCKER_PRAGER_PLASTICITY at the same time.
+# error You cannot choose MOHR_COULOMB_PLASTICITY and DRUCKER_PRAGER_PLASTICITY at the same time.
 #endif
 
 #if MOHR_COULOMB_PLASTICITY && COLLINS_PLASTICITY
-# error ERROR. You cannot choose MOHR_COULOMB_PLASTICITY and COLLINS_PLASTICITY at the same time.
+# error You cannot choose MOHR_COULOMB_PLASTICITY and COLLINS_PLASTICITY at the same time.
 #endif
 
 #if DRUCKER_PRAGER_PLASTICITY && COLLINS_PLASTICITY
-# error ERROR. You cannot choose DRUCKER_PRAGER_PLASTICITY and COLLINS_PLASTICITY at the same time.
+# error You cannot choose DRUCKER_PRAGER_PLASTICITY and COLLINS_PLASTICITY at the same time.
 #endif
 
 #if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY && !COLLINS_PLASTICITY
-# error ERROR. You have chosen COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY but not also COLLINS_PLASTICITY in parameter.h. That is not what you want.
+# error You have chosen COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY but not also COLLINS_PLASTICITY in parameter.h. That is not what you want.
 #endif
 
 #if COLLINS_PLASTICITY && COLLINS_PLASTICITY_SIMPLE
-# error ERROR. You have chosen COLLINS_PLASTICITY and also COLLINS_PLASTICITY_SIMPLE in parameter.h. Choose either one, not both.
+# error You have chosen COLLINS_PLASTICITY and also COLLINS_PLASTICITY_SIMPLE in parameter.h. Choose either one, not both.
 #endif
 
 #if COLLINS_PLASTICITY_SIMPLE && COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
-# error ERROR. You have chosen COLLINS_PLASTICITY_SIMPLE and also COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY in parameter.h. This combination is not implemented yet...
+# error You have chosen COLLINS_PLASTICITY_SIMPLE and also COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY in parameter.h. This combination is not implemented yet...
 #endif
 
 #if COLLINS_PLASTICITY && DAMAGE_ACTS_ON_S
-# error ERROR. You chose COLLINS_PLASTICITY and also DAMAGE_ACTS_ON_S in parameter.h. Not a good idea.
+# error You chose COLLINS_PLASTICITY and also DAMAGE_ACTS_ON_S in parameter.h. Not a good idea.
 #endif
 
 #if VISCOUS_REGOLITH && !SOLID
@@ -80,7 +85,7 @@
 #endif
 
 #if PLASTICITY && !SOLID
-# error ERROR. Using a PLASTICITY model is only possible in combination with SOLID...
+# error Using a PLASTICITY model is only possible in combination with SOLID...
 #endif
 
 #if JC_PLASTICITY && !SOLID
@@ -88,7 +93,7 @@
 #endif
 
 #if PLASTICITY && JC_PLASTICITY
-# error Error: Cannot use another PLASTICITY model along with JC_PLASTICITY at the same time. Decide for one and recompile.
+# error Cannot use another PLASTICITY model along with JC_PLASTICITY at the same time. Decide for one and recompile.
 #endif
 
 
@@ -98,7 +103,7 @@
 #endif
 
 #if DAMAGE_ACTS_ON_S && !FRAGMENTATION
-# error ERROR. You set DAMAGE_ACTS_ON_S but not FRAGMENTATION in parameter.h. Not working...
+# error You set DAMAGE_ACTS_ON_S but not FRAGMENTATION in parameter.h. Not working...
 #endif
 
 
@@ -118,7 +123,7 @@
 #endif
 
 #if DIM == 1 && PARTICLE_ACCRETION
-# error Particle accretion only if DIM > 1
+# error Particle accretion only if DIM > 1.
 #endif
 
 #if USE_BSPLINE_KERNEL && USE_WENDLAND_KERNEL
@@ -126,7 +131,7 @@
 #endif
 
 #if ARTIFICIAL_STRESS && !SOLID
-# error turn off ARTIFICIAL_STRESS when running pure hydro
+# error turn off ARTIFICIAL_STRESS when running hydro sims
 #endif
 
 #if VARIABLE_SML
@@ -136,7 +141,7 @@
 #endif
 
 #if STRESS_PALPHA_POROSITY && !PALPHA_POROSITY
-# error ERROR. You set STRESS_PALPHA_POROSITY but not PALPHA_POROSITY in parameter.h.
+# error You set STRESS_PALPHA_POROSITY but not PALPHA_POROSITY in parameter.h.
 #endif
 
 
