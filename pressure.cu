@@ -33,6 +33,10 @@ __global__ void calculatePressure() {
     register double eta, e, rho, mu, p1, p2;
     int i_rho, i_e;
     double pressure;
+#if COLLINS_PLASTICITY_SIMPLE
+    double p_limit;
+#endif
+
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         pressure = 0.0;
@@ -385,6 +389,15 @@ __global__ void calculatePressure() {
             p.alpha_jutzi_old[i] = p.alpha_jutzi[i];
         }
 #endif
+
+#if COLLINS_PLASTICITY_SIMPLE
+        // limit negative pressures to value at zero of yield strength curve
+        // (zero is at -y_0/mu_i if assumed linear for p<0)
+        p_limit = - matCohesion[matId] / matInternalFriction[matId];
+        if( p.p[i] < p_limit)
+            p.p[i] = p_limit;
+#endif
+
 #if REAL_HYDRO
         if (p.p[i] < 0.0)
             p.p[i] = 0.0;
