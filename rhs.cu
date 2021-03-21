@@ -344,8 +344,8 @@ void rightHandSide()
 
 #if !INTEGRATE_DENSITY
     cudaEventRecord(start, 0);
-    // cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>( interactions)));
-    cudaVerifyKernel((calculateDensity<<<1,1>>>( interactions)));
+    cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>( interactions)));
+//    cudaVerifyKernel((calculateDensity<<<1,1>>>( interactions)));
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
