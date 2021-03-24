@@ -121,6 +121,9 @@ __global__ void symmetrizeStress(void);
 #define MAXDEPTH 128
 
 // the Courant (CFL) number
-#define COURANT 0.7
+#define COURANT_FACT 0.7
+// factor for limiting timestep based on local forces/acceleration
+#define FORCES_FACT 0.2
+
 
 #endif

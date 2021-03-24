@@ -124,10 +124,16 @@ __global__ void limitTimestep(double *forcesPerBlock , double *courantPerBlock)
                 courant = min(courant, courantPerBlock[j]);
             }
             // set new timestep
-            dt = min(COURANT*courant, forces*0.2);
+            dt = min(COURANT_FACT*courant, FORCES_FACT*forces);
+#if DEBUG_TIMESTEP
+            printf("<limitTimestep> max allowed timestep due to CFL is %g, due to forces/accels is %g, set timestep to %g\n",
+                    COURANT_FACT*courant, FORCES_FACT*forces, dt);
+#endif
             dt = min(dt, endTimeD - currentTimeD);
             if (dt > dtmax) {
-                printf("<limittimestep> timestep %g is larger than maximum timestep %g, reducing to %g\n", dt, dtmax, dtmax);
+#if DEBUG_TIMESTEP
+                printf("<limitTimestep> timestep %g is larger than max user-allowed timestep, reducing to %g\n", dt, dtmax);
+#endif
                 dt = dtmax;
             }
             // reset block count
@@ -997,7 +1003,7 @@ __global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock)
             if (maxDamageTimeStep > 0) {
                 dtsuggested = 1./maxDamageTimeStep;
                 if (dtsuggested > dtmax) {
-    //                printf("<damageMaxTimeStep> timestep %g is larger than maximum timestep %g, reducing to %g\n", dtsuggested, dtmax, dtmax);
+                    printf("<damageMaxTimeStep> timestep %g is larger than maximum timestep %g, reducing to %g\n", dtsuggested, dtmax, dtmax);
                     dtsuggested = dtmax;
                 }
                 if (dtsuggested < dt) {

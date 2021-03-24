@@ -443,7 +443,7 @@ __global__ void setTimestep_euler(double *forcesPerBlock, double *courantPerBloc
         courant = min(courant, temp);
 
 #if ARTIFICIAL_VISCOSITY
-        temp = COURANT * sml / (p.cs[i] + 1.2 * (matAlpha[matId]) * p.cs[i] + matBeta[matId] * p.muijmax[i]);
+        temp = COURANT_FACT * sml / (p.cs[i] + 1.2 * (matAlpha[matId]) * p.cs[i] + matBeta[matId] * p.muijmax[i]);
         dtartvisc = min(dtartvisc, temp);
 #endif
 #if INVISCID_SPH
@@ -586,7 +586,7 @@ __global__ void setTimestep_euler(double *forcesPerBlock, double *courantPerBloc
 #endif
             }
             // set new timestep
-            dt = dtx = min(COURANT*courant, forces*0.2);
+            dt = dtx = min(COURANT_FACT*courant, FORCES_FACT*forces);
 #if SOLID
             dt = min(dt, dtS);
 #endif

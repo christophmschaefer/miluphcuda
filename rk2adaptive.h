@@ -31,7 +31,14 @@
 
 void rk2Adaptive();
 
-
+/**
+ * @brief Limit timestep.
+ * @details Limits the timestep by:
+ *     - CFL condition, via dt ~ sml/cs
+ *     - local forces/acceleration, via dt ~ sqrt(sml/a)
+ *     - max user-allowed timestep
+ *     - if endTime would be exceeded
+ */
 __global__ void limitTimestep(double *forcesPerBlock, double *courantPerBlock);
 
 __global__ void checkError(
