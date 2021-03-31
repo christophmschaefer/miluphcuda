@@ -589,6 +589,7 @@ void usage(char *name)
             "\t-f, --filename <name>\t\t Name of input data file (default: disk.0000).\n"
             "\t\t\t\t\t File name format is something like 'string'.XXXX, where XXXX means runlevel and zeros.\n"
             "\t\t\t\t\t By default, an ASCII input file is assumed (unless -X is used).\n"
+            "\t-F, --firsttimestep\t\t For rk2_adaptive, set initial timestep at integration start (default: timeperstep set by -t).\n"
             "\t-g, --decouplegravity\t\t Decouple hydro time scale from gravitational time scale.\n"
             "\t-G, --information\t\t Print information about detected Nvidia GPUs on this host.\n"
 #if HDF5IO
