@@ -43,7 +43,6 @@ extern __device__ double dtNewErrorCheck;
 extern __device__ double dtNewAlphaCheck;
 extern __device__ double maxPosAbsError;
 
-
 extern __constant__ double b21;
 extern __constant__ double b31;
 extern __constant__ double b32;
@@ -61,86 +60,6 @@ extern __constant__ double safety;
 __constant__ __device__ double rk_epsrel_d;
 
 extern double L_ini;
-
-__global__ void limitTimestep(double *forcesPerBlock , double *courantPerBlock)
-{
-    __shared__ double sharedForces[NUM_THREADS_LIMITTIMESTEP];
-    __shared__ double sharedCourant[NUM_THREADS_LIMITTIMESTEP];
-    int i, j, k, m;
-    double forces = 1e100, courant = 1e100;
-    double temp;
-    double sml;
-    double ax;
-#if DIM > 1
-    double ay;
-#endif
-#if DIM == 3
-    double az;
-#endif
-    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
-        ax = p.ax[i];
-#if DIM > 1
-        ay = p.ay[i];
-#endif
-#if DIM == 3
-        az = p.az[i];
-#endif
-        temp = ax*ax;
-#if DIM > 1
-        temp += ay*ay;
-#endif
-#if DIM == 3
-         temp += az*az;
-#endif
-        sml = p.h[i];
-        if (temp > 0) {
-            temp = sqrt(sml / sqrt(temp));
-            forces = min(forces, temp);
-        }
-        temp = sml / p.cs[i];
-        courant = min(courant, temp);
-    }
-    i = threadIdx.x;
-    sharedForces[i] = forces;
-    sharedCourant[i] = courant;
-    for (j = NUM_THREADS_LIMITTIMESTEP / 2; j > 0; j /= 2) {
-        __syncthreads();
-        if (i < j) {
-            k = i + j;
-            sharedForces[i] = forces = min(forces, sharedForces[k]);
-            sharedCourant[i] = courant = min(courant, sharedCourant[k]);
-        }
-    }
-    // write block result to global memory
-    if (i == 0) {
-        k = blockIdx.x;
-        forcesPerBlock[k] = forces;
-        courantPerBlock[k] = courant;
-        m = gridDim.x - 1;
-        if (m == atomicInc((unsigned int *)&blockCount, m)) {
-            // last block, so combine all block results
-            for (j = 0; j <= m; j++) {
-                forces = min(forces, forcesPerBlock[j]);
-                courant = min(courant, courantPerBlock[j]);
-            }
-            // set new timestep
-            dt = min(COURANT_FACT*courant, FORCES_FACT*forces);
-#if DEBUG_TIMESTEP
-            printf("<limitTimestep> max allowed timestep due to CFL is %g, due to forces/accels is %g, set timestep to %g\n",
-                    COURANT_FACT*courant, FORCES_FACT*forces, dt);
-#endif
-            dt = min(dt, endTimeD - currentTimeD);
-            if (dt > dtmax) {
-#if DEBUG_TIMESTEP
-                printf("<limitTimestep> timestep %g is larger than max user-allowed timestep, reducing to %g\n", dt, dtmax);
-#endif
-                dt = dtmax;
-            }
-            // reset block count
-            blockCount = 0;
-        }
-    }
-}
 
 
 /*
@@ -189,7 +108,6 @@ void rk2Adaptive()
     cudaVerify(cudaMalloc((void**)&maxPressureAbsChangePerBlock, sizeof(double)*numberOfMultiprocessors));
 #endif
 
-
     // alloc mem for multiple rhs and copy immutables
     int allocate_immutables = 0;
     for (rkstep = 0; rkstep < 3; rkstep++) {
@@ -218,7 +136,7 @@ void rk2Adaptive()
 
     cudaVerify(cudaMemcpyToSymbol(currentTimeD, &currentTime, sizeof(double)));
 
-
+    // loop over (output) timesteps
     for (timestep = startTimestep; timestep < lastTimestep; timestep++) {
         fprintf(stderr, "calculating step %d\n", timestep);
         fprintf(stdout, "\nstep %d / %d\n", timestep, lastTimestep);
@@ -262,7 +180,7 @@ void rk2Adaptive()
             }
         }
 
-
+        // loop until end of current (output) timestep
         while (currentTime < endTime) {
             // get the correct time
             substep_currentTime = currentTime;
@@ -283,13 +201,11 @@ void rk2Adaptive()
             rightHandSide();
             cudaVerify(cudaDeviceSynchronize());
 
-
 #if FRAGMENTATION
             cudaVerify(cudaMemcpyFromSymbol(&dt_damageold, dt, sizeof(double)));
             /* add function for best timestep with fragmentation here */
             cudaVerifyKernel((damageMaxTimeStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(
-                                maxDamageTimeStepPerBlock
-            )));
+                                maxDamageTimeStepPerBlock)));
             cudaVerify(cudaMemcpyFromSymbol(&dt_damagenew, dt, sizeof(double)));
             if (dt_damagenew < dt_damageold && param.verbose) {
                 fprintf(stdout, "current time: %e \t\t reducing timestep due to damage evolution from suggested time step %g to %g\n", currentTime, dt_damageold, dt_damagenew);
@@ -312,14 +228,18 @@ void rk2Adaptive()
             }
 
 #define SMALLEST_DT_ALLOWED 1e-30
-            // integrate with adaptive timestep
+            // integrate with adaptive timestep and break loop once acceptable
             while (TRUE) {
                 cudaVerify(cudaDeviceSynchronize());
-                // set rk[RKFIRST] variables
+                
+                // compute
+                //    q_n + 0.5*h*k1
+                // and store quantities in [RKFIRST]
                 cudaVerifyKernel((integrateFirstStep<<<numberOfMultiprocessors, NUM_THREADS_RK2_INTEGRATE_STEP>>>()));
 
                 cudaVerify(cudaDeviceSynchronize());
-                // get derivatives for second step
+                
+                // get derivatives for second step (i.e., compute k2)
                 // this happens at t = t0 + h/2
                 cudaVerify(cudaMemcpyFromSymbol(&dt_host, dt, sizeof(double)));
                 if (dt_host < SMALLEST_DT_ALLOWED) {
@@ -336,7 +256,9 @@ void rk2Adaptive()
 
                 cudaVerify(cudaDeviceSynchronize());
 
-                // integrate second step
+                // compute
+                //    q_n - h*k1 + 2*h*k2
+                // and store quantities in [RKSECOND]
                 cudaVerifyKernel((integrateSecondStep<<<numberOfMultiprocessors, NUM_THREADS_RK2_INTEGRATE_STEP>>>()));
 
                 cudaVerify(cudaDeviceSynchronize());
@@ -345,7 +267,7 @@ void rk2Adaptive()
                     copy_gravitational_accels_device_to_device(&rk_device[RKSECOND], &rk_device[RKFIRST]);
                 }
 
-                // get derivatives for the 3rd (and last) step
+                // get derivatives for the 3rd (and last) step (i.e., compute k3)
                 // this happens at t = t0 + h
                 cudaVerify(cudaMemcpyToSymbol(p, &rk_device[RKSECOND], sizeof(struct Particle)));
 #if GRAVITATING_POINT_MASSES
@@ -357,7 +279,9 @@ void rk2Adaptive()
 
                 cudaVerify(cudaDeviceSynchronize());
 
-                // integrate third step
+                // compute
+                //    q_n+1^RK3  from k1, k2, k3 (which are stored in [RKSTART], [RKFIRST], [RKSECOND])
+                // and store quantities in p
                 cudaVerify(cudaMemcpyToSymbol(p, &p_device, sizeof(struct Particle)));
 #if GRAVITATING_POINT_MASSES
                 cudaVerify(cudaMemcpyToSymbol(pointmass, &pointmass_device, sizeof(struct Pointmass)));
@@ -415,7 +339,6 @@ void rk2Adaptive()
                     cudaVerifyKernel((BoundaryConditionsAfterIntegratorStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(interactions)));
                 }
 
-
                 double errPos, errVel, errDensity, errEnergy = 0;
                 cudaVerify(cudaMemcpyFromSymbol(&errPos, maxPosAbsError, sizeof(double)));
                 cudaVerify(cudaMemcpyFromSymbol(&errVel, maxVelAbsError, sizeof(double)));
@@ -426,12 +349,14 @@ void rk2Adaptive()
                 cudaVerify(cudaMemcpyFromSymbol(&errEnergy, maxEnergyAbsError, sizeof(double)));
 #endif
                 cudaVerify(cudaDeviceSynchronize());
-                if (param.verbose) printf("total relative max error: %g (locations: %e, velocities: %e, density: %e, energy: %e) with timestep %e\n", max(max(errPos, errVel), errDensity) / param.rk_epsrel, errPos, errVel, errDensity, errEnergy, dt_host);
-
+                if (param.verbose)
+                    fprintf(stdout, "total relative max error: %g (locations: %e, velocities: %e, density: %e, energy: %e) with timestep %e\n",
+                            max(max(errPos, errVel), errDensity) / param.rk_epsrel, errPos, errVel, errDensity, errEnergy, dt_host);
 
 #if PALPHA_POROSITY
                 if (param.verbose)
-                    printf("Current time: %g \t dt: %g \t dtNewErrorCheck: %g \t dtNewAlphaCheck: %g \n", currentTime, dt_host, dtNewErrorCheck_host, dtNewAlphaCheck_host);
+                    fprintf(stdout, "Current time: %g \t dt: %g \t dtNewErrorCheck: %g \t dtNewAlphaCheck: %g \n",
+                            currentTime, dt_host, dtNewErrorCheck_host, dtNewAlphaCheck_host);
 #endif
                 /* set new time step for next step */
 #if PALPHA_POROSITY
@@ -458,10 +383,11 @@ void rk2Adaptive()
                 cudaVerify(cudaMemcpyToSymbol(dt, &dt_host, sizeof(double)));
                 if (errorSmallEnough_host) {
                     cudaVerify(cudaMemcpyFromSymbol(&currentTime, currentTimeD, sizeof(double)));
-		    //step was successful --> do something (e.g. look for min/max pressure...)
-		    afterIntegrationStep();
-		    if (param.verbose) {
-  			    fprintf(stdout, "last error small enough: current time %.17e  with timestep %.17e new timestep %.17e, time to next output is %.17e  \n", currentTime, dt_host_old, dt_host, endTime-currentTime);
+                    //step was successful --> do something (e.g. look for min/max pressure...)
+                    afterIntegrationStep();
+                    if (param.verbose) {
+                        fprintf(stdout, "last error small enough: current time %.17e  with timestep %.17e new timestep %.17e, time to next output is %.17e  \n",
+                                currentTime, dt_host_old, dt_host, endTime-currentTime);
                     }
                     break; // break while(true) -> continue with next timestep
                 } else {
@@ -478,10 +404,9 @@ void rk2Adaptive()
 #endif
                     cudaVerify(cudaDeviceSynchronize());
                 }
-
             } // loop until error small enough
-
         } // current time < end time loop
+
         // write results
 #if FRAGMENTATION
         cudaVerify(cudaDeviceSynchronize());
@@ -489,11 +414,9 @@ void rk2Adaptive()
         cudaVerify(cudaDeviceSynchronize());
 #endif
         copyToHostAndWriteToFile(timestep, lastTimestep);
-
     } // timestep loop
 
     // free memory
-    // free mem of rksteps
     int free_immutables = 0;
     for (rkstep = 0; rkstep < 3; rkstep++) {
         free_particles_memory(&rk_device[rkstep], free_immutables);
@@ -501,10 +424,8 @@ void rk2Adaptive()
         free_pointmass_memory(&rk_pointmass_device[rkstep], free_immutables);
 #endif
     }
-
     cudaVerify(cudaFree(maxPosAbsErrorPerBlock));
     cudaVerify(cudaFree(maxVelAbsErrorPerBlock));
-
 #if FRAGMENTATION
     cudaVerify(cudaFree(maxDamageTimeStepPerBlock));
 #endif
@@ -517,10 +438,92 @@ void rk2Adaptive()
 #if PALPHA_POROSITY
     cudaVerify(cudaFree(maxalphaDiffPerBlock));
 #endif
-
-
 }
 
+
+
+__global__ void limitTimestep(double *forcesPerBlock , double *courantPerBlock)
+{
+    __shared__ double sharedForces[NUM_THREADS_LIMITTIMESTEP];
+    __shared__ double sharedCourant[NUM_THREADS_LIMITTIMESTEP];
+    int i, j, k, m;
+    double forces = 1e100, courant = 1e100;
+    double temp;
+    double sml;
+    double ax;
+#if DIM > 1
+    double ay;
+#endif
+#if DIM == 3
+    double az;
+#endif
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
+        ax = p.ax[i];
+#if DIM > 1
+        ay = p.ay[i];
+#endif
+#if DIM == 3
+        az = p.az[i];
+#endif
+        temp = ax*ax;
+#if DIM > 1
+        temp += ay*ay;
+#endif
+#if DIM == 3
+         temp += az*az;
+#endif
+        sml = p.h[i];
+        if (temp > 0) {
+            temp = sqrt(sml / sqrt(temp));
+            forces = min(forces, temp);
+        }
+        temp = sml / p.cs[i];
+        courant = min(courant, temp);
+    }
+
+    // reduce shared thread results to one per block
+    i = threadIdx.x;
+    sharedForces[i] = forces;
+    sharedCourant[i] = courant;
+    for (j = NUM_THREADS_LIMITTIMESTEP / 2; j > 0; j /= 2) {
+        __syncthreads();
+        if (i < j) {
+            k = i + j;
+            sharedForces[i] = forces = min(forces, sharedForces[k]);
+            sharedCourant[i] = courant = min(courant, sharedCourant[k]);
+        }
+    }
+
+    // write block result to global memory
+    if (i == 0) {
+        k = blockIdx.x;
+        forcesPerBlock[k] = forces;
+        courantPerBlock[k] = courant;
+        m = gridDim.x - 1;
+        if (m == atomicInc((unsigned int *)&blockCount, m)) {
+            // last block, so combine all block results
+            for (j = 0; j <= m; j++) {
+                forces = min(forces, forcesPerBlock[j]);
+                courant = min(courant, courantPerBlock[j]);
+            }
+            // set new timestep
+            dt = min(COURANT_FACT*courant, FORCES_FACT*forces);
+#if DEBUG_TIMESTEP
+            printf("<limitTimestep> max allowed timestep due to CFL is %g, due to forces/accels is %g, set timestep to %g\n",
+                    COURANT_FACT*courant, FORCES_FACT*forces, dt);
+#endif
+            dt = min(dt, endTimeD - currentTimeD);
+            if (dt > dtmax) {
+#if DEBUG_TIMESTEP
+                printf("<limitTimestep> timestep %g is larger than max user-allowed timestep, reducing to %g\n", dt, dtmax);
+#endif
+                dt = dtmax;
+            }
+            // reset block count
+            blockCount = 0;
+        }
+    }
+}
 
 
 
@@ -529,28 +532,28 @@ __global__ void integrateFirstStep(void)
     int i;
 
 #if GRAVITATING_POINT_MASSES
-    // loop for the point masses
+    // loop for point masses
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
         rk_pointmass[RKFIRST].x[i] = rk_pointmass[RKSTART].x[i] + dt * b21 * rk_pointmass[RKSTART].vx[i];
-#if DIM > 1
+# if DIM > 1
         rk_pointmass[RKFIRST].y[i] = rk_pointmass[RKSTART].y[i] + dt * b21 * rk_pointmass[RKSTART].vy[i];
-#endif
+# endif
 
-#if DIM > 2
+# if DIM > 2
         rk_pointmass[RKFIRST].z[i] = rk_pointmass[RKSTART].z[i] + dt * b21 * rk_pointmass[RKSTART].vz[i];
-#endif
+# endif
 
         rk_pointmass[RKFIRST].vx[i] = rk_pointmass[RKSTART].vx[i] + dt * b21 * rk_pointmass[RKSTART].ax[i];
-#if DIM > 1
+# if DIM > 1
         rk_pointmass[RKFIRST].vy[i] = rk_pointmass[RKSTART].vy[i] + dt * b21 * rk_pointmass[RKSTART].ay[i];
-#endif
-#if DIM > 2
+# endif
+# if DIM > 2
         rk_pointmass[RKFIRST].vz[i] = rk_pointmass[RKSTART].vz[i] + dt * b21 * rk_pointmass[RKSTART].az[i];
-#endif
+# endif
     }
-#endif // GRAVITATING_POINT_MASSES
+#endif
 
-    // loop for the particles
+    // loop for particles
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
 
         //printf("START: vx: %g \t %g :dxdt \t\t\t vy: %g \t %g :dydt\n", velxStart[i], dxdtStart[i], velyStart[i], dydtStart[i]);
@@ -583,20 +586,16 @@ __global__ void integrateFirstStep(void)
             }
         }
 #endif
-
 #if JC_PLASTICITY
         rk[RKFIRST].ep[i] = rk[RKSTART].ep[i] + dt * b21 * rk[RKSTART].edotp[i];
         rk[RKFIRST].T[i] = rk[RKSTART].T[i] + dt * b21 * rk[RKSTART].dTdt[i];
 #endif
-
-
 #if PALPHA_POROSITY
         rk[RKFIRST].alpha_jutzi[i] = rk[RKSTART].alpha_jutzi[i] + dt * b21 * rk[RKSTART].dalphadt[i];
         // rk[RKFIRST].p is the pressure at the begin of the new timestep
         // this pressure has to be compared to the pressure at the end of the timestep
         rk[RKFIRST].pold[i] = rk[RKFIRST].p[i];
 #endif
-
 #if SIRONO_POROSITY
         rk[RKFIRST].rho_0prime[i] = rk[RKSTART].rho_0prime[i];
         rk[RKFIRST].rho_c_plus[i] = rk[RKSTART].rho_c_plus[i];
@@ -608,7 +607,6 @@ __global__ void integrateFirstStep(void)
         rk[RKFIRST].flag_rho_0prime[i] = rk[RKSTART].flag_rho_0prime[i];
         rk[RKFIRST].flag_plastic[i] = rk[RKSTART].flag_plastic[i];
 #endif
-
 #if EPSALPHA_POROSITY
         rk[RKFIRST].alpha_epspor[i] = rk[RKSTART].alpha_epspor[i] + dt * b21 * rk[RKSTART].dalpha_epspordt[i];
         rk[RKFIRST].epsilon_v[i] = rk[RKSTART].epsilon_v[i] + dt * b21 * rk[RKSTART].depsilon_vdt[i];
@@ -618,8 +616,6 @@ __global__ void integrateFirstStep(void)
 #if DIM > 1
         rk[RKFIRST].y[i] = rk[RKSTART].y[i] + dt * b21 * rk[RKSTART].dydt[i];
 #endif
-
-
 #if DIM > 2
         rk[RKFIRST].z[i] = rk[RKSTART].z[i] + dt * b21 * rk[RKSTART].dzdt[i];
 #endif
@@ -631,9 +627,10 @@ __global__ void integrateFirstStep(void)
 #if DIM > 2
         rk[RKFIRST].vz[i] = rk[RKSTART].vz[i] + dt * b21 * rk[RKSTART].az[i];
 #endif
-
     }
 }
+
+
 
 __global__ void integrateSecondStep(void)
 {
@@ -643,25 +640,24 @@ __global__ void integrateSecondStep(void)
     // loop for pointmasses
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
         rk_pointmass[RKSECOND].vx[i] = rk_pointmass[RKSTART].vx[i] + dt * (b31 * rk_pointmass[RKSTART].ax[i] + b32 * rk_pointmass[RKFIRST].ax[i]);
-#if DIM > 1
+# if DIM > 1
         rk_pointmass[RKSECOND].vy[i] = rk_pointmass[RKSTART].vy[i] + dt * (b31 * rk_pointmass[RKSTART].ay[i] + b32 * rk_pointmass[RKFIRST].ay[i]);
-#endif
-#if DIM == 3
+# endif
+# if DIM == 3
         rk_pointmass[RKSECOND].vz[i] = rk_pointmass[RKSTART].vz[i] + dt * (b31 * rk_pointmass[RKSTART].az[i] + b32 * rk_pointmass[RKFIRST].az[i]);
-#endif
+# endif
         rk_pointmass[RKSECOND].x[i] = rk_pointmass[RKSTART].x[i] + dt * (b31 * rk_pointmass[RKSTART].vx[i] + b32 * rk_pointmass[RKFIRST].vx[i]);
-#if DIM > 1
+# if DIM > 1
         rk_pointmass[RKSECOND].y[i] = rk_pointmass[RKSTART].y[i] + dt * (b31 * rk_pointmass[RKSTART].vy[i] + b32 * rk_pointmass[RKFIRST].vy[i]);
-#endif
-#if DIM == 3
+# endif
+# if DIM == 3
         rk_pointmass[RKSECOND].z[i] = rk_pointmass[RKSTART].z[i] + dt * (b31 * rk_pointmass[RKSTART].vz[i] + b32 * rk_pointmass[RKFIRST].vz[i]);
-#endif
+# endif
     }
+#endif
 
-#endif // GRAVITATING_POINT_MASSES
     // loop for particles
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
-
 #if INTEGRATE_DENSITY
         rk[RKSECOND].rho[i] = rk[RKSTART].rho[i] + dt * (b31 * rk[RKSTART].drhodt[i] + b32 * rk[RKFIRST].drhodt[i]);
 #endif
@@ -688,7 +684,6 @@ __global__ void integrateSecondStep(void)
         rk[RKSECOND].alpha_jutzi[i] = rk[RKSTART].alpha_jutzi[i] + dt * (b31 * rk[RKSTART].dalphadt[i] + b32 * rk[RKFIRST].dalphadt[i]);
         rk[RKSECOND].pold[i] = rk[RKFIRST].pold[i];
 #endif
-
 #if SIRONO_POROSITY
         rk[RKSECOND].rho_0prime[i] = rk[RKFIRST].rho_0prime[i];
         rk[RKSECOND].rho_c_plus[i] = rk[RKFIRST].rho_c_plus[i];
@@ -700,12 +695,10 @@ __global__ void integrateSecondStep(void)
         rk[RKSECOND].flag_rho_0prime[i] = rk[RKFIRST].flag_rho_0prime[i];
         rk[RKSECOND].flag_plastic[i] = rk[RKFIRST].flag_plastic[i];
 #endif
-
 #if EPSALPHA_POROSITY
         rk[RKSECOND].alpha_epspor[i] = rk[RKSTART].alpha_epspor[i] + dt * (b31 * rk[RKSTART].dalpha_epspordt[i] + b32 * rk[RKFIRST].dalpha_epspordt[i]);
         rk[RKSECOND].epsilon_v[i] = rk[RKSTART].epsilon_v[i] + dt * (b31 * rk[RKSTART].depsilon_vdt[i] + b32 * rk[RKFIRST].depsilon_vdt[i]);
 #endif
-
 #if INVISCID_SPH
         rk[RKSECOND].beta[i] = rk[RKSTART].beta[i] + dt * (b31 * rk[RKSTART].dbetadt[i] + b32 * rk[RKFIRST].dbetadt[i]);
 #endif
@@ -723,6 +716,7 @@ __global__ void integrateSecondStep(void)
 #if DIM == 3
         rk[RKSECOND].vz[i] = rk[RKSTART].vz[i] + dt * (b31 * rk[RKSTART].az[i] + b32 * rk[RKFIRST].az[i]);
 #endif
+
         rk[RKSECOND].x[i] = rk[RKSTART].x[i] + dt * (b31 * rk[RKSTART].dxdt[i] + b32 * rk[RKFIRST].dxdt[i]);
 #if DIM > 1
         rk[RKSECOND].y[i] = rk[RKSTART].y[i] + dt * (b31 * rk[RKSTART].dydt[i] + b32 * rk[RKFIRST].dydt[i]);
@@ -730,9 +724,10 @@ __global__ void integrateSecondStep(void)
 #if DIM == 3
         rk[RKSECOND].z[i] = rk[RKSTART].z[i] + dt * (b31 * rk[RKSTART].dzdt[i] + b32 * rk[RKFIRST].dzdt[i]);
 #endif
-
     }
 }
+
+
 
 __global__ void integrateThirdStep(void)
 {
@@ -740,31 +735,30 @@ __global__ void integrateThirdStep(void)
     int d;
 
 #if GRAVITATING_POINT_MASSES
-    // loop pointmasses
+    // loop for pointmasses
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
         pointmass.vx[i] = rk_pointmass[RKSTART].vx[i] + dt/6.0 * (c1 * rk_pointmass[RKSTART].ax[i] + c2 * rk_pointmass[RKFIRST].ax[i] + c3 * rk_pointmass[RKSECOND].ax[i]);
         pointmass.ax[i] = 1./6.0 *(c1 * rk_pointmass[RKSTART].ax[i] + c2 * rk_pointmass[RKFIRST].ax[i] + c3 * rk_pointmass[RKSECOND].ax[i]);
-#if DIM > 1
+# if DIM > 1
         pointmass.vy[i] = rk_pointmass[RKSTART].vy[i] + dt/6.0 * (c1 * rk_pointmass[RKSTART].ay[i] + c2 * rk_pointmass[RKFIRST].ay[i] + c3 * rk_pointmass[RKSECOND].ay[i]);
         pointmass.ay[i] = 1./6.0 *(c1 * rk_pointmass[RKSTART].ay[i] + c2 * rk_pointmass[RKFIRST].ay[i] + c3 * rk_pointmass[RKSECOND].ay[i]);
-#endif
-#if DIM > 2
+# endif
+# if DIM > 2
         pointmass.vz[i] = rk_pointmass[RKSTART].vz[i] + dt/6.0 * (c1 * rk_pointmass[RKSTART].az[i] + c2 * rk_pointmass[RKFIRST].az[i] + c3 * rk_pointmass[RKSECOND].az[i]);
         pointmass.az[i] = 1./6.0 *(c1 * rk_pointmass[RKSTART].az[i] + c2 * rk_pointmass[RKFIRST].az[i] + c3 * rk_pointmass[RKSECOND].az[i]);
-#endif
+# endif
 
         pointmass.x[i] = rk_pointmass[RKSTART].x[i] + dt/6.0 * (c1 * rk_pointmass[RKSTART].vx[i] + c2 * rk_pointmass[RKFIRST].vx[i] + c3 * rk_pointmass[RKSECOND].vx[i]);
-#if DIM > 1
+# if DIM > 1
         pointmass.y[i] = rk_pointmass[RKSTART].y[i] + dt/6.0 * (c1 * rk_pointmass[RKSTART].vy[i] + c2 * rk_pointmass[RKFIRST].vy[i] + c3 * rk_pointmass[RKSECOND].vy[i]);
-#endif
-#if DIM > 2
+# endif
+# if DIM > 2
         pointmass.z[i] = rk_pointmass[RKSTART].z[i] + dt/6.0 * (c1 * rk_pointmass[RKSTART].vz[i] + c2 * rk_pointmass[RKFIRST].vz[i] + c3 * rk_pointmass[RKSECOND].vz[i]);
+# endif
+    }
 #endif
 
-    }
-#endif // GRAVITATING_POINT_MASSES
-
-    // loop particles
+    // loop for particles
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
         //printf("THIRD: vx: %g \t %g :dxdt \t\t\t vy: %g \t %g :dydt\n", velxSecond[i], dxdtSecond[i], velySecond[i], dydtSecond[i]);
 #if INTEGRATE_DENSITY
@@ -800,9 +794,11 @@ __global__ void integrateThirdStep(void)
                + c2 * rk[RKFIRST].dedt[i]
                + c3 * rk[RKSECOND].dedt[i]);
 #endif
+
 #if PALPHA_POROSITY
         double dp = rk[RKSECOND].p[i] - rk[RKSTART].p[i];
 #endif
+
 #if FRAGMENTATION
         p.d[i] = rk[RKSTART].d[i] + dt/6.0 *
             (  c1 * rk[RKSTART].dddt[i]
@@ -811,7 +807,7 @@ __global__ void integrateThirdStep(void)
         p.dddt[i] = 1./6. * (c1 * rk[RKSTART].dddt[i]
                + c2 * rk[RKFIRST].dddt[i]
                + c3 * rk[RKSECOND].dddt[i]);
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
         if (dp > 0.0) {
             p.damage_porjutzi[i] = rk[RKSTART].damage_porjutzi[i] + dt/6.0 *
                 (  c1 * rk[RKSTART].ddamage_porjutzidt[i]
@@ -824,7 +820,7 @@ __global__ void integrateThirdStep(void)
             p.d[i] = p.d[i];
             p.damage_porjutzi[i] = rk[RKSTART].damage_porjutzi[i];
         }
-#endif
+# endif
 #endif
 
 #if JC_PLASTICITY
@@ -886,6 +882,7 @@ __global__ void integrateThirdStep(void)
                              +  c2 * rk[RKFIRST].dbetadt[i]
                              +  c3 * rk[RKSECOND].dbetadt[i]);
 #endif
+
 #if SOLID
         int j;
         for (j = 0; j < DIM*DIM; j++) {
@@ -899,6 +896,7 @@ __global__ void integrateThirdStep(void)
                    + c3 * rk[RKSECOND].dSdt[i*DIM*DIM+j]);
         }
 #endif
+
         p.vx[i] = rk[RKSTART].vx[i] + dt/6.0 * (c1 * rk[RKSTART].ax[i] + c2 * rk[RKFIRST].ax[i] + c3 * rk[RKSECOND].ax[i]);
         p.ax[i] = 1./6.0 *(c1 * rk[RKSTART].ax[i] + c2 * rk[RKFIRST].ax[i] + c3 * rk[RKSECOND].ax[i]);
         p.g_ax[i] = 1./6.0 *(c1 * rk[RKSTART].g_ax[i] + c2 * rk[RKFIRST].g_ax[i] + c3 * rk[RKSECOND].g_ax[i]);
@@ -961,9 +959,10 @@ __global__ void integrateThirdStep(void)
     }
 }
 
+
+
 #if FRAGMENTATION
 #define MAX_DAMAGE_CHANGE 1e-2
-/* set maximum time step for damage evolution */
 __global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock)
 {
     __shared__ double sharedMaxDamageTimeStep[NUM_THREADS_ERRORCHECK];
@@ -971,12 +970,16 @@ __global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock)
     double tmp = 0;
     double dtsuggested = 0;
     int i, j, k, m;
+
+    // loop for particles
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
         if (rk[RKFIRST].dddt[i] > 0) {
             tmp = 1./ ( (rk[RKFIRST].d[i] + MAX_DAMAGE_CHANGE) / rk[RKFIRST].dddt[i] );
             localMaxDamageTimeStep = max(tmp, localMaxDamageTimeStep);
         }
     }
+
+    // reduce shared thread results to one per block
     i = threadIdx.x;
     sharedMaxDamageTimeStep[i] = localMaxDamageTimeStep;
     for (j = NUM_THREADS_ERRORCHECK / 2; j > 0; j /= 2) {
@@ -986,6 +989,7 @@ __global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock)
             sharedMaxDamageTimeStep[i] = localMaxDamageTimeStep = max(localMaxDamageTimeStep, sharedMaxDamageTimeStep[k]);
         }
     }
+
     // write block result to global memory
     if (i == 0) {
         k = blockIdx.x;
@@ -1019,21 +1023,26 @@ __global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock)
 #endif
 
 
+
 #if PALPHA_POROSITY
 #define MAX_ALPHA_CHANGE 1e-4
-/* set maximum time step for damage evolution */
 __global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock)
 {
     __shared__ double sharedMaxalphaDiff[NUM_THREADS_ERRORCHECK];
     double localMaxalphaDiff = 0.0;
     double tmp = 0.0;
     int i, j, k, m;
+
     maxalphaDiff = 0.0;
     dtNewAlphaCheck = -1.0;
+
+    // loop for particles
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
         tmp = fabs(rk[RKSTART].alpha_jutzi_old[i] - p.alpha_jutzi[i]);
         localMaxalphaDiff = max(tmp, localMaxalphaDiff);
     }
+
+    // reduce shared thread results to one per block
     i = threadIdx.x;
     sharedMaxalphaDiff[i] = localMaxalphaDiff;
     for (j = NUM_THREADS_ERRORCHECK / 2; j > 0; j /= 2) {
@@ -1043,6 +1052,7 @@ __global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock)
             sharedMaxalphaDiff[i] = localMaxalphaDiff = max(localMaxalphaDiff, sharedMaxalphaDiff[k]);
         }
     }
+
     // write block result to global memory
     if (i == 0) {
         k = blockIdx.x;
@@ -1081,9 +1091,8 @@ __global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock)
 #endif
 
 
-__global__ void checkError
-(
-        double *maxPosAbsErrorPerBlock, double *maxVelAbsErrorPerBlock
+
+__global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErrorPerBlock
 #if INTEGRATE_DENSITY
         , double *maxDensityAbsErrorPerBlock
 #endif
@@ -1110,7 +1119,6 @@ __global__ void checkError
     __shared__ double sharedMaxPressureAbsChange[NUM_THREADS_ERRORCHECK];
     double localMaxPressureAbsChange = 0;
 #endif
-
     int i, j, k, m;
     double posAbsErrorTemp = 0, velAbsErrorTemp = 0, temp = 0, dtNew = 0;
     double localMaxPosAbsError = 0, localMaxVelAbsError = 0;
@@ -1118,6 +1126,7 @@ __global__ void checkError
     double tmp_vel2 = 0.0;
     double tmp_pos = 0.0;
     double tmp_pos2 = 0.0;
+
 // parameter for the adaptive time integration
     double min_pos_change_rk2 = 0.0;
 #define TINY_RK2 1e-30
@@ -1125,7 +1134,7 @@ __global__ void checkError
 #define RK2_LOCATION_SAFETY 0.1
 
 #if GRAVITATING_POINT_MASSES
-    // pointmasses loop
+    // loop for pointmasses
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
         temp = dt * (rk_pointmass[RKFIRST].ax[i]/3.0 - (rk_pointmass[RKSTART].ax[i] + rk_pointmass[RKSECOND].ax[i])/6.0);
         tmp_vel = fabs(rk_pointmass[RKSTART].vx[i]) + fabs(dt*rk_pointmass[RKSTART].ax[i]);
@@ -1133,29 +1142,30 @@ __global__ void checkError
             tmp_vel2 = fabs(temp) / tmp_vel;
             velAbsErrorTemp = tmp_vel2;
         }
-#if DIM > 1
+# if DIM > 1
         temp = dt * (rk_pointmass[RKFIRST].ay[i]/3.0 - (rk_pointmass[RKSTART].ay[i] + rk_pointmass[RKSECOND].ay[i])/6.0);
         tmp_vel = fabs(rk_pointmass[RKSTART].vy[i]) + fabs(dt*rk_pointmass[RKSTART].ay[i]);
         if (tmp_vel > MIN_VEL_CHANGE_RK2) {
             tmp_vel2 = fabs(temp) / tmp_vel;
             velAbsErrorTemp = max(velAbsErrorTemp, tmp_vel2);
         }
-#endif
-#if DIM == 3
+# endif
+# if DIM == 3
         temp = dt * (rk_pointmass[RKFIRST].az[i]/3.0 - (rk_pointmass[RKSTART].az[i] + rk_pointmass[RKSECOND].az[i])/6.0);
         tmp_vel = fabs(rk_pointmass[RKSTART].vz[i]) + fabs(dt*rk_pointmass[RKSTART].az[i]);
         if (tmp_vel > MIN_VEL_CHANGE_RK2) {
             tmp_vel2 = fabs(temp) / tmp_vel;
             velAbsErrorTemp = max(velAbsErrorTemp, tmp_vel2);
         }
-#endif
+# endif
         localMaxVelAbsError = max(localMaxVelAbsError, velAbsErrorTemp);
     }
-#endif // gravitating point masses
+#endif
 
-    // particle loop
+    // loop for particles
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
         if (p_rhs.materialId[i] == EOS_TYPE_IGNORE) continue;
+
         temp = dt * (rk[RKFIRST].dxdt[i]/3.0 - (rk[RKSTART].dxdt[i] + rk[RKSECOND].dxdt[i])/6.0);
         tmp_pos = fabs(rk[RKSTART].x[i]) + fabs(dt*rk[RKSTART].dxdt[i]);
         min_pos_change_rk2 = rk[RKSTART].h[i];
@@ -1205,12 +1215,12 @@ __global__ void checkError
 #endif
         localMaxVelAbsError = max(localMaxVelAbsError, velAbsErrorTemp);
 
-
 #if INTEGRATE_DENSITY
         temp = dt * (rk[RKFIRST].drhodt[i]/3.0 - (rk[RKSTART].drhodt[i] + rk[RKSECOND].drhodt[i])/6.0);
         temp = fabs(temp) / (fabs(rk[RKSTART].rho[i]) + fabs(dt*rk[RKSTART].drhodt[i]) + TINY_RK2);
         localMaxDensityAbsError = max(localMaxDensityAbsError, temp);
 #endif
+
 #if PALPHA_POROSITY
         // check if the pressure changes too much
         temp = fabs(rk[RKFIRST].p[i] - rk[RKSECOND].p[i]);
@@ -1252,7 +1262,9 @@ __global__ void checkError
             localMaxEnergyAbsError = max(localMaxEnergyAbsError, temp);
         }
 #endif
-    }
+    }   // loop for particles
+
+    // reduce shared thread results to one per block
     i = threadIdx.x;
     sharedMaxPosAbsError[i] = localMaxPosAbsError;
     sharedMaxVelAbsError[i] = localMaxVelAbsError;
@@ -1282,6 +1294,7 @@ __global__ void checkError
 #endif
         }
     }
+
     // write block result to global memory
     if (i == 0) {
         k = blockIdx.x;

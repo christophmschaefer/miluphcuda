@@ -21,7 +21,6 @@
  *
  */
 
-
 #ifndef _RK2ADAPTIVE_H
 #define _RK2ADAPTIVE_H
 
@@ -30,6 +29,10 @@
 
 
 void rk2Adaptive();
+
+__global__ void integrateFirstStep(void);
+__global__ void integrateSecondStep(void);
+__global__ void integrateThirdStep(void);
 
 /**
  * @brief Limit timestep.
@@ -56,14 +59,5 @@ __global__ void checkError(
 
 __global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock);
 __global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock);
-
-__global__ void integrateFirstStep(void);
-__global__ void integrateSecondStep(void);
-__global__ void integrateThirdStep(void);
-
-
-
-
-
 
 #endif
