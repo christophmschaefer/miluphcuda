@@ -101,7 +101,7 @@ void printfDeviceInformation(void)
     cudaGetDeviceCount(&device_count);
 
     if (device_count == 0) {
-        printf("\n> No device(s) that support CUDA found!\n");
+        printf("\nNo device(s) that support CUDA found!\n");
         exit(1);
     }
 

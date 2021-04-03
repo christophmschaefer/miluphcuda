@@ -119,13 +119,13 @@ SPH_kernel kernel_h;
 
 
 
-
+/* print info about physical model */
 static void print_compile_information(void)
 {
-    /* give info about physical model */
     char yesno[10];
-    fprintf(stdout, "Parameters: \n"
-                    "Number of dimensions: %d\n", DIM);
+
+    fprintf(stdout, "\n");
+    fprintf(stdout, "Number of dimensions: %d\n", DIM);
 #if INTEGRATE_ENERGY
     strcpy(yesno, "yes");
 #else
@@ -731,7 +731,6 @@ int main(int argc, char *argv[])
                 break;
             case 'd':
                 wanted_device = atoi(optarg);
-                printfDeviceInformation();
                 fprintf(stdout, "Trying to use CUDA device %d\n", wanted_device);
                 cudaSetDevice(wanted_device);
                 break;
@@ -852,6 +851,10 @@ int main(int argc, char *argv[])
         }
     }
 
+    // print device information
+    if (param.verbose)
+        printfDeviceInformation();
+
     // get the information about the number of particles in the file
     if ((inputFile.data = fopen(inputFile.name, "r")) == NULL) {
         fprintf(stderr, "Error: File %s not found.\n", inputFile.name);
@@ -867,7 +870,7 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "********************** Error opening file %s\n", h5filename);
                 exit(1);
             } else {
-                fprintf(stdout, "Using hdf5 input file %s\n", h5filename);
+                fprintf(stdout, "\nUsing hdf5 input file %s\n", h5filename);
             }
 
             /* open the dataset for the positions */
@@ -905,7 +908,7 @@ int main(int argc, char *argv[])
                 datacnt++;
             }
         }
-        fprintf(stdout, "Found %d particles in %s.\n", count, inputFile.name);
+        fprintf(stdout, "\nFound %d particles in %s.\n", count, inputFile.name);
         fclose(inputFile.data);
         numberOfParticles = count;
     }
@@ -961,7 +964,7 @@ int main(int argc, char *argv[])
                 count++;
             }
         }
-        fprintf(stdout, "Found %d particles in %s.\n", count, massfilename);
+        fprintf(stdout, "Found %d point masses in %s.\n", count, massfilename);
         fclose(inputf);
         numberOfPointmasses = count;
     }
@@ -1001,7 +1004,7 @@ int main(int argc, char *argv[])
     }
 
     // choose integrator
-    fprintf(stdout, "Integrator information\n");
+    fprintf(stdout, "\nTime integrator:\n");
     if (0 == strcmp(integrationscheme, "rk2_adaptive")) {
         fprintf(stdout, "using rk2 adaptive\n");
         integrator = &rk2Adaptive;
@@ -1029,7 +1032,7 @@ int main(int argc, char *argv[])
     }
 
     // choose SPH kernel
-    fprintf(stdout, "SPH kernel information\t");
+    fprintf(stdout, "\nSPH kernel:\t");
     if (0 == strcmp(param.kernel, "wendlandc2")) {
         fprintf(stdout, "using wendlandc2 kernel\n");
         cudaMemcpyFromSymbol(&kernel_h, wendlandc2_p, sizeof(SPH_kernel));
@@ -1056,7 +1059,7 @@ int main(int argc, char *argv[])
     }
 
     // print out selfgravity information
-    fprintf(stdout, "Self gravity information\t");
+    fprintf(stdout, "\nSelf gravity:\t");
     if (param.selfgravity) {
         fprintf(stdout, "calculating selfgravity with Barnes Hut tree with theta: %g\n", treeTheta);
     } else if (param.directselfgravity) {
@@ -1064,7 +1067,6 @@ int main(int argc, char *argv[])
     } else {
         fprintf(stdout, "neglecting selfgravity.\n");
     }
-
 
     if (param.maxtimestep < 0)
         param.maxtimestep = timePerStep;
@@ -1080,22 +1082,21 @@ int main(int argc, char *argv[])
     if (param.verbose) printf("N = %d\n", numberOfParticles);
     if (param.verbose) printf("Allocating memory for %d particles\n", maxNumberOfParticles);
 
-    if (param.verbose) printf("checking for cuda devices...\n");
-
-    // check cuda
+    // query GPU(s)
+    if (param.verbose) printf("\nChecking for cuda devices...\n");
     cudaDeviceProp deviceProp;
     int cnt;
     cudaVerify(cudaGetDeviceProperties(&deviceProp, wanted_device));
     cudaGetDeviceCount(&cnt);
     if ((deviceProp.major == 9999) && (deviceProp.minor == 9999)) {
-        fprintf(stderr, "There is no CUDA capable device\n");
+        fprintf(stderr, "There is no CUDA capable device. Exiting...\n");
         exit(-1);
     }
-    fprintf(stdout, "Found compute capability %d.%d\n", deviceProp.major, deviceProp.minor);
-    fprintf(stdout, "Need at least compute capability 2.0\n");
+    fprintf(stdout, "Found compute capability %d.%d (need at least 2.0)\n", deviceProp.major, deviceProp.minor);
     fprintf(stdout, "Found #gpus %d: %s\n", cnt, deviceProp.name);
     numberOfMultiprocessors = deviceProp.multiProcessorCount;
-    if (param.verbose) printf("found cuda device with %d multiprocessors.\n", numberOfMultiprocessors);
+    if (param.verbose)
+        printf("found cuda device with %d multiprocessors.\n", numberOfMultiprocessors);
 
     // initialise the memory
     init_allocate_memory();
