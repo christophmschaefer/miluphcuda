@@ -25,11 +25,7 @@
 #define _DEVICE_TOOLS_H
 
 
-
-
 void printfDeviceInformation(void);
-
-
 
 #endif
 
