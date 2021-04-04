@@ -23,6 +23,7 @@
 
 
 #include "io.h"
+#include "miluph.h"
 #include "timeintegration.h"
 #include "config_parameter.h"
 #include "pressure.h"
@@ -2828,7 +2829,7 @@ void *write_timestep(void *argument)
     // write
     write_particles_to_file(outputFile);
 
-#if TREEDEBUG
+#if DEBUG_TREE
     // write tree
     File treeFile;
     strcpy(treeFile.name, outputFile.name);

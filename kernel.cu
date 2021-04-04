@@ -35,9 +35,6 @@
 #define MIN_NUMBER_OF_INTERACTIONS_FOR_TENSORIAL_CORRECTION_TO_WORK 0
 
 
-#define DEBUG_LINALG 0
-
-
 // pointers for the kernel function
 __device__ SPH_kernel kernel;
 __device__ SPH_kernel wendlandc2_p = wendlandc2;

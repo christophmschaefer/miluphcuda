@@ -26,7 +26,6 @@
 
 // Dimension of the problem
 #define DIM 2
-#define DEBUG 0
 
 // Basic physical model, choose one of the following:
 // SOLID solves continuum mechanics with material strength, and stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
