@@ -318,7 +318,7 @@ static void print_compile_information(void)
     }
     fprintf(stdout, "using ASCII output: \t %s \n", yesno);
 
-    fprintf(stdout, "implemented equations of state and corresponding eos type entry in material.cfg:\n");
+    fprintf(stdout, "\nImplemented equations of state and corresponding eos type entry in material.cfg:\n");
     fprintf(stdout, "EOS_TYPE_IGNORE          \t\t\t %d\n", EOS_TYPE_IGNORE);
     fprintf(stdout, "EOS_TYPE_POLYTROPIC_GAS  \t\t\t %d\n", EOS_TYPE_POLYTROPIC_GAS);
     fprintf(stdout, "EOS_TYPE_MURNAGHAN       \t\t\t %d\n", EOS_TYPE_MURNAGHAN);
@@ -580,7 +580,7 @@ void usage(char *name)
             "\t-h, --help\t\t\t This message.\n"
             "\t-v, --verbose\t\t\t Be talkative (stdout).\n\n"
             "Available options:\n"
-            "\t-a, --theta <value>\t\t Theta Criterion for Barnes-Hut Tree (default: 0.5)\n"
+            "\t-a, --theta <value>\t\t Theta Criterion for Barnes-Hut Tree (default: 0.5).\n"
             "\t-A, --no_ascii_output \t\t Disable ASCII output files (default: not set).\n"
             "\t-b, --boundary_ratio <value>\t Ratio of additional ghost boundary particles (default: 0).\n"
             "\t-c, --cons_qu_file <name>\t Name of logfile for conserved quantities (default: conserved_quantities.log).\n"
@@ -591,7 +591,7 @@ void usage(char *name)
             "\t\t\t\t\t By default, an ASCII input file is assumed (unless -X is used).\n"
             "\t-F, --firsttimestep\t\t For rk2_adaptive, set initial timestep at integration start (default: timeperstep set by -t).\n"
             "\t-g, --decouplegravity\t\t Decouple hydro time scale from gravitational time scale.\n"
-            "\t-G, --information\t\t Print information about detected Nvidia GPUs on this host.\n"
+            "\t-G, --information\t\t Print information about detected Nvidia GPUs.\n"
 #if HDF5IO
             "\t-H, --hdf5_output \t\t Use HDF5 for output (default: not set).\n"
             "\t\t\t\t\t If set, HDF5 files are produced in addition to ASCII files. Use -A to get only HDF5 output.\n"
@@ -993,64 +993,62 @@ int main(int argc, char *argv[])
     maxNumberOfParticles = (int) ( (1+param.boundary_ratio) * numberOfParticles);
     numberOfRealParticles = numberOfParticles;
 
-    if (param.verbose) {
-        print_compile_information();
-    }
+    print_compile_information();
 
     if (param.selfgravity && param.directselfgravity) {
         fprintf(stderr, "Warning: both selfgravity and directselfgravity parameters are set.\n");
-        fprintf(stderr, "unsetting selfgravity and using directselfgravity.\n");
+        fprintf(stderr, "Unsetting selfgravity and using directselfgravity.\n");
         param.selfgravity = FALSE;
     }
 
     // choose integrator
-    fprintf(stdout, "\nTime integrator:\n");
+    fprintf(stdout, "\nTime integrator: ");
     if (0 == strcmp(integrationscheme, "rk2_adaptive")) {
-        fprintf(stdout, "using rk2 adaptive\n");
+        fprintf(stdout, "rk2_adaptive");
         integrator = &rk2Adaptive;
         param.integrator_type = RK2_ADAPTIVE;
-        printf("with accurary rk_epsrel: %g\n", param.rk_epsrel);
+        printf(" with accurary rk_epsrel: %g\n", param.rk_epsrel);
     } else if (0 == strcmp(integrationscheme, "euler")) {
-        fprintf(stdout, "using euler\n");
+        fprintf(stdout, "euler\n");
         integrator = &euler;
         param.integrator_type = EULER;
     } else if (0 == strcmp(integrationscheme, "monaghan_pc")) {
-        fprintf(stdout, "using monaghan_pc\n");
+        fprintf(stdout, "monaghan_pc\n");
         integrator = &predictor_corrector;
         param.integrator_type = MONAGHAN_PC;
     } else if (0 == strcmp(integrationscheme, "heun_rk4")) {
-        fprintf(stdout, "using heun_rk4\n");
+        fprintf(stdout, "heun_rk4\n");
         integrator = &heun_rk4;
         param.integrator_type = HEUN_RK4;
     } else if (0 == strcmp(integrationscheme, "euler_pc")) {
-        fprintf(stdout, "using euler_pc\n");
+        fprintf(stdout, "euler_pc\n");
         integrator = &predictor_corrector_euler;
         param.integrator_type = EULER_PC;
     } else {
-        fprintf(stderr, "Err. No such integration scheme implemented yet.\n");
+        fprintf(stderr, "Err. No such time integration scheme implemented yet.\n");
         exit(1);
     }
 
     // choose SPH kernel
-    fprintf(stdout, "\nSPH kernel:\t");
+    fprintf(stdout, "SPH kernel: ");
     if (0 == strcmp(param.kernel, "wendlandc2")) {
-        fprintf(stdout, "using wendlandc2 kernel\n");
+        fprintf(stdout, "wendlandc2\n");
         cudaMemcpyFromSymbol(&kernel_h, wendlandc2_p, sizeof(SPH_kernel));
         cudaMemcpyToSymbol(kernel, &kernel_h, sizeof(SPH_kernel));
     } else if (0 == strcmp(param.kernel, "wendlandc4")) {
-        fprintf(stdout, "using wendlandc4 kernel\n");
+        fprintf(stdout, "wendlandc4\n");
         cudaMemcpyFromSymbol(&kernel_h, wendlandc4_p, sizeof(SPH_kernel));
         cudaMemcpyToSymbol(kernel, &kernel_h, sizeof(SPH_kernel));
     } else if (0 == strcmp(param.kernel, "wendlandc6")) {
-        fprintf(stdout, "using wendlandc6 kernel\n");
+        fprintf(stdout, "wendlandc6\n");
         cudaMemcpyFromSymbol(&kernel_h, wendlandc6_p, sizeof(SPH_kernel));
         cudaMemcpyToSymbol(kernel, &kernel_h, sizeof(SPH_kernel));
     } else if (0 == strcmp(param.kernel, "cubic_spline")) {
-        fprintf(stdout, "using cubic_spline kernel\n");
+        fprintf(stdout, "cubic_spline\n");
         cudaMemcpyFromSymbol(&kernel_h, cubic_spline_p, sizeof(SPH_kernel));
         cudaMemcpyToSymbol(kernel, &kernel_h, sizeof(SPH_kernel));
     } else if (0 == strcmp(param.kernel, "spiky")) {
-        fprintf(stdout, "using spiky kernel\n");
+        fprintf(stdout, "spiky\n");
         cudaMemcpyFromSymbol(&kernel_h, spiky_p, sizeof(SPH_kernel));
         cudaMemcpyToSymbol(kernel, &kernel_h, sizeof(SPH_kernel));
     } else {
@@ -1058,8 +1056,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    // print out selfgravity information
-    fprintf(stdout, "\nSelf gravity:\t");
+    // print out self-gravity information
+    fprintf(stdout, "Self-gravity: ");
     if (param.selfgravity) {
         fprintf(stdout, "calculating selfgravity with Barnes Hut tree with theta: %g\n", treeTheta);
     } else if (param.directselfgravity) {
@@ -1071,19 +1069,23 @@ int main(int argc, char *argv[])
     if (param.maxtimestep < 0)
         param.maxtimestep = timePerStep;
 
-    if (param.verbose) printf("loading config file...\n");
-
+    if (param.verbose)
+        fprintf(stdout, "\nLoading config file...\n");
     loadConfigFromFile(configFile);
 
-    if (param.verbose) printf("clearing performance file...\n");
+    if (param.performanceTest) {
+        if (param.verbose)
+            fprintf(stdout, "Clearing performance file...\n");
+        clear_performance_file();
+    }
 
-    if (param.performanceTest) clear_performance_file();
-
-    if (param.verbose) printf("N = %d\n", numberOfParticles);
-    if (param.verbose) printf("Allocating memory for %d particles\n", maxNumberOfParticles);
+    if (param.verbose) {
+        fprintf(stdout, "\nNo particles: %d\n", numberOfParticles);
+        fprintf(stdout, "Allocating memory for %d particles...\n", maxNumberOfParticles);
+    }
 
     // query GPU(s)
-    if (param.verbose) printf("\nChecking for cuda devices...\n");
+    fprintf(stdout, "\nChecking for cuda devices...\n");
     cudaDeviceProp deviceProp;
     int cnt;
     cudaVerify(cudaGetDeviceProperties(&deviceProp, wanted_device));
@@ -1095,15 +1097,14 @@ int main(int argc, char *argv[])
     fprintf(stdout, "Found compute capability %d.%d (need at least 2.0)\n", deviceProp.major, deviceProp.minor);
     fprintf(stdout, "Found #gpus %d: %s\n", cnt, deviceProp.name);
     numberOfMultiprocessors = deviceProp.multiProcessorCount;
-    if (param.verbose)
-        printf("found cuda device with %d multiprocessors.\n", numberOfMultiprocessors);
+    fprintf(stdout, "Found cuda device with %d multiprocessors.\n", numberOfMultiprocessors);
 
     // initialise the memory
     init_allocate_memory();
 
     // read particle data from input file
     if (param.verbose)
-        fprintf(stdout, "reading input file %s ...\n", inputFile.name);
+        fprintf(stdout, "\nReading input file %s...\n", inputFile.name);
     if ((inputFile.data = fopen(inputFile.name, "r")) == NULL) {
         fprintf(stderr, "Error: File %s not found.\n", inputFile.name);
         if (param.hdf5input) {
@@ -1180,9 +1181,8 @@ int main(int argc, char *argv[])
 
     /* if hdf5 output is enabled and no hdf5 input is set, write the ascii input file to hdf5 */
     if (param.hdf5output && !param.hdf5input) {
-        if (param.verbose) {
-            fprintf(stdout, "Writing input ascii file to hdf5 %s.h5\n", inputFile.name);
-        }
+        if (param.verbose)
+            fprintf(stdout, "Writing input ascii file to hdf5 %s.h5...\n", inputFile.name);
         int asciiflag = param.ascii_output;
         param.ascii_output = 0;
         h5time = startTime;
@@ -1190,26 +1190,25 @@ int main(int argc, char *argv[])
         param.ascii_output = asciiflag;
     }
 
-    if (param.verbose) {
-        printf("Simulation time start: %g\n", startTime);
-    }
+    if (param.verbose)
+        fprintf(stdout, "Simulation time start: %g\n", startTime);
 
-    if (param.verbose) printf("starting time integration...\n\n");
+    // run the thing
+    fprintf(stdout, "\nStarting time integration...\n\n");
     cudaProfilerStart();
     timeIntegration();
     cudaProfilerStop();
+    fprintf(stdout, "\nTime integration finished.\n\n");
 
-    /* free memory */
-    if (param.verbose) printf("freeing memory\n");
+    if (param.verbose)
+        fprintf(stdout, "Freeing memory...\n");
     free_memory();
 
-    if (param.verbose) printf("resetting GPU...\n");
+    if (param.verbose)
+        fprintf(stdout, "Resetting GPU...\n");
     cudaVerify(cudaDeviceReset());
 
-
-    if (param.verbose) printf("kthxbye.\n");
-
+    fprintf(stdout, "kthxbye.\n");
 
     return 0;
-
 }

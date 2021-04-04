@@ -155,6 +155,6 @@ void printfDeviceInformation(void)
         printf("  Run time limit on kernels:                     %s\n", prop.kernelExecTimeoutEnabled ? "Yes" : "No");
         printf("  Integrated GPU sharing Host Memory:            %s\n", prop.integrated ? "Yes" : "No");
         printf("  Support host page-locked memory mapping:       %s\n", prop.canMapHostMemory ? "Yes" : "No");
-        printf("  Device has ECC support:                        %s\n\n", prop.ECCEnabled ? "Enabled" : "Disabled");
+        printf("  Device has ECC support:                        %s\n", prop.ECCEnabled ? "Enabled" : "Disabled");
     }
 }
