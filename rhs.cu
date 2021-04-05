@@ -844,5 +844,7 @@ void rightHandSide()
     fprintf(stdout, "total duration rhs: %.7f ms\n", totalTime);
     if (param.performanceTest)
         write_performance(time);
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
 #endif
 }
