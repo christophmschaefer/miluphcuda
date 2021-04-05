@@ -32,6 +32,9 @@
 #define DEBUG_TIMESTEP 0
 #define DEBUG_LINALG 0
 #define DEBUG_TREE 0
+#define DEBUG_TREE_TO_FILE 0
+#define DEBUG_GRAVITY 0
+#define DEBUG_RHS 0
 #define DEBUG_RHS_RUNTIMES 0
 
 #define FALSE 0
@@ -387,7 +390,6 @@ typedef struct RunParameter {
     int selfgravity; ///< flag for self-gravity calculation or not
     int directselfgravity; ///< flag to use the N**2 algorithm to calculate self-gravity
     int decouplegravity; ///< flag to decouple the hydrotimestep from the calculation of self-gravity
-    int treeinformation; ///< flag to print out some more information about the tree
     int hdf5output; ///< flag to write to HDF5
     int hdf5input; ///< flag to read from HDF5
     int ascii_output; ///< flag to write to ASCII

@@ -51,6 +51,8 @@ extern double betamin;
 extern double alpha_epspormin;
 extern double epsilon_vmin;
 
+extern __device__ volatile int maxNodeIndex;
+
 File inputFile;
 
 
@@ -2829,7 +2831,7 @@ void *write_timestep(void *argument)
     // write
     write_particles_to_file(outputFile);
 
-#if DEBUG_TREE
+#if DEBUG_TREE_TO_FILE
     // write tree
     File treeFile;
     strcpy(treeFile.name, outputFile.name);
@@ -2880,13 +2882,17 @@ void write_performance(float *time) {
 }
 
 void write_tree_to_file(File file) {
+    int i, maxNodeIndex_host;
+
     // open file for writing
     if ((file.data = fopen(file.name, "w")) == NULL) {
         fprintf(stderr, "Eih? Cannot write to %s.\n", file.name);
         exit(1);
     }
+
+    cudaMemcpyFromSymbol(&maxNodeIndex_host, maxNodeIndex, sizeof(int));
+
     // write to file
-    int i;
     for (i = numberOfParticles; i <= maxNodeIndex_host; i++) {
         fprintf(file.data, "%le\t", p_host.x[i]);
 #if DIM > 1

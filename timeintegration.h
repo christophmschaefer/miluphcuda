@@ -36,21 +36,20 @@
 #include "extrema.h"
 #include "sinking.h"
 
+
 extern int startTimestep;
 extern int numberOfTimesteps;
 extern double startTime;
 extern double timePerStep;
 extern double dt_host;
-extern int maxNodeIndex_host;
 
 extern double currentTime;
 extern double h5time;
 
-
-
 extern __device__ int numParticles;
 extern __device__ int numPointmasses;
 extern int *relaxedPerBlock;
+
 
 extern void (*integrator)();
 
@@ -66,7 +65,6 @@ void heun_rk4(void);
 
 double calculate_angular_momentum(void);
 
-
 void copyToHostAndWriteToFile(int timestep, int lastTimestep);
 
 __device__ int childListIndex(int nodeIndex, int childNumber);
@@ -76,9 +74,6 @@ __device__ int stressIndex(int particleIndex, int row, int col);
 void afterIntegrationStep(void);
 
 __global__ void symmetrizeStress(void);
-
-
-
 
 
 #define NUM_THREADS_512 512

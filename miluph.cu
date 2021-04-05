@@ -695,7 +695,6 @@ int main(int argc, char *argv[])
     param.directselfgravity = FALSE;
     param.decouplegravity = 0;
     param.performanceTest = FALSE;
-    param.treeinformation = FALSE;
 
 #if USE_SIGNAL_HANDLER
     signal(SIGINT, signal_handler);
@@ -764,7 +763,6 @@ int main(int argc, char *argv[])
                 break;
             case 'v':
                 param.verbose = TRUE;
-                param.treeinformation = TRUE;
                 break;
             case 'r':
                 param.restart = TRUE;

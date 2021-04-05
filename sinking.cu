@@ -25,6 +25,8 @@
 #include "parameter.h"
 #include "miluph.h"
 #include "pressure.h"
+#include "config_parameter.h"
+
 
 #if PARTICLE_ACCRETION
 #if UPDATE_SINK_VALUES

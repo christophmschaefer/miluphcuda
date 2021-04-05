@@ -58,7 +58,6 @@ __constant__ double c3 = 1.0;
 __constant__ double safety = 0.9;
 __device__ double maxPosAbsError;
 __device__ double maxVelAbsError;
-__device__ int treeMaxDepth = 0;
 __device__ int movingparticles = 0;
 __device__ int reset_movingparticles = 1;
 __device__ double dtNewErrorCheck = 0.0;
@@ -100,7 +99,6 @@ __device__ double substep_currentTimeD;
 
 __device__ int blockCount = 0;
 __device__ volatile int maxNodeIndex;
-int maxNodeIndex_host;
 __device__ volatile double radius;
 
 // tree computational domain

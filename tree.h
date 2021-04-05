@@ -26,6 +26,9 @@
 #include "parameter.h"
 
 
+extern __device__ int treeMaxDepth;
+
+
 __global__ void buildTree();
 __global__ void getTreeDepth(int *treeDepthPerBlock);
 __global__ void measureTreeChange(int *movingparticlesPerBlock);
