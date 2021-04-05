@@ -21,17 +21,12 @@
  *
  */
 
-
-
 #ifndef _RHS_H
 #define _RHS_H
 
 
 #define MAX_NUMBER_PROFILED_KERNELS 32
 
-
 void rightHandSide(void);
-
-
 
 #endif

@@ -32,6 +32,7 @@
 #define DEBUG_TIMESTEP 0
 #define DEBUG_LINALG 0
 #define DEBUG_TREE 0
+#define DEBUG_RHS_RUNTIMES 0
 
 #define FALSE 0
 #define TRUE 1
