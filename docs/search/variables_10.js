@@ -6,7 +6,6 @@ var searchData=
   ['theta',['theta',['../config__parameter_8cu.html#a55b4b57ff0890976692aae7ebc99a646',1,'theta():&#160;config_parameter.cu'],['../config__parameter_8h.html#a55b4b57ff0890976692aae7ebc99a646',1,'theta():&#160;config_parameter.cu']]],
   ['till_5frho_5f0',['till_rho_0',['../config__parameter_8cu.html#aee842e4d450666792e5cd8c6a7f6b9c1',1,'till_rho_0():&#160;config_parameter.cu'],['../config__parameter_8h.html#aee842e4d450666792e5cd8c6a7f6b9c1',1,'till_rho_0():&#160;config_parameter.cu']]],
   ['timeperstep',['timePerStep',['../timeintegration_8cu.html#ab85d10b965ecaf344a12fa36fec94cc5',1,'timePerStep():&#160;timeintegration.cu'],['../timeintegration_8h.html#ab85d10b965ecaf344a12fa36fec94cc5',1,'timePerStep():&#160;timeintegration.cu']]],
-  ['treeinformation',['treeinformation',['../struct_run_parameter.html#a1f9e8d4b4bf17b0201de406140d3029f',1,'RunParameter']]],
-  ['treemaxdepth',['treeMaxDepth',['../rhs_8cu.html#ac960fdee1afb803800bef22475a21c84',1,'treeMaxDepth():&#160;timeintegration.cu'],['../timeintegration_8cu.html#ac960fdee1afb803800bef22475a21c84',1,'treeMaxDepth():&#160;timeintegration.cu'],['../tree_8cu.html#ac960fdee1afb803800bef22475a21c84',1,'treeMaxDepth():&#160;timeintegration.cu']]],
+  ['treemaxdepth',['treeMaxDepth',['../tree_8cu.html#ac960fdee1afb803800bef22475a21c84',1,'treeMaxDepth():&#160;tree.cu'],['../tree_8h.html#ac960fdee1afb803800bef22475a21c84',1,'treeMaxDepth():&#160;tree.cu']]],
   ['treetheta',['treeTheta',['../miluph_8cu.html#a5d095fb4b7849b1d981d6a8d45d5ad88',1,'treeTheta():&#160;miluph.cu'],['../miluph_8h.html#a5d095fb4b7849b1d981d6a8d45d5ad88',1,'treeTheta():&#160;miluph.cu']]]
 ];

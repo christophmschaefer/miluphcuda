@@ -17,10 +17,11 @@
 <area shape="rect" id="node17" href="$pressure_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/pressure.cu" alt="" coords="3186,131,3385,187"/>
 <area shape="rect" id="node18" href="$rk2adaptive_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/rk2adaptive.cu" alt="" coords="3409,131,3625,187"/>
 <area shape="rect" id="node19" href="$rk4__pointmass_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/rk4_pointmass.cu" alt="" coords="3649,131,3884,187"/>
-<area shape="rect" id="node20" href="$soundspeed_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/soundspeed.cu" alt="" coords="3908,131,4127,187"/>
-<area shape="rect" id="node21" href="$timeintegration_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/timeintegration.cu" alt="" coords="4151,131,4385,187"/>
-<area shape="rect" id="node22" href="$tree_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/tree.cu" alt="" coords="4409,131,4593,187"/>
-<area shape="rect" id="node23" href="$velocity_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/velocity.cu" alt="" coords="4617,131,4812,187"/>
-<area shape="rect" id="node24" href="$viscosity_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/viscosity.cu" alt="" coords="4837,131,5038,187"/>
-<area shape="rect" id="node25" href="$xsph_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/xsph.cu" alt="" coords="5063,131,5247,187"/>
+<area shape="rect" id="node20" href="$sinking_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/sinking.cu" alt="" coords="3909,131,4099,187"/>
+<area shape="rect" id="node21" href="$soundspeed_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/soundspeed.cu" alt="" coords="4124,131,4343,187"/>
+<area shape="rect" id="node22" href="$timeintegration_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/timeintegration.cu" alt="" coords="4367,131,4601,187"/>
+<area shape="rect" id="node23" href="$tree_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/tree.cu" alt="" coords="4625,131,4809,187"/>
+<area shape="rect" id="node24" href="$velocity_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/velocity.cu" alt="" coords="4833,131,5028,187"/>
+<area shape="rect" id="node25" href="$viscosity_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/viscosity.cu" alt="" coords="5053,131,5254,187"/>
+<area shape="rect" id="node26" href="$xsph_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/xsph.cu" alt="" coords="5279,131,5463,187"/>
 </map>

@@ -19,8 +19,7 @@ var searchData=
   ['transpose_5fmatrix',['transpose_matrix',['../linalg_8cu.html#ab840a4b933ee3f226652c613c9936ef9',1,'transpose_matrix(double m[DIM][DIM]):&#160;linalg.cu'],['../linalg_8h.html#aa56886d93c78e345ff29d26856fb9b7f',1,'transpose_matrix(double a[DIM][DIM]):&#160;linalg.cu']]],
   ['tree_2ecu',['tree.cu',['../tree_8cu.html',1,'']]],
   ['tree_2eh',['tree.h',['../tree_8h.html',1,'']]],
-  ['treeinformation',['treeinformation',['../struct_run_parameter.html#a1f9e8d4b4bf17b0201de406140d3029f',1,'RunParameter']]],
-  ['treemaxdepth',['treeMaxDepth',['../rhs_8cu.html#ac960fdee1afb803800bef22475a21c84',1,'treeMaxDepth():&#160;timeintegration.cu'],['../timeintegration_8cu.html#ac960fdee1afb803800bef22475a21c84',1,'treeMaxDepth():&#160;timeintegration.cu'],['../tree_8cu.html#ac960fdee1afb803800bef22475a21c84',1,'treeMaxDepth():&#160;timeintegration.cu']]],
+  ['treemaxdepth',['treeMaxDepth',['../tree_8cu.html#ac960fdee1afb803800bef22475a21c84',1,'treeMaxDepth():&#160;tree.cu'],['../tree_8h.html#ac960fdee1afb803800bef22475a21c84',1,'treeMaxDepth():&#160;tree.cu']]],
   ['treetheta',['treeTheta',['../miluph_8cu.html#a5d095fb4b7849b1d981d6a8d45d5ad88',1,'treeTheta():&#160;miluph.cu'],['../miluph_8h.html#a5d095fb4b7849b1d981d6a8d45d5ad88',1,'treeTheta():&#160;miluph.cu']]],
   ['true',['TRUE',['../miluph_8h.html#aa8cecfc5c5c054d2875c03e77b7be15d',1,'miluph.h']]]
 ];
