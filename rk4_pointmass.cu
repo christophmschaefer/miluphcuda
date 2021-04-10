@@ -33,9 +33,6 @@
 
 extern __device__ double dt;
 
-extern __constant__ double b21;
-extern __constant__ double b32;
-extern __constant__ double c1;
 
 /* the runge-kutta 4nd order integrator with fixed timestep */
 void rk4_nbodies()
@@ -148,20 +145,20 @@ __global__ void rk4_integrateFirstStep()
     int i;
     // loop for the point masses
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
-        rk4_pointmass[RKFIRST].x[i] = rk4_pointmass[RKSTART].x[i] + dt * b21 * rk4_pointmass[RKFIRST].vx[i];
+        rk4_pointmass[RKFIRST].x[i] = rk4_pointmass[RKSTART].x[i] + dt * B21 * rk4_pointmass[RKFIRST].vx[i];
 #if DIM > 1
-        rk4_pointmass[RKFIRST].y[i] = rk4_pointmass[RKSTART].y[i] + dt * b21 * rk4_pointmass[RKFIRST].vy[i];
+        rk4_pointmass[RKFIRST].y[i] = rk4_pointmass[RKSTART].y[i] + dt * B21 * rk4_pointmass[RKFIRST].vy[i];
 #endif
 #if DIM == 3
-        rk4_pointmass[RKFIRST].z[i] = rk4_pointmass[RKSTART].z[i] + dt * b21 * rk4_pointmass[RKFIRST].vz[i];
+        rk4_pointmass[RKFIRST].z[i] = rk4_pointmass[RKSTART].z[i] + dt * B21 * rk4_pointmass[RKFIRST].vz[i];
 #endif
 
-        rk4_pointmass[RKFIRST].vx[i] = rk4_pointmass[RKSTART].vx[i] + dt * b21 * rk4_pointmass[RKFIRST].ax[i];
+        rk4_pointmass[RKFIRST].vx[i] = rk4_pointmass[RKSTART].vx[i] + dt * B21 * rk4_pointmass[RKFIRST].ax[i];
 #if DIM > 1
-        rk4_pointmass[RKFIRST].vy[i] = rk4_pointmass[RKSTART].vy[i] + dt * b21 * rk4_pointmass[RKFIRST].ay[i];
+        rk4_pointmass[RKFIRST].vy[i] = rk4_pointmass[RKSTART].vy[i] + dt * B21 * rk4_pointmass[RKFIRST].ay[i];
 #endif
 #if DIM == 3
-        rk4_pointmass[RKFIRST].vz[i] = rk4_pointmass[RKSTART].vz[i] + dt * b21 * rk4_pointmass[RKFIRST].az[i];
+        rk4_pointmass[RKFIRST].vz[i] = rk4_pointmass[RKSTART].vz[i] + dt * B21 * rk4_pointmass[RKFIRST].az[i];
 #endif
     }
 }
@@ -171,20 +168,20 @@ __global__ void rk4_integrateSecondStep()
     int i;
     // loop for pointmasses
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
-        rk4_pointmass[RKSECOND].vx[i] = rk4_pointmass[RKSTART].vx[i] + dt * b21 * rk4_pointmass[RKFIRST].ax[i];
+        rk4_pointmass[RKSECOND].vx[i] = rk4_pointmass[RKSTART].vx[i] + dt * B21 * rk4_pointmass[RKFIRST].ax[i];
 #if DIM > 1
-        rk4_pointmass[RKSECOND].vy[i] = rk4_pointmass[RKSTART].vy[i] + dt * b21 * rk4_pointmass[RKFIRST].ay[i];
+        rk4_pointmass[RKSECOND].vy[i] = rk4_pointmass[RKSTART].vy[i] + dt * B21 * rk4_pointmass[RKFIRST].ay[i];
 #endif
 #if DIM == 3
-        rk4_pointmass[RKSECOND].vz[i] = rk4_pointmass[RKSTART].vz[i] + dt * b21 * rk4_pointmass[RKFIRST].az[i];
+        rk4_pointmass[RKSECOND].vz[i] = rk4_pointmass[RKSTART].vz[i] + dt * B21 * rk4_pointmass[RKFIRST].az[i];
 #endif
 
-        rk4_pointmass[RKSECOND].x[i] = rk4_pointmass[RKSTART].x[i] + dt * b21 * rk4_pointmass[RKFIRST].vx[i];
+        rk4_pointmass[RKSECOND].x[i] = rk4_pointmass[RKSTART].x[i] + dt * B21 * rk4_pointmass[RKFIRST].vx[i];
 #if DIM > 1
-        rk4_pointmass[RKSECOND].y[i] = rk4_pointmass[RKSTART].y[i] + dt * b21 * rk4_pointmass[RKFIRST].vy[i];
+        rk4_pointmass[RKSECOND].y[i] = rk4_pointmass[RKSTART].y[i] + dt * B21 * rk4_pointmass[RKFIRST].vy[i];
 #endif
 #if DIM == 3
-        rk4_pointmass[RKSECOND].z[i] = rk4_pointmass[RKSTART].z[i] + dt * b21 * rk4_pointmass[RKFIRST].vz[i];
+        rk4_pointmass[RKSECOND].z[i] = rk4_pointmass[RKSTART].z[i] + dt * B21 * rk4_pointmass[RKFIRST].vz[i];
 #endif
     }
 }
@@ -218,23 +215,23 @@ __global__ void rk4_integrateFourthStep()
     int d;
     // loop pointmasses
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
-        pointmass.vx[i] = rk4_pointmass[RKSTART].vx[i] + dt/6.0 * (c1 * rk4_pointmass[RKSTART].ax[i] + b32 * rk4_pointmass[RKFIRST].ax[i] + b32 * rk4_pointmass[RKSECOND].ax[i] + c1 * rk4_pointmass[RKTHIRD].ax[i]);
-        pointmass.ax[i] = 1./6.0 *(c1 * rk4_pointmass[RKSTART].ax[i] + b32 * rk4_pointmass[RKFIRST].ax[i] + b32 * rk4_pointmass[RKSECOND].ax[i] + c1 * rk4_pointmass[RKTHIRD].ax[i]);
+        pointmass.vx[i] = rk4_pointmass[RKSTART].vx[i] + dt/6.0 * (C1 * rk4_pointmass[RKSTART].ax[i] + B32 * rk4_pointmass[RKFIRST].ax[i] + B32 * rk4_pointmass[RKSECOND].ax[i] + C1 * rk4_pointmass[RKTHIRD].ax[i]);
+        pointmass.ax[i] = 1./6.0 *(C1 * rk4_pointmass[RKSTART].ax[i] + B32 * rk4_pointmass[RKFIRST].ax[i] + B32 * rk4_pointmass[RKSECOND].ax[i] + C1 * rk4_pointmass[RKTHIRD].ax[i]);
 #if DIM > 1
-        pointmass.vy[i] = rk4_pointmass[RKSTART].vy[i] + dt/6.0 * (c1 * rk4_pointmass[RKSTART].ay[i] + b32 * rk4_pointmass[RKFIRST].ay[i] + b32 * rk4_pointmass[RKSECOND].ay[i] + c1 * rk4_pointmass[RKTHIRD].ay[i]);
-        pointmass.ay[i] = 1./6.0 *(c1 * rk4_pointmass[RKSTART].ay[i] + b32 * rk4_pointmass[RKFIRST].ay[i] + b32 * rk4_pointmass[RKSECOND].ay[i] + c1 * rk4_pointmass[RKTHIRD].ay[i]);
+        pointmass.vy[i] = rk4_pointmass[RKSTART].vy[i] + dt/6.0 * (C1 * rk4_pointmass[RKSTART].ay[i] + B32 * rk4_pointmass[RKFIRST].ay[i] + B32 * rk4_pointmass[RKSECOND].ay[i] + C1 * rk4_pointmass[RKTHIRD].ay[i]);
+        pointmass.ay[i] = 1./6.0 *(C1 * rk4_pointmass[RKSTART].ay[i] + B32 * rk4_pointmass[RKFIRST].ay[i] + B32 * rk4_pointmass[RKSECOND].ay[i] + C1 * rk4_pointmass[RKTHIRD].ay[i]);
 #endif
 #if DIM > 2
-        pointmass.vz[i] = rk4_pointmass[RKSTART].vz[i] + dt/6.0 * (c1 * rk4_pointmass[RKSTART].az[i] + b32 * rk4_pointmass[RKFIRST].az[i] + b32 * rk4_pointmass[RKSECOND].az[i] + c1 * rk4_pointmass[RKTHIRD].az[i]);
-        pointmass.az[i] = 1./6.0 *(c1 * rk4_pointmass[RKSTART].az[i] + b32 * rk4_pointmass[RKFIRST].az[i] + b32 * rk4_pointmass[RKSECOND].az[i] + c1 * rk4_pointmass[RKFIRST].az[i]);
+        pointmass.vz[i] = rk4_pointmass[RKSTART].vz[i] + dt/6.0 * (C1 * rk4_pointmass[RKSTART].az[i] + B32 * rk4_pointmass[RKFIRST].az[i] + B32 * rk4_pointmass[RKSECOND].az[i] + C1 * rk4_pointmass[RKTHIRD].az[i]);
+        pointmass.az[i] = 1./6.0 *(C1 * rk4_pointmass[RKSTART].az[i] + B32 * rk4_pointmass[RKFIRST].az[i] + B32 * rk4_pointmass[RKSECOND].az[i] + C1 * rk4_pointmass[RKFIRST].az[i]);
 #endif
 
-        pointmass.x[i] = rk4_pointmass[RKSTART].x[i] + dt/6.0 * (c1 * rk4_pointmass[RKSTART].vx[i] + b32 * rk4_pointmass[RKFIRST].vx[i] + b32 * rk4_pointmass[RKSECOND].vx[i] + c1 * rk4_pointmass[RKTHIRD].vx[i]);
+        pointmass.x[i] = rk4_pointmass[RKSTART].x[i] + dt/6.0 * (C1 * rk4_pointmass[RKSTART].vx[i] + B32 * rk4_pointmass[RKFIRST].vx[i] + B32 * rk4_pointmass[RKSECOND].vx[i] + C1 * rk4_pointmass[RKTHIRD].vx[i]);
 #if DIM > 1
-        pointmass.y[i] = rk4_pointmass[RKSTART].y[i] + dt/6.0 * (c1 * rk4_pointmass[RKSTART].vy[i] + b32 * rk4_pointmass[RKFIRST].vy[i] + b32 * rk4_pointmass[RKSECOND].vy[i] + c1 * rk4_pointmass[RKTHIRD].vy[i]);
+        pointmass.y[i] = rk4_pointmass[RKSTART].y[i] + dt/6.0 * (C1 * rk4_pointmass[RKSTART].vy[i] + B32 * rk4_pointmass[RKFIRST].vy[i] + B32 * rk4_pointmass[RKSECOND].vy[i] + C1 * rk4_pointmass[RKTHIRD].vy[i]);
 #endif
 #if DIM > 2
-        pointmass.z[i] = rk4_pointmass[RKSTART].z[i] + dt/6.0 * (c1 * rk4_pointmass[RKSTART].vz[i] + b32 * rk4_pointmass[RKFIRST].vz[i] + b32 * rk4_pointmass[RKSECOND].vz[i] + c1 * rk4_pointmass[RKTHIRD].vz[i]);
+        pointmass.z[i] = rk4_pointmass[RKSTART].z[i] + dt/6.0 * (C1 * rk4_pointmass[RKSTART].vz[i] + B32 * rk4_pointmass[RKFIRST].vz[i] + B32 * rk4_pointmass[RKSECOND].vz[i] + C1 * rk4_pointmass[RKTHIRD].vz[i]);
 #endif
     }
 }

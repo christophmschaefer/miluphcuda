@@ -47,14 +47,6 @@ pthread_t fileIOthread;
 
 double L_ini = 0.0;
 
-// integration parameters
-__constant__ double b21 = 0.5;
-__constant__ double b31 = -1.0;
-__constant__ double b32 = 2.0;
-__constant__ double c1 = 1.0;
-__constant__ double c2 = 4.0;
-__constant__ double c3 = 1.0;
-
 __constant__ double safety = 0.9;
 __device__ double maxPosAbsError;
 __device__ double maxVelAbsError;

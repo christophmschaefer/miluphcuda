@@ -43,12 +43,6 @@ extern __device__ double dtNewErrorCheck;
 extern __device__ double dtNewAlphaCheck;
 extern __device__ double maxPosAbsError;
 
-extern __constant__ double b21;
-extern __constant__ double b31;
-extern __constant__ double b32;
-extern __constant__ double c1;
-extern __constant__ double c2;
-extern __constant__ double c3;
 extern __device__ double maxVelAbsError;
 extern __device__ double maxDensityAbsError;
 extern __device__ double maxEnergyAbsError;
@@ -534,21 +528,21 @@ __global__ void integrateFirstStep(void)
 #if GRAVITATING_POINT_MASSES
     // loop for point masses
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
-        rk_pointmass[RKFIRST].x[i] = rk_pointmass[RKSTART].x[i] + dt * b21 * rk_pointmass[RKSTART].vx[i];
+        rk_pointmass[RKFIRST].x[i] = rk_pointmass[RKSTART].x[i] + dt * B21 * rk_pointmass[RKSTART].vx[i];
 # if DIM > 1
-        rk_pointmass[RKFIRST].y[i] = rk_pointmass[RKSTART].y[i] + dt * b21 * rk_pointmass[RKSTART].vy[i];
+        rk_pointmass[RKFIRST].y[i] = rk_pointmass[RKSTART].y[i] + dt * B21 * rk_pointmass[RKSTART].vy[i];
 # endif
 
 # if DIM > 2
-        rk_pointmass[RKFIRST].z[i] = rk_pointmass[RKSTART].z[i] + dt * b21 * rk_pointmass[RKSTART].vz[i];
+        rk_pointmass[RKFIRST].z[i] = rk_pointmass[RKSTART].z[i] + dt * B21 * rk_pointmass[RKSTART].vz[i];
 # endif
 
-        rk_pointmass[RKFIRST].vx[i] = rk_pointmass[RKSTART].vx[i] + dt * b21 * rk_pointmass[RKSTART].ax[i];
+        rk_pointmass[RKFIRST].vx[i] = rk_pointmass[RKSTART].vx[i] + dt * B21 * rk_pointmass[RKSTART].ax[i];
 # if DIM > 1
-        rk_pointmass[RKFIRST].vy[i] = rk_pointmass[RKSTART].vy[i] + dt * b21 * rk_pointmass[RKSTART].ay[i];
+        rk_pointmass[RKFIRST].vy[i] = rk_pointmass[RKSTART].vy[i] + dt * B21 * rk_pointmass[RKSTART].ay[i];
 # endif
 # if DIM > 2
-        rk_pointmass[RKFIRST].vz[i] = rk_pointmass[RKSTART].vz[i] + dt * b21 * rk_pointmass[RKSTART].az[i];
+        rk_pointmass[RKFIRST].vz[i] = rk_pointmass[RKSTART].vz[i] + dt * B21 * rk_pointmass[RKSTART].az[i];
 # endif
     }
 #endif
@@ -558,40 +552,40 @@ __global__ void integrateFirstStep(void)
 
         //printf("START: vx: %g \t %g :dxdt \t\t\t vy: %g \t %g :dydt\n", velxStart[i], dxdtStart[i], velyStart[i], dydtStart[i]);
 #if INTEGRATE_DENSITY
-        rk[RKFIRST].rho[i] = rk[RKSTART].rho[i] + dt * b21 * rk[RKSTART].drhodt[i];
+        rk[RKFIRST].rho[i] = rk[RKSTART].rho[i] + dt * B21 * rk[RKSTART].drhodt[i];
 #endif
 #if INTEGRATE_SML
-        rk[RKFIRST].h[i] = rk[RKSTART].h[i] + dt * b21 * rk[RKSTART].dhdt[i];
+        rk[RKFIRST].h[i] = rk[RKSTART].h[i] + dt * B21 * rk[RKSTART].dhdt[i];
 #else
         rk[RKFIRST].h[i] = rk[RKSTART].h[i];
 #endif
 #if INTEGRATE_ENERGY
-        rk[RKFIRST].e[i] = rk[RKSTART].e[i] + dt * b21 * rk[RKSTART].dedt[i];
+        rk[RKFIRST].e[i] = rk[RKSTART].e[i] + dt * B21 * rk[RKSTART].dedt[i];
 #endif
 #if FRAGMENTATION
-        rk[RKFIRST].d[i] = rk[RKSTART].d[i] + dt * b21 * rk[RKSTART].dddt[i];
+        rk[RKFIRST].d[i] = rk[RKSTART].d[i] + dt * B21 * rk[RKSTART].dddt[i];
         rk[RKFIRST].numActiveFlaws[i] = rk[RKSTART].numActiveFlaws[i];
 #if PALPHA_POROSITY
-        rk[RKFIRST].damage_porjutzi[i] = rk[RKSTART].damage_porjutzi[i] + dt * b21 * rk[RKSTART].ddamage_porjutzidt[i];
+        rk[RKFIRST].damage_porjutzi[i] = rk[RKSTART].damage_porjutzi[i] + dt * B21 * rk[RKSTART].ddamage_porjutzidt[i];
 #endif
 #endif
 #if INVISCID_SPH
-        rk[RKFIRST].beta[i] = rk[RKSTART].beta[i] + dt * b21 * rk[RKSTART].dbetadt[i];
+        rk[RKFIRST].beta[i] = rk[RKSTART].beta[i] + dt * B21 * rk[RKSTART].dbetadt[i];
 #endif
 #if SOLID
         int j, k;
         for (j = 0; j < DIM; j++) {
             for (k = 0; k < DIM; k++) {
-                rk[RKFIRST].S[stressIndex(i,j,k)] = rk[RKSTART].S[stressIndex(i,j,k)] + dt * b21 * rk[RKSTART].dSdt[stressIndex(i,j,k)];
+                rk[RKFIRST].S[stressIndex(i,j,k)] = rk[RKSTART].S[stressIndex(i,j,k)] + dt * B21 * rk[RKSTART].dSdt[stressIndex(i,j,k)];
             }
         }
 #endif
 #if JC_PLASTICITY
-        rk[RKFIRST].ep[i] = rk[RKSTART].ep[i] + dt * b21 * rk[RKSTART].edotp[i];
-        rk[RKFIRST].T[i] = rk[RKSTART].T[i] + dt * b21 * rk[RKSTART].dTdt[i];
+        rk[RKFIRST].ep[i] = rk[RKSTART].ep[i] + dt * B21 * rk[RKSTART].edotp[i];
+        rk[RKFIRST].T[i] = rk[RKSTART].T[i] + dt * B21 * rk[RKSTART].dTdt[i];
 #endif
 #if PALPHA_POROSITY
-        rk[RKFIRST].alpha_jutzi[i] = rk[RKSTART].alpha_jutzi[i] + dt * b21 * rk[RKSTART].dalphadt[i];
+        rk[RKFIRST].alpha_jutzi[i] = rk[RKSTART].alpha_jutzi[i] + dt * B21 * rk[RKSTART].dalphadt[i];
         // rk[RKFIRST].p is the pressure at the begin of the new timestep
         // this pressure has to be compared to the pressure at the end of the timestep
         rk[RKFIRST].pold[i] = rk[RKFIRST].p[i];
@@ -608,24 +602,24 @@ __global__ void integrateFirstStep(void)
         rk[RKFIRST].flag_plastic[i] = rk[RKSTART].flag_plastic[i];
 #endif
 #if EPSALPHA_POROSITY
-        rk[RKFIRST].alpha_epspor[i] = rk[RKSTART].alpha_epspor[i] + dt * b21 * rk[RKSTART].dalpha_epspordt[i];
-        rk[RKFIRST].epsilon_v[i] = rk[RKSTART].epsilon_v[i] + dt * b21 * rk[RKSTART].depsilon_vdt[i];
+        rk[RKFIRST].alpha_epspor[i] = rk[RKSTART].alpha_epspor[i] + dt * B21 * rk[RKSTART].dalpha_epspordt[i];
+        rk[RKFIRST].epsilon_v[i] = rk[RKSTART].epsilon_v[i] + dt * B21 * rk[RKSTART].depsilon_vdt[i];
 #endif
 
-        rk[RKFIRST].x[i] = rk[RKSTART].x[i] + dt * b21 * rk[RKSTART].dxdt[i];
+        rk[RKFIRST].x[i] = rk[RKSTART].x[i] + dt * B21 * rk[RKSTART].dxdt[i];
 #if DIM > 1
-        rk[RKFIRST].y[i] = rk[RKSTART].y[i] + dt * b21 * rk[RKSTART].dydt[i];
+        rk[RKFIRST].y[i] = rk[RKSTART].y[i] + dt * B21 * rk[RKSTART].dydt[i];
 #endif
 #if DIM > 2
-        rk[RKFIRST].z[i] = rk[RKSTART].z[i] + dt * b21 * rk[RKSTART].dzdt[i];
+        rk[RKFIRST].z[i] = rk[RKSTART].z[i] + dt * B21 * rk[RKSTART].dzdt[i];
 #endif
 
-        rk[RKFIRST].vx[i] = rk[RKSTART].vx[i] + dt * b21 * rk[RKSTART].ax[i];
+        rk[RKFIRST].vx[i] = rk[RKSTART].vx[i] + dt * B21 * rk[RKSTART].ax[i];
 #if DIM > 1
-        rk[RKFIRST].vy[i] = rk[RKSTART].vy[i] + dt * b21 * rk[RKSTART].ay[i];
+        rk[RKFIRST].vy[i] = rk[RKSTART].vy[i] + dt * B21 * rk[RKSTART].ay[i];
 #endif
 #if DIM > 2
-        rk[RKFIRST].vz[i] = rk[RKSTART].vz[i] + dt * b21 * rk[RKSTART].az[i];
+        rk[RKFIRST].vz[i] = rk[RKSTART].vz[i] + dt * B21 * rk[RKSTART].az[i];
 #endif
     }
 }
@@ -639,19 +633,19 @@ __global__ void integrateSecondStep(void)
 #if GRAVITATING_POINT_MASSES
     // loop for pointmasses
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
-        rk_pointmass[RKSECOND].vx[i] = rk_pointmass[RKSTART].vx[i] + dt * (b31 * rk_pointmass[RKSTART].ax[i] + b32 * rk_pointmass[RKFIRST].ax[i]);
+        rk_pointmass[RKSECOND].vx[i] = rk_pointmass[RKSTART].vx[i] + dt * (B31 * rk_pointmass[RKSTART].ax[i] + B32 * rk_pointmass[RKFIRST].ax[i]);
 # if DIM > 1
-        rk_pointmass[RKSECOND].vy[i] = rk_pointmass[RKSTART].vy[i] + dt * (b31 * rk_pointmass[RKSTART].ay[i] + b32 * rk_pointmass[RKFIRST].ay[i]);
+        rk_pointmass[RKSECOND].vy[i] = rk_pointmass[RKSTART].vy[i] + dt * (B31 * rk_pointmass[RKSTART].ay[i] + B32 * rk_pointmass[RKFIRST].ay[i]);
 # endif
 # if DIM == 3
-        rk_pointmass[RKSECOND].vz[i] = rk_pointmass[RKSTART].vz[i] + dt * (b31 * rk_pointmass[RKSTART].az[i] + b32 * rk_pointmass[RKFIRST].az[i]);
+        rk_pointmass[RKSECOND].vz[i] = rk_pointmass[RKSTART].vz[i] + dt * (B31 * rk_pointmass[RKSTART].az[i] + B32 * rk_pointmass[RKFIRST].az[i]);
 # endif
-        rk_pointmass[RKSECOND].x[i] = rk_pointmass[RKSTART].x[i] + dt * (b31 * rk_pointmass[RKSTART].vx[i] + b32 * rk_pointmass[RKFIRST].vx[i]);
+        rk_pointmass[RKSECOND].x[i] = rk_pointmass[RKSTART].x[i] + dt * (B31 * rk_pointmass[RKSTART].vx[i] + B32 * rk_pointmass[RKFIRST].vx[i]);
 # if DIM > 1
-        rk_pointmass[RKSECOND].y[i] = rk_pointmass[RKSTART].y[i] + dt * (b31 * rk_pointmass[RKSTART].vy[i] + b32 * rk_pointmass[RKFIRST].vy[i]);
+        rk_pointmass[RKSECOND].y[i] = rk_pointmass[RKSTART].y[i] + dt * (B31 * rk_pointmass[RKSTART].vy[i] + B32 * rk_pointmass[RKFIRST].vy[i]);
 # endif
 # if DIM == 3
-        rk_pointmass[RKSECOND].z[i] = rk_pointmass[RKSTART].z[i] + dt * (b31 * rk_pointmass[RKSTART].vz[i] + b32 * rk_pointmass[RKFIRST].vz[i]);
+        rk_pointmass[RKSECOND].z[i] = rk_pointmass[RKSTART].z[i] + dt * (B31 * rk_pointmass[RKSTART].vz[i] + B32 * rk_pointmass[RKFIRST].vz[i]);
 # endif
     }
 #endif
@@ -659,29 +653,29 @@ __global__ void integrateSecondStep(void)
     // loop for particles
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
 #if INTEGRATE_DENSITY
-        rk[RKSECOND].rho[i] = rk[RKSTART].rho[i] + dt * (b31 * rk[RKSTART].drhodt[i] + b32 * rk[RKFIRST].drhodt[i]);
+        rk[RKSECOND].rho[i] = rk[RKSTART].rho[i] + dt * (B31 * rk[RKSTART].drhodt[i] + B32 * rk[RKFIRST].drhodt[i]);
 #endif
 #if INTEGRATE_SML
-        rk[RKSECOND].h[i] = rk[RKSTART].h[i] + dt * (b31 * rk[RKSTART].dhdt[i] + b32 * rk[RKFIRST].dhdt[i]);
+        rk[RKSECOND].h[i] = rk[RKSTART].h[i] + dt * (B31 * rk[RKSTART].dhdt[i] + B32 * rk[RKFIRST].dhdt[i]);
 #else
         rk[RKSECOND].h[i] = rk[RKSTART].h[i];
 #endif
 #if INTEGRATE_ENERGY
-        rk[RKSECOND].e[i] = rk[RKSTART].e[i] + dt * (b31 * rk[RKSTART].dedt[i] + b32 * rk[RKFIRST].dedt[i]);
+        rk[RKSECOND].e[i] = rk[RKSTART].e[i] + dt * (B31 * rk[RKSTART].dedt[i] + B32 * rk[RKFIRST].dedt[i]);
 #endif
 #if FRAGMENTATION
-        rk[RKSECOND].d[i] = rk[RKSTART].d[i] + dt * (b31 * rk[RKSTART].dddt[i] + b32 * rk[RKFIRST].dddt[i]);
+        rk[RKSECOND].d[i] = rk[RKSTART].d[i] + dt * (B31 * rk[RKSTART].dddt[i] + B32 * rk[RKFIRST].dddt[i]);
         rk[RKSECOND].numActiveFlaws[i] = rk[RKFIRST].numActiveFlaws[i];
 #if PALPHA_POROSITY
-        rk[RKSECOND].damage_porjutzi[i] = rk[RKSTART].damage_porjutzi[i] + dt * (b31 * rk[RKSTART].ddamage_porjutzidt[i] + b32 * rk[RKFIRST].ddamage_porjutzidt[i]);
+        rk[RKSECOND].damage_porjutzi[i] = rk[RKSTART].damage_porjutzi[i] + dt * (B31 * rk[RKSTART].ddamage_porjutzidt[i] + B32 * rk[RKFIRST].ddamage_porjutzidt[i]);
 #endif
 #endif
 #if JC_PLASTICITY
-        rk[RKSECOND].ep[i] = rk[RKSTART].ep[i] + dt * (b31 * rk[RKSTART].edotp[i] + b32 * rk[RKFIRST].edotp[i]);
-        rk[RKSECOND].T[i] = rk[RKSTART].T[i] + dt * (b31 * rk[RKSTART].dTdt[i] + b32 * rk[RKFIRST].dTdt[i]);
+        rk[RKSECOND].ep[i] = rk[RKSTART].ep[i] + dt * (B31 * rk[RKSTART].edotp[i] + B32 * rk[RKFIRST].edotp[i]);
+        rk[RKSECOND].T[i] = rk[RKSTART].T[i] + dt * (B31 * rk[RKSTART].dTdt[i] + B32 * rk[RKFIRST].dTdt[i]);
 #endif
 #if PALPHA_POROSITY
-        rk[RKSECOND].alpha_jutzi[i] = rk[RKSTART].alpha_jutzi[i] + dt * (b31 * rk[RKSTART].dalphadt[i] + b32 * rk[RKFIRST].dalphadt[i]);
+        rk[RKSECOND].alpha_jutzi[i] = rk[RKSTART].alpha_jutzi[i] + dt * (B31 * rk[RKSTART].dalphadt[i] + B32 * rk[RKFIRST].dalphadt[i]);
         rk[RKSECOND].pold[i] = rk[RKFIRST].pold[i];
 #endif
 #if SIRONO_POROSITY
@@ -696,33 +690,33 @@ __global__ void integrateSecondStep(void)
         rk[RKSECOND].flag_plastic[i] = rk[RKFIRST].flag_plastic[i];
 #endif
 #if EPSALPHA_POROSITY
-        rk[RKSECOND].alpha_epspor[i] = rk[RKSTART].alpha_epspor[i] + dt * (b31 * rk[RKSTART].dalpha_epspordt[i] + b32 * rk[RKFIRST].dalpha_epspordt[i]);
-        rk[RKSECOND].epsilon_v[i] = rk[RKSTART].epsilon_v[i] + dt * (b31 * rk[RKSTART].depsilon_vdt[i] + b32 * rk[RKFIRST].depsilon_vdt[i]);
+        rk[RKSECOND].alpha_epspor[i] = rk[RKSTART].alpha_epspor[i] + dt * (B31 * rk[RKSTART].dalpha_epspordt[i] + B32 * rk[RKFIRST].dalpha_epspordt[i]);
+        rk[RKSECOND].epsilon_v[i] = rk[RKSTART].epsilon_v[i] + dt * (B31 * rk[RKSTART].depsilon_vdt[i] + B32 * rk[RKFIRST].depsilon_vdt[i]);
 #endif
 #if INVISCID_SPH
-        rk[RKSECOND].beta[i] = rk[RKSTART].beta[i] + dt * (b31 * rk[RKSTART].dbetadt[i] + b32 * rk[RKFIRST].dbetadt[i]);
+        rk[RKSECOND].beta[i] = rk[RKSTART].beta[i] + dt * (B31 * rk[RKSTART].dbetadt[i] + B32 * rk[RKFIRST].dbetadt[i]);
 #endif
 #if SOLID
         int j;
         for (j = 0; j < DIM*DIM; j++) {
-            rk[RKSECOND].S[i*DIM*DIM+j] = rk[RKSTART].S[i*DIM*DIM+j] + dt * (b31 * rk[RKSTART].dSdt[i*DIM*DIM+j] + b32 * rk[RKFIRST].dSdt[i*DIM*DIM+j]);
+            rk[RKSECOND].S[i*DIM*DIM+j] = rk[RKSTART].S[i*DIM*DIM+j] + dt * (B31 * rk[RKSTART].dSdt[i*DIM*DIM+j] + B32 * rk[RKFIRST].dSdt[i*DIM*DIM+j]);
         }
 #endif
 
-        rk[RKSECOND].vx[i] = rk[RKSTART].vx[i] + dt * (b31 * rk[RKSTART].ax[i] + b32 * rk[RKFIRST].ax[i]);
+        rk[RKSECOND].vx[i] = rk[RKSTART].vx[i] + dt * (B31 * rk[RKSTART].ax[i] + B32 * rk[RKFIRST].ax[i]);
 #if DIM > 1
-        rk[RKSECOND].vy[i] = rk[RKSTART].vy[i] + dt * (b31 * rk[RKSTART].ay[i] + b32 * rk[RKFIRST].ay[i]);
+        rk[RKSECOND].vy[i] = rk[RKSTART].vy[i] + dt * (B31 * rk[RKSTART].ay[i] + B32 * rk[RKFIRST].ay[i]);
 #endif
 #if DIM == 3
-        rk[RKSECOND].vz[i] = rk[RKSTART].vz[i] + dt * (b31 * rk[RKSTART].az[i] + b32 * rk[RKFIRST].az[i]);
+        rk[RKSECOND].vz[i] = rk[RKSTART].vz[i] + dt * (B31 * rk[RKSTART].az[i] + B32 * rk[RKFIRST].az[i]);
 #endif
 
-        rk[RKSECOND].x[i] = rk[RKSTART].x[i] + dt * (b31 * rk[RKSTART].dxdt[i] + b32 * rk[RKFIRST].dxdt[i]);
+        rk[RKSECOND].x[i] = rk[RKSTART].x[i] + dt * (B31 * rk[RKSTART].dxdt[i] + B32 * rk[RKFIRST].dxdt[i]);
 #if DIM > 1
-        rk[RKSECOND].y[i] = rk[RKSTART].y[i] + dt * (b31 * rk[RKSTART].dydt[i] + b32 * rk[RKFIRST].dydt[i]);
+        rk[RKSECOND].y[i] = rk[RKSTART].y[i] + dt * (B31 * rk[RKSTART].dydt[i] + B32 * rk[RKFIRST].dydt[i]);
 #endif
 #if DIM == 3
-        rk[RKSECOND].z[i] = rk[RKSTART].z[i] + dt * (b31 * rk[RKSTART].dzdt[i] + b32 * rk[RKFIRST].dzdt[i]);
+        rk[RKSECOND].z[i] = rk[RKSTART].z[i] + dt * (B31 * rk[RKSTART].dzdt[i] + B32 * rk[RKFIRST].dzdt[i]);
 #endif
     }
 }
@@ -737,23 +731,23 @@ __global__ void integrateThirdStep(void)
 #if GRAVITATING_POINT_MASSES
     // loop for pointmasses
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
-        pointmass.vx[i] = rk_pointmass[RKSTART].vx[i] + dt/6.0 * (c1 * rk_pointmass[RKSTART].ax[i] + c2 * rk_pointmass[RKFIRST].ax[i] + c3 * rk_pointmass[RKSECOND].ax[i]);
-        pointmass.ax[i] = 1./6.0 *(c1 * rk_pointmass[RKSTART].ax[i] + c2 * rk_pointmass[RKFIRST].ax[i] + c3 * rk_pointmass[RKSECOND].ax[i]);
+        pointmass.vx[i] = rk_pointmass[RKSTART].vx[i] + dt/6.0 * (C1 * rk_pointmass[RKSTART].ax[i] + C2 * rk_pointmass[RKFIRST].ax[i] + C3 * rk_pointmass[RKSECOND].ax[i]);
+        pointmass.ax[i] = 1./6.0 *(C1 * rk_pointmass[RKSTART].ax[i] + C2 * rk_pointmass[RKFIRST].ax[i] + C3 * rk_pointmass[RKSECOND].ax[i]);
 # if DIM > 1
-        pointmass.vy[i] = rk_pointmass[RKSTART].vy[i] + dt/6.0 * (c1 * rk_pointmass[RKSTART].ay[i] + c2 * rk_pointmass[RKFIRST].ay[i] + c3 * rk_pointmass[RKSECOND].ay[i]);
-        pointmass.ay[i] = 1./6.0 *(c1 * rk_pointmass[RKSTART].ay[i] + c2 * rk_pointmass[RKFIRST].ay[i] + c3 * rk_pointmass[RKSECOND].ay[i]);
+        pointmass.vy[i] = rk_pointmass[RKSTART].vy[i] + dt/6.0 * (C1 * rk_pointmass[RKSTART].ay[i] + C2 * rk_pointmass[RKFIRST].ay[i] + C3 * rk_pointmass[RKSECOND].ay[i]);
+        pointmass.ay[i] = 1./6.0 *(C1 * rk_pointmass[RKSTART].ay[i] + C2 * rk_pointmass[RKFIRST].ay[i] + C3 * rk_pointmass[RKSECOND].ay[i]);
 # endif
 # if DIM > 2
-        pointmass.vz[i] = rk_pointmass[RKSTART].vz[i] + dt/6.0 * (c1 * rk_pointmass[RKSTART].az[i] + c2 * rk_pointmass[RKFIRST].az[i] + c3 * rk_pointmass[RKSECOND].az[i]);
-        pointmass.az[i] = 1./6.0 *(c1 * rk_pointmass[RKSTART].az[i] + c2 * rk_pointmass[RKFIRST].az[i] + c3 * rk_pointmass[RKSECOND].az[i]);
+        pointmass.vz[i] = rk_pointmass[RKSTART].vz[i] + dt/6.0 * (C1 * rk_pointmass[RKSTART].az[i] + C2 * rk_pointmass[RKFIRST].az[i] + C3 * rk_pointmass[RKSECOND].az[i]);
+        pointmass.az[i] = 1./6.0 *(C1 * rk_pointmass[RKSTART].az[i] + C2 * rk_pointmass[RKFIRST].az[i] + C3 * rk_pointmass[RKSECOND].az[i]);
 # endif
 
-        pointmass.x[i] = rk_pointmass[RKSTART].x[i] + dt/6.0 * (c1 * rk_pointmass[RKSTART].vx[i] + c2 * rk_pointmass[RKFIRST].vx[i] + c3 * rk_pointmass[RKSECOND].vx[i]);
+        pointmass.x[i] = rk_pointmass[RKSTART].x[i] + dt/6.0 * (C1 * rk_pointmass[RKSTART].vx[i] + C2 * rk_pointmass[RKFIRST].vx[i] + C3 * rk_pointmass[RKSECOND].vx[i]);
 # if DIM > 1
-        pointmass.y[i] = rk_pointmass[RKSTART].y[i] + dt/6.0 * (c1 * rk_pointmass[RKSTART].vy[i] + c2 * rk_pointmass[RKFIRST].vy[i] + c3 * rk_pointmass[RKSECOND].vy[i]);
+        pointmass.y[i] = rk_pointmass[RKSTART].y[i] + dt/6.0 * (C1 * rk_pointmass[RKSTART].vy[i] + C2 * rk_pointmass[RKFIRST].vy[i] + C3 * rk_pointmass[RKSECOND].vy[i]);
 # endif
 # if DIM > 2
-        pointmass.z[i] = rk_pointmass[RKSTART].z[i] + dt/6.0 * (c1 * rk_pointmass[RKSTART].vz[i] + c2 * rk_pointmass[RKFIRST].vz[i] + c3 * rk_pointmass[RKSECOND].vz[i]);
+        pointmass.z[i] = rk_pointmass[RKSTART].z[i] + dt/6.0 * (C1 * rk_pointmass[RKSTART].vz[i] + C2 * rk_pointmass[RKFIRST].vz[i] + C3 * rk_pointmass[RKSECOND].vz[i]);
 # endif
     }
 #endif
@@ -763,36 +757,36 @@ __global__ void integrateThirdStep(void)
         //printf("THIRD: vx: %g \t %g :dxdt \t\t\t vy: %g \t %g :dydt\n", velxSecond[i], dxdtSecond[i], velySecond[i], dydtSecond[i]);
 #if INTEGRATE_DENSITY
         p.rho[i] = rk[RKSTART].rho[i] + dt/6.0 *
-            (  c1 * rk[RKSTART].drhodt[i]
-               + c2 * rk[RKFIRST].drhodt[i]
-               + c3 * rk[RKSECOND].drhodt[i]);
-        p.drhodt[i] = 1./6.*(c1 * rk[RKSTART].drhodt[i]
-               + c2 * rk[RKFIRST].drhodt[i]
-               + c3 * rk[RKSECOND].drhodt[i]);
+            (    C1 * rk[RKSTART].drhodt[i]
+               + C2 * rk[RKFIRST].drhodt[i]
+               + C3 * rk[RKSECOND].drhodt[i]);
+        p.drhodt[i] = 1./6.*(C1 * rk[RKSTART].drhodt[i]
+               + C2 * rk[RKFIRST].drhodt[i]
+               + C3 * rk[RKSECOND].drhodt[i]);
 #else
         p.rho[i] = rk[RKSECOND].rho[i];
 #endif
 
 #if INTEGRATE_SML
         p.h[i] = rk[RKSTART].h[i] + dt/6.0 *
-            (  c1 * rk[RKSTART].dhdt[i]
-               + c2 * rk[RKFIRST].dhdt[i]
-               + c3 * rk[RKSECOND].dhdt[i]);
-        p.dhdt[i] = 1./6.*(c1 * rk[RKSTART].dhdt[i]
-               + c2 * rk[RKFIRST].dhdt[i]
-               + c3 * rk[RKSECOND].dhdt[i]);
+            (    C1 * rk[RKSTART].dhdt[i]
+               + C2 * rk[RKFIRST].dhdt[i]
+               + C3 * rk[RKSECOND].dhdt[i]);
+        p.dhdt[i] = 1./6.*(C1 * rk[RKSTART].dhdt[i]
+               + C2 * rk[RKFIRST].dhdt[i]
+               + C3 * rk[RKSECOND].dhdt[i]);
 #else
         p.h[i] = rk[RKSECOND].h[i];
 #endif
 
 #if INTEGRATE_ENERGY
         p.e[i] = rk[RKSTART].e[i] + dt/6.0 *
-            (  c1 * rk[RKSTART].dedt[i]
-               + c2 * rk[RKFIRST].dedt[i]
-               + c3 * rk[RKSECOND].dedt[i]);
-        p.dedt[i] = 1./6.* (c1 * rk[RKSTART].dedt[i]
-               + c2 * rk[RKFIRST].dedt[i]
-               + c3 * rk[RKSECOND].dedt[i]);
+            (    C1 * rk[RKSTART].dedt[i]
+               + C2 * rk[RKFIRST].dedt[i]
+               + C3 * rk[RKSECOND].dedt[i]);
+        p.dedt[i] = 1./6.* (C1 * rk[RKSTART].dedt[i]
+               + C2 * rk[RKFIRST].dedt[i]
+               + C3 * rk[RKSECOND].dedt[i]);
 #endif
 
 #if PALPHA_POROSITY
@@ -801,21 +795,21 @@ __global__ void integrateThirdStep(void)
 
 #if FRAGMENTATION
         p.d[i] = rk[RKSTART].d[i] + dt/6.0 *
-            (  c1 * rk[RKSTART].dddt[i]
-               + c2 * rk[RKFIRST].dddt[i]
-               + c3 * rk[RKSECOND].dddt[i]);
-        p.dddt[i] = 1./6. * (c1 * rk[RKSTART].dddt[i]
-               + c2 * rk[RKFIRST].dddt[i]
-               + c3 * rk[RKSECOND].dddt[i]);
+            (    C1 * rk[RKSTART].dddt[i]
+               + C2 * rk[RKFIRST].dddt[i]
+               + C3 * rk[RKSECOND].dddt[i]);
+        p.dddt[i] = 1./6. * (C1 * rk[RKSTART].dddt[i]
+               + C2 * rk[RKFIRST].dddt[i]
+               + C3 * rk[RKSECOND].dddt[i]);
 # if PALPHA_POROSITY
         if (dp > 0.0) {
             p.damage_porjutzi[i] = rk[RKSTART].damage_porjutzi[i] + dt/6.0 *
-                (  c1 * rk[RKSTART].ddamage_porjutzidt[i]
-                   + c2 * rk[RKFIRST].ddamage_porjutzidt[i]
-                   + c3 * rk[RKSECOND].ddamage_porjutzidt[i]);
-            p.ddamage_porjutzidt[i] = 1./6. * (c1 * rk[RKSTART].ddamage_porjutzidt[i]
-                   + c2 * rk[RKFIRST].ddamage_porjutzidt[i]
-                   + c3 * rk[RKSECOND].ddamage_porjutzidt[i]);
+                (    C1 * rk[RKSTART].ddamage_porjutzidt[i]
+                   + C2 * rk[RKFIRST].ddamage_porjutzidt[i]
+                   + C3 * rk[RKSECOND].ddamage_porjutzidt[i]);
+            p.ddamage_porjutzidt[i] = 1./6. * (C1 * rk[RKSTART].ddamage_porjutzidt[i]
+                   + C2 * rk[RKFIRST].ddamage_porjutzidt[i]
+                   + C3 * rk[RKSECOND].ddamage_porjutzidt[i]);
         } else {
             p.d[i] = p.d[i];
             p.damage_porjutzi[i] = rk[RKSTART].damage_porjutzi[i];
@@ -825,30 +819,30 @@ __global__ void integrateThirdStep(void)
 
 #if JC_PLASTICITY
         p.ep[i] = rk[RKSTART].ep[i] + dt/6.0 *
-            (  c1 * rk[RKSTART].edotp[i]
-               + c2 * rk[RKFIRST].edotp[i]
-               + c3 * rk[RKSECOND].edotp[i]);
+            (    C1 * rk[RKSTART].edotp[i]
+               + C2 * rk[RKFIRST].edotp[i]
+               + C3 * rk[RKSECOND].edotp[i]);
         p.T[i] = rk[RKSTART].T[i] + dt/6.0 *
-            (  c1 * rk[RKSTART].dTdt[i]
-               + c2 * rk[RKFIRST].dTdt[i]
-               + c3 * rk[RKSECOND].dTdt[i]);
-        p.edotp[i] = 1./6. * (  c1 * rk[RKSTART].edotp[i]
-               + c2 * rk[RKFIRST].edotp[i]
-               + c3 * rk[RKSECOND].edotp[i]);
-        p.dTdt[i] =  1./6. * (  c1 * rk[RKSTART].dTdt[i]
-               + c2 * rk[RKFIRST].dTdt[i]
-               + c3 * rk[RKSECOND].dTdt[i]);
+            (    C1 * rk[RKSTART].dTdt[i]
+               + C2 * rk[RKFIRST].dTdt[i]
+               + C3 * rk[RKSECOND].dTdt[i]);
+        p.edotp[i] = 1./6. * ( C1 * rk[RKSTART].edotp[i]
+               + C2 * rk[RKFIRST].edotp[i]
+               + C3 * rk[RKSECOND].edotp[i]);
+        p.dTdt[i] =  1./6. * ( C1 * rk[RKSTART].dTdt[i]
+               + C2 * rk[RKFIRST].dTdt[i]
+               + C3 * rk[RKSECOND].dTdt[i]);
 #endif
 
 #if PALPHA_POROSITY
         if (dp > 0.0) {
             p.alpha_jutzi[i] = rk[RKSTART].alpha_jutzi[i] + dt/6.0 *
-                (  c1 * rk[RKSTART].dalphadt[i]
-                   + c2 * rk[RKFIRST].dalphadt[i]
-                   + c3 * rk[RKSECOND].dalphadt[i]);
-            p.dalphadt[i] = 1./6. * (c1 * rk[RKSTART].dalphadt[i]
-                   + c2 * rk[RKFIRST].dalphadt[i]
-                   + c3 * rk[RKSECOND].dalphadt[i]);
+                (    C1 * rk[RKSTART].dalphadt[i]
+                   + C2 * rk[RKFIRST].dalphadt[i]
+                   + C3 * rk[RKSECOND].dalphadt[i]);
+            p.dalphadt[i] = 1./6. * (C1 * rk[RKSTART].dalphadt[i]
+                   + C2 * rk[RKFIRST].dalphadt[i]
+                   + C3 * rk[RKSECOND].dalphadt[i]);
         } else {
             p.alpha_jutzi[i] = rk[RKSTART].alpha_jutzi[i];
         }
@@ -856,67 +850,67 @@ __global__ void integrateThirdStep(void)
 
 #if EPSALPHA_POROSITY
         p.alpha_epspor[i] = rk[RKSTART].alpha_epspor[i] + dt/6.0 *
-                (     c1 * rk[RKSTART].dalpha_epspordt[i]
-                    + c2 * rk[RKFIRST].dalpha_epspordt[i]
-                    + c3 * rk[RKSECOND].dalpha_epspordt[i]);
+                (     C1 * rk[RKSTART].dalpha_epspordt[i]
+                    + C2 * rk[RKFIRST].dalpha_epspordt[i]
+                    + C3 * rk[RKSECOND].dalpha_epspordt[i]);
         p.dalpha_epspordt[i] = 1./6. *
-                (     c1 * rk[RKSTART].dalpha_epspordt[i]
-                    + c2 * rk[RKFIRST].dalpha_epspordt[i]
-                    + c3 * rk[RKSECOND].dalpha_epspordt[i]);
+                (     C1 * rk[RKSTART].dalpha_epspordt[i]
+                    + C2 * rk[RKFIRST].dalpha_epspordt[i]
+                    + C3 * rk[RKSECOND].dalpha_epspordt[i]);
         p.epsilon_v[i] = rk[RKSTART].epsilon_v[i] + dt/6.0 *
-                (     c1 * rk[RKSTART].depsilon_vdt[i]
-                    + c2 * rk[RKFIRST].depsilon_vdt[i]
-                    + c3 * rk[RKSECOND].depsilon_vdt[i]);
+                (     C1 * rk[RKSTART].depsilon_vdt[i]
+                    + C2 * rk[RKFIRST].depsilon_vdt[i]
+                    + C3 * rk[RKSECOND].depsilon_vdt[i]);
         p.depsilon_vdt[i] = 1./6. *
-                (     c1 * rk[RKSTART].depsilon_vdt[i]
-                    + c2 * rk[RKFIRST].depsilon_vdt[i]
-                    + c3 * rk[RKSECOND].depsilon_vdt[i]);
+                (     C1 * rk[RKSTART].depsilon_vdt[i]
+                    + C2 * rk[RKFIRST].depsilon_vdt[i]
+                    + C3 * rk[RKSECOND].depsilon_vdt[i]);
 #endif
 
 #if INVISCID_SPH
         p.beta[i] = rk[RKSTART].beta[i] + dt/6.0 *
-            (     c1 * rk[RKSTART].dbetadt[i]
-                + c2 * rk[RKFIRST].dbetadt[i]
-                + c3 * rk[RKSECOND].dbetadt[i]);
-        p.dbetadt[i] = 1./6. * (c1 * rk[RKSTART].dbetadt[i]
-                             +  c2 * rk[RKFIRST].dbetadt[i]
-                             +  c3 * rk[RKSECOND].dbetadt[i]);
+            (     C1 * rk[RKSTART].dbetadt[i]
+                + C2 * rk[RKFIRST].dbetadt[i]
+                + C3 * rk[RKSECOND].dbetadt[i]);
+        p.dbetadt[i] = 1./6. * (C1 * rk[RKSTART].dbetadt[i]
+                             +  C2 * rk[RKFIRST].dbetadt[i]
+                             +  C3 * rk[RKSECOND].dbetadt[i]);
 #endif
 
 #if SOLID
         int j;
         for (j = 0; j < DIM*DIM; j++) {
             p.S[i*DIM*DIM+j] = rk[RKSTART].S[i*DIM*DIM+j] + dt/6.0 *
-                (  c1 * rk[RKSTART].dSdt[i*DIM*DIM+j]
-                   + c2 * rk[RKFIRST].dSdt[i*DIM*DIM+j]
-                   + c3 * rk[RKSECOND].dSdt[i*DIM*DIM+j]);
+                (    C1 * rk[RKSTART].dSdt[i*DIM*DIM+j]
+                   + C2 * rk[RKFIRST].dSdt[i*DIM*DIM+j]
+                   + C3 * rk[RKSECOND].dSdt[i*DIM*DIM+j]);
             p.dSdt[i*DIM*DIM+j] = 1./6. *
-                (  c1 * rk[RKSTART].dSdt[i*DIM*DIM+j]
-                   + c2 * rk[RKFIRST].dSdt[i*DIM*DIM+j]
-                   + c3 * rk[RKSECOND].dSdt[i*DIM*DIM+j]);
+                (    C1 * rk[RKSTART].dSdt[i*DIM*DIM+j]
+                   + C2 * rk[RKFIRST].dSdt[i*DIM*DIM+j]
+                   + C3 * rk[RKSECOND].dSdt[i*DIM*DIM+j]);
         }
 #endif
 
-        p.vx[i] = rk[RKSTART].vx[i] + dt/6.0 * (c1 * rk[RKSTART].ax[i] + c2 * rk[RKFIRST].ax[i] + c3 * rk[RKSECOND].ax[i]);
-        p.ax[i] = 1./6.0 *(c1 * rk[RKSTART].ax[i] + c2 * rk[RKFIRST].ax[i] + c3 * rk[RKSECOND].ax[i]);
-        p.g_ax[i] = 1./6.0 *(c1 * rk[RKSTART].g_ax[i] + c2 * rk[RKFIRST].g_ax[i] + c3 * rk[RKSECOND].g_ax[i]);
+        p.vx[i] = rk[RKSTART].vx[i] + dt/6.0 * (C1 * rk[RKSTART].ax[i] + C2 * rk[RKFIRST].ax[i] + C3 * rk[RKSECOND].ax[i]);
+        p.ax[i] = 1./6.0 *(C1 * rk[RKSTART].ax[i] + C2 * rk[RKFIRST].ax[i] + C3 * rk[RKSECOND].ax[i]);
+        p.g_ax[i] = 1./6.0 *(C1 * rk[RKSTART].g_ax[i] + C2 * rk[RKFIRST].g_ax[i] + C3 * rk[RKSECOND].g_ax[i]);
 #if DIM > 1
-        p.vy[i] = rk[RKSTART].vy[i] + dt/6.0 * (c1 * rk[RKSTART].ay[i] + c2 * rk[RKFIRST].ay[i] + c3 * rk[RKSECOND].ay[i]);
-        p.ay[i] = 1./6.0 *(c1 * rk[RKSTART].ay[i] + c2 * rk[RKFIRST].ay[i] + c3 * rk[RKSECOND].ay[i]);
-        p.g_ay[i] = 1./6.0 *(c1 * rk[RKSTART].g_ay[i] + c2 * rk[RKFIRST].g_ay[i] + c3 * rk[RKSECOND].g_ay[i]);
+        p.vy[i] = rk[RKSTART].vy[i] + dt/6.0 * (C1 * rk[RKSTART].ay[i] + C2 * rk[RKFIRST].ay[i] + C3 * rk[RKSECOND].ay[i]);
+        p.ay[i] = 1./6.0 *(C1 * rk[RKSTART].ay[i] + C2 * rk[RKFIRST].ay[i] + C3 * rk[RKSECOND].ay[i]);
+        p.g_ay[i] = 1./6.0 *(C1 * rk[RKSTART].g_ay[i] + C2 * rk[RKFIRST].g_ay[i] + C3 * rk[RKSECOND].g_ay[i]);
 #endif
 #if DIM > 2
-        p.vz[i] = rk[RKSTART].vz[i] + dt/6.0 * (c1 * rk[RKSTART].az[i] + c2 * rk[RKFIRST].az[i] + c3 * rk[RKSECOND].az[i]);
-        p.az[i] = 1./6.0 *(c1 * rk[RKSTART].az[i] + c2 * rk[RKFIRST].az[i] + c3 * rk[RKSECOND].az[i]);
-        p.g_az[i] = 1./6.0 *(c1 * rk[RKSTART].g_az[i] + c2 * rk[RKFIRST].g_az[i] + c3 * rk[RKSECOND].g_az[i]);
+        p.vz[i] = rk[RKSTART].vz[i] + dt/6.0 * (C1 * rk[RKSTART].az[i] + C2 * rk[RKFIRST].az[i] + C3 * rk[RKSECOND].az[i]);
+        p.az[i] = 1./6.0 *(C1 * rk[RKSTART].az[i] + C2 * rk[RKFIRST].az[i] + C3 * rk[RKSECOND].az[i]);
+        p.g_az[i] = 1./6.0 *(C1 * rk[RKSTART].g_az[i] + C2 * rk[RKFIRST].g_az[i] + C3 * rk[RKSECOND].g_az[i]);
 #endif
 
-        p.x[i] = rk[RKSTART].x[i] + dt/6.0 * (c1 * rk[RKSTART].dxdt[i] + c2 * rk[RKFIRST].dxdt[i] + c3 * rk[RKSECOND].dxdt[i]);
+        p.x[i] = rk[RKSTART].x[i] + dt/6.0 * (C1 * rk[RKSTART].dxdt[i] + C2 * rk[RKFIRST].dxdt[i] + C3 * rk[RKSECOND].dxdt[i]);
 #if DIM > 1
-        p.y[i] = rk[RKSTART].y[i] + dt/6.0 * (c1 * rk[RKSTART].dydt[i] + c2 * rk[RKFIRST].dydt[i] + c3 * rk[RKSECOND].dydt[i]);
+        p.y[i] = rk[RKSTART].y[i] + dt/6.0 * (C1 * rk[RKSTART].dydt[i] + C2 * rk[RKFIRST].dydt[i] + C3 * rk[RKSECOND].dydt[i]);
 #endif
 #if DIM > 2
-        p.z[i] = rk[RKSTART].z[i] + dt/6.0 * (c1 * rk[RKSTART].dzdt[i] + c2 * rk[RKFIRST].dzdt[i] + c3 * rk[RKSECOND].dzdt[i]);
+        p.z[i] = rk[RKSTART].z[i] + dt/6.0 * (C1 * rk[RKSTART].dzdt[i] + C2 * rk[RKFIRST].dzdt[i] + C3 * rk[RKSECOND].dzdt[i]);
 #endif
 
         /* remember some more values */

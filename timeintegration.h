@@ -120,5 +120,13 @@ __global__ void symmetrizeStress(void);
 // factor for limiting timestep based on local forces/acceleration
 #define FORCES_FACT 0.2
 
+// Runge-Kutta constants
+#define B21 0.5
+#define B31 -1.0
+#define B32 2.0
+#define C1 1.0
+#define C2 4.0
+#define C3 1.0
+
 
 #endif
