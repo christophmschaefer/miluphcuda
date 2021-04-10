@@ -49,7 +49,6 @@ extern __device__ double maxEnergyAbsError;
 extern __device__ double maxPressureAbsChange;
 extern __device__ double maxDamageTimeStep;
 extern __device__ double maxalphaDiff;
-extern __constant__ double safety;
 
 __constant__ __device__ double rk_epsrel_d;
 
@@ -1120,12 +1119,8 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
     double tmp_vel2 = 0.0;
     double tmp_pos = 0.0;
     double tmp_pos2 = 0.0;
-
-// parameter for the adaptive time integration
     double min_pos_change_rk2 = 0.0;
-#define TINY_RK2 1e-30
-#define MIN_VEL_CHANGE_RK2 1e100
-#define RK2_LOCATION_SAFETY 0.1
+
 
 #if GRAVITATING_POINT_MASSES
     // loop for pointmasses
@@ -1341,10 +1336,10 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
             }
             if (temp > 1) { // error too large
                 errorSmallEnough = FALSE;
-                dtNew = max(0.1*dt, dt*safety*pow(temp,-0.25));
+                dtNew = max( 0.1*dt, dt*RK2_TIMESTEP_SAFETY*pow(temp,-0.25) );
             } else { // error small enough
                 errorSmallEnough = TRUE;
-                dtNew = dt * safety * pow(temp, -0.3);
+                dtNew = dt * RK2_TIMESTEP_SAFETY * pow(temp, -0.3);
 #if PALPHA_POROSITY
 				// do not increase more than 1.1 times in the porous case
  				if (dtNew > 1.1 * dt) {

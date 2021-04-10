@@ -47,7 +47,6 @@ pthread_t fileIOthread;
 
 double L_ini = 0.0;
 
-__constant__ double safety = 0.9;
 __device__ double maxPosAbsError;
 __device__ double maxVelAbsError;
 __device__ int movingparticles = 0;

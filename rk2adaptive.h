@@ -28,6 +28,13 @@
 #include "timeintegration.h"
 
 
+/* integration parameters */
+#define TINY_RK2 1e-30
+#define MIN_VEL_CHANGE_RK2 1e100
+#define RK2_LOCATION_SAFETY 0.1
+#define RK2_TIMESTEP_SAFETY 0.9
+
+
 void rk2Adaptive();
 
 __global__ void integrateFirstStep(void);
