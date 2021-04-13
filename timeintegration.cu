@@ -83,8 +83,8 @@ int flag_force_gravity_calc = 0;
 double currentTime;
 double startTime;
 double h5time;
-__device__ double dt;
-__device__ double dtmax;
+__device__ double dt;   // timestep on the device
+__device__ double dtmax;    // max allowed timestep (either from cmd-line or output timestep)
 __device__ double endTimeD, currentTimeD;
 __device__ double substep_currentTimeD;
 

@@ -2810,9 +2810,9 @@ void *write_timestep(void *argument)
 {
     int timestep = *((int *) argument);
     if (timestep < 0) {
-        fprintf(stderr, "special write because SIGTERM received...\n");
+        fprintf(stderr, "Special write because SIGTERM received...\n");
     }
-    fprintf(stderr, "start printing %d \n", timestep+1);
+    fprintf(stdout, "Writing output step %d to file...\n", timestep+1);
     // last occurrence of .
     char *pch;
     pch = strrchr(inputFile.name, '.');
@@ -2841,7 +2841,8 @@ void *write_timestep(void *argument)
     if (timestep < 0) exit(0);
 
     //pthread_exit((void*) argument);
-    fprintf(stderr, "end printing %d \n", timestep+1);
+    if( param.verbose )
+        fprintf(stdout, "Finished writing output step %d.\n", timestep+1);
     currentDiskIO = FALSE;
     free(argument);
     return NULL;

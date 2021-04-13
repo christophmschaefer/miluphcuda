@@ -33,6 +33,7 @@
 #define MIN_VEL_CHANGE_RK2 1e100
 #define RK2_LOCATION_SAFETY 0.1
 #define RK2_TIMESTEP_SAFETY 0.9
+#define SMALLEST_DT_ALLOWED 1e-30
 
 
 void rk2Adaptive();

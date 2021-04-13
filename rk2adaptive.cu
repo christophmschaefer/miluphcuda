@@ -69,8 +69,6 @@ void rk2Adaptive()
     double dt_alphanew = 0;
     double dt_alphaold = 0;
 #endif
-    double *maxPosAbsErrorPerBlock;
-    double *maxVelAbsErrorPerBlock;
 #if FRAGMENTATION
     double dt_damagenew = 0;
     double dt_damageold = 0;
@@ -80,6 +78,7 @@ void rk2Adaptive()
     cudaVerify(cudaMemcpyToSymbol(rk_epsrel_d, &param.rk_epsrel, sizeof(double)));
 
     // allocate memory for runge kutta second order
+    double *maxPosAbsErrorPerBlock, *maxVelAbsErrorPerBlock;
     cudaVerify(cudaMalloc((void**)&maxPosAbsErrorPerBlock, sizeof(double)*numberOfMultiprocessors));
     cudaVerify(cudaMalloc((void**)&maxVelAbsErrorPerBlock, sizeof(double)*numberOfMultiprocessors));
 #if INTEGRATE_DENSITY
@@ -117,6 +116,8 @@ void rk2Adaptive()
     cudaVerify(cudaMemcpyToSymbol(rk_pointmass, &rk_pointmass_device, sizeof(struct Pointmass) * 3));
 #endif
 
+    cudaVerify(cudaDeviceSynchronize());
+
     int lastTimestep = startTimestep + numberOfTimesteps;
     int timestep;
     int nsteps_cnt = 0;
@@ -125,16 +126,16 @@ void rk2Adaptive()
     double endTime = startTime;
     double substep_currentTime;
 
-    cudaVerify(cudaDeviceSynchronize());
-
     cudaVerify(cudaMemcpyToSymbol(currentTimeD, &currentTime, sizeof(double)));
 
     // loop over (output) timesteps
     for (timestep = startTimestep; timestep < lastTimestep; timestep++) {
-        fprintf(stderr, "calculating step %d\n", timestep);
-        fprintf(stdout, "\nstep %d / %d\n", timestep, lastTimestep);
+        fprintf(stdout, "\nStart integrating output step %d/%d...\n", timestep, lastTimestep);
         endTime += timePerStep;
-        fprintf(stdout, "currenttime: %e \t endtime: %e\n", currentTime, endTime);
+        fprintf(stdout, "current time: %e \t end time: %e\n", currentTime, endTime);
+        cudaVerify(cudaMemcpyToSymbol(endTimeD, &endTime, sizeof(double)));
+
+        // set first dt
         if (nsteps_cnt == 0) {
             if (timePerStep > param.firsttimestep && param.firsttimestep > 0) {
                 cudaVerify(cudaMemcpyToSymbol(dt, &param.firsttimestep, sizeof(double)));
@@ -145,14 +146,13 @@ void rk2Adaptive()
             } else {
                 cudaVerify(cudaMemcpyToSymbol(dt, &timePerStep, sizeof(double)));
             }
-            if (param.verbose) fprintf(stdout, "Starting with timestep %.17e\n", dt_host_old);
+            if (param.verbose) fprintf(stdout, "starting with timestep %.17e\n", dt_host_old);
         } else {
-            cudaVerify(cudaMemcpyToSymbol(dt, &dt_host_old, sizeof(double)));
             dt_host = dt_host_old;
-            if (param.verbose) fprintf(stdout, "Continuing with timestep %.17e\n", dt_host_old);
+            cudaVerify(cudaMemcpyToSymbol(dt, &dt_host, sizeof(double)));
+            if (param.verbose) fprintf(stdout, "continuing with timestep %.17e\n", dt_host_old);
         }
         nsteps_cnt++;
-        cudaVerify(cudaMemcpyToSymbol(endTimeD, &endTime, sizeof(double)));
 
         // checking for changes in angular momentum
         if (param.angular_momentum_check > 0) {
@@ -201,7 +201,7 @@ void rk2Adaptive()
                                 maxDamageTimeStepPerBlock)));
             cudaVerify(cudaMemcpyFromSymbol(&dt_damagenew, dt, sizeof(double)));
             if (dt_damagenew < dt_damageold && param.verbose) {
-                fprintf(stdout, "current time: %e \t\t reducing timestep due to damage evolution from suggested time step %g to %g\n", currentTime, dt_damageold, dt_damagenew);
+                fprintf(stdout, "reducing timestep due to damage evolution from %g to %g (current time: %e)\n", dt_damageold, dt_damagenew, currentTime);
                 dt_host = dt_damagenew;
                 dt_host_old = dt_host;
             }
@@ -220,7 +220,6 @@ void rk2Adaptive()
                 copy_gravitational_accels_device_to_device(&rk_device[RKSTART], &rk_device[RKFIRST]);
             }
 
-#define SMALLEST_DT_ALLOWED 1e-30
             // integrate with adaptive timestep and break loop once acceptable
             while (TRUE) {
                 cudaVerify(cudaDeviceSynchronize());
@@ -229,16 +228,17 @@ void rk2Adaptive()
                 //    q_n + 0.5*h*k1
                 // and store quantities in [RKFIRST]
                 cudaVerifyKernel((integrateFirstStep<<<numberOfMultiprocessors, NUM_THREADS_RK2_INTEGRATE_STEP>>>()));
-
                 cudaVerify(cudaDeviceSynchronize());
                 
-                // get derivatives for second step (i.e., compute k2)
-                // this happens at t = t0 + h/2
+                // check for SMALLEST_DT_ALLOWED
                 cudaVerify(cudaMemcpyFromSymbol(&dt_host, dt, sizeof(double)));
                 if (dt_host < SMALLEST_DT_ALLOWED) {
                     fprintf(stderr, "Timestep is smaller than SMALLEST_DT_ALLOWED. Stopping here.\n");
                     exit(1);
                 }
+
+                // get derivatives for second step (i.e., compute k2)
+                // this happens at t = t0 + h/2
                 substep_currentTime = currentTime + dt_host*0.5;
                 cudaVerify(cudaMemcpyToSymbol(substep_currentTimeD, &substep_currentTime, sizeof(double)));
                 cudaVerify(cudaMemcpyToSymbol(p, &rk_device[RKFIRST], sizeof(struct Particle)));
@@ -246,14 +246,12 @@ void rk2Adaptive()
                 cudaVerify(cudaMemcpyToSymbol(pointmass, &rk_pointmass_device[RKFIRST], sizeof(struct Pointmass)));
 #endif
                 rightHandSide();
-
                 cudaVerify(cudaDeviceSynchronize());
 
                 // compute
                 //    q_n - h*k1 + 2*h*k2
                 // and store quantities in [RKSECOND]
                 cudaVerifyKernel((integrateSecondStep<<<numberOfMultiprocessors, NUM_THREADS_RK2_INTEGRATE_STEP>>>()));
-
                 cudaVerify(cudaDeviceSynchronize());
 
                 if (param.selfgravity) {
@@ -269,7 +267,6 @@ void rk2Adaptive()
                 substep_currentTime = currentTime + dt_host;
                 cudaVerify(cudaMemcpyToSymbol(substep_currentTimeD, &substep_currentTime, sizeof(double)));
                 rightHandSide();
-
                 cudaVerify(cudaDeviceSynchronize());
 
                 // compute
@@ -280,12 +277,10 @@ void rk2Adaptive()
                 cudaVerify(cudaMemcpyToSymbol(pointmass, &pointmass_device, sizeof(struct Pointmass)));
 #endif
                 cudaVerifyKernel((integrateThirdStep<<<numberOfMultiprocessors, NUM_THREADS_RK2_INTEGRATE_STEP>>>()));
-
                 cudaVerify(cudaDeviceSynchronize());
 
                 // calculate errors
-                // following Stephen Oxley 1999, Modelling the Capture Theory for the
-                // Origin of Planetary Systems
+                // following Stephen Oxley 1999, Modelling the Capture Theory for the Origin of Planetary Systems
                 cudaVerifyKernel((checkError<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(
                                 maxPosAbsErrorPerBlock, maxVelAbsErrorPerBlock
 #if INTEGRATE_DENSITY
