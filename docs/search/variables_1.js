@@ -1,8 +1,5 @@
 var searchData=
 [
-  ['b21',['b21',['../rk2adaptive_8cu.html#aaf49278d2fbf81b32d249091f94473a4',1,'b21():&#160;timeintegration.cu'],['../rk4__pointmass_8cu.html#aaf49278d2fbf81b32d249091f94473a4',1,'b21():&#160;timeintegration.cu'],['../timeintegration_8cu.html#aaf49278d2fbf81b32d249091f94473a4',1,'b21():&#160;timeintegration.cu']]],
-  ['b31',['b31',['../rk2adaptive_8cu.html#a3f7a4dfdf123050bc614334e4f19a948',1,'b31():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a3f7a4dfdf123050bc614334e4f19a948',1,'b31():&#160;timeintegration.cu']]],
-  ['b32',['b32',['../rk2adaptive_8cu.html#af4ae9eef865b52d13fb8d22fae5ca768',1,'b32():&#160;timeintegration.cu'],['../rk4__pointmass_8cu.html#af4ae9eef865b52d13fb8d22fae5ca768',1,'b32():&#160;timeintegration.cu'],['../timeintegration_8cu.html#af4ae9eef865b52d13fb8d22fae5ca768',1,'b32():&#160;timeintegration.cu']]],
   ['betamin',['betamin',['../config__parameter_8cu.html#aebd45078a3f9e0f4c91d74adfab08f9f',1,'betamin():&#160;config_parameter.cu'],['../io_8cu.html#aebd45078a3f9e0f4c91d74adfab08f9f',1,'betamin():&#160;config_parameter.cu']]],
   ['betamin_5fd',['betamin_d',['../config__parameter_8cu.html#a93aa0ff62d8867ed92d404ff98d90647',1,'betamin_d():&#160;config_parameter.cu'],['../coupled__heun__rk4__sph__nbody_8cu.html#a93aa0ff62d8867ed92d404ff98d90647',1,'betamin_d():&#160;config_parameter.cu'],['../predictor__corrector_8cu.html#a93aa0ff62d8867ed92d404ff98d90647',1,'betamin_d():&#160;config_parameter.cu'],['../predictor__corrector__euler_8cu.html#a93aa0ff62d8867ed92d404ff98d90647',1,'betamin_d():&#160;config_parameter.cu']]],
   ['binarysystemfilename',['binarysystemfilename',['../struct_run_parameter.html#afb0944db628fab1247df659b514102e7',1,'RunParameter']]],

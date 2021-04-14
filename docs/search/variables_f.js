@@ -1,7 +1,6 @@
 var searchData=
 [
   ['s',['S',['../struct_particle.html#a06dcf6021acf16eae05f211ba5898855',1,'Particle']]],
-  ['safety',['safety',['../rk2adaptive_8cu.html#a42b157bdae8a71c3b5e55009e725fa7a',1,'safety():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a42b157bdae8a71c3b5e55009e725fa7a',1,'safety():&#160;timeintegration.cu']]],
   ['scale_5fheight',['scale_height',['../config__parameter_8cu.html#abecd46b516de41fd974cb4b7e1d96fb6',1,'scale_height():&#160;config_parameter.cu'],['../config__parameter_8h.html#abecd46b516de41fd974cb4b7e1d96fb6',1,'scale_height():&#160;config_parameter.cu']]],
   ['selfgravity',['selfgravity',['../struct_run_parameter.html#a6d5502005c48b3d5f16f0a047918ffb2',1,'RunParameter']]],
   ['sigma',['sigma',['../struct_particle.html#a7492d53cea5f3254f278fd3907f19206',1,'Particle']]],

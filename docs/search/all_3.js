@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['c1',['c1',['../rk2adaptive_8cu.html#a5bf8dbaf4c05389d6c9f5ab6fa8ceae4',1,'c1():&#160;timeintegration.cu'],['../rk4__pointmass_8cu.html#a5bf8dbaf4c05389d6c9f5ab6fa8ceae4',1,'c1():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a5bf8dbaf4c05389d6c9f5ab6fa8ceae4',1,'c1():&#160;timeintegration.cu']]],
-  ['c2',['c2',['../rk2adaptive_8cu.html#a66b4bb7d81572df6a3636b9f352d639a',1,'c2():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a66b4bb7d81572df6a3636b9f352d639a',1,'c2():&#160;timeintegration.cu']]],
-  ['c3',['c3',['../rk2adaptive_8cu.html#a50b23ce5af25665980909f6389da6ab2',1,'c3():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a50b23ce5af25665980909f6389da6ab2',1,'c3():&#160;timeintegration.cu']]],
+  ['c1',['C1',['../timeintegration_8h.html#a44779f18d87e71c78fc9fbf9dc88537d',1,'timeintegration.h']]],
+  ['c2',['C2',['../timeintegration_8h.html#ad6fc13322a4f1c314332ff34aa8b3fa0',1,'timeintegration.h']]],
+  ['c3',['C3',['../timeintegration_8h.html#a58aba30d6a33889c81827a54620dd5d9',1,'timeintegration.h']]],
   ['calcdivvandcurlv',['CalcDivvandCurlv',['../kernel_8h.html#a574755ce5da7bc304ea1752e5e3d125b',1,'kernel.h']]],
   ['calculate_5fall_5feigenvalues',['calculate_all_eigenvalues',['../linalg_8cu.html#a3fa9133c1c4bcf51f1dc6151e608d5b3',1,'calculate_all_eigenvalues(double M[DIM][DIM], double eigenvalues[DIM], double v[DIM][DIM]):&#160;linalg.cu'],['../linalg_8h.html#a2254477b3a2ad5b59fc68f8c1b0551c9',1,'calculate_all_eigenvalues(double M[DIM][DIM], double eigenvals[DIM], double v[DIM][DIM]):&#160;linalg.cu']]],
   ['calculate_5fangular_5fmomentum',['calculate_angular_momentum',['../timeintegration_8cu.html#aacee04f8bf23d8594794f6952451678c',1,'calculate_angular_momentum(void):&#160;timeintegration.cu'],['../timeintegration_8h.html#aacee04f8bf23d8594794f6952451678c',1,'calculate_angular_momentum(void):&#160;timeintegration.cu']]],
