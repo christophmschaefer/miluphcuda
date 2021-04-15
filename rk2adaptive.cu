@@ -131,13 +131,14 @@ void rk2Adaptive()
     // loop over output steps
     for (timestep = startTimestep; timestep < lastTimestep; timestep++) {
         endTime += timePerStep;
+        assert(endTime > currentTime);
         cudaVerify(cudaMemcpyToSymbol(endTimeD, &endTime, sizeof(double)));
         fprintf(stdout, "\nStart integrating output step %d / %d from time %e to %e...\n",
                 timestep+1, lastTimestep, currentTime, endTime);
 
         // set first dt for this output step
         if (nsteps_cnt == 0) {
-            if (timePerStep > param.firsttimestep && param.firsttimestep > 0) {
+            if (param.firsttimestep > 0 && timePerStep > param.firsttimestep) {
                 dt_host = dt_suggested = param.firsttimestep;
             } else if (timePerStep > param.maxtimestep) {
                 dt_host = dt_suggested = param.maxtimestep;
@@ -148,10 +149,13 @@ void rk2Adaptive()
                 fprintf(stdout, "starting with timestep: %e\n", dt_host);
         } else {
             dt_host = dt_suggested;   // use previously suggested next timestep as starting point
+            if (dt_host > timePerStep)
+                dt_host = timePerStep;
             if (param.verbose)
                 fprintf(stdout, "continuing with timestep: %e\n", dt_host);
         }
         assert(dt_host > 0);
+        assert(dt_host <= timePerStep);
         cudaVerify(cudaMemcpyToSymbol(dt, &dt_host, sizeof(double)));
         nsteps_cnt++;
 
@@ -502,7 +506,6 @@ __global__ void limitTimestep(double *forcesPerBlock , double *courantPerBlock)
             printf("<limitTimestep> max allowed timestep due to CFL is %g, due to forces/accels is %g, set timestep to %g\n",
                     COURANT_FACT*courant, FORCES_FACT*forces, dt);
 #endif
-            dt = min(dt, endTimeD - currentTimeD);
             if (dt > dtmax) {
 #if DEBUG_TIMESTEP
                 printf("<limitTimestep> timestep %g is larger than max user-allowed timestep, reducing to %g\n", dt, dtmax);
@@ -1000,12 +1003,8 @@ __global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock)
                     printf("<damageMaxTimeStep> timestep %g is larger than maximum timestep %g, reducing to %g\n", dtsuggested, dtmax, dtmax);
                     dtsuggested = dtmax;
                 }
-                if (dtsuggested < dt) {
+                if (dtsuggested < dt)
                     dt = dtsuggested;
-                    if (currentTimeD+dt > endTimeD) {
-                        dt = endTimeD - currentTimeD;
-                    }
-                }
             }
         }
     }
