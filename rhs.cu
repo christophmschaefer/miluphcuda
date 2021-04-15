@@ -177,9 +177,6 @@ void rightHandSide()
     cudaVerify(cudaMemset(childListd, EMPTY, memorySizeForChildren));
     cudaVerify(cudaDeviceSynchronize());
 
-    if (param.verbose)
-        fprintf(stdout, "rhs call\n");
-
     // zero all accelerations
 #if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
