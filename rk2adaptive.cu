@@ -201,9 +201,11 @@ void rk2Adaptive()
             cudaVerifyKernel((damageMaxTimeStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(
                                 maxDamageTimeStepPerBlock)));
             cudaVerify(cudaMemcpyFromSymbol(&dt_damagenew, dt, sizeof(double)));
-            if (dt_damagenew < dt_damageold && param.verbose) {
-                fprintf(stdout, "reducing timestep due to damage evolution from %g to %g (current time: %e)\n", dt_damageold, dt_damagenew, currentTime);
+            if (dt_damagenew < dt_damageold) {
                 dt_host = dt_suggested = dt_damagenew;
+                if (param.verbose)
+                    fprintf(stdout, "reducing timestep due to damage evolution from %g to %g (current time: %e)\n",
+                            dt_damageold, dt_damagenew, currentTime);
             }
 #endif
 
