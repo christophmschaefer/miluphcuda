@@ -121,37 +121,38 @@ void rk2Adaptive()
     int lastTimestep = startTimestep + numberOfTimesteps;
     int timestep;
     int nsteps_cnt = 0;
-    double dt_host_old = timePerStep;
+    double dt_suggested = timePerStep;
     currentTime = startTime;
     double endTime = startTime;
     double substep_currentTime;
 
     cudaVerify(cudaMemcpyToSymbol(currentTimeD, &currentTime, sizeof(double)));
 
-    // loop over (output) timesteps
+    // loop over output steps
     for (timestep = startTimestep; timestep < lastTimestep; timestep++) {
         fprintf(stdout, "\nStart integrating output step %d/%d...\n", timestep, lastTimestep);
         endTime += timePerStep;
-        fprintf(stdout, "current time: %e \t end time: %e\n", currentTime, endTime);
+        fprintf(stdout, "current time: %e\t end time: %e\n", currentTime, endTime);
         cudaVerify(cudaMemcpyToSymbol(endTimeD, &endTime, sizeof(double)));
 
-        // set first dt
+        // set first dt for this output step
         if (nsteps_cnt == 0) {
             if (timePerStep > param.firsttimestep && param.firsttimestep > 0) {
-                cudaVerify(cudaMemcpyToSymbol(dt, &param.firsttimestep, sizeof(double)));
-                dt_host_old = param.firsttimestep;
+                dt_host = dt_suggested = param.firsttimestep;
             } else if (timePerStep > param.maxtimestep) {
-                cudaVerify(cudaMemcpyToSymbol(dt, &param.maxtimestep, sizeof(double)));
-                dt_host_old = param.maxtimestep;
+                dt_host = dt_suggested = param.maxtimestep;
             } else {
-                cudaVerify(cudaMemcpyToSymbol(dt, &timePerStep, sizeof(double)));
+                dt_host = dt_suggested = timePerStep;
             }
-            if (param.verbose) fprintf(stdout, "starting with timestep %.17e\n", dt_host_old);
+            if (param.verbose)
+                fprintf(stdout, "starting with timestep: %e\n", dt_host);
         } else {
-            dt_host = dt_host_old;
-            cudaVerify(cudaMemcpyToSymbol(dt, &dt_host, sizeof(double)));
-            if (param.verbose) fprintf(stdout, "continuing with timestep %.17e\n", dt_host_old);
+            dt_host = dt_suggested;   // use previously suggested next timestep as starting point
+            if (param.verbose)
+                fprintf(stdout, "continuing with timestep: %e\n", dt_host);
         }
+        assert(dt_host > 0);
+        cudaVerify(cudaMemcpyToSymbol(dt, &dt_host, sizeof(double)));
         nsteps_cnt++;
 
         // checking for changes in angular momentum
@@ -202,8 +203,7 @@ void rk2Adaptive()
             cudaVerify(cudaMemcpyFromSymbol(&dt_damagenew, dt, sizeof(double)));
             if (dt_damagenew < dt_damageold && param.verbose) {
                 fprintf(stdout, "reducing timestep due to damage evolution from %g to %g (current time: %e)\n", dt_damageold, dt_damagenew, currentTime);
-                dt_host = dt_damagenew;
-                dt_host_old = dt_host;
+                dt_host = dt_suggested = dt_damagenew;
             }
 #endif
 
@@ -233,7 +233,7 @@ void rk2Adaptive()
                 // check for SMALLEST_DT_ALLOWED
                 cudaVerify(cudaMemcpyFromSymbol(&dt_host, dt, sizeof(double)));
                 if (dt_host < SMALLEST_DT_ALLOWED) {
-                    fprintf(stderr, "Timestep is smaller than SMALLEST_DT_ALLOWED. Stopping here.\n");
+                    fprintf(stderr, "Timestep %e is below SMALLEST_DT_ALLOWED. Stopping here.\n", dt_host);
                     exit(1);
                 }
 
@@ -304,15 +304,13 @@ void rk2Adaptive()
                 /* special checks for the convergence of the p(alpha) crush curve stuff */
                 if (errorSmallEnough_host) {
                     dt_alphaold = dt_host;
-                    //cudaVerify(cudaDeviceSynchronize());
-                    //cudaVerify(cudaMemcpyFromSymbol(&dt_alphaold, dtNewErrorCheck, sizeof(double)));
                     /* checking if the distention change is within the set limit */
                     cudaVerifyKernel((alphaMaxTimeStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(
                                     maxalphaDiffPerBlock
                     )));
                     cudaVerify(cudaMemcpyFromSymbol(&dt_alphanew, dtNewAlphaCheck, sizeof(double)));
                     if (dt_alphanew < dt_alphaold && param.verbose && dt_alphanew > 0) {
-                        fprintf(stdout, "current time step: %e is too large for distention. lowering it to %e\n", dt_alphaold, dt_alphanew);
+                        fprintf(stdout, "current timestep %e is too large for distention; reducing to %e\n", dt_alphaold, dt_alphanew);
                     }
                 }
                 dtNewAlphaCheck_host = -1.0;
@@ -327,6 +325,7 @@ void rk2Adaptive()
                     cudaVerifyKernel((BoundaryConditionsAfterIntegratorStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(interactions)));
                 }
 
+                /* print information about errors */
                 double errPos, errVel, errDensity, errEnergy = 0;
                 cudaVerify(cudaMemcpyFromSymbol(&errPos, maxPosAbsError, sizeof(double)));
                 cudaVerify(cudaMemcpyFromSymbol(&errVel, maxVelAbsError, sizeof(double)));
@@ -338,52 +337,52 @@ void rk2Adaptive()
 #endif
                 cudaVerify(cudaDeviceSynchronize());
                 if (param.verbose)
-                    fprintf(stdout, "total relative max error: %g (locations: %e, velocities: %e, density: %e, energy: %e) with timestep %e\n",
+                    fprintf(stdout, "total relative max error: %g (locations: %e, velocities: %e, density: %e, energy: %e) with timestep: %e\n",
                             max(max(errPos, errVel), errDensity) / param.rk_epsrel, errPos, errVel, errDensity, errEnergy, dt_host);
-
 #if PALPHA_POROSITY
                 if (param.verbose)
-                    fprintf(stdout, "Current time: %g \t dt: %g \t dtNewErrorCheck: %g \t dtNewAlphaCheck: %g \n",
+                    fprintf(stdout, "current time: %g\t dt: %g\t dtNewErrorCheck: %g\t dtNewAlphaCheck: %g\n",
                             currentTime, dt_host, dtNewErrorCheck_host, dtNewAlphaCheck_host);
 #endif
-                /* set new time step for next step */
+
+                /* set new timestep for next step */
 #if PALPHA_POROSITY
-                dt_host_old = dt_host;
                 if (dtNewAlphaCheck_host <= 0) {
-                    dt_host = dtNewErrorCheck_host;
+                    dt_suggested = dtNewErrorCheck_host;
                 } else {
-                    dt_host = min(dtNewErrorCheck_host, dtNewAlphaCheck_host);
+                    dt_suggested = min(dtNewErrorCheck_host, dtNewAlphaCheck_host);
                 }
 #else
-                dt_host_old = dt_host;
-                dt_host = dtNewErrorCheck_host;
+                dt_suggested = dtNewErrorCheck_host;
 #endif
-                /* check if time step is too large */
-                /* and lower if necessary */
-                if (currentTime + dt_host > endTime) {
-                    dt_host_old = dt_host;
+                assert(dt_suggested > 0);
+                if (currentTime + dt_suggested > endTime) {
+                    /* if suggested next timestep would overshoot, reduce it */
                     dt_host = endTime - currentTime;
+                    if( param.verbose )
+                        fprintf(stdout, "next timestep would overshoot output time, reduced from suggested %e to %e\n", dt_suggested, dt_host);
+                } else {
+                    /* otherwise use suggested timestep for next step */
+                    dt_host = dt_suggested;
                 }
 
-                cudaVerify(cudaDeviceSynchronize());
-                /* tell the gpu the new time step size and the current time */
+                /* tell the gpu the new timestep and the current time */
                 cudaVerify(cudaMemcpyToSymbol(currentTimeD, &currentTime, sizeof(double)));
                 cudaVerify(cudaMemcpyToSymbol(dt, &dt_host, sizeof(double)));
+
+                /* break loop if timestep was successful, otherwise set stage for next adaptive round */
                 if (errorSmallEnough_host) {
-                    cudaVerify(cudaMemcpyFromSymbol(&currentTime, currentTimeD, sizeof(double)));
-                    //step was successful --> do something (e.g. look for min/max pressure...)
-                    afterIntegrationStep();
+                    afterIntegrationStep();   // do something after successful step (e.g. look for min/max pressure...)
                     if (param.verbose) {
-                        fprintf(stdout, "last error small enough: current time %.17e  with timestep %.17e new timestep %.17e, time to next output is %.17e  \n",
-                                currentTime, dt_host_old, dt_host, endTime-currentTime);
+                        fprintf(stdout, "error small enough, timestep accepted:\t current time: %e\t next timestep: %e\t time to next output: %e\n",
+                                currentTime, dt_host, endTime-currentTime);
                     }
-                    break; // break while(true) -> continue with next timestep
+                    break; // break while(TRUE) and continue with next timestep
                 } else {
-                    // integration not successful, dt has been lowered, try another round
-                    if (param.verbose) {
-                        fprintf(stdout, "error too large >>>>>>>>>>>> current time: %e timestep lowered to %e\n", currentTime, dt_host);
-                    }
-                    // copy back the initial values of particles
+                    if (param.verbose)
+                        fprintf(stdout, "error too large, timestep rejected:\t current time: %e\t timestep lowered to: %e\n",
+                                currentTime, dt_host);
+                    // copy back the initial values of the particles
                     copy_particles_variables_device_to_device(&rk_device[RKFIRST], &rk_device[RKSTART]);
                     copy_particles_derivatives_device_to_device(&rk_device[RKFIRST], &rk_device[RKSTART]);
 #if GRAVITATING_POINT_MASSES
@@ -403,6 +402,7 @@ void rk2Adaptive()
 #endif
         copyToHostAndWriteToFile(timestep, lastTimestep);
     } // timestep loop
+
 
     // free memory
     int free_immutables = 0;
