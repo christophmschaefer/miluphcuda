@@ -130,10 +130,10 @@ void rk2Adaptive()
 
     // loop over output steps
     for (timestep = startTimestep; timestep < lastTimestep; timestep++) {
-        fprintf(stdout, "\nStart integrating output step %d/%d...\n", timestep, lastTimestep);
         endTime += timePerStep;
-        fprintf(stdout, "current time: %e\t end time: %e\n", currentTime, endTime);
         cudaVerify(cudaMemcpyToSymbol(endTimeD, &endTime, sizeof(double)));
+        fprintf(stdout, "\nStart integrating output step %d / %d from time %e to %e...\n",
+                timestep+1, lastTimestep, currentTime, endTime);
 
         // set first dt for this output step
         if (nsteps_cnt == 0) {
@@ -343,7 +343,7 @@ void rk2Adaptive()
                             max(max(errPos, errVel), errDensity) / param.rk_epsrel, errPos, errVel, errDensity, errEnergy, dt_host);
 #if PALPHA_POROSITY
                 if (param.verbose)
-                    fprintf(stdout, "current time: %g\t dt: %g\t dtNewErrorCheck: %g\t dtNewAlphaCheck: %g\n",
+                    fprintf(stdout, "current time: %g   dt: %g   dtNewErrorCheck: %g   dtNewAlphaCheck: %g\n",
                             currentTime, dt_host, dtNewErrorCheck_host, dtNewAlphaCheck_host);
 #endif
 
@@ -376,13 +376,13 @@ void rk2Adaptive()
                 if (errorSmallEnough_host) {
                     afterIntegrationStep();   // do something after successful step (e.g. look for min/max pressure...)
                     if (param.verbose) {
-                        fprintf(stdout, "error small enough, timestep accepted:\t current time: %e\t next timestep: %e\t time to next output: %e\n",
+                        fprintf(stdout, "error small enough, timestep accepted, current time: %e   next timestep: %e   time to next output: %e\n",
                                 currentTime, dt_host, endTime-currentTime);
                     }
                     break; // break while(TRUE) and continue with next timestep
                 } else {
                     if (param.verbose)
-                        fprintf(stdout, "error too large, timestep rejected:\t current time: %e\t timestep lowered to: %e\n",
+                        fprintf(stdout, "error too large, timestep rejected, current time: %e   timestep lowered to: %e\n",
                                 currentTime, dt_host);
                     // copy back the initial values of the particles
                     copy_particles_variables_device_to_device(&rk_device[RKFIRST], &rk_device[RKSTART]);
