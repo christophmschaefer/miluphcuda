@@ -740,8 +740,8 @@ int init_allocate_memory(void)
         numberOfNodes++;
 
 	if (param.verbose) {
-        printf("allocating memory for %d particles ...\n", numberOfParticles);
-	    printf("allocating memory for %d pointmasses...\n", numberOfPointmasses);
+        fprintf(stdout, "\nAllocating memory for %d particles...\n", numberOfParticles);
+	    fprintf(stdout, "Allocating memory for %d pointmasses...\n", numberOfPointmasses);
         fprintf(stdout, "Number of nodes of tree: %d\n", numberOfNodes);
     }
 
@@ -1072,8 +1072,9 @@ int init_allocate_memory(void)
 int copy_particle_data_to_device()
 {
     int rc = 0;
-	// copy particle data to device
-	if (param.verbose) printf("copying particle data to device ...\n");
+
+	if (param.verbose)
+        fprintf(stdout, "\nCopying particle data to device...\n");
 
 	cudaVerify(cudaMemcpy(p_device.x0, p_host.x, memorySizeForTree, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.x, p_host.x, memorySizeForTree, cudaMemcpyHostToDevice));
@@ -1180,10 +1181,11 @@ int copy_particle_data_to_device()
 
 int free_memory()
 {
-
     int rc = 0;
-	// free device memory
-	if (param.verbose) printf("freeing device memory...\n");
+
+	/* free device memory */
+	if (param.verbose)
+        fprintf(stdout, "Freeing device memory...\n");
 	cudaVerify(cudaFree(p_device.x));
 	cudaVerify(cudaFree(p_device.g_x));
 	cudaVerify(cudaFree(p_device.g_local_cellsize));
@@ -1409,8 +1411,9 @@ int free_memory()
     cudaVerify(cudaFree(p_device.depsilon_vdt));
 #endif
 
-	// free host memory
-	if (param.verbose) printf("freeing host memory...\n");
+	/* free host memory */
+	if (param.verbose)
+        fprintf(stdout, "Freeing host memory...\n");
 	cudaVerify(cudaFreeHost(p_host.x));
 	cudaVerify(cudaFreeHost(p_host.vx));
 	cudaVerify(cudaFreeHost(p_host.ax));
@@ -1486,8 +1489,6 @@ int free_memory()
     cudaVerify(cudaFreeHost(p_host.g_az));
 #endif
 
-    if (param.verbose)
-        printf("freeing ANEOS (global) host memory...\n");
     free_aneos_memory();
 
     return rc;

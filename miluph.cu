@@ -436,9 +436,9 @@ static void format_information(char *name)
 #endif
     fprintf(stdout, "\n");
 #if HDF5IO
-    fprintf(stdout, "output file format: (non-hdf5, for hdf5 use h5ls):\n");
+    fprintf(stdout, "output file format: (non-HDF5, for HDF5 use h5ls):\n");
 #else
-    fprintf(stdout, "output file format: only ascii since HDF5IO was not defined during compile time:\n");
+    fprintf(stdout, "output file format: only ASCII since HDF5IO was not defined during compile time:\n");
 #endif
 
     for (i = 0; i < DIM; i++)
@@ -551,9 +551,9 @@ static void format_information(char *name)
     fprintf(stdout, "%d:mass %d:rmin %d:rmax", DIM+DIM+1, DIM+DIM+2, DIM+DIM+3);
     fprintf(stdout, "\n");
 #if HDF5IO
-    fprintf(stdout, "output file format for <string.XXXX>.mass: (non-hdf5, for hdf5 use h5ls):\n");
+    fprintf(stdout, "output file format for <string.XXXX>.mass: (non-HDF5, for HDF5 use h5ls):\n");
 #else
-    fprintf(stdout, "output file format for <string.XXXX>.mass: only ascii since HDF5IO was not defined during compile time:\n");
+    fprintf(stdout, "output file format for <string.XXXX>.mass: only ASCII since HDF5IO was not defined during compile time:\n");
 #endif
     for (i = 0; i < DIM; i++) {
         fprintf(stdout, "%d:x[%d] ", i+1, i);
@@ -870,15 +870,15 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "********************** Error opening file %s\n", h5filename);
                 exit(1);
             } else {
-                fprintf(stdout, "\nUsing hdf5 input file %s\n", h5filename);
+                fprintf(stdout, "\nUsing HDF5 input file %s.\n", h5filename);
             }
 
             /* open the dataset for the positions */
             hid_t x_id = H5Dopen(file_id, "/x", H5P_DEFAULT);
             if (x_id < 0) {
-                fprintf(stderr, "Could not find locations in hdf5 file.  Exiting.\n");
+                fprintf(stderr, "Could not find locations in HDF5 file. Exiting...\n");
             }
-            /* determine number of particles stored in hdf5 file */
+            /* determine number of particles stored in HDF5 file */
             hid_t dspace = H5Dget_space(x_id);
             const int ndims = H5Sget_simple_extent_ndims(dspace);
             hsize_t dims[ndims];
@@ -934,15 +934,15 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "********************** Error opening file %s\n", h5filename);
                 exit(1);
             } else {
-                fprintf(stdout, "Using hdf5 input file %s\n", h5filename);
+                fprintf(stdout, "Using HDF5 input file %s.\n", h5filename);
             }
 
             /* open the dataset for the positions */
             hid_t x_id = H5Dopen(file_id, "/x", H5P_DEFAULT);
             if (x_id < 0) {
-                fprintf(stderr, "Could not find locations in hdf5 file.  Exiting.\n");
+                fprintf(stderr, "Could not find locations in HDF5 file. Exiting...\n");
             }
-            /* determine number of particles stored in hdf5 file */
+            /* determine number of particles stored in HDF5 file */
             hid_t dspace = H5Dget_space(x_id);
             const int ndims = H5Sget_simple_extent_ndims(dspace);
             hsize_t dims[ndims];
@@ -1098,8 +1098,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "There is no CUDA capable device. Exiting...\n");
         exit(-1);
     }
-    fprintf(stdout, "Found compute capability %d.%d (need at least 2.0)\n", deviceProp.major, deviceProp.minor);
-    fprintf(stdout, "Found #gpus %d: %s\n", cnt, deviceProp.name);
+    fprintf(stdout, "Found compute capability %d.%d (need at least 2.0).\n", deviceProp.major, deviceProp.minor);
+    fprintf(stdout, "Found #gpus: %d: %s\n", cnt, deviceProp.name);
     numberOfMultiprocessors = deviceProp.multiProcessorCount;
     fprintf(stdout, "Found cuda device with %d multiprocessors.\n", numberOfMultiprocessors);
 
@@ -1183,10 +1183,9 @@ int main(int argc, char *argv[])
     }
     fclose(conservedquantitiesfile);
 
-    /* if hdf5 output is enabled and no hdf5 input is set, write the ascii input file to hdf5 */
+    /* if HDF5 output is enabled and no hdf5 input is set, write the ASCII input file to HDF5 */
     if (param.hdf5output && !param.hdf5input) {
-        if (param.verbose)
-            fprintf(stdout, "Writing input ascii file to hdf5 %s.h5...\n", inputFile.name);
+        fprintf(stdout, "\nWriting input ASCII file to HDF5 %s.h5...\n", inputFile.name);
         int asciiflag = param.ascii_output;
         param.ascii_output = 0;
         h5time = startTime;
@@ -1194,25 +1193,19 @@ int main(int argc, char *argv[])
         param.ascii_output = asciiflag;
     }
 
-    if (param.verbose)
-        fprintf(stdout, "Simulation time start: %g\n", startTime);
-
     // run the thing
-    fprintf(stdout, "\nStarting time integration...\n\n");
+    fprintf(stdout, "\n\nStarting time integration from start time %e...\n\n", startTime);
     cudaProfilerStart();
     timeIntegration();
     cudaProfilerStop();
     fprintf(stdout, "\nTime integration finished.\n\n");
 
-    if (param.verbose)
-        fprintf(stdout, "Freeing memory...\n");
     free_memory();
 
-    if (param.verbose)
-        fprintf(stdout, "Resetting GPU...\n");
+    fprintf(stdout, "Resetting GPU...\n");
     cudaVerify(cudaDeviceReset());
 
-    fprintf(stdout, "kthxbye.\n");
+    fprintf(stdout, "\nkthxbye.\n");
 
     return 0;
 }

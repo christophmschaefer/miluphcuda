@@ -134,7 +134,7 @@ void rk2Adaptive()
         endTime += timePerStep;
         assert(endTime > currentTime);
         cudaVerify(cudaMemcpyToSymbol(endTimeD, &endTime, sizeof(double)));
-        fprintf(stdout, "\nStart integrating output step %d / %d from time %e to %e...\n",
+        fprintf(stdout, "\n\nStart integrating output step %d / %d from time %g to %g...\n",
                 timestep+1, lastTimestep, currentTime, endTime);
 
         // set first dt for this output step
@@ -147,13 +147,13 @@ void rk2Adaptive()
                 dt_host = dt_suggested = timePerStep;
             }
             if (param.verbose)
-                fprintf(stdout, "starting with timestep: %e\n", dt_host);
+                fprintf(stdout, "   starting with timestep: %e\n", dt_host);
         } else {
             dt_host = dt_suggested;   // use previously suggested next timestep as starting point
             if (dt_host > timePerStep)
                 dt_host = timePerStep;
             if (param.verbose)
-                fprintf(stdout, "continuing with timestep: %e\n", dt_host);
+                fprintf(stdout, "   continuing with timestep: %e\n", dt_host);
         }
         assert(dt_host > 0);
         assert(dt_host <= timePerStep);
@@ -317,7 +317,7 @@ void rk2Adaptive()
                     )));
                     cudaVerify(cudaMemcpyFromSymbol(&dt_alphanew, dtNewAlphaCheck, sizeof(double)));
                     if (dt_alphanew < dt_alphaold && param.verbose && dt_alphanew > 0) {
-                        fprintf(stdout, "current timestep %e is too large for distention; reducing to %e\n", dt_alphaold, dt_alphanew);
+                        fprintf(stdout, "timestep is too large for distention, reducing from %e to %e\n", dt_alphaold, dt_alphanew);
                     }
                 }
                 dtNewAlphaCheck_host = -1.0;
@@ -329,28 +329,30 @@ void rk2Adaptive()
                 /* last time step was okay, forward time and continue with new time step size */
                 if (errorSmallEnough_host) {
                     currentTime += dt_host;
+                    if (!param.verbose)
+                        fprintf(stdout, "time: %e   last timestep: %e\n", currentTime, dt_host);
                     cudaVerifyKernel((BoundaryConditionsAfterIntegratorStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(interactions)));
+                    cudaVerify(cudaDeviceSynchronize());
                 }
 
                 /* print information about errors */
-                double errPos, errVel, errDensity, errEnergy = 0;
-                cudaVerify(cudaMemcpyFromSymbol(&errPos, maxPosAbsError, sizeof(double)));
-                cudaVerify(cudaMemcpyFromSymbol(&errVel, maxVelAbsError, sizeof(double)));
+                if (param.verbose) {
+                    double errPos, errVel, errDensity, errEnergy = 0;
+                    cudaVerify(cudaMemcpyFromSymbol(&errPos, maxPosAbsError, sizeof(double)));
+                    cudaVerify(cudaMemcpyFromSymbol(&errVel, maxVelAbsError, sizeof(double)));
 #if INTEGRATE_DENSITY
-                cudaVerify(cudaMemcpyFromSymbol(&errDensity, maxDensityAbsError, sizeof(double)));
+                    cudaVerify(cudaMemcpyFromSymbol(&errDensity, maxDensityAbsError, sizeof(double)));
 #endif
 #if INTEGRATE_ENERGY
-                cudaVerify(cudaMemcpyFromSymbol(&errEnergy, maxEnergyAbsError, sizeof(double)));
+                    cudaVerify(cudaMemcpyFromSymbol(&errEnergy, maxEnergyAbsError, sizeof(double)));
 #endif
-                cudaVerify(cudaDeviceSynchronize());
-                if (param.verbose)
+                    cudaVerify(cudaDeviceSynchronize());
                     fprintf(stdout, "total relative max error: %g (locations: %e, velocities: %e, density: %e, energy: %e) with timestep: %e\n",
                             max(max(errPos, errVel), errDensity) / param.rk_epsrel, errPos, errVel, errDensity, errEnergy, dt_host);
 #if PALPHA_POROSITY
-                if (param.verbose)
-                    fprintf(stdout, "current time: %g   dt: %g   dtNewErrorCheck: %g   dtNewAlphaCheck: %g\n",
-                            currentTime, dt_host, dtNewErrorCheck_host, dtNewAlphaCheck_host);
+                    fprintf(stdout, "dtNewErrorCheck: %g   dtNewAlphaCheck: %g\n", dtNewErrorCheck_host, dtNewAlphaCheck_host);
 #endif
+                }
 
                 /* set suggested next timestep */
 #if PALPHA_POROSITY
@@ -363,19 +365,24 @@ void rk2Adaptive()
                 dt_suggested = dtNewErrorCheck_host;
 #endif
                 assert(dt_suggested > 0);
+#if DEBUG_TIMESTEP
+                fprintf(stdout, "suggested next timestep based on errors: %e\n", dt_suggested);
+#endif
 
                 /* limit suggested next timestep to max allowed timestep */
                 if (dt_suggested > dtmax_host) {
-                    if (param.verbose)
-                        fprintf(stdout, "suggested next timestep is larger than max allowed timestep, reduced from %e to %e\n", dt_suggested, dtmax_host);
+#if DEBUG_TIMESTEP
+                    fprintf(stdout, "suggested next timestep is larger than max allowed timestep, reduced from %e to %e\n", dt_suggested, dtmax_host);
+#endif
                     dt_suggested = dtmax_host;
                 }
 
                 if (currentTime + dt_suggested > endTime) {
                     /* if suggested next timestep would overshoot, reduce it */
                     dt_host = endTime - currentTime;
-                    if (param.verbose)
-                        fprintf(stdout, "next timestep would overshoot output time, reduced from suggested %e to %e\n", dt_suggested, dt_host);
+#if DEBUG_TIMESTEP
+                    fprintf(stdout, "next timestep would overshoot output time, reduced from suggested %e to %e\n", dt_suggested, dt_host);
+#endif
                 } else {
                     /* otherwise use suggested timestep for next step */
                     dt_host = dt_suggested;
@@ -389,14 +396,13 @@ void rk2Adaptive()
                 if (errorSmallEnough_host) {
                     afterIntegrationStep();   // do something after successful step (e.g. look for min/max pressure...)
                     if (param.verbose) {
-                        fprintf(stdout, "error small enough, timestep accepted, current time: %e   next timestep: %e   time to next output: %e\n",
-                                currentTime, dt_host, endTime-currentTime);
+                        fprintf(stdout, "   error was small enough, last timestep accepted, current time: %e   time to next output: %e   next timestep: %e\n",
+                                currentTime, endTime-currentTime, dt_host);
                     }
                     break; // break while(TRUE) and continue with next timestep
                 } else {
                     if (param.verbose)
-                        fprintf(stdout, "error too large, timestep rejected, current time: %e   timestep lowered to: %e\n",
-                                currentTime, dt_host);
+                        fprintf(stdout, "   error was too large, last timestep rejected, current time: %e   timestep lowered to: %e\n", currentTime, dt_host);
                     // copy back the initial values of the particles
                     copy_particles_variables_device_to_device(&rk_device[RKFIRST], &rk_device[RKSTART]);
                     copy_particles_derivatives_device_to_device(&rk_device[RKFIRST], &rk_device[RKSTART]);

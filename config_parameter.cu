@@ -479,7 +479,7 @@ void transferMaterialsToGPU()
             material = config_setting_get_elem(materials, i);
             int ID;
             config_setting_lookup_int(material, "ID", &ID);
-	        printf("Reading information about material ID %d out of %d in total \n", ID, numberOfElements);
+	        fprintf(stdout, "Reading information about material ID %d out of %d in total...\n", ID, numberOfElements);
             config_setting_lookup_float(material, "sml", &sml[ID]);
 #if VARIABLE_SML
 #if FIXED_NOI
@@ -1086,29 +1086,31 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(matCV, &matCV_d, sizeof(void*)));
 #endif
 
-        fprintf(stdout, "Using following values for sph\n");
-        fprintf(stdout, "  grav-constant = %e\n", grav_const);
+        fprintf(stdout, "\nUsing following values for SPH:\n");
+        fprintf(stdout, "grav-constant: %e\n", grav_const);
         fprintf(stdout, "Material No \t smoothing length or number of interactions \t density floor \t alpha \t\t beta\n");
         fprintf(stdout, "------------\t--------------------------------------------\t---------------\t-------\t\t-----\n");
         for (i = 0; i < numberOfMaterials; i++) {
-            fprintf(stdout, "  %d \t\t %e or %d \t %g \t\t\t\t %e \t %e \n", i, sml[i], noi[i], density_floor[i], alpha[i], beta[i]);
+            fprintf(stdout, "  %d \t\t %e  or  %d \t\t\t\t %g \t\t %e \t %e \n", i, sml[i], noi[i], density_floor[i], alpha[i], beta[i]);
         }
 #if VARIABLE_SML
         fprintf(stdout, "Material No \t factor for maximum and minimum smoothing length and corresponding smoothing lengths\n");
         fprintf(stdout, "------------\t--------------------------------------------\t-------\t\t-----\n");
         for (i = 0; i < numberOfMaterials; i++) {
-            fprintf(stdout, "  %d \t\t factor_min %e -> minimum sml %e \t\t factor_max %e -> maximun sml %e \n", i, f_sml_min[i], f_sml_min[i]*sml[i], f_sml_max[i], f_sml_max[i]*sml[i]);
+            fprintf(stdout, "  %d \t\t factor_min %e -> minimum sml %e \t\t factor_max %e -> maximun sml %e \n",
+                    i, f_sml_min[i], f_sml_min[i]*sml[i], f_sml_max[i], f_sml_max[i]*sml[i]);
         }
 #endif
 #if PLASTICITY
-        fprintf(stdout, "Using following values for the plasticity model\n");
+        fprintf(stdout, "\nUsing following values for the plasticity model:\n");
         fprintf(stdout, "Material No \t yield_stress \t  cohesion \t cohesion_damaged \t friction_angle \t friction_angle_damaged \t melt_energy \n");
         fprintf(stdout, "------------\t--------------\t-----------\t------------------\t----------------\t------------------------\t-------------\n");
         for (i = 0; i < numberOfMaterials; i++) {
-            fprintf(stdout, "  %d \t\t %e \t %e \t %e \t %e \t %e \t %e \n", i, yield_stress[i], cohesion[i], cohesion_damaged[i], friction_angle[i], friction_angle_damaged[i], melt_energy[i]);
+            fprintf(stdout, "  %d \t\t %e \t %e \t %e \t\t %e \t\t %e \t\t\t %e \n",
+                    i, yield_stress[i], cohesion[i], cohesion_damaged[i], friction_angle[i], friction_angle_damaged[i], melt_energy[i]);
         }
 #endif
-        fprintf(stdout, "Using following values for the equation of state\n");
+        fprintf(stdout, "\nUsing following values for the equation of state:\n");
         fprintf(stdout, "Material No \t EoS\n");
         fprintf(stdout, "----------- \t --- \n");
         char eos_type[255];
@@ -1257,7 +1259,7 @@ void transferMaterialsToGPU()
         }
 
 #if SOLID
-        fprintf(stdout, "Using following values for bulk and shear modulus\n");
+        fprintf(stdout, "\nUsing following values for bulk and shear modulus:\n");
         fprintf(stdout, "Material No \t bulk modulus \t shear modulus \n");
         fprintf(stdout, "----------- \t ------------ \t ------------- \n");
         for (i = 0; i < numberOfMaterials; i++) {
@@ -1266,7 +1268,7 @@ void transferMaterialsToGPU()
 #endif
 
 #if NAVIER_STOKES
-        fprintf(stdout, "Using following values for the physical viscosity\n");
+        fprintf(stdout, "\nUsing following values for the physical viscosity:\n");
         fprintf(stdout, "Material No \t alpha coef    \t dynamic       \t bulk       \n");
         fprintf(stdout, "----------- \t ------------ \t ------------- \t -----------\n");
         for (i = 0; i < numberOfMaterials; i++) {
@@ -1275,7 +1277,7 @@ void transferMaterialsToGPU()
 #endif
 
 #if GRAVITATING_POINT_MASSES
-        fprintf(stdout, "Found %d pointmasses in input mass file\n", numberOfPointmasses);
+        fprintf(stdout, "Found %d pointmasses in input mass file.\n", numberOfPointmasses);
         for (i = 0; i < numberOfPointmasses; i++) {
             fprintf(stdout, "no. %d  x %e ", i, pointmass_host.x[i]);
 #if DIM > 1
@@ -1299,7 +1301,7 @@ void transferMaterialsToGPU()
 #endif
 
 #if ARTIFICIAL_STRESS
-        fprintf(stdout, "Using following parameters for artificial stress\n");
+        fprintf(stdout, "\nUsing following parameters for artificial stress:\n");
         fprintf(stdout, "Material No \t exponent tensor \t epsilon stress \t mean particle distance \n");
         fprintf(stdout, "----------- \t ------------------- \t -------------------- \t ----------------- \n");
         for (i = 0; i < numberOfMaterials; i++) {
