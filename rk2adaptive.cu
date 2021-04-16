@@ -35,7 +35,6 @@
 extern __device__ double endTimeD, currentTimeD;
 extern __device__ double substep_currentTimeD;
 extern __device__ double dt;
-extern __device__ double dtmax;
 extern __device__ int isRelaxed;
 extern __device__ int blockCount;
 extern __device__ int errorSmallEnough;
@@ -63,6 +62,8 @@ void rk2Adaptive()
 {
     int rkstep;
     int errorSmallEnough_host;
+    double dtmax_host = param.maxtimestep;
+    assert(dtmax_host > 0);
     double dtNewErrorCheck_host = 0.0;
 #if PALPHA_POROSITY
     double dtNewAlphaCheck_host = -1.0;
@@ -140,8 +141,8 @@ void rk2Adaptive()
         if (nsteps_cnt == 0) {
             if (param.firsttimestep > 0 && timePerStep > param.firsttimestep) {
                 dt_host = dt_suggested = param.firsttimestep;
-            } else if (timePerStep > param.maxtimestep) {
-                dt_host = dt_suggested = param.maxtimestep;
+            } else if (dtmax_host < timePerStep) {
+                dt_host = dt_suggested = dtmax_host;
             } else {
                 dt_host = dt_suggested = timePerStep;
             }
@@ -351,7 +352,7 @@ void rk2Adaptive()
                             currentTime, dt_host, dtNewErrorCheck_host, dtNewAlphaCheck_host);
 #endif
 
-                /* set new timestep for next step */
+                /* set suggested next timestep */
 #if PALPHA_POROSITY
                 if (dtNewAlphaCheck_host <= 0) {
                     dt_suggested = dtNewErrorCheck_host;
@@ -362,10 +363,18 @@ void rk2Adaptive()
                 dt_suggested = dtNewErrorCheck_host;
 #endif
                 assert(dt_suggested > 0);
+
+                /* limit suggested next timestep to max allowed timestep */
+                if (dt_suggested > dtmax_host) {
+                    if (param.verbose)
+                        fprintf(stdout, "suggested next timestep is larger than max allowed timestep, reduced from %e to %e\n", dt_suggested, dtmax_host);
+                    dt_suggested = dtmax_host;
+                }
+
                 if (currentTime + dt_suggested > endTime) {
                     /* if suggested next timestep would overshoot, reduce it */
                     dt_host = endTime - currentTime;
-                    if( param.verbose )
+                    if (param.verbose)
                         fprintf(stdout, "next timestep would overshoot output time, reduced from suggested %e to %e\n", dt_suggested, dt_host);
                 } else {
                     /* otherwise use suggested timestep for next step */
@@ -506,12 +515,6 @@ __global__ void limitTimestep(double *forcesPerBlock , double *courantPerBlock)
             printf("<limitTimestep> max allowed timestep due to CFL is %g, due to forces/accels is %g, set timestep to %g\n",
                     COURANT_FACT*courant, FORCES_FACT*forces, dt);
 #endif
-            if (dt > dtmax) {
-#if DEBUG_TIMESTEP
-                printf("<limitTimestep> timestep %g is larger than max user-allowed timestep, reducing to %g\n", dt, dtmax);
-#endif
-                dt = dtmax;
-            }
             // reset block count
             blockCount = 0;
         }
@@ -999,10 +1002,6 @@ __global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock)
 
             if (maxDamageTimeStep > 0) {
                 dtsuggested = 1./maxDamageTimeStep;
-                if (dtsuggested > dtmax) {
-                    printf("<damageMaxTimeStep> timestep %g is larger than maximum timestep %g, reducing to %g\n", dtsuggested, dtmax, dtmax);
-                    dtsuggested = dtmax;
-                }
                 if (dtsuggested < dt)
                     dt = dtsuggested;
             }
@@ -1064,10 +1063,6 @@ __global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock)
 //        dtNewAlphaCheck = dt * MAX_ALPHA_CHANGE / (maxalphaDiff);
         if (maxalphaDiff > MAX_ALPHA_CHANGE) {
             dtNewAlphaCheck = dt * MAX_ALPHA_CHANGE / (maxalphaDiff * 1.51);
-            if (dtNewAlphaCheck > dtmax) {
-                printf("<alphaMaxTimeStep> timestep %g is larger than maximum timestep %g, reducing to %g\n", dtNewAlphaCheck, dtmax, dtmax);
-                dtNewAlphaCheck = dtmax;
-            }
             errorSmallEnough = FALSE;
 //            if (dtNewAlphaCheck < 1e-29) {
 //                dtNewAlphaCheck = 1e-29;
@@ -1352,13 +1347,9 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
                     dtNew = 1.05 * dt;
                 }
             }
-            if (dtNew > dtmax) {
-                printf("<checkError> timestep %g is larger than maximum timestep %g, reducing to %g\n", dtNew, dtmax, dtmax);
-                dtNew = dtmax;
-            }
+
             dtNewErrorCheck = dtNew;
-            // reset block count
-            blockCount = 0;
+            blockCount = 0;   // reset block count
         }
     }
 }

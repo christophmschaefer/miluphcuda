@@ -1068,6 +1068,10 @@ int main(int argc, char *argv[])
 
     if (param.maxtimestep < 0)
         param.maxtimestep = timePerStep;
+    if (param.maxtimestep > timePerStep) {
+        fprintf(stderr, "ERROR. maxtimestep cannot be larger than time between outputs...\n");
+        exit(1);
+    }
 
     if (param.verbose)
         fprintf(stdout, "\nLoading config file...\n");
