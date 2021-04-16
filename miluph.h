@@ -27,7 +27,7 @@
 
 #define MILUPHCUDA_VERSION "devel"
 
-// debug flags
+// debug flags, mainly for additional output
 #define DEBUG 0
 #define DEBUG_TIMESTEP 0
 #define DEBUG_LINALG 0
