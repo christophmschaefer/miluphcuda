@@ -126,7 +126,7 @@ __global__ void calculateSoundSpeed()
 //            }
             /* switched from jutzis implementation of the soundspeed to a linear soundspeed from cs_porous with alpha=alpha0 to cs_solid with alpha=1 (also done in iSale) */
             p.cs[i] = matcs_solid[matId] + (matcs_porous[matId] - matcs_solid[matId]) * (p.alpha_jutzi[i] - 1.0) / (matporjutzi_alpha_0[matId] - 1.0);
-#if DEBUG
+#if DEBUG_MISC
             if (isnan(p.cs[i])) {
                 printf("i %d alpha_jutzi %e delpdelrho %e delpdele %e dalphadp %e p %e rho %e\n", i, p.alpha_jutzi[i], p.delpdelrho[i], p.delpdele[i], p.dalphadp[i], p.p[i], p.rho[i]);
                 assert(0);
@@ -150,7 +150,7 @@ __global__ void calculateSoundSpeed()
             } else {
                 p.cs[i] = cs;
             }
-#if DEBUG
+#if DEBUG_MISC
             if (isnan(p.cs[i])) {
                 printf("i %d alpha_jutzi %e delpdelrho %e delpdele %e dalphadp %e p %e rho %e\n", i, p.alpha_jutzi[i], p.delpdelrho[i], p.delpdele[i], p.dalphadp[i], p.p[i], p.rho[i]);
                 assert(0);
@@ -209,7 +209,7 @@ __global__ void calculateSoundSpeed()
                     p.cs[i] = sqrt(cs_sq);
                 }
             }
-#if DEBUG
+#if DEBUG_MISC
             if (isnan(p.cs[i])) {
                 printf("i %d alpha_jutzi %e delpdelrho %e delpdele %e dalphadp %e p %e rho %e\n", i, p.alpha_jutzi[i], p.delpdelrho[i], p.delpdele[i], p.dalphadp[i], p.p[i], p.rho[i]);
                 assert(0);

@@ -636,7 +636,7 @@ __global__ void knnNeighbourSearch(int *interactions)
                 htmpold = htmp;
                 htmp *= 0.5 *  ( 1.0 + pow( (double) matnoi[p_rhs.materialId[i]]/ (double) numberOfInteractions, 1./DIM));
             }
-#if DEBUG
+#if DEBUG_MISC
             if (htmp < 1e-20) {
                 printf("+++ particle: %d it: %d htmp: %e htmpold: %e wanted: %d current: %d mId: %d \n", i, nit,
                         htmp, htmpold, matnoi[p_rhs.materialId[i]], numberOfInteractions, p_rhs.materialId[i]);

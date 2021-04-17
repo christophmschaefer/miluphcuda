@@ -1280,7 +1280,7 @@ void read_particles_from_file(File inputFile)
             char ch2;
             fscanf(inputFile.data, "%c", &ch);
             if (ch == '\n') {
-#if DEBUG
+#if DEBUG_MISC
 # if DIM == 1
     	        fprintf(stdout, "Reading coordinates for particle no. %d (x) = %e \n", i+1, p_host.x[i]);
 # endif
@@ -2484,7 +2484,7 @@ void write_particles_to_file(File file) {
         if (maxnof > 0) {
             dims[0] = numberOfParticles;
             dims[1] = maxnof;
-#if DEBUG
+#if DEBUG_MISC
             fprintf(stdout, "using %d doubles for flaws in HDF5 output\n", maxnof);
 #endif
             dataspace_id = H5Screate_simple(2, dims, NULL);
@@ -2935,7 +2935,7 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     }
 
     /* calling additional functions to get correct values at timestep */
-#if DEBUG
+#if DEBUG_MISC
     fprintf(stdout, "calling pressure for i/o\n");
 #endif
     cudaVerify(cudaDeviceSynchronize());

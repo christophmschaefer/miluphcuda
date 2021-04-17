@@ -724,7 +724,7 @@ __global__ void internalForces(int *interactions) {
 #  elif (SPH_EQU_VERSION == 2)
                     dedt += 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)] + p_rhs.sigma[stressIndex(j,d,dd)])/(p.rho[i]*p.rho[j]) * dv[d] * dWdx[dd];
 #endif
-#if DEBUG
+#if DEBUG_MISC
                     if (isnan(dedt)) {
                         printf("no %d m=%e sigma_i[%d][%d]=%e sigma_j[%d][%d]= %e dv[%d] %e  dWdx[%d] %e  p_i %e  p_j %e rho_i %e rho_j %e pij %e cs_i %e cs_j %e\n", i, p.m[j], d, dd, p_rhs.sigma[stressIndex(i,d,dd)], d, dd,p_rhs.sigma[stressIndex(j,d,dd)], d, dv[d], dd, dWdx[dd], p.p[i], p.p[j], p.rho[i], p.rho[j], pij,p.cs[i], p.cs[j]);
                         assert(0);

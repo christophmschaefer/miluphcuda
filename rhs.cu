@@ -612,7 +612,7 @@ void rightHandSide()
 # endif
 #endif
 
-#if DEBUG
+#if DEBUG_MISC
     fprintf(stdout, "checking correlation matrix\n");
     fflush(stdout);
     cudaVerifyKernel((checkNaNs<<<numberOfMultiprocessors, NUM_THREADS_128>>>(interactions)));
@@ -726,7 +726,7 @@ void rightHandSide()
 # endif
 #endif
 
-#if DEBUG
+#if DEBUG_MISC
     if (param.verbose) fprintf(stdout, "checking for nans after internal_forces\n");
     fflush(stdout);
     cudaVerifyKernel((checkNaNs<<<numberOfMultiprocessors, NUM_THREADS_128>>>(interactions)));
