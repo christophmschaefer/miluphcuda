@@ -55,8 +55,8 @@ extern double L_ini;
 
 
 /*
-   the runge-kutta 2nd order integrator with adaptive timestep
-   see cuda-paper for details
+   Runge-kutta 2nd order integrator with adaptive timestep,
+   see Schäfer et al. (2016) for details.
  */
 void rk2Adaptive()
 {
@@ -147,13 +147,13 @@ void rk2Adaptive()
                 dt_host = dt_suggested = timePerStep;
             }
             if (param.verbose)
-                fprintf(stdout, "   starting with timestep: %e\n", dt_host);
+                fprintf(stdout, "   starting with timestep: %g\n", dt_host);
         } else {
             dt_host = dt_suggested;   // use previously suggested next timestep as starting point
             if (dt_host > timePerStep)
                 dt_host = timePerStep;
             if (param.verbose)
-                fprintf(stdout, "   continuing with timestep: %e\n", dt_host);
+                fprintf(stdout, "   continuing with timestep: %g\n", dt_host);
         }
         assert(dt_host > 0);
         assert(dt_host <= timePerStep);
@@ -201,8 +201,8 @@ void rk2Adaptive()
             cudaVerify(cudaDeviceSynchronize());
 
 #if FRAGMENTATION
+            /* limit timestep according to damage evolution */
             cudaVerify(cudaMemcpyFromSymbol(&dt_damageold, dt, sizeof(double)));
-            /* add function for best timestep with fragmentation here */
             cudaVerifyKernel((damageMaxTimeStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(
                                 maxDamageTimeStepPerBlock)));
             cudaVerify(cudaMemcpyFromSymbol(&dt_damagenew, dt, sizeof(double)));
@@ -316,9 +316,8 @@ void rk2Adaptive()
                                     maxalphaDiffPerBlock
                     )));
                     cudaVerify(cudaMemcpyFromSymbol(&dt_alphanew, dtNewAlphaCheck, sizeof(double)));
-                    if (dt_alphanew < dt_alphaold && param.verbose && dt_alphanew > 0) {
-                        fprintf(stdout, "timestep is too large for distention, reducing from %e to %e\n", dt_alphaold, dt_alphanew);
-                    }
+                    if (param.verbose && dt_alphanew < dt_alphaold && dt_alphanew > 0)
+                        fprintf(stdout, "timestep is too large for distention, reducing from %g to %g\n", dt_alphaold, dt_alphanew);
                 }
                 dtNewAlphaCheck_host = -1.0;
                 cudaVerify(cudaDeviceSynchronize());
@@ -330,7 +329,7 @@ void rk2Adaptive()
                 if (errorSmallEnough_host) {
                     currentTime += dt_host;
                     if (!param.verbose)
-                        fprintf(stdout, "time: %e   last timestep: %e\n", currentTime, dt_host);
+                        fprintf(stdout, "time: %e   last timestep: %g\n", currentTime, dt_host);
                     cudaVerifyKernel((BoundaryConditionsAfterIntegratorStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(interactions)));
                     cudaVerify(cudaDeviceSynchronize());
                 }
@@ -347,14 +346,14 @@ void rk2Adaptive()
                     cudaVerify(cudaMemcpyFromSymbol(&errEnergy, maxEnergyAbsError, sizeof(double)));
 #endif
                     cudaVerify(cudaDeviceSynchronize());
-                    fprintf(stdout, "total relative max error: %g (locations: %e, velocities: %e, density: %e, energy: %e) with timestep: %e\n",
+                    fprintf(stdout, "total relative max error: %g (locations: %e, velocities: %e, density: %e, energy: %e) with timestep: %g\n",
                             max(max(errPos, errVel), errDensity) / param.rk_epsrel, errPos, errVel, errDensity, errEnergy, dt_host);
 #if PALPHA_POROSITY
                     fprintf(stdout, "dtNewErrorCheck: %g   dtNewAlphaCheck: %g\n", dtNewErrorCheck_host, dtNewAlphaCheck_host);
 #endif
                 }
 
-                /* set suggested next timestep */
+                /* set suggested next timestep based on errors */
 #if PALPHA_POROSITY
                 if (dtNewAlphaCheck_host <= 0) {
                     dt_suggested = dtNewErrorCheck_host;
@@ -366,13 +365,13 @@ void rk2Adaptive()
 #endif
                 assert(dt_suggested > 0);
 #if DEBUG_TIMESTEP
-                fprintf(stdout, "suggested next timestep based on errors: %e\n", dt_suggested);
+                fprintf(stdout, "suggested next timestep based on errors: %g\n", dt_suggested);
 #endif
 
                 /* limit suggested next timestep to max allowed timestep */
                 if (dt_suggested > dtmax_host) {
 #if DEBUG_TIMESTEP
-                    fprintf(stdout, "suggested next timestep is larger than max allowed timestep, reduced from %e to %e\n", dt_suggested, dtmax_host);
+                    fprintf(stdout, "suggested next timestep is larger than max allowed timestep, reduced from %g to %g\n", dt_suggested, dtmax_host);
 #endif
                     dt_suggested = dtmax_host;
                 }
@@ -381,7 +380,7 @@ void rk2Adaptive()
                     /* if suggested next timestep would overshoot, reduce it */
                     dt_host = endTime - currentTime;
 #if DEBUG_TIMESTEP
-                    fprintf(stdout, "next timestep would overshoot output time, reduced from suggested %e to %e\n", dt_suggested, dt_host);
+                    fprintf(stdout, "next timestep would overshoot output time, reduced from suggested %g to %g\n", dt_suggested, dt_host);
 #endif
                 } else {
                     /* otherwise use suggested timestep for next step */
@@ -396,13 +395,13 @@ void rk2Adaptive()
                 if (errorSmallEnough_host) {
                     afterIntegrationStep();   // do something after successful step (e.g. look for min/max pressure...)
                     if (param.verbose) {
-                        fprintf(stdout, "   error was small enough, last timestep accepted, current time: %e   time to next output: %e   next timestep: %e\n",
+                        fprintf(stdout, "   error was small enough, last timestep accepted, current time: %e   time to next output: %g   next timestep: %g\n",
                                 currentTime, endTime-currentTime, dt_host);
                     }
                     break; // break while(TRUE) and continue with next timestep
                 } else {
                     if (param.verbose)
-                        fprintf(stdout, "   error was too large, last timestep rejected, current time: %e   timestep lowered to: %e\n", currentTime, dt_host);
+                        fprintf(stdout, "   error was too large, last timestep rejected, current time: %e   timestep lowered to: %g\n", currentTime, dt_host);
                     // copy back the initial values of the particles
                     copy_particles_variables_device_to_device(&rk_device[RKFIRST], &rk_device[RKSTART]);
                     copy_particles_derivatives_device_to_device(&rk_device[RKFIRST], &rk_device[RKSTART]);
@@ -964,20 +963,18 @@ __global__ void integrateThirdStep(void)
 
 
 #if FRAGMENTATION
-#define MAX_DAMAGE_CHANGE 1e-2
 __global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock)
 {
     __shared__ double sharedMaxDamageTimeStep[NUM_THREADS_ERRORCHECK];
-    double localMaxDamageTimeStep = 0;
+    double localMaxDamageTimeStep = 1e100;
     double tmp = 0;
-    double dtsuggested = 0;
     int i, j, k, m;
 
     // loop for particles
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
         if (rk[RKFIRST].dddt[i] > 0) {
-            tmp = 1./ ( (rk[RKFIRST].d[i] + MAX_DAMAGE_CHANGE) / rk[RKFIRST].dddt[i] );
-            localMaxDamageTimeStep = max(tmp, localMaxDamageTimeStep);
+            tmp = (rk[RKFIRST].d[i] + RK2_MAX_DAMAGE_CHANGE) / rk[RKFIRST].dddt[i];
+            localMaxDamageTimeStep = min(tmp, localMaxDamageTimeStep);
         }
     }
 
@@ -988,7 +985,7 @@ __global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock)
         __syncthreads();
         if (i < j) {
             k = i + j;
-            sharedMaxDamageTimeStep[i] = localMaxDamageTimeStep = max(localMaxDamageTimeStep, sharedMaxDamageTimeStep[k]);
+            sharedMaxDamageTimeStep[i] = localMaxDamageTimeStep = min(localMaxDamageTimeStep, sharedMaxDamageTimeStep[k]);
         }
     }
 
@@ -1000,17 +997,19 @@ __global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock)
         if (m == atomicInc((unsigned int *)&blockCount, m)) {
             // last block, so combine all block results
             for (j = 0; j <= m; j++) {
-                localMaxDamageTimeStep = max(localMaxDamageTimeStep, maxDamageTimeStepPerBlock[j]);
+                localMaxDamageTimeStep = min(localMaxDamageTimeStep, maxDamageTimeStepPerBlock[j]);
             }
-            maxDamageTimeStep = localMaxDamageTimeStep;
             // reset block count
             blockCount = 0;
+#if DEBUG_TIMESTEP
+            printf("<damageMaxTimeStep> suggests max timestep: %g\n", localMaxDamageTimeStep);
+#endif
+            // reduce timestep if necessary
+            if (localMaxDamageTimeStep < dt  &&  localMaxDamageTimeStep > 0)
+                dt = localMaxDamageTimeStep;
 
-            if (maxDamageTimeStep > 0) {
-                dtsuggested = 1./maxDamageTimeStep;
-                if (dtsuggested < dt)
-                    dt = dtsuggested;
-            }
+            // write also to global device mem...
+            maxDamageTimeStep = localMaxDamageTimeStep;
         }
     }
 }
@@ -1019,7 +1018,6 @@ __global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock)
 
 
 #if PALPHA_POROSITY
-#define MAX_ALPHA_CHANGE 1e-4
 __global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock)
 {
     __shared__ double sharedMaxalphaDiff[NUM_THREADS_ERRORCHECK];
@@ -1066,15 +1064,10 @@ __global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock)
         /* maybe needs a smoother implementation - also if timestep gets too small because of alpha
            set it to 5e-14. It's a temporary fix for cases where dtNewAlphaCheck gets too low and crashes */
         dtNewAlphaCheck = FIXMEDT*dt;
-//        dtNewAlphaCheck = dt * MAX_ALPHA_CHANGE / (maxalphaDiff);
-        if (maxalphaDiff > MAX_ALPHA_CHANGE) {
-            dtNewAlphaCheck = dt * MAX_ALPHA_CHANGE / (maxalphaDiff * 1.51);
+//        dtNewAlphaCheck = dt * RK2_MAX_ALPHA_CHANGE / (maxalphaDiff);
+        if (maxalphaDiff > RK2_MAX_ALPHA_CHANGE) {
+            dtNewAlphaCheck = dt * RK2_MAX_ALPHA_CHANGE / (maxalphaDiff * 1.51);
             errorSmallEnough = FALSE;
-//            if (dtNewAlphaCheck < 1e-29) {
-//                dtNewAlphaCheck = 1e-29;
-//                errorSmallEnough = TRUE;
-//                printf("Timestep too small: %g Old Timestep: %g Alpha Change: %g Max Allowed: %g \n", dtNewAlphaCheck, dt, maxalphaDiff, MAX_ALPHA_CHANGE);
-//            }
         }
     }
 }
@@ -1084,13 +1077,13 @@ __global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock)
 
 __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErrorPerBlock
 #if INTEGRATE_DENSITY
-        , double *maxDensityAbsErrorPerBlock
+                        , double *maxDensityAbsErrorPerBlock
 #endif
 #if INTEGRATE_ENERGY
-        , double *maxEnergyAbsErrorPerBlock
+                        , double *maxEnergyAbsErrorPerBlock
 #endif
 #if PALPHA_POROSITY
-        , double *maxPressureAbsChangePerBlock
+                        , double *maxPressureAbsChangePerBlock
 #endif
         )
 {
@@ -1110,41 +1103,37 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
     double localMaxPressureAbsChange = 0;
 #endif
     int i, j, k, m;
-    double posAbsErrorTemp = 0, velAbsErrorTemp = 0, temp = 0, dtNew = 0;
+    double dtNew = 0;
     double localMaxPosAbsError = 0, localMaxVelAbsError = 0;
-    double tmp_vel = 0.0;
-    double tmp_vel2 = 0.0;
-    double tmp_pos = 0.0;
-    double tmp_pos2 = 0.0;
+    double tmp = 0.0;
+    double tmp_vel = 0.0, tmp_vel2 = 0.0, tmp_pos = 0.0, tmp_pos2 = 0.0;
     double min_pos_change_rk2 = 0.0;
-
 
 #if GRAVITATING_POINT_MASSES
     // loop for pointmasses
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
-        temp = dt * (rk_pointmass[RKFIRST].ax[i]/3.0 - (rk_pointmass[RKSTART].ax[i] + rk_pointmass[RKSECOND].ax[i])/6.0);
+        tmp = dt * (rk_pointmass[RKFIRST].ax[i]/3.0 - (rk_pointmass[RKSTART].ax[i] + rk_pointmass[RKSECOND].ax[i])/6.0);
         tmp_vel = fabs(rk_pointmass[RKSTART].vx[i]) + fabs(dt*rk_pointmass[RKSTART].ax[i]);
         if (tmp_vel > MIN_VEL_CHANGE_RK2) {
-            tmp_vel2 = fabs(temp) / tmp_vel;
-            velAbsErrorTemp = tmp_vel2;
+            tmp_vel2 = fabs(tmp) / tmp_vel;
+            localMaxVelAbsError = max(localMaxVelAbsError, tmp_vel2);
         }
 # if DIM > 1
-        temp = dt * (rk_pointmass[RKFIRST].ay[i]/3.0 - (rk_pointmass[RKSTART].ay[i] + rk_pointmass[RKSECOND].ay[i])/6.0);
+        tmp = dt * (rk_pointmass[RKFIRST].ay[i]/3.0 - (rk_pointmass[RKSTART].ay[i] + rk_pointmass[RKSECOND].ay[i])/6.0);
         tmp_vel = fabs(rk_pointmass[RKSTART].vy[i]) + fabs(dt*rk_pointmass[RKSTART].ay[i]);
         if (tmp_vel > MIN_VEL_CHANGE_RK2) {
-            tmp_vel2 = fabs(temp) / tmp_vel;
-            velAbsErrorTemp = max(velAbsErrorTemp, tmp_vel2);
+            tmp_vel2 = fabs(tmp) / tmp_vel;
+            localMaxVelAbsError = max(localMaxVelAbsError, tmp_vel2);
         }
 # endif
 # if DIM == 3
-        temp = dt * (rk_pointmass[RKFIRST].az[i]/3.0 - (rk_pointmass[RKSTART].az[i] + rk_pointmass[RKSECOND].az[i])/6.0);
+        tmp = dt * (rk_pointmass[RKFIRST].az[i]/3.0 - (rk_pointmass[RKSTART].az[i] + rk_pointmass[RKSECOND].az[i])/6.0);
         tmp_vel = fabs(rk_pointmass[RKSTART].vz[i]) + fabs(dt*rk_pointmass[RKSTART].az[i]);
         if (tmp_vel > MIN_VEL_CHANGE_RK2) {
-            tmp_vel2 = fabs(temp) / tmp_vel;
-            velAbsErrorTemp = max(velAbsErrorTemp, tmp_vel2);
+            tmp_vel2 = fabs(tmp) / tmp_vel;
+            localMaxVelAbsError = max(localMaxVelAbsError, tmp_vel2);
         }
 # endif
-        localMaxVelAbsError = max(localMaxVelAbsError, velAbsErrorTemp);
     }
 #endif
 
@@ -1152,70 +1141,68 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
         if (p_rhs.materialId[i] == EOS_TYPE_IGNORE) continue;
 
-        temp = dt * (rk[RKFIRST].dxdt[i]/3.0 - (rk[RKSTART].dxdt[i] + rk[RKSECOND].dxdt[i])/6.0);
+        min_pos_change_rk2 = rk[RKSTART].h[i] * RK2_LOCATION_SAFETY;
+
+        tmp = dt * (rk[RKFIRST].dxdt[i]/3.0 - (rk[RKSTART].dxdt[i] + rk[RKSECOND].dxdt[i])/6.0);
         tmp_pos = fabs(rk[RKSTART].x[i]) + fabs(dt*rk[RKSTART].dxdt[i]);
-        min_pos_change_rk2 = rk[RKSTART].h[i];
-        min_pos_change_rk2 *= RK2_LOCATION_SAFETY;
         if (tmp_pos > min_pos_change_rk2) {
-            posAbsErrorTemp = fabs(temp) / tmp_pos;
+            tmp_pos2 = fabs(tmp) / tmp_pos;
+            localMaxPosAbsError = max(localMaxPosAbsError, tmp_pos2);
         }
 #if DIM > 1
-        temp = dt * (rk[RKFIRST].dydt[i]/3.0 - (rk[RKSTART].dydt[i] + rk[RKSECOND].dydt[i])/6.0);
+        tmp = dt * (rk[RKFIRST].dydt[i]/3.0 - (rk[RKSTART].dydt[i] + rk[RKSECOND].dydt[i])/6.0);
         tmp_pos = fabs(rk[RKSTART].y[i]) + fabs(dt*rk[RKSTART].dydt[i]);
         if (tmp_pos > min_pos_change_rk2) {
-            tmp_pos2 = fabs(temp) / tmp_pos;
-            posAbsErrorTemp = max(posAbsErrorTemp,tmp_pos2);
+            tmp_pos2 = fabs(tmp) / tmp_pos;
+            localMaxPosAbsError = max(localMaxPosAbsError, tmp_pos2);
         }
 #endif
 #if DIM > 2
-        temp = dt * (rk[RKFIRST].dzdt[i]/3.0 - (rk[RKSTART].dzdt[i] + rk[RKSECOND].dzdt[i])/6.0);
+        tmp = dt * (rk[RKFIRST].dzdt[i]/3.0 - (rk[RKSTART].dzdt[i] + rk[RKSECOND].dzdt[i])/6.0);
         tmp_pos = fabs(rk[RKSTART].z[i]) + fabs(dt*rk[RKSTART].dzdt[i]);
         if (tmp_pos > min_pos_change_rk2) {
-            tmp_pos2 = fabs(temp) / tmp_pos;
-            posAbsErrorTemp = max(posAbsErrorTemp,tmp_pos2);
+            tmp_pos2 = fabs(tmp) / tmp_pos;
+            localMaxPosAbsError = max(localMaxPosAbsError, tmp_pos2);
         }
 #endif
-        localMaxPosAbsError = max(localMaxPosAbsError, posAbsErrorTemp);
 
-        temp = dt * (rk[RKFIRST].ax[i]/3.0 - (rk[RKSTART].ax[i] + rk[RKSECOND].ax[i])/6.0);
+        tmp = dt * (rk[RKFIRST].ax[i]/3.0 - (rk[RKSTART].ax[i] + rk[RKSECOND].ax[i])/6.0);
         tmp_vel = fabs(rk[RKSTART].vx[i]) + fabs(dt*rk[RKSTART].ax[i]);
         if (tmp_vel > MIN_VEL_CHANGE_RK2) {
-            tmp_vel2 = fabs(temp) / tmp_vel;
-            velAbsErrorTemp = tmp_vel2;
+            tmp_vel2 = fabs(tmp) / tmp_vel;
+            localMaxVelAbsError = max(localMaxVelAbsError, tmp_vel2);
         }
 #if DIM > 1
-        temp = dt * (rk[RKFIRST].ay[i]/3.0 - (rk[RKSTART].ay[i] + rk[RKSECOND].ay[i])/6.0);
+        tmp = dt * (rk[RKFIRST].ay[i]/3.0 - (rk[RKSTART].ay[i] + rk[RKSECOND].ay[i])/6.0);
         tmp_vel = fabs(rk[RKSTART].vy[i]) + fabs(dt*rk[RKSTART].ay[i]);
         if (tmp_vel > MIN_VEL_CHANGE_RK2) {
-            tmp_vel2 = fabs(temp) / tmp_vel;
-            velAbsErrorTemp = max(velAbsErrorTemp, tmp_vel2);
+            tmp_vel2 = fabs(tmp) / tmp_vel;
+            localMaxVelAbsError = max(localMaxVelAbsError, tmp_vel2);
         }
 #endif
 #if DIM == 3
-        temp = dt * (rk[RKFIRST].az[i]/3.0 - (rk[RKSTART].az[i] + rk[RKSECOND].az[i])/6.0);
+        tmp = dt * (rk[RKFIRST].az[i]/3.0 - (rk[RKSTART].az[i] + rk[RKSECOND].az[i])/6.0);
         tmp_vel = fabs(rk[RKSTART].vz[i]) + fabs(dt*rk[RKSTART].az[i]);
         if (tmp_vel > MIN_VEL_CHANGE_RK2) {
-            tmp_vel2 = fabs(temp) / tmp_vel;
-            velAbsErrorTemp = max(velAbsErrorTemp, tmp_vel2);
+            tmp_vel2 = fabs(tmp) / tmp_vel;
+            localMaxVelAbsError = max(localMaxVelAbsError, tmp_vel2);
         }
 #endif
-        localMaxVelAbsError = max(localMaxVelAbsError, velAbsErrorTemp);
 
 #if INTEGRATE_DENSITY
-        temp = dt * (rk[RKFIRST].drhodt[i]/3.0 - (rk[RKSTART].drhodt[i] + rk[RKSECOND].drhodt[i])/6.0);
-        temp = fabs(temp) / (fabs(rk[RKSTART].rho[i]) + fabs(dt*rk[RKSTART].drhodt[i]) + TINY_RK2);
-        localMaxDensityAbsError = max(localMaxDensityAbsError, temp);
+        tmp = dt * (rk[RKFIRST].drhodt[i]/3.0 - (rk[RKSTART].drhodt[i] + rk[RKSECOND].drhodt[i])/6.0);
+        tmp = fabs(tmp) / (fabs(rk[RKSTART].rho[i]) + fabs(dt*rk[RKSTART].drhodt[i]) + TINY_RK2);
+        localMaxDensityAbsError = max(localMaxDensityAbsError, tmp);
 #endif
 
 #if PALPHA_POROSITY
         // check if the pressure changes too much
-        temp = fabs(rk[RKFIRST].p[i] - rk[RKSECOND].p[i]);
-        localMaxPressureAbsChange = max(localMaxPressureAbsChange, temp);
+        tmp = fabs(rk[RKFIRST].p[i] - rk[RKSECOND].p[i]);
+        localMaxPressureAbsChange = max(localMaxPressureAbsChange, tmp);
 #endif
 
 #if INTEGRATE_ENERGY
         hasEnergy = 0;
-
         switch  (matEOS[p_rhs.materialId[i]]) {
             case (EOS_TYPE_TILLOTSON):
                 hasEnergy = 1;
@@ -1243,9 +1230,9 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
                 break;
         }
         if (hasEnergy) {
-            temp = dt * (rk[RKFIRST].dedt[i]/3.0 - (rk[RKSTART].dedt[i] + rk[RKSECOND].dedt[i])/6.0);
-            temp = fabs(temp) / (fabs(rk[RKSTART].e[i]) + fabs(dt*rk[RKSTART].dedt[i]) + TINY_RK2);
-            localMaxEnergyAbsError = max(localMaxEnergyAbsError, temp);
+            tmp = dt * (rk[RKFIRST].dedt[i]/3.0 - (rk[RKSTART].dedt[i] + rk[RKSECOND].dedt[i])/6.0);
+            tmp = fabs(tmp) / (fabs(rk[RKSTART].e[i]) + fabs(dt*rk[RKSTART].dedt[i]) + TINY_RK2);
+            localMaxEnergyAbsError = max(localMaxEnergyAbsError, tmp);
         }
 #endif
     }   // loop for particles
@@ -1313,35 +1300,42 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
             }
             maxPosAbsError = localMaxPosAbsError;
             maxVelAbsError = localMaxVelAbsError;
-            temp = max(localMaxPosAbsError, localMaxVelAbsError); // relative total max error
+            // (single) max relative error
+            tmp = max(localMaxPosAbsError, localMaxVelAbsError);
 #if INTEGRATE_DENSITY
             maxDensityAbsError = localMaxDensityAbsError;
-            temp = max(temp, localMaxDensityAbsError);
+            tmp = max(tmp, localMaxDensityAbsError);
 #endif
 #if INTEGRATE_ENERGY
             maxEnergyAbsError = localMaxEnergyAbsError;
 // we neglect the error from the energy integration
-//            temp = max(temp, localMaxEnergyAbsError);
+//            tmp = max(tmp, localMaxEnergyAbsError);
 #endif
+            // max relative error over Runge-Kutta eps
+            tmp /= rk_epsrel_d;
+
 #if PALPHA_POROSITY
             maxPressureAbsChange = localMaxPressureAbsChange;
-#endif
-            temp /= rk_epsrel_d; // total error
-            if (temp > 1 && maxPressureAbsChange > max_abs_pressure_change) {
-                printf("pressure changes too much, maximum allowed change is %e, current registered change was %e, reducing time step\n", max_abs_pressure_change, maxPressureAbsChange);
-                temp = 1.1;
+
+            if (tmp > 1 && maxPressureAbsChange > max_abs_pressure_change) {
+                printf("pressure changes too much, maximum allowed change is %e, current registered change was %e, reducing time step\n",
+                        max_abs_pressure_change, maxPressureAbsChange);
+                tmp = 1.1;
             }
-            if (temp > 1) { // error too large
+#endif
+            if (tmp > 1) {
+                /* error too large */
                 errorSmallEnough = FALSE;
-                dtNew = max( 0.1*dt, dt*RK2_TIMESTEP_SAFETY*pow(temp,-0.25) );
-            } else { // error small enough
+                dtNew = max( 0.1*dt, dt*RK2_TIMESTEP_SAFETY*pow(tmp,-0.25) );
+            } else {
+                /* error small enough */
                 errorSmallEnough = TRUE;
-                dtNew = dt * RK2_TIMESTEP_SAFETY * pow(temp, -0.3);
+                dtNew = dt * RK2_TIMESTEP_SAFETY * pow(tmp, -0.3);
 #if PALPHA_POROSITY
-				// do not increase more than 1.1 times in the porous case
- 				if (dtNew > 1.1 * dt) {
- 					dtNew = 1.1 * dt;
- 				}
+                // do not increase more than 1.1 times for p-alpha porosity
+                if (dtNew > 1.1 * dt) {
+                    dtNew = 1.1 * dt;
+                }
 #else
                 // do not increase more than 5 times
                 if (dtNew > 5.0 * dt) {

@@ -28,12 +28,14 @@
 #include "timeintegration.h"
 
 
-/* integration parameters */
+/* rk2_adaptive integration parameters */
 #define TINY_RK2 1e-30
-#define MIN_VEL_CHANGE_RK2 1e100
-#define RK2_LOCATION_SAFETY 0.1
+#define MIN_VEL_CHANGE_RK2 1e100  // defines min vel to consider in error check for velocities
+#define RK2_LOCATION_SAFETY 0.1  // this times the sml defines the min length to consider in error check for positions
 #define RK2_TIMESTEP_SAFETY 0.9
-#define SMALLEST_DT_ALLOWED 1e-30
+#define SMALLEST_DT_ALLOWED 1e-16
+#define RK2_MAX_ALPHA_CHANGE 1e-4
+#define RK2_MAX_DAMAGE_CHANGE 1e-2
 
 
 void rk2Adaptive();
@@ -47,8 +49,6 @@ __global__ void integrateThirdStep(void);
  * @details Limits the timestep by:
  *     - CFL condition, via dt ~ sml/cs
  *     - local forces/acceleration, via dt ~ sqrt(sml/a)
- *     - max user-allowed timestep
- *     - if endTime would be exceeded
  */
 __global__ void limitTimestep(double *forcesPerBlock, double *courantPerBlock);
 

@@ -591,9 +591,8 @@ void transferMaterialsToGPU()
             //end reading ANEOS lookup table to host memory
 #if PALPHA_POROSITY
             config_setting_lookup_float(subset, "porjutzi_p_elastic", &porjutzi_p_elastic[ID]);
-            if (porjutzi_p_elastic[ID] < max_abs_pressure_change_host) {
-                max_abs_pressure_change_host = porjutzi_p_elastic[ID];
-            }
+            if (porjutzi_p_elastic[ID] > 0.0)
+                max_abs_pressure_change_host = fmin(max_abs_pressure_change_host, porjutzi_p_elastic[ID]);
             config_setting_lookup_float(subset, "porjutzi_p_transition", &porjutzi_p_transition[ID]);
             config_setting_lookup_float(subset, "porjutzi_p_compacted", &porjutzi_p_compacted[ID]);
             config_setting_lookup_float(subset, "porjutzi_alpha_0", &porjutzi_alpha_0[ID]);
@@ -872,9 +871,10 @@ void transferMaterialsToGPU()
 #if PALPHA_POROSITY
         cudaGetSymbolAddress((void **)&pc_pointer, max_abs_pressure_change);
         cudaMemcpy(pc_pointer, &max_abs_pressure_change_host, sizeof(double), cudaMemcpyHostToDevice);
-        if (param.verbose) {
-            fprintf(stdout, "Setting maximum allowed pressure change to %.17e \n", max_abs_pressure_change_host);
-        }
+        fprintf(stdout, "setting max allowed pressure change for time integration to %e\n", max_abs_pressure_change_host);
+        if( !(max_abs_pressure_change_host > 0.0) )
+            fprintf(stderr, "WARNING: Max allowed pressure change for time integration is set to %e (set as smallest 'porjutzi_p_elastic' found in material config).\n",
+                    max_abs_pressure_change_host);
 #endif
 
         cudaVerify(cudaMemcpy(matSml_d, sml, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
