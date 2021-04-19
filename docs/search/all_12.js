@@ -21,6 +21,8 @@ var searchData=
   ['rk',['rk',['../miluph_8cu.html#a4a6c73e833d232244b849c1e8156329e',1,'rk():&#160;miluph.cu'],['../miluph_8h.html#a4a6c73e833d232244b849c1e8156329e',1,'rk():&#160;miluph.cu']]],
   ['rk2_5fadaptive',['RK2_ADAPTIVE',['../miluph_8h.html#adf764cbdea00d65edcd07bb9953ad2b7acd343968fdf1f81d98e598822641ebbe',1,'miluph.h']]],
   ['rk2_5flocation_5fsafety',['RK2_LOCATION_SAFETY',['../rk2adaptive_8h.html#a774fa7646b3d5f5d8fd5bb984f72e12e',1,'rk2adaptive.h']]],
+  ['rk2_5fmax_5falpha_5fchange',['RK2_MAX_ALPHA_CHANGE',['../rk2adaptive_8h.html#ac019c1c2050576793bad54ccd1cc1940',1,'rk2adaptive.h']]],
+  ['rk2_5fmax_5fdamage_5fchange',['RK2_MAX_DAMAGE_CHANGE',['../rk2adaptive_8h.html#ac2536e81a7d17d261a20749a2b42f009',1,'rk2adaptive.h']]],
   ['rk2_5ftimestep_5fsafety',['RK2_TIMESTEP_SAFETY',['../rk2adaptive_8h.html#ad2b197ee52ad7afb2147c6a10273f582',1,'rk2adaptive.h']]],
   ['rk2adaptive',['rk2Adaptive',['../rk2adaptive_8cu.html#a8d37d229e9c2b5972c19177be715137b',1,'rk2Adaptive():&#160;rk2adaptive.cu'],['../rk2adaptive_8h.html#a8d37d229e9c2b5972c19177be715137b',1,'rk2Adaptive():&#160;rk2adaptive.cu'],['../timeintegration_8h.html#ac83bf5e9a92c2318d6ec80dab45cfc6f',1,'rk2Adaptive(void):&#160;rk2adaptive.cu']]],
   ['rk2adaptive_2ecu',['rk2adaptive.cu',['../rk2adaptive_8cu.html',1,'']]],
