@@ -26,12 +26,23 @@
 
 #include "miluph.h"
 #include "timeintegration.h"
+#include "parameter.h"
 
 
 /* rk2_adaptive integration parameters */
-#define TINY_RK2 1e-30
-#define MIN_VEL_CHANGE_RK2 1e100  // defines min vel to consider in error check for velocities
+
+/* specify which quantities are used for error estimate, where positions are always used (for particles) */
+/* for pointmasses, no error checking is done by default, but can be set for velocities */
+#define RK2_USE_VELOCITY_ERROR 0
+#define RK2_USE_DENSITY_ERROR 1
+#define RK2_USE_ENERGY_ERROR 0
+#define RK2_USE_VELOCITY_ERROR_POINTMASSES 0  // use velocity error checking for pointmasses
+
+/* specific parameters */
 #define RK2_LOCATION_SAFETY 0.1  // this times the sml defines the min length to consider in error check for positions
+#define MIN_VEL_CHANGE_RK2 10.0  // defines min vel to consider in error check for velocities
+#define RK2_TINY_DENSITY 1e-2
+#define RK2_TINY_ENERGY 10.0
 #define RK2_TIMESTEP_SAFETY 0.9
 #define SMALLEST_DT_ALLOWED 1e-16
 #define RK2_MAX_ALPHA_CHANGE 1e-4
@@ -53,11 +64,14 @@ __global__ void integrateThirdStep(void);
 __global__ void limitTimestep(double *forcesPerBlock, double *courantPerBlock);
 
 __global__ void checkError(
-		double *maxPosAbsErrorPerBlock, double *maxVelAbsErrorPerBlock
-#if INTEGRATE_DENSITY
+		double *maxPosAbsErrorPerBlock
+#if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
+        , double *maxVelAbsErrorPerBlock
+#endif
+#if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
 		, double *maxDensityAbsErrorPerBlock
 #endif
-#if INTEGRATE_ENERGY
+#if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
 		, double *maxEnergyAbsErrorPerBlock
 #endif
 #if PALPHA_POROSITY
@@ -67,5 +81,10 @@ __global__ void checkError(
 
 __global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock);
 __global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock);
+
+
+#if RK2_USE_VELOCITY_ERROR_POINTMASSES && !GRAVITATING_POINT_MASSES
+# error You set RK2_USE_VELOCITY_ERROR_POINTMASSES but not GRAVITATING_POINT_MASSES...
+#endif
 
 #endif

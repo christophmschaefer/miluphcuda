@@ -75,18 +75,20 @@ void rk2Adaptive()
     double dt_damageold = 0;
 #endif
 
-    /* first of all copy the rk_epsrel to the device */
     cudaVerify(cudaMemcpyToSymbol(rk_epsrel_d, &param.rk_epsrel, sizeof(double)));
 
     // allocate memory for runge kutta second order
-    double *maxPosAbsErrorPerBlock, *maxVelAbsErrorPerBlock;
+    double *maxPosAbsErrorPerBlock;
     cudaVerify(cudaMalloc((void**)&maxPosAbsErrorPerBlock, sizeof(double)*numberOfMultiprocessors));
+#if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
+    double *maxVelAbsErrorPerBlock;
     cudaVerify(cudaMalloc((void**)&maxVelAbsErrorPerBlock, sizeof(double)*numberOfMultiprocessors));
-#if INTEGRATE_DENSITY
+#endif
+#if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
     double *maxDensityAbsErrorPerBlock;
     cudaVerify(cudaMalloc((void**)&maxDensityAbsErrorPerBlock , sizeof(double)*numberOfMultiprocessors));
 #endif
-#if INTEGRATE_ENERGY
+#if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
     double *maxEnergyAbsErrorPerBlock;
     cudaVerify(cudaMalloc((void**)&maxEnergyAbsErrorPerBlock, sizeof(double)*numberOfMultiprocessors));
 #endif
@@ -111,6 +113,7 @@ void rk2Adaptive()
         copy_pointmass_immutables_device_to_device(&rk_pointmass_device[rkstep], &pointmass_device);
 #endif
     }
+
     // set the symbol pointers
     cudaVerify(cudaMemcpyToSymbol(rk, &rk_device, sizeof(struct Particle) * 3));
 #if GRAVITATING_POINT_MASSES
@@ -289,11 +292,14 @@ void rk2Adaptive()
                 // calculate errors
                 // following Stephen Oxley 1999, Modelling the Capture Theory for the Origin of Planetary Systems
                 cudaVerifyKernel((checkError<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(
-                                maxPosAbsErrorPerBlock, maxVelAbsErrorPerBlock
-#if INTEGRATE_DENSITY
+                                  maxPosAbsErrorPerBlock
+#if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
+                                , maxVelAbsErrorPerBlock
+#endif
+#if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
                                 , maxDensityAbsErrorPerBlock
 #endif
-#if INTEGRATE_ENERGY
+#if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
                                 , maxEnergyAbsErrorPerBlock
 #endif
 #if PALPHA_POROSITY
@@ -336,18 +342,21 @@ void rk2Adaptive()
 
                 /* print information about errors */
                 if (param.verbose) {
-                    double errPos, errVel, errDensity, errEnergy = 0;
+                    double errPos = 0.0, errVel = 0.0, errDensity = 0.0, errEnergy = 0.0;
                     cudaVerify(cudaMemcpyFromSymbol(&errPos, maxPosAbsError, sizeof(double)));
+#if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
                     cudaVerify(cudaMemcpyFromSymbol(&errVel, maxVelAbsError, sizeof(double)));
-#if INTEGRATE_DENSITY
+#endif
+#if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
                     cudaVerify(cudaMemcpyFromSymbol(&errDensity, maxDensityAbsError, sizeof(double)));
 #endif
-#if INTEGRATE_ENERGY
+#if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
                     cudaVerify(cudaMemcpyFromSymbol(&errEnergy, maxEnergyAbsError, sizeof(double)));
 #endif
                     cudaVerify(cudaDeviceSynchronize());
-                    fprintf(stdout, "total relative max error: %g (locations: %e, velocities: %e, density: %e, energy: %e) with timestep: %g\n",
-                            max(max(errPos, errVel), errDensity) / param.rk_epsrel, errPos, errVel, errDensity, errEnergy, dt_host);
+                    fprintf(stdout, "total max error (relative to eps): %g  (location: %g, velocity: %g, density: %g, energy: %g)  with timestep: %g\n",
+                            max(max(max(errPos, errVel), errDensity), errEnergy) / param.rk_epsrel,
+                            errPos / param.rk_epsrel, errVel / param.rk_epsrel, errDensity / param.rk_epsrel, errEnergy / param.rk_epsrel, dt_host);
 #if PALPHA_POROSITY
                     fprintf(stdout, "dtNewErrorCheck: %g   dtNewAlphaCheck: %g\n", dtNewErrorCheck_host, dtNewAlphaCheck_host);
 #endif
@@ -433,14 +442,16 @@ void rk2Adaptive()
 #endif
     }
     cudaVerify(cudaFree(maxPosAbsErrorPerBlock));
+#if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
     cudaVerify(cudaFree(maxVelAbsErrorPerBlock));
+#endif
 #if FRAGMENTATION
     cudaVerify(cudaFree(maxDamageTimeStepPerBlock));
 #endif
-#if INTEGRATE_ENERGY
+#if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
     cudaVerify(cudaFree(maxEnergyAbsErrorPerBlock));
 #endif
-#if INTEGRATE_DENSITY
+#if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
     cudaVerify(cudaFree(maxDensityAbsErrorPerBlock));
 #endif
 #if PALPHA_POROSITY
@@ -1075,11 +1086,14 @@ __global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock)
 
 
 
-__global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErrorPerBlock
-#if INTEGRATE_DENSITY
+__global__ void checkError(double *maxPosAbsErrorPerBlock
+#if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
+                        , double *maxVelAbsErrorPerBlock
+#endif
+#if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
                         , double *maxDensityAbsErrorPerBlock
 #endif
-#if INTEGRATE_ENERGY
+#if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
                         , double *maxEnergyAbsErrorPerBlock
 #endif
 #if PALPHA_POROSITY
@@ -1088,28 +1102,34 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
         )
 {
     __shared__ double sharedMaxPosAbsError[NUM_THREADS_ERRORCHECK];
+#if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
     __shared__ double sharedMaxVelAbsError[NUM_THREADS_ERRORCHECK];
-#if INTEGRATE_DENSITY
-    __shared__ double sharedMaxDensityAbsError[NUM_THREADS_ERRORCHECK];
-    double localMaxDensityAbsError = 0;
 #endif
-#if INTEGRATE_ENERGY
+#if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
+    __shared__ double sharedMaxDensityAbsError[NUM_THREADS_ERRORCHECK];
+    double localMaxDensityAbsError = 0.0;
+#endif
+#if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
     __shared__ double sharedMaxEnergyAbsError[NUM_THREADS_ERRORCHECK];
-    double localMaxEnergyAbsError = 0;
+    double localMaxEnergyAbsError = 0.0;
     int hasEnergy = 0;
 #endif
 #if PALPHA_POROSITY
     __shared__ double sharedMaxPressureAbsChange[NUM_THREADS_ERRORCHECK];
-    double localMaxPressureAbsChange = 0;
+    double localMaxPressureAbsChange = 0.0;
 #endif
     int i, j, k, m;
-    double dtNew = 0;
-    double localMaxPosAbsError = 0, localMaxVelAbsError = 0;
+    double dtNew = 0.0;
+    double localMaxPosAbsError = 0.0;
+#if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
+    double localMaxVelAbsError = 0.0;
+    double tmp_vel = 0.0, tmp_vel2 = 0.0;
+#endif
     double tmp = 0.0;
-    double tmp_vel = 0.0, tmp_vel2 = 0.0, tmp_pos = 0.0, tmp_pos2 = 0.0;
+    double tmp_pos = 0.0, tmp_pos2 = 0.0;
     double min_pos_change_rk2 = 0.0;
 
-#if GRAVITATING_POINT_MASSES
+#if GRAVITATING_POINT_MASSES && RK2_USE_VELOCITY_ERROR_POINTMASSES
     // loop for pointmasses
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
         tmp = dt * (rk_pointmass[RKFIRST].ax[i]/3.0 - (rk_pointmass[RKSTART].ax[i] + rk_pointmass[RKSECOND].ax[i])/6.0);
@@ -1166,32 +1186,34 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
         }
 #endif
 
+#if RK2_USE_VELOCITY_ERROR
         tmp = dt * (rk[RKFIRST].ax[i]/3.0 - (rk[RKSTART].ax[i] + rk[RKSECOND].ax[i])/6.0);
         tmp_vel = fabs(rk[RKSTART].vx[i]) + fabs(dt*rk[RKSTART].ax[i]);
         if (tmp_vel > MIN_VEL_CHANGE_RK2) {
             tmp_vel2 = fabs(tmp) / tmp_vel;
             localMaxVelAbsError = max(localMaxVelAbsError, tmp_vel2);
         }
-#if DIM > 1
+# if DIM > 1
         tmp = dt * (rk[RKFIRST].ay[i]/3.0 - (rk[RKSTART].ay[i] + rk[RKSECOND].ay[i])/6.0);
         tmp_vel = fabs(rk[RKSTART].vy[i]) + fabs(dt*rk[RKSTART].ay[i]);
         if (tmp_vel > MIN_VEL_CHANGE_RK2) {
             tmp_vel2 = fabs(tmp) / tmp_vel;
             localMaxVelAbsError = max(localMaxVelAbsError, tmp_vel2);
         }
-#endif
-#if DIM == 3
+# endif
+# if DIM == 3
         tmp = dt * (rk[RKFIRST].az[i]/3.0 - (rk[RKSTART].az[i] + rk[RKSECOND].az[i])/6.0);
         tmp_vel = fabs(rk[RKSTART].vz[i]) + fabs(dt*rk[RKSTART].az[i]);
         if (tmp_vel > MIN_VEL_CHANGE_RK2) {
             tmp_vel2 = fabs(tmp) / tmp_vel;
             localMaxVelAbsError = max(localMaxVelAbsError, tmp_vel2);
         }
+# endif
 #endif
 
-#if INTEGRATE_DENSITY
+#if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
         tmp = dt * (rk[RKFIRST].drhodt[i]/3.0 - (rk[RKSTART].drhodt[i] + rk[RKSECOND].drhodt[i])/6.0);
-        tmp = fabs(tmp) / (fabs(rk[RKSTART].rho[i]) + fabs(dt*rk[RKSTART].drhodt[i]) + TINY_RK2);
+        tmp = fabs(tmp) / (fabs(rk[RKSTART].rho[i]) + fabs(dt*rk[RKSTART].drhodt[i]) + RK2_TINY_DENSITY);
         localMaxDensityAbsError = max(localMaxDensityAbsError, tmp);
 #endif
 
@@ -1201,7 +1223,7 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
         localMaxPressureAbsChange = max(localMaxPressureAbsChange, tmp);
 #endif
 
-#if INTEGRATE_ENERGY
+#if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
         hasEnergy = 0;
         switch  (matEOS[p_rhs.materialId[i]]) {
             case (EOS_TYPE_TILLOTSON):
@@ -1231,7 +1253,7 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
         }
         if (hasEnergy) {
             tmp = dt * (rk[RKFIRST].dedt[i]/3.0 - (rk[RKSTART].dedt[i] + rk[RKSECOND].dedt[i])/6.0);
-            tmp = fabs(tmp) / (fabs(rk[RKSTART].e[i]) + fabs(dt*rk[RKSTART].dedt[i]) + TINY_RK2);
+            tmp = fabs(tmp) / (fabs(rk[RKSTART].e[i]) + fabs(dt*rk[RKSTART].dedt[i]) + RK2_TINY_ENERGY);
             localMaxEnergyAbsError = max(localMaxEnergyAbsError, tmp);
         }
 #endif
@@ -1240,11 +1262,13 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
     // reduce shared thread results to one per block
     i = threadIdx.x;
     sharedMaxPosAbsError[i] = localMaxPosAbsError;
+#if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
     sharedMaxVelAbsError[i] = localMaxVelAbsError;
-#if INTEGRATE_DENSITY
+#endif
+#if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
     sharedMaxDensityAbsError[i] = localMaxDensityAbsError;
 #endif
-#if INTEGRATE_ENERGY
+#if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
     sharedMaxEnergyAbsError[i] = localMaxEnergyAbsError;
 #endif
 #if PALPHA_POROSITY
@@ -1255,11 +1279,13 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
         if (i < j) {
             k = i + j;
             sharedMaxPosAbsError[i] = localMaxPosAbsError = max(localMaxPosAbsError, sharedMaxPosAbsError[k]);
+#if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
             sharedMaxVelAbsError[i] = localMaxVelAbsError = max(localMaxVelAbsError, sharedMaxVelAbsError[k]);
-#if INTEGRATE_DENSITY
+#endif
+#if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
             sharedMaxDensityAbsError[i] = localMaxDensityAbsError = max(localMaxDensityAbsError, sharedMaxDensityAbsError[k]);
 #endif
-#if INTEGRATE_ENERGY
+#if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
             sharedMaxEnergyAbsError[i] = localMaxEnergyAbsError = max(localMaxEnergyAbsError, sharedMaxEnergyAbsError[k]);
 #endif
 #if PALPHA_POROSITY
@@ -1272,11 +1298,13 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
     if (i == 0) {
         k = blockIdx.x;
         maxPosAbsErrorPerBlock[k] = localMaxPosAbsError;
+#if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
         maxVelAbsErrorPerBlock[k] = localMaxVelAbsError;
-#if INTEGRATE_DENSITY
+#endif
+#if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
         maxDensityAbsErrorPerBlock[k] = localMaxDensityAbsError;
 #endif
-#if INTEGRATE_ENERGY
+#if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
         maxEnergyAbsErrorPerBlock[k] = localMaxEnergyAbsError;
 #endif
 #if PALPHA_POROSITY
@@ -1287,29 +1315,34 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock, double *maxVelAbsErro
             // last block, so combine all block results
             for (j = 0; j <= m; j++) {
                 localMaxPosAbsError = max(localMaxPosAbsError, maxPosAbsErrorPerBlock[j]);
+#if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
                 localMaxVelAbsError = max(localMaxVelAbsError, maxVelAbsErrorPerBlock[j]);
-#if INTEGRATE_DENSITY
+#endif
+#if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
                 localMaxDensityAbsError = max(localMaxDensityAbsError, maxDensityAbsErrorPerBlock[j]);
 #endif
-#if INTEGRATE_ENERGY
+#if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
                 localMaxEnergyAbsError = max(localMaxEnergyAbsError, maxEnergyAbsErrorPerBlock[j]);
 #endif
 #if PALPHA_POROSITY
                 localMaxPressureAbsChange = max(localMaxPressureAbsChange, maxPressureAbsChangePerBlock[j]);
 #endif
             }
-            maxPosAbsError = localMaxPosAbsError;
-            maxVelAbsError = localMaxVelAbsError;
+
             // (single) max relative error
-            tmp = max(localMaxPosAbsError, localMaxVelAbsError);
-#if INTEGRATE_DENSITY
-            maxDensityAbsError = localMaxDensityAbsError;
-            tmp = max(tmp, localMaxDensityAbsError);
+            tmp = localMaxPosAbsError;
+            maxPosAbsError = localMaxPosAbsError;
+#if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
+            tmp = max(tmp, localMaxVelAbsError);
+            maxVelAbsError = localMaxVelAbsError;
 #endif
-#if INTEGRATE_ENERGY
+#if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
+            tmp = max(tmp, localMaxDensityAbsError);
+            maxDensityAbsError = localMaxDensityAbsError;
+#endif
+#if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
+            tmp = max(tmp, localMaxEnergyAbsError);
             maxEnergyAbsError = localMaxEnergyAbsError;
-// we neglect the error from the energy integration
-//            tmp = max(tmp, localMaxEnergyAbsError);
 #endif
             // max relative error over Runge-Kutta eps
             tmp /= rk_epsrel_d;
