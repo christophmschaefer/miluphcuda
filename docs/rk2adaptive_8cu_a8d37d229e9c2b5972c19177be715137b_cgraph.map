@@ -17,7 +17,7 @@
 <area shape="rect" id="node43" href="$rk2adaptive_8cu.html#a7fc5e6003a94d1b86a72334ff19a14ab" title="integrateSecondStep" alt="" coords="197,1207,340,1233"/>
 <area shape="rect" id="node44" href="$rk2adaptive_8cu.html#a6927b6b75fda2ade3605df5545a20c54" title="integrateThirdStep" alt="" coords="205,1257,333,1284"/>
 <area shape="rect" id="node45" href="$rk2adaptive_8h.html#a7ed61b702995d95eba762edca2a045c6" title="alphaMaxTimeStep" alt="" coords="477,1507,612,1533"/>
-<area shape="rect" id="node46" href="$rk2adaptive_8cu.html#a8da31361d8a77da93d058fa8c48e704e" title="checkError" alt="" coords="226,1359,311,1385"/>
+<area shape="rect" id="node46" href="$rk2adaptive_8cu.html#aa4e60801bdeec04da75b0dda529a1334" title="checkError" alt="" coords="226,1359,311,1385"/>
 <area shape="rect" id="node47" href="$boundary_8cu.html#a44e4bfe25445a2670dad98922f1d2be3" title="BoundaryConditionsAfterIntegratorStep" alt="" coords="144,1409,393,1436"/>
 <area shape="rect" id="node48" href="$timeintegration_8cu.html#a78edde5c20a29ae558ad63db1c2749b5" title="afterIntegrationStep" alt="" coords="201,1460,337,1487"/>
 <area shape="rect" id="node49" href="$memory__handling_8cu.html#a98496f47800965844494c86dc0fe4923" title="free_particles_memory" alt="" coords="191,1511,346,1537"/>
