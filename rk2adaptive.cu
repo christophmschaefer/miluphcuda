@@ -334,8 +334,9 @@ void rk2Adaptive()
                 /* last time step was okay, forward time and continue with new time step size */
                 if (errorSmallEnough_host) {
                     currentTime += dt_host;
-                    if (!param.verbose)
-                        fprintf(stdout, "time: %e   last timestep: %g\n", currentTime, dt_host);
+                    if (!param.verbose) {
+                        fprintf(stdout, "time: %e   last timestep: %g next output time in: %e\n", currentTime, dt_host, endTime-currentTime);
+                    }
                     cudaVerifyKernel((BoundaryConditionsAfterIntegratorStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(interactions)));
                     cudaVerify(cudaDeviceSynchronize());
                 }
