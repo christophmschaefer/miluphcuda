@@ -31,7 +31,12 @@
 
 /* rk2_adaptive integration parameters */
 
-/* specify which quantities are used for error estimate, where positions are always used (for particles) */
+/* pre-timestep checks to limit timestep (all for particles only) */
+#define RK2_USE_COURANT_LIMIT 0
+#define RK2_USE_FORCES_LIMIT 0
+#define RK2_USE_DAMAGE_LIMIT 0
+
+/* specify quantities for post-timestep error estimate, where positions are always used (for particles) */
 /* for pointmasses, no error checking is done by default, but can be set for velocities */
 #define RK2_USE_VELOCITY_ERROR 0
 #define RK2_USE_DENSITY_ERROR 1
@@ -51,17 +56,24 @@
 
 void rk2Adaptive();
 
+/**
+ * @brief Limits the timestep by the CFL condition, with dt ~ sml/cs.
+ */
+__global__ void limitTimestepCourant(double *courantPerBlock);
+
+/**
+ * @brief Limits the timestep based on local forces/acceleration, with dt ~ sqrt(sml/a).
+ */
+__global__ void limitTimestepForces(double *forcesPerBlock);
+
+/**
+ * @brief Limits the timestep based on the rate of damage change.
+ */
+__global__ void limitTimestepDamage(double *maxDamageTimeStepPerBlock);
+
 __global__ void integrateFirstStep(void);
 __global__ void integrateSecondStep(void);
 __global__ void integrateThirdStep(void);
-
-/**
- * @brief Limit timestep.
- * @details Limits the timestep by:
- *     - CFL condition, via dt ~ sml/cs
- *     - local forces/acceleration, via dt ~ sqrt(sml/a)
- */
-__global__ void limitTimestep(double *forcesPerBlock, double *courantPerBlock);
 
 __global__ void checkError(
 		double *maxPosAbsErrorPerBlock
@@ -79,7 +91,6 @@ __global__ void checkError(
 #endif
 );
 
-__global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock);
 __global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock);
 
 

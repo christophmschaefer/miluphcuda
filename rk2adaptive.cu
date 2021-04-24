@@ -65,14 +65,11 @@ void rk2Adaptive()
     double dtmax_host = param.maxtimestep;
     assert(dtmax_host > 0);
     double dtNewErrorCheck_host = 0.0;
+    double dt_new;
 #if PALPHA_POROSITY
     double dtNewAlphaCheck_host = -1.0;
     double dt_alphanew = 0;
     double dt_alphaold = 0;
-#endif
-#if FRAGMENTATION
-    double dt_damagenew = 0;
-    double dt_damageold = 0;
 #endif
 
     cudaVerify(cudaMemcpyToSymbol(rk_epsrel_d, &param.rk_epsrel, sizeof(double)));
@@ -92,7 +89,15 @@ void rk2Adaptive()
     double *maxEnergyAbsErrorPerBlock;
     cudaVerify(cudaMalloc((void**)&maxEnergyAbsErrorPerBlock, sizeof(double)*numberOfMultiprocessors));
 #endif
-#if FRAGMENTATION
+#if RK2_USE_COURANT_LIMIT
+    double *courantPerBlock;
+    cudaVerify(cudaMalloc((void**)&courantPerBlock, sizeof(double)*numberOfMultiprocessors));
+#endif
+#if RK2_USE_FORCES_LIMIT
+    double *forcesPerBlock;
+    cudaVerify(cudaMalloc((void**)&forcesPerBlock, sizeof(double)*numberOfMultiprocessors));
+#endif
+#if RK2_USE_DAMAGE_LIMIT && FRAGMENTATION
     double *maxDamageTimeStepPerBlock;
     cudaVerify(cudaMalloc((void**)&maxDamageTimeStepPerBlock, sizeof(double)*numberOfMultiprocessors));
 #endif
@@ -182,13 +187,14 @@ void rk2Adaptive()
             }
         }
 
-        // loop until end of current (output) timestep
+        // loop until end of current output time
         while (currentTime < endTime) {
             // get the correct time
             substep_currentTime = currentTime;
             cudaVerify(cudaMemcpyToSymbol(substep_currentTimeD, &substep_currentTime, sizeof(double)));
 
             cudaVerify(cudaDeviceSynchronize());
+
             // copy particle data to first runge kutta step
             copy_particles_variables_device_to_device(&rk_device[RKFIRST], &p_device);
             cudaVerify(cudaDeviceSynchronize());
@@ -197,24 +203,43 @@ void rk2Adaptive()
             cudaVerify(cudaDeviceSynchronize());
 #endif
 
-            // calculate first right hand side with rk[RKFIRST]_device
+            // calculate first right hand side, based on quantities in [RKFIRST]
             cudaVerify(cudaMemcpyToSymbol(p, &rk_device[RKFIRST], sizeof(struct Particle)));
+#if GRAVITATING_POINT_MASSES
             cudaVerify(cudaMemcpyToSymbol(pointmass, &rk_pointmass_device[RKFIRST], sizeof(struct Pointmass)));
+#endif
             rightHandSide();
             cudaVerify(cudaDeviceSynchronize());
 
-#if FRAGMENTATION
-            /* limit timestep according to damage evolution */
-            cudaVerify(cudaMemcpyFromSymbol(&dt_damageold, dt, sizeof(double)));
-            cudaVerifyKernel((damageMaxTimeStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(
+#if RK2_USE_COURANT_LIMIT
+            /* limit timestep based on CFL condition, with dt ~ sml/cs */
+            cudaVerifyKernel((limitTimestepCourant<<<numberOfMultiprocessors, NUM_THREADS_LIMITTIMESTEP>>>(
+                                courantPerBlock)));
+            cudaVerify(cudaDeviceSynchronize());
+            cudaVerify(cudaMemcpyFromSymbol(&dt_new, dt, sizeof(double)));
+            if (param.verbose && dt_new < dt_host)
+                fprintf(stdout, "reducing timestep due to CFL condition from %g to %g (current time: %e)\n", dt_host, dt_new, currentTime);
+            dt_host = dt_suggested = dt_new;
+#endif
+#if RK2_USE_FORCES_LIMIT
+            /* limit timestep based on local forces/acceleration, with dt ~ sqrt(sml/a) */
+            cudaVerifyKernel((limitTimestepForces<<<numberOfMultiprocessors, NUM_THREADS_LIMITTIMESTEP>>>(
+                                forcesPerBlock)));
+            cudaVerify(cudaDeviceSynchronize());
+            cudaVerify(cudaMemcpyFromSymbol(&dt_new, dt, sizeof(double)));
+            if (param.verbose && dt_new < dt_host)
+                fprintf(stdout, "reducing timestep due to forces/accels from %g to %g (current time: %e)\n", dt_host, dt_new, currentTime);
+            dt_host = dt_suggested = dt_new;
+#endif
+#if RK2_USE_DAMAGE_LIMIT && FRAGMENTATION
+            /* limit timestep based on rate of damage change */
+            cudaVerifyKernel((limitTimestepDamage<<<numberOfMultiprocessors, NUM_THREADS_LIMITTIMESTEP>>>(
                                 maxDamageTimeStepPerBlock)));
-            cudaVerify(cudaMemcpyFromSymbol(&dt_damagenew, dt, sizeof(double)));
-            if (dt_damagenew < dt_damageold) {
-                dt_host = dt_suggested = dt_damagenew;
-                if (param.verbose)
-                    fprintf(stdout, "reducing timestep due to damage evolution from %g to %g (current time: %e)\n",
-                            dt_damageold, dt_damagenew, currentTime);
-            }
+            cudaVerify(cudaDeviceSynchronize());
+            cudaVerify(cudaMemcpyFromSymbol(&dt_new, dt, sizeof(double)));
+            if (param.verbose && dt_new < dt_host)
+                fprintf(stdout, "reducing timestep due to damage evolution from %g to %g (current time: %e)\n", dt_host, dt_new, currentTime);
+            dt_host = dt_suggested = dt_new;
 #endif
 
             // remember values of first step
@@ -224,22 +249,20 @@ void rk2Adaptive()
             copy_pointmass_variables_device_to_device(&rk_pointmass_device[RKSTART], &rk_pointmass_device[RKFIRST]);
             copy_pointmass_derivatives_device_to_device(&rk_pointmass_device[RKSTART], &rk_pointmass_device[RKFIRST]);
 #endif
-
             // remember accels due to gravity
-            if (param.selfgravity) {
+            if (param.selfgravity)
                 copy_gravitational_accels_device_to_device(&rk_device[RKSTART], &rk_device[RKFIRST]);
-            }
 
             // integrate with adaptive timestep and break loop once acceptable
             while (TRUE) {
                 cudaVerify(cudaDeviceSynchronize());
-                
+
                 // compute
                 //    q_n + 0.5*h*k1
                 // and store quantities in [RKFIRST]
                 cudaVerifyKernel((integrateFirstStep<<<numberOfMultiprocessors, NUM_THREADS_RK2_INTEGRATE_STEP>>>()));
                 cudaVerify(cudaDeviceSynchronize());
-                
+
                 // check for SMALLEST_DT_ALLOWED
                 cudaVerify(cudaMemcpyFromSymbol(&dt_host, dt, sizeof(double)));
                 if (dt_host < SMALLEST_DT_ALLOWED) {
@@ -247,7 +270,7 @@ void rk2Adaptive()
                     exit(1);
                 }
 
-                // get derivatives for second step (i.e., compute k2)
+                // get derivatives for second step (i.e., compute k2), based on quantities in [RKFIRST]
                 // this happens at t = t0 + h/2
                 substep_currentTime = currentTime + dt_host*0.5;
                 cudaVerify(cudaMemcpyToSymbol(substep_currentTimeD, &substep_currentTime, sizeof(double)));
@@ -268,7 +291,7 @@ void rk2Adaptive()
                     copy_gravitational_accels_device_to_device(&rk_device[RKSECOND], &rk_device[RKFIRST]);
                 }
 
-                // get derivatives for the 3rd (and last) step (i.e., compute k3)
+                // get derivatives for the 3rd (and last) step (i.e., compute k3), based on quantities in [RKSECOND]
                 // this happens at t = t0 + h
                 cudaVerify(cudaMemcpyToSymbol(p, &rk_device[RKSECOND], sizeof(struct Particle)));
 #if GRAVITATING_POINT_MASSES
@@ -445,7 +468,13 @@ void rk2Adaptive()
 #if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
     cudaVerify(cudaFree(maxVelAbsErrorPerBlock));
 #endif
-#if FRAGMENTATION
+#if RK2_USE_COURANT_LIMIT
+    cudaVerify(cudaFree(courantPerBlock));
+#endif
+#if RK2_USE_FORCES_LIMIT
+    cudaVerify(cudaFree(forcesPerBlock));
+#endif
+#if RK2_USE_DAMAGE_LIMIT && FRAGMENTATION
     cudaVerify(cudaFree(maxDamageTimeStepPerBlock));
 #endif
 #if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
@@ -461,14 +490,61 @@ void rk2Adaptive()
 
 
 
-__global__ void limitTimestep(double *forcesPerBlock , double *courantPerBlock)
+#if RK2_USE_COURANT_LIMIT
+__global__ void limitTimestepCourant(double *courantPerBlock)
 {
-    __shared__ double sharedForces[NUM_THREADS_LIMITTIMESTEP];
     __shared__ double sharedCourant[NUM_THREADS_LIMITTIMESTEP];
     int i, j, k, m;
-    double forces = 1e100, courant = 1e100;
-    double temp;
-    double sml;
+    double courant = 1e100;
+
+    // loop for particles
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
+        courant = min(courant, p.h[i]/p.cs[i]);
+    }
+
+    // reduce shared thread results to one per block
+    i = threadIdx.x;
+    sharedCourant[i] = courant;
+    for (j = NUM_THREADS_LIMITTIMESTEP / 2; j > 0; j /= 2) {
+        __syncthreads();
+        if (i < j) {
+            k = i + j;
+            sharedCourant[i] = courant = min(courant, sharedCourant[k]);
+        }
+    }
+
+    // compute block result
+    if (i == 0) {
+        k = blockIdx.x;
+        courantPerBlock[k] = courant;
+        m = gridDim.x - 1;
+        if (m == atomicInc((unsigned int *)&blockCount, m)) {
+            // last block, so combine all block results
+            for (j = 0; j <= m; j++)
+                courant = min(courant, courantPerBlock[j]);
+            blockCount = 0;  // reset block count
+
+            courant *= COURANT_FACT;
+#if DEBUG_TIMESTEP
+            printf("<limitTimestepCourant> suggests max timestep: %g\n", courant);
+#endif
+            // reduce timestep if necessary
+            if (courant < dt  &&  courant > 0.0)
+                dt = courant;
+        }
+    }
+}
+#endif
+
+
+
+#if RK2_USE_FORCES_LIMIT
+__global__ void limitTimestepForces(double *forcesPerBlock)
+{
+    __shared__ double sharedForces[NUM_THREADS_LIMITTIMESTEP];
+    int i, j, k, m;
+    double forces = 1e100;
+    double tmp;
     double ax;
 #if DIM > 1
     double ay;
@@ -476,6 +552,8 @@ __global__ void limitTimestep(double *forcesPerBlock , double *courantPerBlock)
 #if DIM == 3
     double az;
 #endif
+
+    // loop for particles
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
         ax = p.ax[i];
 #if DIM > 1
@@ -484,58 +562,107 @@ __global__ void limitTimestep(double *forcesPerBlock , double *courantPerBlock)
 #if DIM == 3
         az = p.az[i];
 #endif
-        temp = ax*ax;
+        tmp = ax*ax;
 #if DIM > 1
-        temp += ay*ay;
+        tmp += ay*ay;
 #endif
 #if DIM == 3
-         temp += az*az;
+         tmp += az*az;
 #endif
-        sml = p.h[i];
-        if (temp > 0) {
-            temp = sqrt(sml / sqrt(temp));
-            forces = min(forces, temp);
+        if (tmp > 0.0) {
+            tmp = sqrt(p.h[i] / sqrt(tmp));
+            forces = min(forces, tmp);
         }
-        temp = sml / p.cs[i];
-        courant = min(courant, temp);
     }
 
     // reduce shared thread results to one per block
     i = threadIdx.x;
     sharedForces[i] = forces;
-    sharedCourant[i] = courant;
     for (j = NUM_THREADS_LIMITTIMESTEP / 2; j > 0; j /= 2) {
         __syncthreads();
         if (i < j) {
             k = i + j;
             sharedForces[i] = forces = min(forces, sharedForces[k]);
-            sharedCourant[i] = courant = min(courant, sharedCourant[k]);
         }
     }
 
-    // write block result to global memory
+    // compute block result
     if (i == 0) {
         k = blockIdx.x;
         forcesPerBlock[k] = forces;
-        courantPerBlock[k] = courant;
+        m = gridDim.x - 1;
+        if (m == atomicInc((unsigned int *)&blockCount, m)) {
+            // last block, so combine all block results
+            for (j = 0; j <= m; j++)
+                forces = min(forces, forcesPerBlock[j]);
+            blockCount = 0;  // reset block count
+
+            forces *= FORCES_FACT;
+#if DEBUG_TIMESTEP
+            printf("<limitTimestepForces> suggests max timestep: %g\n", forces);
+#endif
+            // reduce timestep if necessary
+            if (forces < dt  &&  forces > 0.0)
+                dt = forces;
+        }
+    }
+}
+#endif
+
+
+
+#if RK2_USE_DAMAGE_LIMIT && FRAGMENTATION
+__global__ void limitTimestepDamage(double *maxDamageTimeStepPerBlock)
+{
+    __shared__ double sharedMaxDamageTimeStep[NUM_THREADS_LIMITTIMESTEP];
+    double localMaxDamageTimeStep = 1e100;
+    double tmp = 0.0;
+    int i, j, k, m;
+
+    // loop for particles
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
+        if (p.dddt[i] > 0.0) {
+            tmp = (p.d[i] + RK2_MAX_DAMAGE_CHANGE) / p.dddt[i];
+            localMaxDamageTimeStep = min(tmp, localMaxDamageTimeStep);
+        }
+    }
+
+    // reduce shared thread results to one per block
+    i = threadIdx.x;
+    sharedMaxDamageTimeStep[i] = localMaxDamageTimeStep;
+    for (j = NUM_THREADS_LIMITTIMESTEP / 2; j > 0; j /= 2) {
+        __syncthreads();
+        if (i < j) {
+            k = i + j;
+            sharedMaxDamageTimeStep[i] = localMaxDamageTimeStep = min(localMaxDamageTimeStep, sharedMaxDamageTimeStep[k]);
+        }
+    }
+
+    // compute block result
+    if (i == 0) {
+        k = blockIdx.x;
+        maxDamageTimeStepPerBlock[k] = localMaxDamageTimeStep;
         m = gridDim.x - 1;
         if (m == atomicInc((unsigned int *)&blockCount, m)) {
             // last block, so combine all block results
             for (j = 0; j <= m; j++) {
-                forces = min(forces, forcesPerBlock[j]);
-                courant = min(courant, courantPerBlock[j]);
+                localMaxDamageTimeStep = min(localMaxDamageTimeStep, maxDamageTimeStepPerBlock[j]);
             }
-            // set new timestep
-            dt = min(COURANT_FACT*courant, FORCES_FACT*forces);
+            blockCount = 0;  // reset block count
+
 #if DEBUG_TIMESTEP
-            printf("<limitTimestep> max allowed timestep due to CFL is %g, due to forces/accels is %g, set timestep to %g\n",
-                    COURANT_FACT*courant, FORCES_FACT*forces, dt);
+            printf("<limitTimestepDamage> suggests max timestep: %g\n", localMaxDamageTimeStep);
 #endif
-            // reset block count
-            blockCount = 0;
+            // reduce timestep if necessary
+            if (localMaxDamageTimeStep < dt  &&  localMaxDamageTimeStep > 0.0)
+                dt = localMaxDamageTimeStep;
+
+            // write also to global device mem...
+            maxDamageTimeStep = localMaxDamageTimeStep;
         }
     }
 }
+#endif
 
 
 
@@ -970,61 +1097,6 @@ __global__ void integrateThirdStep(void)
 #endif
     }
 }
-
-
-
-#if FRAGMENTATION
-__global__ void damageMaxTimeStep(double *maxDamageTimeStepPerBlock)
-{
-    __shared__ double sharedMaxDamageTimeStep[NUM_THREADS_ERRORCHECK];
-    double localMaxDamageTimeStep = 1e100;
-    double tmp = 0;
-    int i, j, k, m;
-
-    // loop for particles
-    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
-        if (rk[RKFIRST].dddt[i] > 0) {
-            tmp = (rk[RKFIRST].d[i] + RK2_MAX_DAMAGE_CHANGE) / rk[RKFIRST].dddt[i];
-            localMaxDamageTimeStep = min(tmp, localMaxDamageTimeStep);
-        }
-    }
-
-    // reduce shared thread results to one per block
-    i = threadIdx.x;
-    sharedMaxDamageTimeStep[i] = localMaxDamageTimeStep;
-    for (j = NUM_THREADS_ERRORCHECK / 2; j > 0; j /= 2) {
-        __syncthreads();
-        if (i < j) {
-            k = i + j;
-            sharedMaxDamageTimeStep[i] = localMaxDamageTimeStep = min(localMaxDamageTimeStep, sharedMaxDamageTimeStep[k]);
-        }
-    }
-
-    // write block result to global memory
-    if (i == 0) {
-        k = blockIdx.x;
-        maxDamageTimeStepPerBlock[k] = localMaxDamageTimeStep;
-        m = gridDim.x - 1;
-        if (m == atomicInc((unsigned int *)&blockCount, m)) {
-            // last block, so combine all block results
-            for (j = 0; j <= m; j++) {
-                localMaxDamageTimeStep = min(localMaxDamageTimeStep, maxDamageTimeStepPerBlock[j]);
-            }
-            // reset block count
-            blockCount = 0;
-#if DEBUG_TIMESTEP
-            printf("<damageMaxTimeStep> suggests max timestep: %g\n", localMaxDamageTimeStep);
-#endif
-            // reduce timestep if necessary
-            if (localMaxDamageTimeStep < dt  &&  localMaxDamageTimeStep > 0)
-                dt = localMaxDamageTimeStep;
-
-            // write also to global device mem...
-            maxDamageTimeStep = localMaxDamageTimeStep;
-        }
-    }
-}
-#endif
 
 
 
