@@ -8,8 +8,11 @@ var searchData=
   ['rk2_5ftimestep_5fsafety',['RK2_TIMESTEP_SAFETY',['../rk2adaptive_8h.html#ad2b197ee52ad7afb2147c6a10273f582',1,'rk2adaptive.h']]],
   ['rk2_5ftiny_5fdensity',['RK2_TINY_DENSITY',['../rk2adaptive_8h.html#a6d9e88c97a6b4e5aba98f14e96c7980a',1,'rk2adaptive.h']]],
   ['rk2_5ftiny_5fenergy',['RK2_TINY_ENERGY',['../rk2adaptive_8h.html#aff7d860a4eadf8c1623d106fa4834c6e',1,'rk2adaptive.h']]],
+  ['rk2_5fuse_5fcourant_5flimit',['RK2_USE_COURANT_LIMIT',['../rk2adaptive_8h.html#a1f7327572dbd17d287ec440671671f51',1,'rk2adaptive.h']]],
+  ['rk2_5fuse_5fdamage_5flimit',['RK2_USE_DAMAGE_LIMIT',['../rk2adaptive_8h.html#a91283b01772bb1d92e1261a78ebcfdca',1,'rk2adaptive.h']]],
   ['rk2_5fuse_5fdensity_5ferror',['RK2_USE_DENSITY_ERROR',['../rk2adaptive_8h.html#a227bd35ea6a90486b08bf1bbfb1c6640',1,'rk2adaptive.h']]],
   ['rk2_5fuse_5fenergy_5ferror',['RK2_USE_ENERGY_ERROR',['../rk2adaptive_8h.html#a9322793cd37254bdd9d8df9c66f3ec02',1,'rk2adaptive.h']]],
+  ['rk2_5fuse_5fforces_5flimit',['RK2_USE_FORCES_LIMIT',['../rk2adaptive_8h.html#ad5fac376212107b4a5c7d146ba66abd5',1,'rk2adaptive.h']]],
   ['rk2_5fuse_5fvelocity_5ferror',['RK2_USE_VELOCITY_ERROR',['../rk2adaptive_8h.html#a88584352dcb8115a5756a346dbdce364',1,'rk2adaptive.h']]],
   ['rk2_5fuse_5fvelocity_5ferror_5fpointmasses',['RK2_USE_VELOCITY_ERROR_POINTMASSES',['../rk2adaptive_8h.html#a011ac2f2c89cd4b9cb6f4cdfab449139',1,'rk2adaptive.h']]]
 ];

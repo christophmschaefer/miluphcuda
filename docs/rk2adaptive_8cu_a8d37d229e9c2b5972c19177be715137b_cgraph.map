@@ -1,22 +1,24 @@
 <map id="rk2Adaptive" name="rk2Adaptive">
-<area shape="rect" id="node2" href="$memory__handling_8cu.html#a83017b6658aa7eaf464e864932fc1b47" title="allocate_particles\l_memory" alt="" coords="207,311,330,353"/>
-<area shape="rect" id="node3" href="$memory__handling_8cu.html#a00388f6cb86dd667c058df18b8f7d3ea" title="copy_particles_immutables\l_device_to_device" alt="" coords="179,377,359,418"/>
-<area shape="rect" id="node4" href="$memory__handling_8cu.html#a320620af346b15f6f7da698b78548ac5" title="allocate_pointmass\l_memory" alt="" coords="201,442,336,483"/>
-<area shape="rect" id="node5" href="$memory__handling_8cu.html#ac4196d9a93284642b2ed484e0ac26391" title="copy_pointmass_immutables\l_device_to_device" alt="" coords="173,507,364,549"/>
-<area shape="rect" id="node6" href="$timeintegration_8cu.html#aacee04f8bf23d8594794f6952451678c" title="calculate_angular_momentum" alt="" coords="171,573,366,600"/>
-<area shape="rect" id="node7" href="$memory__handling_8cu.html#a3ae09c6f873144aeac3dd424fc56005d" title="copy_particles_variables\l_device_to_device" alt="" coords="186,625,351,666"/>
-<area shape="rect" id="node8" href="$memory__handling_8cu.html#a6762d0c5bec9943020b8f70c0211f9cb" title="copy_pointmass_variables\l_device_to_device" alt="" coords="181,690,357,731"/>
-<area shape="rect" id="node9" href="$rhs_8cu.html#aaa69e1e6250e714b978b8f83f260a28d" title="rightHandSide" alt="" coords="217,807,321,833"/>
+<area shape="rect" id="node2" href="$memory__handling_8cu.html#a83017b6658aa7eaf464e864932fc1b47" title="allocate_particles\l_memory" alt="" coords="207,210,330,251"/>
+<area shape="rect" id="node3" href="$memory__handling_8cu.html#a00388f6cb86dd667c058df18b8f7d3ea" title="copy_particles_immutables\l_device_to_device" alt="" coords="179,275,359,317"/>
+<area shape="rect" id="node4" href="$memory__handling_8cu.html#a320620af346b15f6f7da698b78548ac5" title="allocate_pointmass\l_memory" alt="" coords="201,341,336,382"/>
+<area shape="rect" id="node5" href="$memory__handling_8cu.html#ac4196d9a93284642b2ed484e0ac26391" title="copy_pointmass_immutables\l_device_to_device" alt="" coords="173,406,364,447"/>
+<area shape="rect" id="node6" href="$timeintegration_8cu.html#aacee04f8bf23d8594794f6952451678c" title="calculate_angular_momentum" alt="" coords="171,472,366,499"/>
+<area shape="rect" id="node7" href="$memory__handling_8cu.html#a3ae09c6f873144aeac3dd424fc56005d" title="copy_particles_variables\l_device_to_device" alt="" coords="186,523,351,565"/>
+<area shape="rect" id="node8" href="$memory__handling_8cu.html#a6762d0c5bec9943020b8f70c0211f9cb" title="copy_pointmass_variables\l_device_to_device" alt="" coords="181,589,357,630"/>
+<area shape="rect" id="node9" href="$rhs_8cu.html#aaa69e1e6250e714b978b8f83f260a28d" title="rightHandSide" alt="" coords="217,705,321,732"/>
 <area shape="rect" id="node10" href="$io_8cu.html#aeb07186d62049f2b5568dedb0264bdd2" title="copyToHostAndWriteToFile" alt="" coords="453,5,636,32"/>
-<area shape="rect" id="node31" href="$damage_8h.html#a21afcc6e2f3ce13ddaad8f60b8982f75" title="Limits the damage to what is supported by the number of activated flaws. " alt="" coords="497,1405,593,1432"/>
-<area shape="rect" id="node38" href="$rk2adaptive_8h.html#a59fa6fb2b980eb0a3939339f8ef758f3" title="damageMaxTimeStep" alt="" coords="470,1456,619,1483"/>
+<area shape="rect" id="node31" href="$damage_8h.html#a21afcc6e2f3ce13ddaad8f60b8982f75" title="Limits the damage to what is supported by the number of activated flaws. " alt="" coords="497,1288,593,1315"/>
+<area shape="rect" id="node36" href="$rk2adaptive_8h.html#a3a7a96c59b53a445b89f46dd54de7871" title="Limits the timestep by the CFL condition, with dt ~ sml/cs. " alt="" coords="195,807,342,833"/>
+<area shape="rect" id="node37" href="$rk2adaptive_8h.html#a50c5449bcb1aa80263db8a7f1f5b3260" title="Limits the timestep based on local forces/acceleration, with dt ~ sqrt(sml/a). " alt="" coords="199,857,339,884"/>
+<area shape="rect" id="node38" href="$rk2adaptive_8h.html#a15dded8dbb117ac6fe0bb4d81956c1d2" title="Limits the timestep based on the rate of damage change. " alt="" coords="194,908,343,935"/>
 <area shape="rect" id="node39" href="$memory__handling_8cu.html#a5d88d1ba1f3e7e4d44a43aa6f06c2311" title="copy_particles_derivatives\l_device_to_device" alt="" coords="181,959,357,1001"/>
 <area shape="rect" id="node40" href="$memory__handling_8cu.html#ad1ed0ecd3f7be7d1b032da6b1fb4898e" title="copy_pointmass_derivatives\l_device_to_device" alt="" coords="175,1025,362,1066"/>
 <area shape="rect" id="node41" href="$memory__handling_8cu.html#aa5336b131f7abee34ab1147ba5217521" title="copy_gravitational\l_accels_device_to_device" alt="" coords="181,1090,356,1131"/>
 <area shape="rect" id="node42" href="$rk2adaptive_8cu.html#ae845fa1a6860cd81b051bf8efa13d2ae" title="integrateFirstStep" alt="" coords="206,1156,331,1183"/>
 <area shape="rect" id="node43" href="$rk2adaptive_8cu.html#a7fc5e6003a94d1b86a72334ff19a14ab" title="integrateSecondStep" alt="" coords="197,1207,340,1233"/>
 <area shape="rect" id="node44" href="$rk2adaptive_8cu.html#a6927b6b75fda2ade3605df5545a20c54" title="integrateThirdStep" alt="" coords="205,1257,333,1284"/>
-<area shape="rect" id="node45" href="$rk2adaptive_8h.html#a7ed61b702995d95eba762edca2a045c6" title="alphaMaxTimeStep" alt="" coords="477,1507,612,1533"/>
+<area shape="rect" id="node45" href="$rk2adaptive_8h.html#a7ed61b702995d95eba762edca2a045c6" title="alphaMaxTimeStep" alt="" coords="477,1339,612,1365"/>
 <area shape="rect" id="node46" href="$rk2adaptive_8cu.html#aa4e60801bdeec04da75b0dda529a1334" title="checkError" alt="" coords="226,1359,311,1385"/>
 <area shape="rect" id="node47" href="$boundary_8cu.html#a44e4bfe25445a2670dad98922f1d2be3" title="BoundaryConditionsAfterIntegratorStep" alt="" coords="144,1409,393,1436"/>
 <area shape="rect" id="node48" href="$timeintegration_8cu.html#a78edde5c20a29ae558ad63db1c2749b5" title="afterIntegrationStep" alt="" coords="201,1460,337,1487"/>
@@ -46,6 +48,4 @@
 <area shape="rect" id="node33" href="$internal__forces_8h.html#a68f70b7adeb9ebbf8eebae040bfd803c" title="calculatedeviatoricStress" alt="" coords="461,1136,629,1163"/>
 <area shape="rect" id="node34" href="$xsph_8cu.html#a5cc7201c525d9ef61114cbd52cfea95f" title="calculateXSPHchanges" alt="" coords="465,1187,625,1213"/>
 <area shape="rect" id="node35" href="$little__helpers_8cu.html#a15ff2f32836f363fb1f5cdfa3a149d1c" title="checkNaNs" alt="" coords="499,1237,590,1264"/>
-<area shape="rect" id="node36" href="$stress_8cu.html#af15671e840f16bcac37084ff0a6e64f5" title="set_stress_tensor" alt="" coords="481,1288,608,1315"/>
-<area shape="rect" id="node37" href="$viscosity_8h.html#a5f4f7c861289abc110a778820eafdeb2" title="calculate_kinematic\l_viscosity" alt="" coords="476,1339,613,1381"/>
 </map>
