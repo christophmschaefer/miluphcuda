@@ -1,0 +1,106 @@
+
+Reading parameters from 'impact_ini.params' ... Done.
+
+Verbosity 1: Standard printing
+
+> Interpolating profiles to increase radial density 
+> Done interpolating profiles! 
+
+1 layer(s):
+    Outer radius   Mass          Material
+    5.000000e-01   5.23599e-01   0
+
+> Divide the profile into shells
+
+> Tweak the particle mass to fix the outer boundary
+> Done particle mass tweaking!
+
+2 shells in layer 1
+
+> Done profile division into shells!
+
+==== Particles ====
+
+> Find the values for the particles in each shell
+  No extra values.
+> Done shell particle values!
+
+> Arrange the particles in each shell
+    Shell 1 of 2    Shell 2 of 2
+> Done particles!
+
+Final number of particles = 32
+
+> SEAGen done!
+Verbosity 1: Standard printing
+
+> Interpolating profiles to increase radial density 
+> Done interpolating profiles! 
+
+1 layer(s):
+    Outer radius   Mass          Material
+    1.500000e+01   2.08403e+03   0
+
+> Divide the profile into shells
+
+> Tweak the particle mass to fix the outer boundary
+> Done particle mass tweaking!
+
+36 shells in layer 1
+
+> Done profile division into shells!
+
+==== Particles ====
+
+> Find the values for the particles in each shell
+  No extra values.
+> Done shell particle values!
+
+> Arrange the particles in each shell
+    Shell 1 of 36    Shell 2 of 36    Shell 3 of 36    Shell 4 of 36    Shell 5 of 36    Shell 6 of 36    Shell 7 of 36    Shell 8 of 36    Shell 9 of 36    Shell 10 of 36    Shell 11 of 36    Shell 12 of 36    Shell 13 of 36    Shell 14 of 36    Shell 15 of 36    Shell 16 of 36    Shell 17 of 36    Shell 18 of 36    Shell 19 of 36    Shell 20 of 36    Shell 21 of 36    Shell 22 of 36    Shell 23 of 36    Shell 24 of 36    Shell 25 of 36    Shell 26 of 36    Shell 27 of 36    Shell 28 of 36    Shell 29 of 36    Shell 30 of 36    Shell 31 of 36    Shell 32 of 36    Shell 33 of 36    Shell 34 of 36    Shell 35 of 36    Shell 36 of 36
+> Done particles!
+
+Final number of particles = 95475
+
+> SEAGen done!
+
+Statistics of particle masses according to SEAGen generation (where SEAGen strives for equal masses), i.e., not directly related to actual SPH particle masses:
+    projectile: minimum  = 0.0161185
+                maximum  = 0.0163413
+                mean     = 0.0163135
+                median   = 0.0163413
+                std.dev. = 7.36769e-05
+        target: minimum  = 0.0210474
+                maximum  = 0.0219375
+                mean     = 0.021827
+                median   = 0.0218265
+                std.dev. = 6.74527e-06
+distributed 54 flaws for 32 particles.
+distributed 223793 flaws for 47737 particles.
+
+Writing particles to 'impact.0000' in format 'SOLIDPOROUS' ... Done.
+
+Particle numbers:
+    Total final = 47769
+    N_proj_des = 20    N_proj_final = 32
+    N_targ_des = 15000    N_targ_final = 47737
+Masses:
+    Projectile mass = 1127.59
+    Target mass = 1.50486e+07
+Geometry:
+    Projectile radius:  desired = 0.5  actual/final = 0.4995
+    Projectile volume:  desired = 0.523599  actual/final = 0.522031
+    Projectile initial position = 1.5 / 0 / 2.59808
+    Projectile initial velocity = -3000 / 0 / -5196.15
+Particle volume ranges:
+    proj volumes in [0.0161185,0.0163413]
+    targ volumes in [0.0210474,2.18307]
+sml ranges:
+    proj smls in [0.595433,0.598164]
+    targ smls in [0.650815,3.05783]
+    sml-fact = 2.1
+    proj mpds in [0.28354,0.28484]
+    targ mpds in [0.309912,1.45611]
+
+Penetration timescale (proj-diam/vel): 0.000166667
+

@@ -1,0 +1,71 @@
+# This is the (YAML) input parameter file for impact_ini.
+# Units are SI.
+
+
+# impact speed
+speed: 6e3
+# impact angle, in deg to the vertical
+angle: 30.
+# initial distance, center to center
+distance: 3.
+
+
+# projectile properties
+proj:
+    # set to either 'spherical' (with SEAGen) or 'cubic' (SC lattice)
+    shape: spherical
+    # either radius or edge length
+    size: 0.5
+    # particle number for cubic, while for spherical it is determined by trying to match the resolution in the target (center)
+    N: 20
+
+    # matrix density if porous
+    density: 2700.
+    # specific internal energy
+    energy: 0.
+    # distention (porosity)
+    alpha: 1.25
+    # DIM-root of tensile damage
+    damage: 0.
+    # has to match material.cfg
+    mat-type: 0
+
+
+# target properties
+targ:
+    # the particle density is constant up to R_inner, then decreases linearly to R_outer, then remains
+    # constant up to R, where f_outer is the fraction of outer vs. inner particle density
+    R: 15.
+    R_inner: 5.
+    R_outer: 10.
+    f_outer: 0.01
+    # desired particle number for whole target (actual one is usually higher due to SEAGen)
+    N: 15e3
+
+    # matrix density if porous
+    density: 2700.
+    # specific internal energy
+    energy: 0.
+    # distention (porosity)
+    alpha: 1.25
+    # DIM-root of tensile damage
+    damage: 0.
+    # has to match material.cfg
+    mat-type: 0
+
+    # include outer shell (additional to R above) of distinct material, to realize simple boundary conditions
+    # set to yes/no
+    shell: no
+    shell-flaws: no
+    shell-thickness: 5.
+    shell-density: 2.7e3
+    shell-energy: 0.
+    shell-alpha: 1.25
+    shell-damage: 0.
+    shell-mat-type: 2
+
+
+# Weibull parameters (for all materials)
+weibull-m: 16.
+weibull-k: 1e61
+

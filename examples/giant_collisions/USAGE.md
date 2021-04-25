@@ -28,7 +28,7 @@ and 3h for *solid* on most current GPUs (benchmarked on a GTX 970).
 **To run the examples:**
 
 1. Compile miluphcuda using the `parameter.h` file from the respective directory (hydro or solid).  
-   Don't forget to also adapt the Makefile to your system.
+   Don't forget to also adapt the miluphcuda Makefile to your system.
 2. Unpack `impact.0000.gz`.
 3. Adapt the start script `run.sh` to your system (path to CUDA libs and to miluphcuda executable) and execute it.
 4. Wait for the simulation to finish (75 output files).
@@ -48,7 +48,7 @@ and 3h for *solid* on most current GPUs (benchmarked on a GTX 970).
 
     * directly open the created paraview.xdmf and choose settings yourself
     * load the prepared Paraview state in *paraview.pvsm* (*File -> Load State*), and select
-      the created paraview.xdmf file under *Choose File Names*
+      the created `paraview.xdmf` file under *Choose File Names*
 
 * Compare your results (e.g., visualized with Paraview) to the animations in the `results/` directories,
   which show the interior structure of the colliding bodies (cut views) for various quantities.
