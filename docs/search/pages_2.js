@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['miluphcuda',['miluphcuda',['../index.html',1,'']]],
-  ['miluphcuda',['miluphcuda',['../md__home_schaefer_src_miluphcuda_documentation_miluphcuda_main__r_e_a_d_m_e.html',1,'']]]
+  ['impact_20example_20for_20miluphcuda',['Impact example for miluphcuda',['../md__home_schaefer_src_miluphcuda_documentation_miluphcuda_main_examples_impact__u_s_a_g_e.html',1,'']]]
 ];

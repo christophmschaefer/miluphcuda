@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['quick_20start_20guide',['Quick Start Guide',['../md__home_schaefer_src_miluphcuda_documentation_miluphcuda_main_utils_postprocessing_fast_identifea40ff5980556bd8b2d4b143d045f5f8.html',1,'']]]
+  ['miluphcuda',['miluphcuda',['../index.html',1,'']]],
+  ['miluphcuda',['miluphcuda',['../md__home_schaefer_src_miluphcuda_documentation_miluphcuda_main__r_e_a_d_m_e.html',1,'']]]
 ];
