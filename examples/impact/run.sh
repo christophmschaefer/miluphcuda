@@ -13,5 +13,5 @@ MC=../../miluphcuda
 
 
 # miluphcuda cmd line
-$MC -v -A -f impact.0000 -H -I rk2_adaptive -Q 1e-4 -m material.cfg -n 200 -t 1e-3 1>miluphcuda.output 2>miluphcuda.error &
+$MC -v -A -f impact.0000 -H -I rk2_adaptive -Q 1e-4 -m material.cfg -n 200 -t 5e-4 1>miluphcuda.output 2>miluphcuda.error &
 

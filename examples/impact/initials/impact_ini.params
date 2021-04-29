@@ -17,7 +17,7 @@ proj:
     # either radius or edge length
     size: 0.5
     # particle number for cubic, while for spherical it is determined by trying to match the resolution in the target (center)
-    N: 20
+    N: 25
 
     # matrix density if porous
     density: 2700.
@@ -36,11 +36,11 @@ targ:
     # the particle density is constant up to R_inner, then decreases linearly to R_outer, then remains
     # constant up to R, where f_outer is the fraction of outer vs. inner particle density
     R: 15.
-    R_inner: 5.
-    R_outer: 10.
+    R_inner: 4.
+    R_outer: 8.
     f_outer: 0.01
     # desired particle number for whole target (actual one is usually higher due to SEAGen)
-    N: 15e3
+    N: 20e3
 
     # matrix density if porous
     density: 2700.

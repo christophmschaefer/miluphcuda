@@ -4,7 +4,7 @@ Impact example for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 25/Apr/2021
+last updated: 29/Apr/2021
 
 -----------------------------------------
 
@@ -23,7 +23,7 @@ Applied rheology models:
 
 A zero-gravity environment is assumed.
 
-The scenario uses ~50k SPH particles, with a runtime on the order of several hours on most current GPUs (benchmarked on a GTX 970).
+The scenario uses ~60k SPH particles, with a runtime on the order of several hours on most current GPUs (benchmarked on a GTX 970).
 
 -----------------------------------------
 
@@ -45,15 +45,30 @@ The scenario uses ~50k SPH particles, with a runtime on the order of several hou
   First, enter the simulation directory and run
 
         utils/postprocessing/create_xdmf.py
+
   which creates an xdmf file (*paraview.xdmf* by default). You can use the default cmd-line options,
   so no need to set anything explicitly. Then start Paraview and either
 
     * directly open the created paraview.xdmf and choose settings yourself
     * load the prepared Paraview state in *paraview.pvsm* (*File -> Load State*), and select
       the created `paraview.xdmf` file under *Choose File Names*
+      (note that this shows you a slice of the target by default, for better visibility of the cratering process)
 
-* Compare your results (e.g., visualized with Paraview) to the animations in the `results/` directories,
-  which show the interior structure (cut view) during the impact for various quantities.
+* Compare your results (e.g., visualized with Paraview) to the animations in the `results/` directory,
+  which show the cratering process (a sclice of the target) for various quantities.
+
+* A full view of the (half-sphere) target and the impact process is visualized in *full.mp4*.
+
+* An important aspect of the porosity model is that the *crush curve* (the curve distention vs. pressure which is
+  followed during compaction) is modeled correctly. Since the pressures that lead to compaction are typically released
+  again quickly, the SPH particles will eventually lie either on or below the crush curve -- if the model is accurate.  
+  You can check this by running for example
+
+        results/plot_p_alpha_convergence.py -v --files impact.000[1-4].h5
+
+  which plots SPH particles + the theoretical crush curve for output frames 1 through 4. Take a look at
+  *results/p_vs_alpha.first4frames.png* to see what the plots should qualitatively look like for the above four frames.
+  You can of course specify any number/sequence of frames you are interested in for plotting.
 
 -----------------------------------------
 
