@@ -1,4 +1,4 @@
-/**
+//**
  * @author      Christoph Schaefer cm.schaefer@gmail.com and Thomas I. Maindl
  *
  * @section     LICENSE
@@ -75,7 +75,9 @@ void backreaction_from_disk_to_point_masses(int calculate_nbody)
         if (!pointmass_host.feels_particles[n]) {
             continue;
         }
+#if DEBUG_GRAVITY
         fprintf(stdout, "Calculating force from particles on star/planet no. %d\n", n);
+#endif
         cudaVerifyKernel((particles_gravitational_feedback<<<h_blocksize, NUM_THREADS_REDUCTION>>>(n, g_x, g_y, g_z)));
         cudaVerify(cudaDeviceSynchronize());
 
@@ -215,8 +217,10 @@ __global__ void particles_gravitational_feedback(int n, double *g_ax, double *g_
             pointmass.az[n] += az;
             pointmass.feedback_az[n] = az;
 #endif
+#endif    
+#if DEBUG_GRAVITY
+            printf("id:%d ax=%e ay=%e az=%e\n", n, ax, ay, az);
 #endif
-            printf("%d %e %e %e\n", n, ax, ay, az);
             blockCount = 0;
         }
     }
