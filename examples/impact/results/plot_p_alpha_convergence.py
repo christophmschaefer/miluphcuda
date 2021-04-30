@@ -15,7 +15,7 @@ The input has to be HDF5 file(s) with the following data sets:
 authors: Christoph Schaefer, Christoph Burger
 comments to: ch.schaefer@uni-tuebingen.de
 
-last updated: 28/Apr/2021
+last updated: 30/Apr/2021
 """
 
 
@@ -64,8 +64,7 @@ if args.v:
 # create fig
 fig = plt.figure()
 fig.set_size_inches(6.4, 4.8*n_files)
-fig.tight_layout()
-fig.subplots_adjust(left=0.11, right=0.97, hspace=0.26, bottom=0.1, top=0.95)
+fig.subplots_adjust(left=0.11, right=0.96, hspace=0.26, bottom=0.1, top=0.95)
 
 
 # loop over input files
@@ -85,6 +84,7 @@ for currentfile in args.files:
     time = f['time'][0]
     p = f['p'][:]
     alpha = f['alpha_jutzi'][:]
+    dalphadt = f['dalphadt'][:]
     nop = len(p)
     f.close()
 
@@ -135,11 +135,11 @@ for currentfile in args.files:
     # plot it (add current subplot to fig)
     ax = fig.add_subplot(n_files, 1, n)
     if crushcurve_style == 0:
-        ax.plot(x, y, '--b', label='crush curve')
+        ax.plot(x, y, '--', c='darkgray', label='crush curve')
     elif crushcurve_style == 1:
-        ax.plot(x, y1, '--', c='g', label='crush curve')
-        ax.plot(x, y2, '--', c='b', label='crush curve')
-    ax.scatter(p, alpha, c='r', s=2, label='SPH particles')
+        ax.plot(x, y1, '--', c='darkgray', label='crush curve')
+        ax.plot(x, y2, '--', c='darkgray', label='crush curve')
+    sc = ax.scatter(p, alpha, c=dalphadt, s=2, label='SPH particles')
 
     ax.set_xlim(p_min, p_max)
     ax.set_ylim(alpha_min, alpha_max)
@@ -148,6 +148,8 @@ for currentfile in args.files:
     ax.set_title("File: {}    Time: {:g}".format(currentfile, time) )
     ax.set_xlabel(r'Pressure [Pa]')
     ax.set_ylabel(r'Distention [1]')
+    clb = plt.colorbar(sc, ax=ax)
+    clb.set_label('dalpha/dt')
 
 
 if n != n_files:
@@ -155,6 +157,6 @@ if n != n_files:
     sys.exit(1)
 
 if args.v:
-    print("\nWriting image to {}.\n".format(args.imagefile) )
+    print("\nWriting image to {}...\n".format(args.imagefile) )
 fig.savefig(args.imagefile, dpi=200)
 
