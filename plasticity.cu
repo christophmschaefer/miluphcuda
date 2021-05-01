@@ -135,14 +135,12 @@ __global__ void plasticityModel(void) {
 
         /* second invariant of the deviator stress tensor */
         J2 = 0.0;
-
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
                 tmp = p.S[stressIndex(i, d, e)];
                 J2 += tmp*tmp;
             }
         }
-
         J2 *= 0.5;
         sqrt_J2 = sqrt(J2);
 

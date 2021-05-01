@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-Plots alpha(p) from miluphcuda HDF5 output files + the theoretical
-crush curve, optionally for several files to one plot.
+Plots alpha(p) from miluphcuda HDF5 output files + the theoretical crush curve
+(parameters hardcoded below!), optionally for several files to one plot.
 
 All particles should lie on or below the crush curve.
 
@@ -10,6 +10,7 @@ The input has to be HDF5 file(s) with the following data sets:
 
 /p
 /alpha_jutzi
+/dalphadt
 /time
 
 authors: Christoph Schaefer, Christoph Burger
@@ -85,7 +86,6 @@ for currentfile in args.files:
     p = f['p'][:]
     alpha = f['alpha_jutzi'][:]
     dalphadt = f['dalphadt'][:]
-    nop = len(p)
     f.close()
 
     # set plot limits
