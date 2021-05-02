@@ -1,4 +1,4 @@
-//**
+/**
  * @author      Christoph Schaefer cm.schaefer@gmail.com and Thomas I. Maindl
  *
  * @section     LICENSE
