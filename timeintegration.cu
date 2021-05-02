@@ -59,7 +59,9 @@ __device__ double maxDensityAbsError;
 #if INTEGRATE_ENERGY
 __device__ double maxEnergyAbsError;
 #endif
+#if PALPHA_POROSITY
 __device__ double maxPressureAbsChange;
+#endif
 #if FRAGMENTATION
 __device__ double maxDamageTimeStep;
 #endif

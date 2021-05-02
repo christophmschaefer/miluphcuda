@@ -68,8 +68,6 @@ void rk2Adaptive()
     double dt_new;
 #if PALPHA_POROSITY
     double dtNewAlphaCheck_host = -1.0;
-    double dt_alphanew = 0;
-    double dt_alphaold = 0;
 #endif
 
     cudaVerify(cudaMemcpyToSymbol(rk_epsrel_d, &param.rk_epsrel, sizeof(double)));
@@ -104,6 +102,8 @@ void rk2Adaptive()
 #if PALPHA_POROSITY
     double *maxalphaDiffPerBlock;
     cudaVerify(cudaMalloc((void**)&maxalphaDiffPerBlock, sizeof(double)*numberOfMultiprocessors));
+#endif
+#if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
     double *maxPressureAbsChangePerBlock;
     cudaVerify(cudaMalloc((void**)&maxPressureAbsChangePerBlock, sizeof(double)*numberOfMultiprocessors));
 #endif
@@ -325,7 +325,7 @@ void rk2Adaptive()
 #if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
                                 , maxEnergyAbsErrorPerBlock
 #endif
-#if PALPHA_POROSITY
+#if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
                                 , maxPressureAbsChangePerBlock
 #endif
                                 )));
@@ -339,26 +339,24 @@ void rk2Adaptive()
 #if PALPHA_POROSITY
                 /* special checks for the convergence of the p(alpha) crush curve stuff */
                 if (errorSmallEnough_host) {
-                    dt_alphaold = dt_host;
                     /* checking if the distention change is within the set limit */
                     cudaVerifyKernel((alphaMaxTimeStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(
                                     maxalphaDiffPerBlock
                     )));
-                    cudaVerify(cudaMemcpyFromSymbol(&dt_alphanew, dtNewAlphaCheck, sizeof(double)));
-                    if (param.verbose && dt_alphanew < dt_alphaold && dt_alphanew > 0)
-                        fprintf(stdout, "timestep is too large for distention, reducing from %g to %g\n", dt_alphaold, dt_alphanew);
+                    cudaVerify(cudaMemcpyFromSymbol(&dt_new, dtNewAlphaCheck, sizeof(double)));
+                    if (param.verbose && dt_new < dt_host && dt_new > 0.0)
+                        fprintf(stdout, "timestep is too large for distention, reducing from %g to %g\n", dt_host, dt_new);
                 }
-                dtNewAlphaCheck_host = -1.0;
                 cudaVerify(cudaDeviceSynchronize());
                 cudaVerify(cudaMemcpyFromSymbol(&dtNewAlphaCheck_host, dtNewAlphaCheck, sizeof(double)));
                 cudaVerify(cudaMemcpyFromSymbol(&errorSmallEnough_host, errorSmallEnough, sizeof(int)));
 #endif
 
-                /* last time step was okay, forward time and continue with new time step size */
+                /* last timestep was okay, forward time and continue with new timestep */
                 if (errorSmallEnough_host) {
                     currentTime += dt_host;
                     if (!param.verbose) {
-                        fprintf(stdout, "time: %e   last timestep: %g next output time in: %e\n", currentTime, dt_host, endTime-currentTime);
+                        fprintf(stdout, "time: %e   last timestep: %g   time to next output: %e\n", currentTime, dt_host, endTime-currentTime);
                     }
                     cudaVerifyKernel((BoundaryConditionsAfterIntegratorStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(interactions)));
                     cudaVerify(cudaDeviceSynchronize());
@@ -378,10 +376,18 @@ void rk2Adaptive()
                     cudaVerify(cudaMemcpyFromSymbol(&errEnergy, maxEnergyAbsError, sizeof(double)));
 #endif
                     cudaVerify(cudaDeviceSynchronize());
-                    fprintf(stdout, "total max error (relative to eps): %g  (location: %g, velocity: %g, density: %g, energy: %g)  with timestep: %g\n",
+                    fprintf(stdout, "total max error (relative to eps): %g   (location: %g, velocity: %g, density: %g, energy: %g)   with timestep: %g\n",
                             max(max(max(errPos, errVel), errDensity), errEnergy) / param.rk_epsrel,
                             errPos / param.rk_epsrel, errVel / param.rk_epsrel, errDensity / param.rk_epsrel, errEnergy / param.rk_epsrel, dt_host);
+
 #if PALPHA_POROSITY
+                    double errPressure = 0.0;
+# if RK2_LIMIT_PRESSURE_CHANGE
+                    cudaVerify(cudaMemcpyFromSymbol(&errPressure, maxPressureAbsChange, sizeof(double)));
+# endif
+                    cudaVerify(cudaDeviceSynchronize());
+                    fprintf(stdout, "total max change (relative to max allowed): %g   (pressure: %g)\n", errPressure, errPressure);
+
                     fprintf(stdout, "dtNewErrorCheck: %g   dtNewAlphaCheck: %g\n", dtNewErrorCheck_host, dtNewAlphaCheck_host);
 #endif
                 }
@@ -486,6 +492,9 @@ void rk2Adaptive()
 #endif
 #if PALPHA_POROSITY
     cudaVerify(cudaFree(maxalphaDiffPerBlock));
+#endif
+#if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
+    cudaVerify(cudaFree(maxPressureAbsChangePerBlock));
 #endif
 }
 
@@ -1140,13 +1149,11 @@ __global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock)
                 localMaxalphaDiff = max(localMaxalphaDiff, maxalphaDiffPerBlock[j]);
             }
             maxalphaDiff = localMaxalphaDiff;
-            // reset block count
-            blockCount = 0;
+
+            blockCount = 0;  // reset block count
         }
 
 #define FIXMEDT 1000
-        /* maybe needs a smoother implementation - also if timestep gets too small because of alpha
-           set it to 5e-14. It's a temporary fix for cases where dtNewAlphaCheck gets too low and crashes */
         dtNewAlphaCheck = FIXMEDT*dt;
 //        dtNewAlphaCheck = dt * RK2_MAX_ALPHA_CHANGE / (maxalphaDiff);
         if (maxalphaDiff > RK2_MAX_ALPHA_CHANGE) {
@@ -1169,7 +1176,7 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
 #if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
                         , double *maxEnergyAbsErrorPerBlock
 #endif
-#if PALPHA_POROSITY
+#if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
                         , double *maxPressureAbsChangePerBlock
 #endif
         )
@@ -1187,7 +1194,7 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
     double localMaxEnergyAbsError = 0.0;
     int hasEnergy = 0;
 #endif
-#if PALPHA_POROSITY
+#if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
     __shared__ double sharedMaxPressureAbsChange[NUM_THREADS_ERRORCHECK];
     double localMaxPressureAbsChange = 0.0;
 #endif
@@ -1201,6 +1208,7 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
     double tmp = 0.0;
     double tmp_pos = 0.0, tmp_pos2 = 0.0;
     double min_pos_change_rk2 = 0.0;
+
 
 #if GRAVITATING_POINT_MASSES && RK2_USE_VELOCITY_ERROR_POINTMASSES
     // loop for pointmasses
@@ -1290,7 +1298,7 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
         localMaxDensityAbsError = max(localMaxDensityAbsError, tmp);
 #endif
 
-#if PALPHA_POROSITY
+#if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
         // check if the pressure changes too much
         tmp = fabs(rk[RKFIRST].p[i] - rk[RKSECOND].p[i]);
         localMaxPressureAbsChange = max(localMaxPressureAbsChange, tmp);
@@ -1305,9 +1313,9 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
             case (EOS_TYPE_JUTZI):
                 hasEnergy = 1;
                 break;
-			case (EOS_TYPE_JUTZI_ANEOS):
-				hasEnergy = 1;
-				break;
+            case (EOS_TYPE_JUTZI_ANEOS):
+                hasEnergy = 1;
+                break;
             case (EOS_TYPE_SIRONO):
                 hasEnergy = 1;
                 break;
@@ -1344,7 +1352,7 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
 #if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
     sharedMaxEnergyAbsError[i] = localMaxEnergyAbsError;
 #endif
-#if PALPHA_POROSITY
+#if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
     sharedMaxPressureAbsChange[i] = localMaxPressureAbsChange;
 #endif
     for (j = NUM_THREADS_ERRORCHECK / 2; j > 0; j /= 2) {
@@ -1361,7 +1369,7 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
 #if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
             sharedMaxEnergyAbsError[i] = localMaxEnergyAbsError = max(localMaxEnergyAbsError, sharedMaxEnergyAbsError[k]);
 #endif
-#if PALPHA_POROSITY
+#if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
             sharedMaxPressureAbsChange[i] = localMaxPressureAbsChange = max(localMaxPressureAbsChange, sharedMaxPressureAbsChange[k]);
 #endif
         }
@@ -1380,7 +1388,7 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
 #if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
         maxEnergyAbsErrorPerBlock[k] = localMaxEnergyAbsError;
 #endif
-#if PALPHA_POROSITY
+#if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
         maxPressureAbsChangePerBlock[k] = localMaxPressureAbsChange;
 #endif
         m = gridDim.x - 1;
@@ -1397,7 +1405,7 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
 #if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
                 localMaxEnergyAbsError = max(localMaxEnergyAbsError, maxEnergyAbsErrorPerBlock[j]);
 #endif
-#if PALPHA_POROSITY
+#if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
                 localMaxPressureAbsChange = max(localMaxPressureAbsChange, maxPressureAbsChangePerBlock[j]);
 #endif
             }
@@ -1417,19 +1425,17 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
             tmp = max(tmp, localMaxEnergyAbsError);
             maxEnergyAbsError = localMaxEnergyAbsError;
 #endif
-            // max relative error over Runge-Kutta eps
+            // max relative error over Runge-Kutta eps - error too large if > 1, error ok if < 1
             tmp /= rk_epsrel_d;
 
-#if PALPHA_POROSITY
-            maxPressureAbsChange = localMaxPressureAbsChange;
+#if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
+            // store change relative to max allowed change
+            maxPressureAbsChange = localMaxPressureAbsChange / max_abs_pressure_change;
 
-            if (tmp > 1 && maxPressureAbsChange > max_abs_pressure_change) {
-                printf("pressure changes too much, maximum allowed change is %e, current registered change was %e, reducing time step\n",
-                        max_abs_pressure_change, maxPressureAbsChange);
-                tmp = 1.1;
-            }
+            tmp = max(tmp, maxPressureAbsChange);
 #endif
-            if (tmp > 1) {
+
+            if (tmp > 1.0) {
                 /* error too large */
                 errorSmallEnough = FALSE;
                 dtNew = max( 0.1*dt, dt*RK2_TIMESTEP_SAFETY*pow(tmp,-0.25) );
@@ -1437,21 +1443,18 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
                 /* error small enough */
                 errorSmallEnough = TRUE;
                 dtNew = dt * RK2_TIMESTEP_SAFETY * pow(tmp, -0.3);
-#if PALPHA_POROSITY
+//#if PALPHA_POROSITY
                 // do not increase more than 1.1 times for p-alpha porosity
-                if (dtNew > 1.1 * dt) {
-                    dtNew = 1.1 * dt;
-                }
-#else
+//                if (dtNew > 1.1 * dt)
+//                    dtNew = 1.1 * dt;
+//#else
                 // do not increase more than 5 times
-                if (dtNew > 5.0 * dt) {
+                if (dtNew > 5.0 * dt)
                     dtNew = 5.0 * dt;
-                }
-#endif
+//#endif
                 // do not make timestep smaller
-                if (dtNew < dt) {
-                    dtNew = 1.05 * dt;
-                }
+                if (dtNew < dt)
+                    dtNew = dt;
             }
 
             dtNewErrorCheck = dtNew;

@@ -198,31 +198,29 @@ static void print_compile_information(void)
 #else
     strcpy(yesno, "no");
 #endif
-    fprintf(stdout, "Plasticity model:\t  %s", yesno);
+    fprintf(stdout, "Plasticity model:\t  %s\n", yesno);
 #if MOHR_COULOMB_PLASTICITY
-    fprintf(stdout, "\t\t\t Mohr-Coulomb");
+    fprintf(stdout, "    Mohr-Coulomb");
 # if VON_MISES_PLASTICITY
     fprintf(stdout, " + von Mises yield limit");
 # endif
     fprintf(stdout, "\n");
 #elif DRUCKER_PRAGER_PLASTICITY
-    fprintf(stdout, "\t\t\t Drucker-Prager");
+    fprintf(stdout, "    Drucker-Prager");
 # if VON_MISES_PLASTICITY
     fprintf(stdout, " + von Mises yield limit");
 # endif
     fprintf(stdout, "\n");
 #elif COLLINS_PLASTICITY
-    fprintf(stdout, "\t\t\t Collins model: pressure dependent yield strength with friction model for damaged material");
+    fprintf(stdout, "    Collins model: pressure dependent yield strength with friction model for damaged material");
 # if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
-    fprintf(stdout, " including strength reduction based on (single) melt energy");
+    fprintf(stdout, " + strength reduction based on (single) melt energy");
 # endif
     fprintf(stdout, "\n");
 #elif COLLINS_PLASTICITY_SIMPLE
-    fprintf(stdout, "\t\t\t Simplified version of Collins model: pressure dependent yield strength irrespective of damage\n");
+    fprintf(stdout, "    simplified version of Collins model: pressure dependent yield strength irrespective of damage\n");
 #elif VON_MISES_PLASTICITY
-    fprintf(stdout, "\t\t\t simple von Mises yield criterion\n");
-#else
-    fprintf(stdout, "\n");
+    fprintf(stdout, "    simple von Mises yield criterion\n");
 #endif
 
 #if JC_PLASTICITY
@@ -267,9 +265,9 @@ static void print_compile_information(void)
 #if VARIABLE_SML
     fprintf(stdout, "Using variable smoothing:\t yes\n");
 #if FIXED_NOI
-    fprintf(stdout, "\t\t with fixed number of interaction partners.\n");
+    fprintf(stdout, "    with fixed number of interaction partners.\n");
 #elif INTEGRATE_SML
-    fprintf(stdout, "\t\t with integration of the smoothing length.\n");
+    fprintf(stdout, "    with integration of the smoothing length.\n");
 #else
 #error no such scheme for VARIABLE_SML
 #endif
