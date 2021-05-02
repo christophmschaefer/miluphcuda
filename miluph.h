@@ -340,7 +340,7 @@ enum {
 /// the implemented integrators
 enum {
     EULER, ///< simple 1st order Euler integrator - use only for tests, no production runs, no science!
-    RK2_ADAPTIVE, ////< the default integrator with adaptive time step. could be worse
+    RK2_ADAPTIVE, ////< the default embedded Runge Kutta 2/3 integrator with adaptive time step
     MONAGHAN_PC, ////< predictor corrector integrator with initial half step 
     EULER_PC, ///< predictor corrector integrator with initial full step
     HEUN_RK4 ///< fancy coupled Heun/RK4 integrator for use with sims with gravitating point masses. The point masses are integrated using the higher order rk4 and the hydro/solid aka sph part is done with standard Heun (aka Euler PC)

@@ -37,6 +37,12 @@
 #include "sinking.h"
 
 
+// Courant (CFL) number
+#define COURANT_FACT 0.7
+// factor for limiting timestep based on local forces/acceleration
+#define FORCES_FACT 0.2
+
+
 extern int startTimestep;
 extern int numberOfTimesteps;
 extern double startTime;
@@ -115,10 +121,6 @@ __global__ void symmetrizeStress(void);
 
 #define MAXDEPTH 128
 
-// the Courant (CFL) number
-#define COURANT_FACT 0.7
-// factor for limiting timestep based on local forces/acceleration
-#define FORCES_FACT 0.2
 
 // Runge-Kutta constants
 #define B21 0.5

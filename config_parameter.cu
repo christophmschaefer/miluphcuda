@@ -872,9 +872,12 @@ void transferMaterialsToGPU()
         cudaGetSymbolAddress((void **)&pc_pointer, max_abs_pressure_change);
         cudaMemcpy(pc_pointer, &max_abs_pressure_change_host, sizeof(double), cudaMemcpyHostToDevice);
         fprintf(stdout, "setting max allowed pressure change for time integration to %e\n", max_abs_pressure_change_host);
-        if( !(max_abs_pressure_change_host > 0.0) )
-            fprintf(stderr, "WARNING: Max allowed pressure change for time integration is set to %e (set as smallest 'porjutzi_p_elastic' found in material config).\n",
+        if( !(max_abs_pressure_change_host > 0.0) ) {
+            fprintf(stderr, "ERROR. Max allowed pressure change for time integration is set to %e (set as smallest 'porjutzi_p_elastic' found in material config).\n",
                     max_abs_pressure_change_host);
+            fprintf(stderr, "Stopping here for now...\n");
+            exit(1);
+        }
 #endif
 
         cudaVerify(cudaMemcpy(matSml_d, sml, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
@@ -1142,52 +1145,52 @@ void transferMaterialsToGPU()
                     strcpy(eos_type, "Tillotson with P-alpha model");
                     fprintf(stdout, " %s\n", eos_type);
                     fprintf(stdout, "\t\t EOS params:\n");
-                    fprintf(stdout, "\t\t\t till_rho_0 \t %e \n", till_rho_0[i]);
-                    fprintf(stdout, "\t\t\t till_A \t %e \n", till_A[i]);
-                    fprintf(stdout, "\t\t\t till_B \t %e \n", till_B[i]);
-                    fprintf(stdout, "\t\t\t till_E_0 \t %e \n", till_E_0[i]);
-                    fprintf(stdout, "\t\t\t till_E_iv \t %e \n", till_E_iv[i]);
-                    fprintf(stdout, "\t\t\t till_E_cv \t %e \n", till_E_cv[i]);
-                    fprintf(stdout, "\t\t\t till_a \t %e \n", till_a[i]);
-                    fprintf(stdout, "\t\t\t till_b \t %e \n", till_b[i]);
-                    fprintf(stdout, "\t\t\t till_alpha \t %e \n", till_alpha[i]);
-                    fprintf(stdout, "\t\t\t till_beta \t %e \n", till_beta[i]);
-                    fprintf(stdout, "\t\t\t rho_limit \t %e \n", rho_limit[i]);
-                    fprintf(stdout, "\t\t\t p_e \t\t %e \n", porjutzi_p_elastic[i]);
-                    fprintf(stdout, "\t\t\t p_t \t\t %e \n", porjutzi_p_transition[i]);
-                    fprintf(stdout, "\t\t\t p_c \t\t %e \n", porjutzi_p_compacted[i]);
-                    fprintf(stdout, "\t\t\t alpha_0 \t %e \n", porjutzi_alpha_0[i]);
-                    fprintf(stdout, "\t\t\t alpha_e \t %e \n", porjutzi_alpha_e[i]);
-                    fprintf(stdout, "\t\t\t alpha_t \t %e \n", porjutzi_alpha_t[i]);
-                    fprintf(stdout, "\t\t\t n1 \t\t %e \n", porjutzi_n1[i]);
-                    fprintf(stdout, "\t\t\t n2 \t\t %e \n", porjutzi_n2[i]);
-                    fprintf(stdout, "\t\t\t cs_porous \t %e \n", cs_porous[i]);
-                    fprintf(stdout, "\t\t\t crushcurve_style \t %d \n", crushcurve_style[i]);
+                    fprintf(stdout, "\t\t till_rho_0 \t %e \n", till_rho_0[i]);
+                    fprintf(stdout, "\t\t till_A \t %e \n", till_A[i]);
+                    fprintf(stdout, "\t\t till_B \t %e \n", till_B[i]);
+                    fprintf(stdout, "\t\t till_E_0 \t %e \n", till_E_0[i]);
+                    fprintf(stdout, "\t\t till_E_iv \t %e \n", till_E_iv[i]);
+                    fprintf(stdout, "\t\t till_E_cv \t %e \n", till_E_cv[i]);
+                    fprintf(stdout, "\t\t till_a \t %e \n", till_a[i]);
+                    fprintf(stdout, "\t\t till_b \t %e \n", till_b[i]);
+                    fprintf(stdout, "\t\t till_alpha \t %e \n", till_alpha[i]);
+                    fprintf(stdout, "\t\t till_beta \t %e \n", till_beta[i]);
+                    fprintf(stdout, "\t\t rho_limit \t %e \n", rho_limit[i]);
+                    fprintf(stdout, "\t\t p_e \t\t %e \n", porjutzi_p_elastic[i]);
+                    fprintf(stdout, "\t\t p_t \t\t %e \n", porjutzi_p_transition[i]);
+                    fprintf(stdout, "\t\t p_c \t\t %e \n", porjutzi_p_compacted[i]);
+                    fprintf(stdout, "\t\t alpha_0 \t %e \n", porjutzi_alpha_0[i]);
+                    fprintf(stdout, "\t\t alpha_e \t %e \n", porjutzi_alpha_e[i]);
+                    fprintf(stdout, "\t\t alpha_t \t %e \n", porjutzi_alpha_t[i]);
+                    fprintf(stdout, "\t\t n1 \t\t %e \n", porjutzi_n1[i]);
+                    fprintf(stdout, "\t\t n2 \t\t %e \n", porjutzi_n2[i]);
+                    fprintf(stdout, "\t\t cs_porous \t %e \n", cs_porous[i]);
+                    fprintf(stdout, "\t\t crushcurve_style \t %d \n", crushcurve_style[i]);
                     break;
                 case (EOS_TYPE_JUTZI_ANEOS):
                     strcpy(eos_type, "ANEOS with P-alpha model");
                     fprintf(stdout, "\t\t EOS params:\n");
-                    fprintf(stdout, "\t\t\t till_rho_0 \t %e \n", till_rho_0[i]);
-                    fprintf(stdout, "\t\t\t till_A \t %e \n", till_A[i]);
-                    fprintf(stdout, "\t\t\t till_B \t %e \n", till_B[i]);
-                    fprintf(stdout, "\t\t\t till_E_0 \t %e \n", till_E_0[i]);
-                    fprintf(stdout, "\t\t\t till_E_iv \t %e \n", till_E_iv[i]);
-                    fprintf(stdout, "\t\t\t till_E_cv \t %e \n", till_E_cv[i]);
-                    fprintf(stdout, "\t\t\t till_a \t %e \n", till_a[i]);
-                    fprintf(stdout, "\t\t\t till_b \t %e \n", till_b[i]);
-                    fprintf(stdout, "\t\t\t till_alpha \t %e \n", till_alpha[i]);
-                    fprintf(stdout, "\t\t\t till_beta \t %e \n", till_beta[i]);
-                    fprintf(stdout, "\t\t\t rho_limit \t %e \n", rho_limit[i]);
-                    fprintf(stdout, "\t\t\t p_e \t\t %e \n", porjutzi_p_elastic[i]);
-                    fprintf(stdout, "\t\t\t p_t \t\t %e \n", porjutzi_p_transition[i]);
-                    fprintf(stdout, "\t\t\t p_c \t\t %e \n", porjutzi_p_compacted[i]);
-                    fprintf(stdout, "\t\t\t alpha_0 \t %e \n", porjutzi_alpha_0[i]);
-                    fprintf(stdout, "\t\t\t alpha_e \t %e \n", porjutzi_alpha_e[i]);
-                    fprintf(stdout, "\t\t\t alpha_t \t %e \n", porjutzi_alpha_t[i]);
-                    fprintf(stdout, "\t\t\t n1 \t\t %e \n", porjutzi_n1[i]);
-                    fprintf(stdout, "\t\t\t n2 \t\t %e \n", porjutzi_n2[i]);
-                    fprintf(stdout, "\t\t\t cs_porous \t %e \n", cs_porous[i]);
-                    fprintf(stdout, "\t\t\t crushcurve_style \t %d \n", crushcurve_style[i]);
+                    fprintf(stdout, "\t\t till_rho_0 \t %e \n", till_rho_0[i]);
+                    fprintf(stdout, "\t\t till_A \t %e \n", till_A[i]);
+                    fprintf(stdout, "\t\t till_B \t %e \n", till_B[i]);
+                    fprintf(stdout, "\t\t till_E_0 \t %e \n", till_E_0[i]);
+                    fprintf(stdout, "\t\t till_E_iv \t %e \n", till_E_iv[i]);
+                    fprintf(stdout, "\t\t till_E_cv \t %e \n", till_E_cv[i]);
+                    fprintf(stdout, "\t\t till_a \t %e \n", till_a[i]);
+                    fprintf(stdout, "\t\t till_b \t %e \n", till_b[i]);
+                    fprintf(stdout, "\t\t till_alpha \t %e \n", till_alpha[i]);
+                    fprintf(stdout, "\t\t till_beta \t %e \n", till_beta[i]);
+                    fprintf(stdout, "\t\t rho_limit \t %e \n", rho_limit[i]);
+                    fprintf(stdout, "\t\t p_e \t\t %e \n", porjutzi_p_elastic[i]);
+                    fprintf(stdout, "\t\t p_t \t\t %e \n", porjutzi_p_transition[i]);
+                    fprintf(stdout, "\t\t p_c \t\t %e \n", porjutzi_p_compacted[i]);
+                    fprintf(stdout, "\t\t alpha_0 \t %e \n", porjutzi_alpha_0[i]);
+                    fprintf(stdout, "\t\t alpha_e \t %e \n", porjutzi_alpha_e[i]);
+                    fprintf(stdout, "\t\t alpha_t \t %e \n", porjutzi_alpha_t[i]);
+                    fprintf(stdout, "\t\t n1 \t\t %e \n", porjutzi_n1[i]);
+                    fprintf(stdout, "\t\t n2 \t\t %e \n", porjutzi_n2[i]);
+                    fprintf(stdout, "\t\t cs_porous \t %e \n", cs_porous[i]);
+                    fprintf(stdout, "\t\t crushcurve_style \t %d \n", crushcurve_style[i]);
                     break;
 #endif
 
@@ -1196,15 +1199,15 @@ void transferMaterialsToGPU()
                     strcpy(eos_type, "Sirono Porosity");
                     fprintf(stdout, " %s\n", eos_type);
                     fprintf(stdout, "\t\t EOS params:\n");
-                    fprintf(stdout, "\t\t\t K_0 \t %e \n", porsirono_K_0[i]);
-                    fprintf(stdout, "\t\t\t rho_0 \t %e \n", porsirono_rho_0[i]);
-                    fprintf(stdout, "\t\t\t rho_s \t %e \n", porsirono_rho_s[i]);
-                    fprintf(stdout, "\t\t\t gamma_K %e \n", porsirono_gamma_K[i]);
-                    fprintf(stdout, "\t\t\t alpha \t %e \n", porsirono_alpha[i]);
-                    fprintf(stdout, "\t\t\t pm \t %e \n", porsirono_pm[i]);
-                    fprintf(stdout, "\t\t\t phimax  %e \n", porsirono_phimax[i]);
-                    fprintf(stdout, "\t\t\t phi0 \t %e \n", porsirono_phi0[i]);
-                    fprintf(stdout, "\t\t\t delta \t %e \n", porsirono_delta[i]);
+                    fprintf(stdout, "\t\t K_0 \t %e \n", porsirono_K_0[i]);
+                    fprintf(stdout, "\t\t rho_0 \t %e \n", porsirono_rho_0[i]);
+                    fprintf(stdout, "\t\t rho_s \t %e \n", porsirono_rho_s[i]);
+                    fprintf(stdout, "\t\t gamma_K %e \n", porsirono_gamma_K[i]);
+                    fprintf(stdout, "\t\t alpha \t %e \n", porsirono_alpha[i]);
+                    fprintf(stdout, "\t\t pm \t %e \n", porsirono_pm[i]);
+                    fprintf(stdout, "\t\t phimax  %e \n", porsirono_phimax[i]);
+                    fprintf(stdout, "\t\t phi0 \t %e \n", porsirono_phi0[i]);
+                    fprintf(stdout, "\t\t delta \t %e \n", porsirono_delta[i]);
                     break;
 #endif
 
@@ -1213,11 +1216,11 @@ void transferMaterialsToGPU()
                     strcpy(eos_type, "Tillotson EOS with Epsilon-Alpha Porosity");
                     fprintf(stdout, " %s\n", eos_type);
                     fprintf(stdout, "\t\t EOS params:\n");
-                    fprintf(stdout, "\t\t\t kappa \t %e \n", porepsilon_kappa[i]);
-                    fprintf(stdout, "\t\t\t alpha_0 \t %e \n", porepsilon_alpha_0[i]);
-                    fprintf(stdout, "\t\t\t epsilon_e \t %e \n", porepsilon_epsilon_e[i]);
-                    fprintf(stdout, "\t\t\t epsilon_x \t %e \n", porepsilon_epsilon_x[i]);
-                    fprintf(stdout, "\t\t\t epsilon_c \t %e \n", porepsilon_epsilon_c[i]);
+                    fprintf(stdout, "\t\t kappa \t %e \n", porepsilon_kappa[i]);
+                    fprintf(stdout, "\t\t alpha_0 \t %e \n", porepsilon_alpha_0[i]);
+                    fprintf(stdout, "\t\t epsilon_e \t %e \n", porepsilon_epsilon_e[i]);
+                    fprintf(stdout, "\t\t epsilon_x \t %e \n", porepsilon_epsilon_x[i]);
+                    fprintf(stdout, "\t\t epsilon_c \t %e \n", porepsilon_epsilon_c[i]);
 #endif
                 case (EOS_TYPE_ANEOS):
                     strcpy(eos_type, "ANEOS");

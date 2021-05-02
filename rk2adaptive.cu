@@ -1462,3 +1462,83 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
         }
     }
 }
+
+
+
+void print_rk2_adaptive_settings()
+{
+    double tmp;
+
+    fprintf(stdout, "\n\n");
+    fprintf(stdout, "Using rk2_adaptive with the following settings:\n");
+    fprintf(stdout, "    start time: %g\n", startTime);
+    fprintf(stdout, "    output index of start time: %d\n", startTimestep);
+    fprintf(stdout, "    no output times: %d\n", numberOfTimesteps);
+    fprintf(stdout, "    duration between output times: %g\n", timePerStep);
+    fprintf(stdout, "\n");
+    fprintf(stdout, "    first timestep: %g\n", param.firsttimestep);
+    fprintf(stdout, "    max allowed timestep: %g\n", param.maxtimestep);
+    fprintf(stdout, "\n");
+    fprintf(stdout, "    pre-timestep checks to limit timestep in advance:\n");
+#if RK2_USE_COURANT_LIMIT
+    fprintf(stdout, "        Courant condition:    yes    (Courant factor: %g)\n", COURANT_FACT);
+#else
+    fprintf(stdout, "        Courant condition:    no\n");
+#endif
+#if RK2_USE_FORCES_LIMIT
+    fprintf(stdout, "        forces/acceleration:  yes    (forces factor: %g)\n", FORCES_FACT);
+#else
+    fprintf(stdout, "        forces/acceleration:  no\n");
+#endif
+#if FRAGMENTATION
+# if RK2_USE_DAMAGE_LIMIT
+    fprintf(stdout, "        limit damage change:  yes    (MAX_DAMAGE_CHANGE: %g)\n", RK2_MAX_DAMAGE_CHANGE);
+# else
+    fprintf(stdout, "        limit damage change:  no\n");
+# endif
+#endif
+    fprintf(stdout, "\n");
+    fprintf(stdout, "    post-timestep error checks to adapt timestep:\n");
+    fprintf(stdout, "        general accuracy (eps): %g\n", param.rk_epsrel);
+    fprintf(stdout, "        positions:       yes    (LOCATION_SAFETY: %g)\n", RK2_LOCATION_SAFETY);
+#if RK2_USE_VELOCITY_ERROR
+    fprintf(stdout, "        velocities:      yes    (MIN_VEL_CHANGE: %g)\n", MIN_VEL_CHANGE_RK2);
+#else
+    fprintf(stdout, "        velocities:      no\n");
+#endif
+#if GRAVITATING_POINT_MASSES
+# if RK2_USE_VELOCITY_ERROR_POINTMASSES
+    fprintf(stdout, "        velocities pointmasses: yes    (MIN_VEL_CHANGE: %g)\n", MIN_VEL_CHANGE_RK2);
+# else
+    fprintf(stdout, "        velocities pointmasses: no\n");
+# endif
+#endif
+#if INTEGRATE_DENSITY
+# if RK2_USE_DENSITY_ERROR
+    fprintf(stdout, "        density:         yes    (TINY_DENSITY: %g)\n", RK2_TINY_DENSITY);
+# else
+    fprintf(stdout, "        density:         no\n");
+# endif
+#endif
+#if INTEGRATE_ENERGY
+# if RK2_USE_ENERGY_ERROR
+    fprintf(stdout, "        energy:          yes    (TINY_ENERGY: %g)\n", RK2_TINY_ENERGY);
+# else
+    fprintf(stdout, "        energy:          no\n");
+# endif
+#endif
+#if PALPHA_POROSITY
+# if RK2_LIMIT_PRESSURE_CHANGE
+    cudaVerify(cudaMemcpyFromSymbol(&tmp, max_abs_pressure_change, sizeof(double)));
+    fprintf(stdout, "        pressure change: yes    (max allowed change: %g)\n", tmp);
+# else
+    fprintf(stdout, "        pressure change: no\n");
+# endif
+# if RK2_LIMIT_ALPHA_CHANGE
+    fprintf(stdout, "        alpha change:    yes    (max allowed change: %g)\n", RK2_MAX_ALPHA_CHANGE);
+# else
+    fprintf(stdout, "        alpha change:    no\n");
+# endif
+#endif
+    fprintf(stdout, "\n");
+}

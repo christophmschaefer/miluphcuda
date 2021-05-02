@@ -164,9 +164,8 @@ void init_values(void)
     int i;
     int matId;
 
-    if (param.verbose) {
-        fprintf(stdout, "\nInitialising material constants and copying them to the GPU...\n");
-    }
+    if (param.verbose)
+        fprintf(stdout, "\nReading/initialising material constants and copy them to the GPU...\n");
     transferMaterialsToGPU();
 
     for (i = 0; i < numberOfParticles; i++) {

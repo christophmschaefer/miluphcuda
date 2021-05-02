@@ -31,7 +31,7 @@
 
 /* rk2_adaptive integration parameters */
 
-/* pre-timestep checks to limit timestep (all for particles only) */
+/* pre-timestep checks to limit timestep in advance (all for particles only) */
 #define RK2_USE_COURANT_LIMIT 1
 #define RK2_USE_FORCES_LIMIT 0
 #define RK2_USE_DAMAGE_LIMIT 1
@@ -94,6 +94,8 @@ __global__ void checkError(
 );
 
 __global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock);
+
+void print_rk2_adaptive_settings();
 
 
 #if RK2_USE_VELOCITY_ERROR_POINTMASSES && !GRAVITATING_POINT_MASSES

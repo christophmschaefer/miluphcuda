@@ -27,6 +27,7 @@
 #include "device_tools.h"
 #include "kernel.h"
 #include "little_helpers.h"
+#include "rk2adaptive.h"
 #include <cuda_runtime.h>
 
 #if HDF5IO
@@ -1002,10 +1003,9 @@ int main(int argc, char *argv[])
     // choose integrator
     fprintf(stdout, "\nTime integrator: ");
     if (0 == strcmp(integrationscheme, "rk2_adaptive")) {
-        fprintf(stdout, "rk2_adaptive");
         integrator = &rk2Adaptive;
         param.integrator_type = RK2_ADAPTIVE;
-        printf(" with accurary rk_epsrel: %g\n", param.rk_epsrel);
+        fprintf(stdout, "rk2_adaptive - with accurary rk_epsrel: %g\n", param.rk_epsrel);
     } else if (0 == strcmp(integrationscheme, "euler")) {
         fprintf(stdout, "euler\n");
         integrator = &euler;
@@ -1120,10 +1120,14 @@ int main(int argc, char *argv[])
         fclose(inputFile.data);
     }
 
-    // init some values
+    // read/initialize material constants and copy them to the GPU + init some values
     init_values();
 
-    // copy the particles to the gpu
+    // print information about time integrator settings
+    if( param.integrator_type == RK2_ADAPTIVE )
+        print_rk2_adaptive_settings();
+
+    // copy the particles to the GPU
     copy_particle_data_to_device();
     if (cudaSuccess != cudaMemcpyToSymbol(childList, &childListd, sizeof(void*))) {
         fprintf(stderr, "copying of childList to device failed\n");
