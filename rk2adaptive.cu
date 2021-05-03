@@ -53,10 +53,7 @@ __constant__ __device__ double rk_epsrel_d;
 extern double L_ini;
 
 
-/*
-   Runge-kutta 2nd order integrator with adaptive timestep,
-   see Schäfer et al. (2016) for details.
- */
+
 void rk2Adaptive()
 {
     int rkstep;
@@ -1076,7 +1073,6 @@ __global__ void integrateThirdStep(void)
 #endif
     }
 }
-
 
 
 
