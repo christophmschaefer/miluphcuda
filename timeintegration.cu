@@ -52,7 +52,6 @@ __device__ double maxVelAbsError;
 __device__ int movingparticles = 0;
 __device__ int reset_movingparticles = 1;
 __device__ double dtNewErrorCheck = 0.0;
-__device__ double dtNewAlphaCheck = 0.0;
 #if INTEGRATE_DENSITY
 __device__ double maxDensityAbsError;
 #endif
@@ -61,12 +60,10 @@ __device__ double maxEnergyAbsError;
 #endif
 #if PALPHA_POROSITY
 __device__ double maxPressureAbsChange;
+__device__ double maxAlphaDiff;
 #endif
 #if FRAGMENTATION
 __device__ double maxDamageTimeStep;
-#endif
-#if PALPHA_POROSITY
-__device__ double maxalphaDiff = 0.0;
 #endif
 __device__ int errorSmallEnough = FALSE;
 __constant__ int isRelaxationRun = FALSE;

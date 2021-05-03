@@ -42,8 +42,8 @@
 #define RK2_USE_DENSITY_ERROR 1
 #define RK2_USE_ENERGY_ERROR 0
 #define RK2_USE_VELOCITY_ERROR_POINTMASSES 0  // use velocity error checking for pointmasses
-#define RK2_LIMIT_ALPHA_CHANGE 1   // special check for PALPHA_POROSITY for crush curve convergence
 #define RK2_LIMIT_PRESSURE_CHANGE 1   // special check for PALPHA_POROSITY for crush curve convergence
+#define RK2_LIMIT_ALPHA_CHANGE 1   // special check for PALPHA_POROSITY for crush curve convergence
 
 /* specific parameters */
 #define RK2_LOCATION_SAFETY 0.1  // this times the sml defines the min length to consider in error check for positions
@@ -52,8 +52,9 @@
 #define RK2_TINY_ENERGY 10.0
 #define RK2_TIMESTEP_SAFETY 0.9
 #define SMALLEST_DT_ALLOWED 1e-16
-#define RK2_MAX_ALPHA_CHANGE 1e-3
 #define RK2_MAX_DAMAGE_CHANGE 2e-2
+#define RK2_MAX_ALPHA_CHANGE 1e-3
+
 
 
 void rk2Adaptive();
@@ -77,23 +78,23 @@ __global__ void integrateFirstStep(void);
 __global__ void integrateSecondStep(void);
 __global__ void integrateThirdStep(void);
 
-__global__ void checkError(
-		double *maxPosAbsErrorPerBlock
+__global__ void checkError(double *maxPosAbsErrorPerBlock
 #if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
-        , double *maxVelAbsErrorPerBlock
+                        , double *maxVelAbsErrorPerBlock
 #endif
 #if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
-		, double *maxDensityAbsErrorPerBlock
+                        , double *maxDensityAbsErrorPerBlock
 #endif
 #if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
-		, double *maxEnergyAbsErrorPerBlock
+                        , double *maxEnergyAbsErrorPerBlock
 #endif
 #if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
-        , double *maxPressureAbsChangePerBlock
+                        , double *maxPressureAbsChangePerBlock
+#endif
+#if RK2_LIMIT_ALPHA_CHANGE && PALPHA_POROSITY
+                        , double *maxAlphaDiffPerBlock
 #endif
 );
-
-__global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock);
 
 void print_rk2_adaptive_settings();
 

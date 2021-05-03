@@ -1,5 +1,5 @@
 /**
- * @author      Christoph Schaefer cm.schaefer@gmail.com and Thomas I. Maindl
+ * @author      Christoph Schaefer cm.schaefer@gmail.com, Thomas I. Maindl, Christoph Burger
  *
  * @section     LICENSE
  * Copyright (c) 2019 Christoph Schaefer
@@ -39,7 +39,6 @@ extern __device__ int isRelaxed;
 extern __device__ int blockCount;
 extern __device__ int errorSmallEnough;
 extern __device__ double dtNewErrorCheck;
-extern __device__ double dtNewAlphaCheck;
 extern __device__ double maxPosAbsError;
 
 extern __device__ double maxVelAbsError;
@@ -47,7 +46,7 @@ extern __device__ double maxDensityAbsError;
 extern __device__ double maxEnergyAbsError;
 extern __device__ double maxPressureAbsChange;
 extern __device__ double maxDamageTimeStep;
-extern __device__ double maxalphaDiff;
+extern __device__ double maxAlphaDiff;
 
 __constant__ __device__ double rk_epsrel_d;
 
@@ -64,15 +63,11 @@ void rk2Adaptive()
     int errorSmallEnough_host;
     double dtmax_host = param.maxtimestep;
     assert(dtmax_host > 0);
-    double dtNewErrorCheck_host = 0.0;
     double dt_new;
-#if PALPHA_POROSITY
-    double dtNewAlphaCheck_host = -1.0;
-#endif
 
     cudaVerify(cudaMemcpyToSymbol(rk_epsrel_d, &param.rk_epsrel, sizeof(double)));
 
-    // allocate memory for runge kutta second order
+    // allocate mem
     double *maxPosAbsErrorPerBlock;
     cudaVerify(cudaMalloc((void**)&maxPosAbsErrorPerBlock, sizeof(double)*numberOfMultiprocessors));
 #if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
@@ -99,13 +94,13 @@ void rk2Adaptive()
     double *maxDamageTimeStepPerBlock;
     cudaVerify(cudaMalloc((void**)&maxDamageTimeStepPerBlock, sizeof(double)*numberOfMultiprocessors));
 #endif
-#if PALPHA_POROSITY
-    double *maxalphaDiffPerBlock;
-    cudaVerify(cudaMalloc((void**)&maxalphaDiffPerBlock, sizeof(double)*numberOfMultiprocessors));
-#endif
 #if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
     double *maxPressureAbsChangePerBlock;
     cudaVerify(cudaMalloc((void**)&maxPressureAbsChangePerBlock, sizeof(double)*numberOfMultiprocessors));
+#endif
+#if RK2_LIMIT_ALPHA_CHANGE && PALPHA_POROSITY
+    double *maxAlphaDiffPerBlock;
+    cudaVerify(cudaMalloc((void**)&maxAlphaDiffPerBlock, sizeof(double)*numberOfMultiprocessors));
 #endif
 
     // alloc mem for multiple rhs and copy immutables
@@ -142,7 +137,7 @@ void rk2Adaptive()
         endTime += timePerStep;
         assert(endTime > currentTime);
         cudaVerify(cudaMemcpyToSymbol(endTimeD, &endTime, sizeof(double)));
-        fprintf(stdout, "\n\nStart integrating output step %d / %d from time %g to %g...\n",
+        fprintf(stdout, "\nStart integrating output step %d / %d from time %g to %g...\n",
                 timestep+1, lastTimestep, currentTime, endTime);
 
         // set first dt for this output step
@@ -155,13 +150,13 @@ void rk2Adaptive()
                 dt_host = dt_suggested = timePerStep;
             }
             if (param.verbose)
-                fprintf(stdout, "   starting with timestep: %g\n", dt_host);
+                fprintf(stdout, "    starting with timestep: %g\n", dt_host);
         } else {
             dt_host = dt_suggested;   // use previously suggested next timestep as starting point
             if (dt_host > timePerStep)
                 dt_host = timePerStep;
             if (param.verbose)
-                fprintf(stdout, "   continuing with timestep: %g\n", dt_host);
+                fprintf(stdout, "    continuing with timestep: %g\n", dt_host);
         }
         assert(dt_host > 0);
         assert(dt_host <= timePerStep);
@@ -195,7 +190,7 @@ void rk2Adaptive()
 
             cudaVerify(cudaDeviceSynchronize());
 
-            // copy particle data to first runge kutta step
+            // copy particle data to first Runge Kutta step
             copy_particles_variables_device_to_device(&rk_device[RKFIRST], &p_device);
             cudaVerify(cudaDeviceSynchronize());
 #if GRAVITATING_POINT_MASSES
@@ -203,7 +198,7 @@ void rk2Adaptive()
             cudaVerify(cudaDeviceSynchronize());
 #endif
 
-            // calculate first right hand side, based on quantities in [RKFIRST]
+            // calculate first rhs, based on quantities in [RKFIRST]
             cudaVerify(cudaMemcpyToSymbol(p, &rk_device[RKFIRST], sizeof(struct Particle)));
 #if GRAVITATING_POINT_MASSES
             cudaVerify(cudaMemcpyToSymbol(pointmass, &rk_pointmass_device[RKFIRST], sizeof(struct Pointmass)));
@@ -218,7 +213,7 @@ void rk2Adaptive()
             cudaVerify(cudaDeviceSynchronize());
             cudaVerify(cudaMemcpyFromSymbol(&dt_new, dt, sizeof(double)));
             if (param.verbose && dt_new < dt_host)
-                fprintf(stdout, "reducing timestep due to CFL condition from %g to %g (current time: %e)\n", dt_host, dt_new, currentTime);
+                fprintf(stdout, "reducing coming timestep due to CFL condition from %g to %g (current time: %e)\n", dt_host, dt_new, currentTime);
             dt_host = dt_suggested = dt_new;
 #endif
 #if RK2_USE_FORCES_LIMIT
@@ -228,7 +223,7 @@ void rk2Adaptive()
             cudaVerify(cudaDeviceSynchronize());
             cudaVerify(cudaMemcpyFromSymbol(&dt_new, dt, sizeof(double)));
             if (param.verbose && dt_new < dt_host)
-                fprintf(stdout, "reducing timestep due to forces/accels from %g to %g (current time: %e)\n", dt_host, dt_new, currentTime);
+                fprintf(stdout, "reducing coming timestep due to forces/accels from %g to %g (current time: %e)\n", dt_host, dt_new, currentTime);
             dt_host = dt_suggested = dt_new;
 #endif
 #if RK2_USE_DAMAGE_LIMIT && FRAGMENTATION
@@ -238,7 +233,7 @@ void rk2Adaptive()
             cudaVerify(cudaDeviceSynchronize());
             cudaVerify(cudaMemcpyFromSymbol(&dt_new, dt, sizeof(double)));
             if (param.verbose && dt_new < dt_host)
-                fprintf(stdout, "reducing timestep due to damage evolution from %g to %g (current time: %e)\n", dt_host, dt_new, currentTime);
+                fprintf(stdout, "reducing coming timestep due to damage evolution from %g to %g (current time: %e)\n", dt_host, dt_new, currentTime);
             dt_host = dt_suggested = dt_new;
 #endif
 
@@ -328,29 +323,14 @@ void rk2Adaptive()
 #if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
                                 , maxPressureAbsChangePerBlock
 #endif
-                                )));
-                /* get info about the quality of the time step: if errorSmallEnough is TRUE, then
-                   the integration is successful and the timestep size is raised. if errorSmallEnough
-                   is FALSE, the timestep size is lowered and the step is repeated */
-                cudaVerify(cudaDeviceSynchronize());
-                cudaVerify(cudaMemcpyFromSymbol(&dtNewErrorCheck_host, dtNewErrorCheck, sizeof(double)));
-                cudaVerify(cudaMemcpyFromSymbol(&errorSmallEnough_host, errorSmallEnough, sizeof(int)));
-
-#if PALPHA_POROSITY
-                /* special checks for the convergence of the p(alpha) crush curve stuff */
-                if (errorSmallEnough_host) {
-                    /* checking if the distention change is within the set limit */
-                    cudaVerifyKernel((alphaMaxTimeStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(
-                                    maxalphaDiffPerBlock
-                    )));
-                    cudaVerify(cudaMemcpyFromSymbol(&dt_new, dtNewAlphaCheck, sizeof(double)));
-                    if (param.verbose && dt_new < dt_host && dt_new > 0.0)
-                        fprintf(stdout, "timestep is too large for distention, reducing from %g to %g\n", dt_host, dt_new);
-                }
-                cudaVerify(cudaDeviceSynchronize());
-                cudaVerify(cudaMemcpyFromSymbol(&dtNewAlphaCheck_host, dtNewAlphaCheck, sizeof(double)));
-                cudaVerify(cudaMemcpyFromSymbol(&errorSmallEnough_host, errorSmallEnough, sizeof(int)));
+#if RK2_LIMIT_ALPHA_CHANGE && PALPHA_POROSITY
+                                , maxAlphaDiffPerBlock
 #endif
+                                )));
+                cudaVerify(cudaDeviceSynchronize());
+                cudaVerify(cudaMemcpyFromSymbol(&dt_suggested, dtNewErrorCheck, sizeof(double)));
+                cudaVerify(cudaMemcpyFromSymbol(&errorSmallEnough_host, errorSmallEnough, sizeof(int)));
+                cudaVerify(cudaDeviceSynchronize());
 
                 /* last timestep was okay, forward time and continue with new timestep */
                 if (errorSmallEnough_host) {
@@ -376,38 +356,27 @@ void rk2Adaptive()
                     cudaVerify(cudaMemcpyFromSymbol(&errEnergy, maxEnergyAbsError, sizeof(double)));
 #endif
                     cudaVerify(cudaDeviceSynchronize());
-                    fprintf(stdout, "total max error (relative to eps): %g   (location: %g, velocity: %g, density: %g, energy: %g)   with timestep: %g\n",
+                    fprintf(stdout, "    with timestep: %g\n", dt_host);
+                    fprintf(stdout, "    total max error (relative to eps): %g   (location: %g, velocity: %g, density: %g, energy: %g)\n",
                             max(max(max(errPos, errVel), errDensity), errEnergy) / param.rk_epsrel,
-                            errPos / param.rk_epsrel, errVel / param.rk_epsrel, errDensity / param.rk_epsrel, errEnergy / param.rk_epsrel, dt_host);
-
+                            errPos / param.rk_epsrel, errVel / param.rk_epsrel, errDensity / param.rk_epsrel, errEnergy / param.rk_epsrel);
 #if PALPHA_POROSITY
-                    double errPressure = 0.0;
+                    double errPressure = 0.0, errAlpha = 0.0;
 # if RK2_LIMIT_PRESSURE_CHANGE
                     cudaVerify(cudaMemcpyFromSymbol(&errPressure, maxPressureAbsChange, sizeof(double)));
 # endif
+# if RK2_LIMIT_ALPHA_CHANGE
+                    cudaVerify(cudaMemcpyFromSymbol(&errAlpha, maxAlphaDiff, sizeof(double)));
+# endif
                     cudaVerify(cudaDeviceSynchronize());
-                    fprintf(stdout, "total max change (relative to max allowed): %g   (pressure: %g)\n", errPressure, errPressure);
-
-                    fprintf(stdout, "dtNewErrorCheck: %g   dtNewAlphaCheck: %g\n", dtNewErrorCheck_host, dtNewAlphaCheck_host);
+                    fprintf(stdout, "    total max change (relative to max allowed): %g   (pressure: %g, alpha: %g)\n",
+                            max(errPressure, errAlpha), errPressure, errAlpha);
 #endif
+                    fprintf(stdout, "    errors suggest next timestep: %g\n", dt_suggested);
                 }
-
-                /* set suggested next timestep based on errors */
-#if PALPHA_POROSITY
-                if (dtNewAlphaCheck_host <= 0) {
-                    dt_suggested = dtNewErrorCheck_host;
-                } else {
-                    dt_suggested = min(dtNewErrorCheck_host, dtNewAlphaCheck_host);
-                }
-#else
-                dt_suggested = dtNewErrorCheck_host;
-#endif
-                assert(dt_suggested > 0);
-#if DEBUG_TIMESTEP
-                fprintf(stdout, "suggested next timestep based on errors: %g\n", dt_suggested);
-#endif
 
                 /* limit suggested next timestep to max allowed timestep */
+                assert(dt_suggested > 0.0);
                 if (dt_suggested > dtmax_host) {
 #if DEBUG_TIMESTEP
                     fprintf(stdout, "suggested next timestep is larger than max allowed timestep, reduced from %g to %g\n", dt_suggested, dtmax_host);
@@ -426,7 +395,7 @@ void rk2Adaptive()
                     dt_host = dt_suggested;
                 }
 
-                /* tell the gpu the new timestep and the current time */
+                /* tell the GPU the new timestep and the current time */
                 cudaVerify(cudaMemcpyToSymbol(currentTimeD, &currentTime, sizeof(double)));
                 cudaVerify(cudaMemcpyToSymbol(dt, &dt_host, sizeof(double)));
 
@@ -434,13 +403,13 @@ void rk2Adaptive()
                 if (errorSmallEnough_host) {
                     afterIntegrationStep();   // do something after successful step (e.g. look for min/max pressure...)
                     if (param.verbose) {
-                        fprintf(stdout, "   error was small enough, last timestep accepted, current time: %e   time to next output: %g   next timestep: %g\n",
+                        fprintf(stdout, "Errors were small enough, last timestep accepted, current time: %e   time to next output: %g   next timestep: %g\n\n",
                                 currentTime, endTime-currentTime, dt_host);
                     }
                     break; // break while(TRUE) and continue with next timestep
                 } else {
                     if (param.verbose)
-                        fprintf(stdout, "   error was too large, last timestep rejected, current time: %e   timestep lowered to: %g\n", currentTime, dt_host);
+                        fprintf(stdout, "Errors were too large, last timestep rejected, current time: %e   timestep lowered to: %g\n\n", currentTime, dt_host);
                     // copy back the initial values of the particles
                     copy_particles_variables_device_to_device(&rk_device[RKFIRST], &rk_device[RKSTART]);
                     copy_particles_derivatives_device_to_device(&rk_device[RKFIRST], &rk_device[RKSTART]);
@@ -490,11 +459,11 @@ void rk2Adaptive()
 #if RK2_USE_DENSITY_ERROR && INTEGRATE_DENSITY
     cudaVerify(cudaFree(maxDensityAbsErrorPerBlock));
 #endif
-#if PALPHA_POROSITY
-    cudaVerify(cudaFree(maxalphaDiffPerBlock));
-#endif
 #if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
     cudaVerify(cudaFree(maxPressureAbsChangePerBlock));
+#endif
+#if RK2_LIMIT_ALPHA_CHANGE && PALPHA_POROSITY
+    cudaVerify(cudaFree(maxAlphaDiffPerBlock));
 #endif
 }
 
@@ -1110,61 +1079,6 @@ __global__ void integrateThirdStep(void)
 
 
 
-#if PALPHA_POROSITY
-__global__ void alphaMaxTimeStep(double *maxalphaDiffPerBlock)
-{
-    __shared__ double sharedMaxalphaDiff[NUM_THREADS_ERRORCHECK];
-    double localMaxalphaDiff = 0.0;
-    double tmp = 0.0;
-    int i, j, k, m;
-
-    maxalphaDiff = 0.0;
-    dtNewAlphaCheck = -1.0;
-
-    // loop for particles
-    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
-        tmp = fabs(rk[RKSTART].alpha_jutzi_old[i] - p.alpha_jutzi[i]);
-        localMaxalphaDiff = max(tmp, localMaxalphaDiff);
-    }
-
-    // reduce shared thread results to one per block
-    i = threadIdx.x;
-    sharedMaxalphaDiff[i] = localMaxalphaDiff;
-    for (j = NUM_THREADS_ERRORCHECK / 2; j > 0; j /= 2) {
-        __syncthreads();
-        if (i < j) {
-            k = i + j;
-            sharedMaxalphaDiff[i] = localMaxalphaDiff = max(localMaxalphaDiff, sharedMaxalphaDiff[k]);
-        }
-    }
-
-    // write block result to global memory
-    if (i == 0) {
-        k = blockIdx.x;
-        maxalphaDiffPerBlock[k] = localMaxalphaDiff;
-        m = gridDim.x - 1;
-        if (m == atomicInc((unsigned int *)&blockCount, m)) {
-            // last block, so combine all block results
-            for (j = 0; j <= m; j++) {
-                localMaxalphaDiff = max(localMaxalphaDiff, maxalphaDiffPerBlock[j]);
-            }
-            maxalphaDiff = localMaxalphaDiff;
-
-            blockCount = 0;  // reset block count
-        }
-
-#define FIXMEDT 1000
-        dtNewAlphaCheck = FIXMEDT*dt;
-//        dtNewAlphaCheck = dt * RK2_MAX_ALPHA_CHANGE / (maxalphaDiff);
-        if (maxalphaDiff > RK2_MAX_ALPHA_CHANGE) {
-            dtNewAlphaCheck = dt * RK2_MAX_ALPHA_CHANGE / (maxalphaDiff * 1.51);
-            errorSmallEnough = FALSE;
-        }
-    }
-}
-#endif
-
-
 
 __global__ void checkError(double *maxPosAbsErrorPerBlock
 #if RK2_USE_VELOCITY_ERROR || RK2_USE_VELOCITY_ERROR_POINTMASSES
@@ -1178,6 +1092,9 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
 #endif
 #if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
                         , double *maxPressureAbsChangePerBlock
+#endif
+#if RK2_LIMIT_ALPHA_CHANGE && PALPHA_POROSITY
+                        , double *maxAlphaDiffPerBlock
 #endif
         )
 {
@@ -1197,6 +1114,10 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
 #if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
     __shared__ double sharedMaxPressureAbsChange[NUM_THREADS_ERRORCHECK];
     double localMaxPressureAbsChange = 0.0;
+#endif
+#if RK2_LIMIT_ALPHA_CHANGE && PALPHA_POROSITY
+    __shared__ double sharedMaxAlphaDiff[NUM_THREADS_ERRORCHECK];
+    double localMaxAlphaDiff = 0.0;
 #endif
     int i, j, k, m;
     double dtNew = 0.0;
@@ -1303,6 +1224,11 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
         tmp = fabs(rk[RKFIRST].p[i] - rk[RKSECOND].p[i]);
         localMaxPressureAbsChange = max(localMaxPressureAbsChange, tmp);
 #endif
+#if RK2_LIMIT_ALPHA_CHANGE && PALPHA_POROSITY
+        // check if alpha changes too much
+        tmp = fabs(rk[RKSTART].alpha_jutzi_old[i] - p.alpha_jutzi[i]);
+        localMaxAlphaDiff = max(localMaxAlphaDiff, tmp);
+#endif
 
 #if RK2_USE_ENERGY_ERROR && INTEGRATE_ENERGY
         hasEnergy = 0;
@@ -1340,6 +1266,7 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
 #endif
     }   // loop for particles
 
+
     // reduce shared thread results to one per block
     i = threadIdx.x;
     sharedMaxPosAbsError[i] = localMaxPosAbsError;
@@ -1354,6 +1281,9 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
 #endif
 #if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
     sharedMaxPressureAbsChange[i] = localMaxPressureAbsChange;
+#endif
+#if RK2_LIMIT_ALPHA_CHANGE && PALPHA_POROSITY
+    sharedMaxAlphaDiff[i] = localMaxAlphaDiff;
 #endif
     for (j = NUM_THREADS_ERRORCHECK / 2; j > 0; j /= 2) {
         __syncthreads();
@@ -1371,6 +1301,9 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
 #endif
 #if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
             sharedMaxPressureAbsChange[i] = localMaxPressureAbsChange = max(localMaxPressureAbsChange, sharedMaxPressureAbsChange[k]);
+#endif
+#if RK2_LIMIT_ALPHA_CHANGE && PALPHA_POROSITY
+            sharedMaxAlphaDiff[i] = localMaxAlphaDiff = max(localMaxAlphaDiff, sharedMaxAlphaDiff[k]);
 #endif
         }
     }
@@ -1391,6 +1324,9 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
 #if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
         maxPressureAbsChangePerBlock[k] = localMaxPressureAbsChange;
 #endif
+#if RK2_LIMIT_ALPHA_CHANGE && PALPHA_POROSITY
+        maxAlphaDiffPerBlock[k] = localMaxAlphaDiff;
+#endif
         m = gridDim.x - 1;
         if (m == atomicInc((unsigned int *)&blockCount, m)) {
             // last block, so combine all block results
@@ -1407,6 +1343,9 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
 #endif
 #if RK2_LIMIT_PRESSURE_CHANGE && PALPHA_POROSITY
                 localMaxPressureAbsChange = max(localMaxPressureAbsChange, maxPressureAbsChangePerBlock[j]);
+#endif
+#if RK2_LIMIT_ALPHA_CHANGE && PALPHA_POROSITY
+                localMaxAlphaDiff = max(localMaxAlphaDiff, maxAlphaDiffPerBlock[j]);
 #endif
             }
 
@@ -1434,6 +1373,17 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
 
             tmp = max(tmp, maxPressureAbsChange);
 #endif
+#if RK2_LIMIT_ALPHA_CHANGE && PALPHA_POROSITY
+            // store change relative to max allowed change
+            maxAlphaDiff = localMaxAlphaDiff / RK2_MAX_ALPHA_CHANGE;
+
+            tmp = max(tmp, maxAlphaDiff);
+
+// old implemenation:
+//        dtNewAlphaCheck = dt * RK2_MAX_ALPHA_CHANGE / maxAlphaDiff;
+//        if (maxAlphaDiff > RK2_MAX_ALPHA_CHANGE)
+//            dtNewAlphaCheck = dt * RK2_MAX_ALPHA_CHANGE / (maxAlphaDiff * 1.51);
+#endif
 
             if (tmp > 1.0) {
                 /* error too large */
@@ -1452,7 +1402,7 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
                 if (dtNew > 5.0 * dt)
                     dtNew = 5.0 * dt;
 //#endif
-                // do not make timestep smaller
+                // do not make timestep smaller if error small enough
                 if (dtNew < dt)
                     dtNew = dt;
             }
