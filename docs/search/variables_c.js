@@ -2,7 +2,6 @@ var searchData=
 [
   ['name',['name',['../struct_file.html#a348deeccd6613402baa45359b275ea52',1,'File']]],
   ['noi',['noi',['../struct_particle.html#a54d63482d07d98baa2e436c0ad4095af',1,'Particle']]],
-  ['not',['not',['../gravity_8cu.html#ae2c322db5ce3e686ad6704072cda1637',1,'gravity.cu']]],
   ['numberofchildren',['numberOfChildren',['../miluph_8cu.html#a4c8f9b962957f758f66a7e9a4367d567',1,'numberOfChildren():&#160;miluph.cu'],['../miluph_8h.html#a4c8f9b962957f758f66a7e9a4367d567',1,'numberOfChildren():&#160;miluph.cu']]],
   ['numberofmaterials',['numberOfMaterials',['../config__parameter_8cu.html#a7f00ec370e9aef040c0b2831da3b71ce',1,'numberOfMaterials():&#160;config_parameter.cu'],['../config__parameter_8h.html#a7f00ec370e9aef040c0b2831da3b71ce',1,'numberOfMaterials():&#160;config_parameter.cu']]],
   ['numberofmultiprocessors',['numberOfMultiprocessors',['../miluph_8cu.html#ad8a83283303f020de0d8ed12f3478bfa',1,'numberOfMultiprocessors():&#160;miluph.cu'],['../miluph_8h.html#ad8a83283303f020de0d8ed12f3478bfa',1,'numberOfMultiprocessors():&#160;miluph.cu']]],

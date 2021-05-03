@@ -1,51 +1,51 @@
 <map id="predictor_corrector_euler" name="predictor_corrector_euler">
-<area shape="rect" id="node2" href="$memory__handling_8cu.html#a83017b6658aa7eaf464e864932fc1b47" title="allocate_particles\l_memory" alt="" coords="220,486,343,528"/>
-<area shape="rect" id="node3" href="$memory__handling_8cu.html#a00388f6cb86dd667c058df18b8f7d3ea" title="copy_particles_immutables\l_device_to_device" alt="" coords="191,552,371,593"/>
-<area shape="rect" id="node4" href="$memory__handling_8cu.html#a320620af346b15f6f7da698b78548ac5" title="allocate_pointmass\l_memory" alt="" coords="214,617,349,658"/>
-<area shape="rect" id="node5" href="$memory__handling_8cu.html#ac4196d9a93284642b2ed484e0ac26391" title="copy_pointmass_immutables\l_device_to_device" alt="" coords="186,682,377,724"/>
-<area shape="rect" id="node6" href="$timeintegration_8cu.html#aacee04f8bf23d8594794f6952451678c" title="calculate_angular_momentum" alt="" coords="184,748,379,775"/>
-<area shape="rect" id="node7" href="$rhs_8cu.html#aaa69e1e6250e714b978b8f83f260a28d" title="rightHandSide" alt="" coords="229,900,333,927"/>
+<area shape="rect" id="node2" href="$memory__handling_8cu.html#a83017b6658aa7eaf464e864932fc1b47" title="allocate_particles\l_memory" alt="" coords="220,470,343,512"/>
+<area shape="rect" id="node3" href="$memory__handling_8cu.html#a00388f6cb86dd667c058df18b8f7d3ea" title="copy_particles_immutables\l_device_to_device" alt="" coords="191,536,371,577"/>
+<area shape="rect" id="node4" href="$memory__handling_8cu.html#a320620af346b15f6f7da698b78548ac5" title="allocate_pointmass\l_memory" alt="" coords="214,601,349,642"/>
+<area shape="rect" id="node5" href="$memory__handling_8cu.html#ac4196d9a93284642b2ed484e0ac26391" title="copy_pointmass_immutables\l_device_to_device" alt="" coords="186,666,377,708"/>
+<area shape="rect" id="node6" href="$timeintegration_8cu.html#aacee04f8bf23d8594794f6952451678c" title="calculate_angular_momentum" alt="" coords="184,732,379,759"/>
+<area shape="rect" id="node7" href="$rhs_8cu.html#aaa69e1e6250e714b978b8f83f260a28d" title="rightHandSide" alt="" coords="229,884,333,911"/>
 <area shape="rect" id="node8" href="$io_8cu.html#aeb07186d62049f2b5568dedb0264bdd2" title="copyToHostAndWriteToFile" alt="" coords="439,58,621,84"/>
 <area shape="rect" id="node9" href="$pressure_8cu.html#a4c983e72593c81e8ad8c3da244750599" title="Calculates the pressure for all particles. " alt="" coords="702,58,829,84"/>
-<area shape="rect" id="node29" href="$damage_8h.html#a21afcc6e2f3ce13ddaad8f60b8982f75" title="Limits the damage to what is supported by the number of activated flaws. " alt="" coords="482,1859,578,1886"/>
-<area shape="rect" id="node43" href="$predictor__corrector__euler_8cu.html#a3814a4a56df5c90e98a03679cccb64d8" title="setTimestep_euler" alt="" coords="217,1002,346,1028"/>
-<area shape="rect" id="node44" href="$predictor__corrector__euler_8cu.html#ae60b18b51688d5882e980729f2eff55b" title="PredictorStep_euler" alt="" coords="213,1103,349,1130"/>
-<area shape="rect" id="node45" href="$predictor__corrector__euler_8h.html#a9ce871f72690382989cf12e8fd62da1b" title="pressureChangeCheck\l_euler" alt="" coords="453,1910,607,1952"/>
-<area shape="rect" id="node46" href="$memory__handling_8cu.html#aa5336b131f7abee34ab1147ba5217521" title="copy_gravitational\l_accels_device_to_device" alt="" coords="194,1154,369,1196"/>
-<area shape="rect" id="node47" href="$predictor__corrector__euler_8cu.html#a3224f02d552e580055d6be5f641f0157" title="CorrectorStep_euler" alt="" coords="212,1220,351,1247"/>
-<area shape="rect" id="node48" href="$timeintegration_8cu.html#a78edde5c20a29ae558ad63db1c2749b5" title="afterIntegrationStep" alt="" coords="213,1271,349,1298"/>
-<area shape="rect" id="node49" href="$memory__handling_8cu.html#a98496f47800965844494c86dc0fe4923" title="free_particles_memory" alt="" coords="204,1322,359,1348"/>
-<area shape="rect" id="node50" href="$memory__handling_8cu.html#a0f9affd655eca13484593d5eeec73294" title="free_pointmass_memory" alt="" coords="199,1372,364,1399"/>
-<area shape="rect" id="node10" href="$rhs_8cu.html#a3ce839e17b600b5ff81502b864d95c86" title="zero_all_derivatives" alt="" coords="461,327,599,354"/>
-<area shape="rect" id="node11" href="$boundary_8cu.html#a092ef939062b27aab9bf0369faa630bf" title="BoundaryConditionsBeforeRHS" alt="" coords="427,378,633,404"/>
-<area shape="rect" id="node12" href="$tree_8cu.html#ad35586f87db125b73735ca74fbe35116" title="computationalDomain" alt="" coords="456,428,604,455"/>
-<area shape="rect" id="node13" href="$tree_8cu.html#ad2c17b7a6e842835311d5502e30cef6b" title="buildTree" alt="" coords="493,479,567,506"/>
-<area shape="rect" id="node14" href="$tree_8cu.html#a409f6d46534c450659fd202310fa1551" title="getTreeDepth" alt="" coords="479,530,581,556"/>
-<area shape="rect" id="node15" href="$tree_8h.html#a59b57cd8d63b7c9793e441ef1792f03a" title="check_sml_boundary" alt="" coords="693,1052,838,1079"/>
-<area shape="rect" id="node16" href="$tree_8h.html#a050f6a7f19647d225c91d9d548ea6c0c" title="knnNeighbourSearch" alt="" coords="459,631,601,658"/>
-<area shape="rect" id="node17" href="$tree_8cu.html#a17108361cf7fb6aceec797277720fea1" title="nearNeighbourSearch\l_modify_sml" alt="" coords="457,682,603,724"/>
-<area shape="rect" id="node18" href="$tree_8cu.html#a479b902754e4995b95be63d446ec9506" title="nearNeighbourSearch" alt="" coords="457,1356,603,1383"/>
-<area shape="rect" id="node19" href="$tree_8cu.html#a5d1d94630fd2202ed47880e841ef9181" title="setEmptyMassForInnerNodes" alt="" coords="432,799,628,826"/>
-<area shape="rect" id="node20" href="$density_8cu.html#a9bb9c9b345cb0f4f95fa62e35644cc37" title="Calculates the density using the kernel sum. " alt="" coords="471,850,589,876"/>
-<area shape="rect" id="node21" href="$kernel_8h.html#a8531e5403979e291fe8fea8f359d5415" title="Calculates the zeroth order corrections for the kernel sum. " alt="" coords="466,900,594,927"/>
-<area shape="rect" id="node22" href="$soundspeed_8cu.html#a843a8fdd8c8728659687aab98307813b" title="Compute sound speed depending on equation of state. " alt="" coords="456,951,604,978"/>
-<area shape="rect" id="node23" href="$kernel_8h.html#a574755ce5da7bc304ea1752e5e3d125b" title="Calculates &#160;and . " alt="" coords="466,1002,594,1028"/>
-<area shape="rect" id="node24" href="$porosity_8h.html#a918dad81cd63090e7989028d74741899" title="calculateCompressiveStrength" alt="" coords="430,1052,630,1079"/>
-<area shape="rect" id="node25" href="$porosity_8h.html#aa2dec2a1b423af3cc5035e4e0ff25b2e" title="calculateTensileStrength" alt="" coords="447,1103,613,1130"/>
-<area shape="rect" id="node26" href="$tree_8cu.html#a2d67dae7a7571beb2ec412b04de92583" title="calculateCentersOfMass" alt="" coords="447,1154,613,1180"/>
-<area shape="rect" id="node27" href="$viscosity_8h.html#a2bfa27ba72d5dedf75a624cd871a0346" title="betaviscosity" alt="" coords="481,1204,579,1231"/>
-<area shape="rect" id="node28" href="$timeintegration_8cu.html#ac975fd6d71ce6df7f03d462d5394248f" title="symmetrizeStress" alt="" coords="466,1255,594,1282"/>
-<area shape="rect" id="node30" href="$kernel_8cu.html#adfb4edbc8801ad7272d4bfa4e39495c3" title="Calculates the tensorial correction factors for linear consistency. " alt="" coords="465,1306,595,1332"/>
-<area shape="rect" id="node31" href="$internal__forces_8h.html#a68f70b7adeb9ebbf8eebae040bfd803c" title="calculatedeviatoricStress" alt="" coords="681,1750,849,1776"/>
-<area shape="rect" id="node32" href="$xsph_8cu.html#a5cc7201c525d9ef61114cbd52cfea95f" title="calculateXSPHchanges" alt="" coords="450,1407,610,1434"/>
-<area shape="rect" id="node33" href="$little__helpers_8cu.html#a15ff2f32836f363fb1f5cdfa3a149d1c" title="checkNaNs" alt="" coords="485,1458,575,1484"/>
-<area shape="rect" id="node34" href="$stress_8cu.html#af15671e840f16bcac37084ff0a6e64f5" title="set_stress_tensor" alt="" coords="467,1508,593,1535"/>
-<area shape="rect" id="node35" href="$viscosity_8h.html#a5f4f7c861289abc110a778820eafdeb2" title="calculate_kinematic\l_viscosity" alt="" coords="461,1560,599,1601"/>
-<area shape="rect" id="node36" href="$viscosity_8h.html#a753caadd06df4fc17c916cbb55029193" title="calculate_shear_stress\l_tensor" alt="" coords="452,1625,608,1666"/>
-<area shape="rect" id="node37" href="$internal__forces_8cu.html#a31671c77ed0ca3452ac84cb46f84af00" title="internalForces" alt="" coords="478,1808,582,1835"/>
-<area shape="rect" id="node38" href="$gravity_8h.html#a5409cb95653aa7810363d6ccf0d4906b" title="gravitation_from_point\l_masses" alt="" coords="455,1742,605,1784"/>
-<area shape="rect" id="node39" href="$gravity_8h.html#aca45c20940674a89aa043f2c4109ffc5" title="backreaction_from_disk\l_to_point_masses" alt="" coords="450,109,610,150"/>
-<area shape="rect" id="node40" href="$tree_8cu.html#a3dd72b7d09239c038e6d5605d325322e" title="measureTreeChange" alt="" coords="459,175,601,202"/>
-<area shape="rect" id="node41" href="$gravity_8cu.html#a7ea470f8746206cb9b1dd4e28b6b8e7c" title="selfgravity" alt="" coords="489,226,571,252"/>
-<area shape="rect" id="node42" href="$gravity_8h.html#a88a683a4afca0afc5834013361148725" title="addoldselfgravity" alt="" coords="470,276,590,303"/>
+<area shape="rect" id="node29" href="$damage_8h.html#a21afcc6e2f3ce13ddaad8f60b8982f75" title="Limits the damage to what is supported by the number of activated flaws. " alt="" coords="482,1827,578,1854"/>
+<area shape="rect" id="node43" href="$predictor__corrector__euler_8cu.html#a3814a4a56df5c90e98a03679cccb64d8" title="setTimestep_euler" alt="" coords="217,986,346,1012"/>
+<area shape="rect" id="node44" href="$predictor__corrector__euler_8cu.html#ae60b18b51688d5882e980729f2eff55b" title="PredictorStep_euler" alt="" coords="213,1087,349,1114"/>
+<area shape="rect" id="node45" href="$predictor__corrector__euler_8h.html#a9ce871f72690382989cf12e8fd62da1b" title="pressureChangeCheck\l_euler" alt="" coords="453,1878,607,1920"/>
+<area shape="rect" id="node46" href="$memory__handling_8cu.html#aa5336b131f7abee34ab1147ba5217521" title="copy_gravitational\l_accels_device_to_device" alt="" coords="194,1138,369,1180"/>
+<area shape="rect" id="node47" href="$predictor__corrector__euler_8cu.html#a3224f02d552e580055d6be5f641f0157" title="CorrectorStep_euler" alt="" coords="212,1204,351,1231"/>
+<area shape="rect" id="node48" href="$timeintegration_8cu.html#a78edde5c20a29ae558ad63db1c2749b5" title="afterIntegrationStep" alt="" coords="213,1255,349,1282"/>
+<area shape="rect" id="node49" href="$memory__handling_8cu.html#a98496f47800965844494c86dc0fe4923" title="free_particles_memory" alt="" coords="204,1306,359,1332"/>
+<area shape="rect" id="node50" href="$memory__handling_8cu.html#a0f9affd655eca13484593d5eeec73294" title="free_pointmass_memory" alt="" coords="199,1356,364,1383"/>
+<area shape="rect" id="node10" href="$rhs_8cu.html#a3ce839e17b600b5ff81502b864d95c86" title="zero_all_derivatives" alt="" coords="461,311,599,338"/>
+<area shape="rect" id="node11" href="$boundary_8cu.html#a092ef939062b27aab9bf0369faa630bf" title="BoundaryConditionsBeforeRHS" alt="" coords="427,362,633,388"/>
+<area shape="rect" id="node12" href="$tree_8cu.html#ad35586f87db125b73735ca74fbe35116" title="computationalDomain" alt="" coords="456,412,604,439"/>
+<area shape="rect" id="node13" href="$tree_8cu.html#ad2c17b7a6e842835311d5502e30cef6b" title="buildTree" alt="" coords="493,463,567,490"/>
+<area shape="rect" id="node14" href="$tree_8cu.html#a409f6d46534c450659fd202310fa1551" title="getTreeDepth" alt="" coords="479,514,581,540"/>
+<area shape="rect" id="node15" href="$tree_8h.html#a59b57cd8d63b7c9793e441ef1792f03a" title="check_sml_boundary" alt="" coords="693,1663,838,1690"/>
+<area shape="rect" id="node16" href="$tree_8h.html#a050f6a7f19647d225c91d9d548ea6c0c" title="knnNeighbourSearch" alt="" coords="459,615,601,642"/>
+<area shape="rect" id="node17" href="$tree_8cu.html#a17108361cf7fb6aceec797277720fea1" title="nearNeighbourSearch\l_modify_sml" alt="" coords="457,666,603,708"/>
+<area shape="rect" id="node18" href="$tree_8cu.html#a479b902754e4995b95be63d446ec9506" title="nearNeighbourSearch" alt="" coords="457,1675,603,1702"/>
+<area shape="rect" id="node19" href="$tree_8cu.html#a5d1d94630fd2202ed47880e841ef9181" title="setEmptyMassForInnerNodes" alt="" coords="432,783,628,810"/>
+<area shape="rect" id="node20" href="$density_8cu.html#a9bb9c9b345cb0f4f95fa62e35644cc37" title="Calculates the density using the kernel sum. " alt="" coords="471,834,589,860"/>
+<area shape="rect" id="node21" href="$kernel_8h.html#a8531e5403979e291fe8fea8f359d5415" title="Calculates the zeroth order corrections for the kernel sum. " alt="" coords="466,884,594,911"/>
+<area shape="rect" id="node22" href="$soundspeed_8cu.html#a843a8fdd8c8728659687aab98307813b" title="Compute sound speed depending on equation of state. " alt="" coords="456,935,604,962"/>
+<area shape="rect" id="node23" href="$kernel_8h.html#a574755ce5da7bc304ea1752e5e3d125b" title="Calculates &#160;and . " alt="" coords="466,986,594,1012"/>
+<area shape="rect" id="node24" href="$porosity_8h.html#a918dad81cd63090e7989028d74741899" title="calculateCompressiveStrength" alt="" coords="430,1036,630,1063"/>
+<area shape="rect" id="node25" href="$porosity_8h.html#aa2dec2a1b423af3cc5035e4e0ff25b2e" title="calculateTensileStrength" alt="" coords="447,1087,613,1114"/>
+<area shape="rect" id="node26" href="$tree_8cu.html#a2d67dae7a7571beb2ec412b04de92583" title="calculateCentersOfMass" alt="" coords="447,1138,613,1164"/>
+<area shape="rect" id="node27" href="$viscosity_8h.html#a2bfa27ba72d5dedf75a624cd871a0346" title="betaviscosity" alt="" coords="481,1188,579,1215"/>
+<area shape="rect" id="node28" href="$timeintegration_8cu.html#ac975fd6d71ce6df7f03d462d5394248f" title="symmetrizeStress" alt="" coords="466,1239,594,1266"/>
+<area shape="rect" id="node30" href="$kernel_8cu.html#adfb4edbc8801ad7272d4bfa4e39495c3" title="Calculates the tensorial correction factors for linear consistency. " alt="" coords="465,1290,595,1316"/>
+<area shape="rect" id="node31" href="$internal__forces_8h.html#a68f70b7adeb9ebbf8eebae040bfd803c" title="calculatedeviatoricStress" alt="" coords="681,1739,849,1766"/>
+<area shape="rect" id="node32" href="$xsph_8cu.html#a5cc7201c525d9ef61114cbd52cfea95f" title="calculateXSPHchanges" alt="" coords="450,1391,610,1418"/>
+<area shape="rect" id="node33" href="$little__helpers_8cu.html#a15ff2f32836f363fb1f5cdfa3a149d1c" title="checkNaNs" alt="" coords="485,1442,575,1468"/>
+<area shape="rect" id="node34" href="$stress_8cu.html#af15671e840f16bcac37084ff0a6e64f5" title="set_stress_tensor" alt="" coords="467,1492,593,1519"/>
+<area shape="rect" id="node35" href="$viscosity_8h.html#a5f4f7c861289abc110a778820eafdeb2" title="calculate_kinematic\l_viscosity" alt="" coords="461,1544,599,1585"/>
+<area shape="rect" id="node36" href="$viscosity_8h.html#a753caadd06df4fc17c916cbb55029193" title="calculate_shear_stress\l_tensor" alt="" coords="452,1609,608,1650"/>
+<area shape="rect" id="node37" href="$internal__forces_8cu.html#a31671c77ed0ca3452ac84cb46f84af00" title="internalForces" alt="" coords="478,1726,582,1752"/>
+<area shape="rect" id="node38" href="$gravity_8h.html#a5409cb95653aa7810363d6ccf0d4906b" title="gravitation_from_point\l_masses" alt="" coords="690,674,841,716"/>
+<area shape="rect" id="node39" href="$gravity_8h.html#aca45c20940674a89aa043f2c4109ffc5" title="backreaction_from_disk\l_to_point_masses" alt="" coords="685,405,845,446"/>
+<area shape="rect" id="node40" href="$tree_8cu.html#a3dd72b7d09239c038e6d5605d325322e" title="measureTreeChange" alt="" coords="459,159,601,186"/>
+<area shape="rect" id="node41" href="$gravity_8cu.html#a7ea470f8746206cb9b1dd4e28b6b8e7c" title="selfgravity" alt="" coords="489,210,571,236"/>
+<area shape="rect" id="node42" href="$gravity_8cu.html#a88a683a4afca0afc5834013361148725" title="addoldselfgravity" alt="" coords="470,564,590,591"/>
 </map>
