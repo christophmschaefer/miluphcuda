@@ -66,8 +66,8 @@ void rk2Adaptive()
     // vars for timestep benchmarking
     unsigned int ts_no_total = 0, ts_no_total_acc = 0, ts_no_total_rej = 0;   // total number of timesteps in sim
     unsigned int ts_no_substep = 0, ts_no_substep_acc = 0, ts_no_substep_rej = 0;
-    double ts_smallest = DBL_MAX;   // smallest timestep in sim
-    double ts_largest = 0.0;
+    double ts_smallest = DBL_MAX, ts_largest = 0.0;   // smallest, largest accepted timestep in sim
+    double ts_smallest_rej = DBL_MAX;
     int approaching_output_time = FALSE;
 
     cudaVerify(cudaMemcpyToSymbol(rk_epsrel_d, &param.rk_epsrel, sizeof(double)));
@@ -359,6 +359,7 @@ void rk2Adaptive()
                     ts_largest = fmax(ts_largest, dt_host);
                 } else {
                     ts_no_substep_rej++;
+                    ts_smallest_rej = fmin(ts_smallest_rej, dt_host);
                 }
 
                 /* print information about errors */
@@ -423,7 +424,7 @@ void rk2Adaptive()
                 if (errorSmallEnough_host) {
                     afterIntegrationStep();   // do something after successful step (e.g. look for min/max pressure...)
                     if (param.verbose) {
-                        fprintf(stdout, "Errors were small enough, last timestep accepted, current time: %e   time to next output: %g   next timestep: %g\n\n",
+                        fprintf(stdout, "Errors were small enough, last timestep accepted, current time: %e   time to next output: %g   suggested next timestep: %g\n\n",
                                 currentTime, endTime-currentTime, dt_host);
                     }
                     break; // break while(TRUE) and continue with next timestep
@@ -464,6 +465,7 @@ void rk2Adaptive()
     fprintf(stdout, "    fraction of rejected timesteps: %g\n\n", (double)ts_no_total_rej/(double)ts_no_total);
     fprintf(stdout, "    smallest accepted timestep: %g\n", ts_smallest);
     fprintf(stdout, "    largest accepted timestep:  %g\n", ts_largest);
+    fprintf(stdout, "    smallest rejected timestep: %g\n\n", ts_smallest_rej);
 
     // free memory
     int free_immutables = 0;
