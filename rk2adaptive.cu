@@ -31,6 +31,7 @@
 #include "pressure.h"
 #include "boundary.h"
 #include "damage.h"
+#include <float.h>
 
 extern __device__ double endTimeD, currentTimeD;
 extern __device__ double substep_currentTimeD;
@@ -61,6 +62,13 @@ void rk2Adaptive()
     double dtmax_host = param.maxtimestep;
     assert(dtmax_host > 0);
     double dt_new;
+
+    // vars for timestep benchmarking
+    unsigned int ts_no_total = 0, ts_no_total_acc = 0, ts_no_total_rej = 0;   // total number of timesteps in sim
+    unsigned int ts_no_substep = 0, ts_no_substep_acc = 0, ts_no_substep_rej = 0;
+    double ts_smallest = DBL_MAX;   // smallest timestep in sim
+    double ts_largest = 0.0;
+    int approaching_output_time = FALSE;
 
     cudaVerify(cudaMemcpyToSymbol(rk_epsrel_d, &param.rk_epsrel, sizeof(double)));
 
@@ -134,8 +142,11 @@ void rk2Adaptive()
         endTime += timePerStep;
         assert(endTime > currentTime);
         cudaVerify(cudaMemcpyToSymbol(endTimeD, &endTime, sizeof(double)));
-        fprintf(stdout, "\nStart integrating output step %d / %d from time %g to %g...\n",
+        fprintf(stdout, "\n\nStart integrating output step %d / %d from time %g to %g...\n",
                 timestep+1, lastTimestep, currentTime, endTime);
+
+        ts_no_substep = ts_no_substep_acc = ts_no_substep_rej = 0;
+        approaching_output_time = FALSE;
 
         // set first dt for this output step
         if (nsteps_cnt == 0) {
@@ -339,6 +350,17 @@ void rk2Adaptive()
                     cudaVerify(cudaDeviceSynchronize());
                 }
 
+                /* update timestep statistics */
+                ts_no_substep++;
+                if (errorSmallEnough_host) {
+                    ts_no_substep_acc++;
+                    if(!approaching_output_time)
+                        ts_smallest = fmin(ts_smallest, dt_host);
+                    ts_largest = fmax(ts_largest, dt_host);
+                } else {
+                    ts_no_substep_rej++;
+                }
+
                 /* print information about errors */
                 if (param.verbose) {
                     double errPos = 0.0, errVel = 0.0, errDensity = 0.0, errEnergy = 0.0;
@@ -387,6 +409,7 @@ void rk2Adaptive()
 #if DEBUG_TIMESTEP
                     fprintf(stdout, "next timestep would overshoot output time, reduced from suggested %g to %g\n", dt_suggested, dt_host);
 #endif
+                    approaching_output_time = TRUE;
                 } else {
                     /* otherwise use suggested timestep for next step */
                     dt_host = dt_suggested;
@@ -419,6 +442,12 @@ void rk2Adaptive()
             } // loop until error small enough
         } // current time < end time loop
 
+        fprintf(stdout, "Finished integrating output step %d / %d. Had to integrate %d timesteps (%d accepted, %d rejected).\n",
+                timestep+1, lastTimestep, ts_no_substep, ts_no_substep_acc, ts_no_substep_rej);
+        ts_no_total += ts_no_substep;
+        ts_no_total_acc += ts_no_substep_acc;
+        ts_no_total_rej += ts_no_substep_rej;
+
         // write results
 #if FRAGMENTATION
         cudaVerify(cudaDeviceSynchronize());
@@ -428,6 +457,13 @@ void rk2Adaptive()
         copyToHostAndWriteToFile(timestep, lastTimestep);
     } // timestep loop
 
+    fprintf(stdout, "\nTimestep statistics:\n");
+    fprintf(stdout, "    total no integrated timesteps: %d\n", ts_no_total);
+    fprintf(stdout, "    accepted timesteps: %d\n", ts_no_total_acc);
+    fprintf(stdout, "    rejected timesteps: %d\n", ts_no_total_rej);
+    fprintf(stdout, "    fraction of rejected timesteps: %g\n\n", (double)ts_no_total_rej/(double)ts_no_total);
+    fprintf(stdout, "    smallest accepted timestep: %g\n", ts_smallest);
+    fprintf(stdout, "    largest accepted timestep:  %g\n", ts_largest);
 
     // free memory
     int free_immutables = 0;

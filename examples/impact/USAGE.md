@@ -4,7 +4,7 @@ Impact example for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 29/Apr/2021
+last updated: 04/May/2021
 
 -----------------------------------------
 
@@ -79,6 +79,9 @@ scenarios, with varying impactor masses, impact parameters, and even material co
 
 We use an external tool for creating the required initial conditions, which is easy to use.
 Just drop me an e-mail if you are interested.
+
+Take a look at the timestep statistics at the very bottom of *miluphcuda.output*. If you are not satisfied you may try
+to adjust the integrator accuracy on the cmd-line and/or the compile-time settings for the integrator in *rk2adaptive.h*.
 
 Enjoy!
 

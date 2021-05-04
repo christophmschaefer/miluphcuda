@@ -4,7 +4,7 @@ Giant Collision examples for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 22/Feb/2021
+last updated: 04/May/2021
 
 -----------------------------------------
 
@@ -60,6 +60,9 @@ and 3h for *solid* on most current GPUs (benchmarked on a GTX 970).
 You can easily build on those examples for setting up your own simulations. It is straight-forward to run different scenarios,
 with varying masses, collision parameters, and even material compositions, and pre-collision rotation. We use an external
 tool for creating the required initial conditions, which is easy to use. Just drop me an e-mail if you are interested.
+
+Take a look at the timestep statistics at the very bottom of *miluphcuda.output*. If you are not satisfied you may try
+to adjust the integrator accuracy on the cmd-line and/or the compile-time settings for the integrator in *rk2adaptive.h*.
 
 You can also run further postprocessing on the results, e.g., to find all collision fragments and
 gravitationally bound aggregates of those. The necessary tools are included in
