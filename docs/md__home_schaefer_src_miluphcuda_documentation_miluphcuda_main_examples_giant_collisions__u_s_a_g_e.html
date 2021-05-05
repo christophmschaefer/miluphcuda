@@ -69,7 +69,7 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>Christoph Burger <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a></p>
-<p>last updated: 22/Feb/2021 </p><hr/>
+<p>last updated: 04/May/2021 </p><hr/>
 <p>These examples represent a collision of a ~1/10 Moon-mass body with a ~Moon-mass target. Both bodies have a 30 mass% iron core and a 70 mass% rocky mantle. The collision velocity is two times the mutual escape velocity (at the moment of first contact). The impact angle is 45 deg.</p>
 <p>You can choose between two material rheologies:</p>
 <ul>
@@ -100,6 +100,7 @@ $(function() {
 </ul>
 <p><b>Where to go from here?</b></p>
 <p>You can easily build on those examples for setting up your own simulations. It is straight-forward to run different scenarios, with varying masses, collision parameters, and even material compositions, and pre-collision rotation. We use an external tool for creating the required initial conditions, which is easy to use. Just drop me an e-mail if you are interested.</p>
+<p>Take a look at the timestep statistics at the very bottom of <em>miluphcuda.output</em>. If you are not satisfied you may try to adjust the integrator accuracy on the cmd-line and/or the compile-time settings for the integrator in <em><a class="el" href="rk2adaptive_8h.html">rk2adaptive.h</a></em>.</p>
 <p>You can also run further postprocessing on the results, e.g., to find all collision fragments and gravitationally bound aggregates of those. The necessary tools are included in </p><pre class="fragment">    miluphcuda/utils/postprocessing/fast_identify_fragments_and_calc_aggregates/
 </pre><p>Check the QuickStart guide there for more details.</p>
 <p>Enjoy! </p>
@@ -107,7 +108,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - Giant Collision examples for miluphcuda<br />
-    Generated on Tue May 4 2021 07:05:14 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Wed May 5 2021 07:05:14 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
