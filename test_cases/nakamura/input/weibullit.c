@@ -331,15 +331,15 @@ int main(int argc, char *argv[])
 			}
 			fprintf(out, "%d\t", p[i].material_type);
 			fprintf(out, "%d\t", p[i].flaws.nof);
-			fprintf(out, "%e\t", p[i].damage);
+			fprintf(out, "%e", p[i].damage);
 			for (d = 0; d < DIM; d++) 
 				for (e = 0; e < DIM; e++)
-					fprintf(out, "%e\t", p[i].S[d][e]);
+					fprintf(out, "\t%e", p[i].S[d][e]);
 			/* and now the flaws */
 			for (d = 0; d < p[i].flaws.nof; d++) 
-				fprintf(out, "%e\t", p[i].flaws.activation_threshold[d]);
+				fprintf(out, "\t%e", p[i].flaws.activation_threshold[d]);
 			fprintf(out, "\n");
-		}	
+		}
 	} else if (sph98) { /* sph98 input file */
 		for (i = 0; i < number; i++) {
 			fprintf(out, "%d\t", i);

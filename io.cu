@@ -1017,6 +1017,7 @@ void read_particles_from_file(File inputFile)
     int columns;
     int pcnt = 0;
     char iotmp[256];
+    unsigned int tab_endings = 0;
 
     if (!param.hdf5input) {
         for (i = 0; i < numberOfParticles; i++) {
@@ -1275,40 +1276,40 @@ void read_particles_from_file(File inputFile)
 #endif
 
             // check for end of line
-            char ch;
-            char ch2;
-            fscanf(inputFile.data, "%c", &ch);
-            if (ch == '\n') {
 #if DEBUG_MISC
 # if DIM == 1
-    	        fprintf(stdout, "Reading coordinates for particle no. %d (x) = %e \n", i+1, p_host.x[i]);
+            fprintf(stdout, "Read coordinates for particle no. %d (x) = %e\n", i+1, p_host.x[i]);
 # endif
 # if DIM == 2
-	            fprintf(stdout, "Reading coordinates for particle no. %d (x,y) = %e %e\n", i+1, p_host.x[i], p_host.y[i]);
+            fprintf(stdout, "Read coordinates for particle no. %d (x,y) = %e %e\n", i+1, p_host.x[i], p_host.y[i]);
 # endif
 # if DIM == 3
-	            fprintf(stdout, "Reading coordinates for particle no. %d (x,y,z) = %e %e %e\n", i+1, p_host.x[i], p_host.y[i], p_host.z[i]);
+            fprintf(stdout, "Read coordinates for particle no. %d (x,y,z) = %e %e %e\n", i+1, p_host.x[i], p_host.y[i], p_host.z[i]);
 # endif
 #endif
+            char ch, ch2;
+            fscanf(inputFile.data, "%c", &ch);
+            if (ch == '\n') {
+                continue;
             } else if (ch == '\t') {
                 fscanf(inputFile.data, "%c", &ch2);
                 if (ch2 == '\n') {
-                    fprintf(stdout, "Warning. Line ending with \\t\\n, expected only a \\n.");
-#if DIM == 1
-                    fprintf(stdout, "Reading coordinates for particle no. %d (x) = %e \n", i+1, p_host.x[i]);
-#endif
-#if DIM == 2
-                    fprintf(stdout, "Reading coordinates for particle no. %d (x,y) = %e %e\n", i+1, p_host.x[i], p_host.y[i]);
-#endif
-#if DIM == 3
-                    fprintf(stdout, "Reading coordinates for particle no. %d (x,y,z) = %e %e %e\n", i+1, p_host.x[i], p_host.y[i], p_host.z[i]);
-#endif
+                    tab_endings++;
                 } else {
-                    fprintf(stderr, "End of line not reached. Check your input file.\n");
+                    fprintf(stderr, "ERROR in input file, particle no. %d. End of line not reached.\n", i+1);
                     exit(1);
                 }
             }
-        }
+            else {
+                fprintf(stderr, "ERROR in input file, particle no. %d. Expected end of line but found something else...\n", i+1);
+                exit(1);
+            }
+
+        }  // particles loop
+
+        if (tab_endings != 0)
+            fprintf(stderr, "WARNING. Found %d lines ending with \\t\\n in input file, expected only a \\n.\n", tab_endings);
+
 
 #if GRAVITATING_POINT_MASSES
         if ((massfile = fopen(massfilename, "r")) == NULL) {
