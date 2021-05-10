@@ -451,6 +451,7 @@ void rk2Adaptive()
 
         // write results
 #if FRAGMENTATION
+        // necessary because damage was limited only in rhs calls and not after integrating third step
         cudaVerify(cudaDeviceSynchronize());
         cudaVerifyKernel((damageLimit<<<numberOfMultiprocessors*4, NUM_THREADS_PC_INTEGRATOR>>>()));
         cudaVerify(cudaDeviceSynchronize());
