@@ -184,9 +184,11 @@ __global__ void BoundaryConditionsAfterRHS(int *interactions)
 
         /* boundary conditions for tensile rod setup */
         if (p.x0[i] < -1.3) {
-            p.vx[i] = p.dxdt[i] =  -5e-3;
+            p.vx[i] = p.dxdt[i] = -5e-3;
+            p.vy[i] = p.dydt[i] = 0.0;
         } else if (p.x0[i] > 1.3) {
             p.vx[i] = p.dxdt[i] = 5e-3;
+            p.vy[i] = p.dydt[i] = 0.0;
         }
 
 

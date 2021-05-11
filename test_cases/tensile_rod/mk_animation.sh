@@ -2,8 +2,12 @@
 
 # make plots
 for FILE in `ls -1 rod.????.h5`; do
-    echo "plotting $FILE..."
-    ./mk_plot.py $FILE
+    if [ -f "$FILE.png" ]; then
+        echo "$FILE already plotted."
+    else
+        echo "plotting $FILE..."
+        ./mk_plot.py $FILE
+    fi
 done
 
 # make video

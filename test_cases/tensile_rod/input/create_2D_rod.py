@@ -4,7 +4,7 @@
 Creates initial conditions for tensile rod test case, see Gray (2001) and Schaefer (2005).
 
 authors: Christoph Schäfer, Christoph Burger
-last updated: 09/May/2021
+last updated: 11/May/2021
 """
 
 
@@ -80,9 +80,9 @@ while True:
     if particle_picked[index] == 0:
         particle_picked[index] = 1
         N_picked += 1
-    # don't set flaws outside 1.2 cm
+    # don't set flaws outside 1.1 cm
     # (note: the boundary conditions are imposed outside 1.3 cm, see boundary.cu, where this transition zone avoids fracture at the interface)
-    if x[index] < -1.2 or x[index] > 1.2:
+    if x[index] < -1.1 or x[index] > 1.1:
         continue
     else:
         # set flaw
