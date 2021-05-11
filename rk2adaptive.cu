@@ -637,7 +637,8 @@ __global__ void limitTimestepDamage(double *maxDamageTimeStepPerBlock)
     // loop for particles
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
         if (p.dddt[i] > 0.0) {
-            tmp = (p.d[i] + RK2_MAX_DAMAGE_CHANGE) / p.dddt[i];
+            tmp = 0.7 * (p.d[i] + RK2_MAX_DAMAGE_CHANGE) / p.dddt[i];
+            tmp = min(tmp, RK2_MAX_DAMAGE_CHANGE / p.dddt[i]);
             localMaxDamageTimeStep = min(tmp, localMaxDamageTimeStep);
         }
     }
