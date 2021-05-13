@@ -856,10 +856,8 @@ int main(int argc, char *argv[])
 
     // get the information about the number of particles in the file
     if ((inputFile.data = fopen(inputFile.name, "r")) == NULL) {
-        fprintf(stderr, "Error: File %s not found.\n", inputFile.name);
         if (param.hdf5input) {
 #if HDF5IO
-            fprintf(stderr, "Hope you know what you're up to and search for a h5 file\n");
             char h5filename[256];
             strcpy(h5filename, inputFile.name);
             strcat(h5filename, ".h5");
@@ -888,6 +886,7 @@ int main(int argc, char *argv[])
             H5Fclose(file_id);
 #endif
         } else {
+            fprintf(stderr, "Error: File %s not found.\n", inputFile.name);
             exit(1);
         }
     } else {
@@ -920,10 +919,8 @@ int main(int argc, char *argv[])
     strcat(massfilename, ".mass");
 
     if ((inputf = fopen(massfilename, "r")) == NULL) {
-        fprintf(stderr, "File for the point masses %s not found.\n", massfilename);
         if (param.hdf5input) {
 # if HDF5IO
-            fprintf(stderr, "Hope you know what you're up to and search for a h5 file\n");
             char h5filename[256];
             strcpy(h5filename, inputFile.name);
             strcat(h5filename, ".mass.h5");
@@ -952,6 +949,7 @@ int main(int argc, char *argv[])
             H5Fclose(file_id);
 # endif
         } else {
+            fprintf(stderr, "File for the point masses %s not found.\n", massfilename);
             exit(1);
         }
     } else {
@@ -972,13 +970,13 @@ int main(int argc, char *argv[])
     /* create binary system file and write header */
     if(param.hdf5input){
         if( (binarysystemfile = fopen(param.binarysystemfilename, "a")) == NULL ) {
-            fprintf(stderr, "Ohoh Merry Xmas... Cannot open '%s' for writing. Abort...\n", param.binarysystemfilename);
+            fprintf(stderr, "Cannot open '%s' for writing. Abort...\n", param.binarysystemfilename);
             exit(1);
         }
     }
     else {
         if( (binarysystemfile = fopen(param.binarysystemfilename, "w")) == NULL ) {
-            fprintf(stderr, "Ohoh Merry Xmas... Cannot open '%s' for writing. Abort...\n", param.binarysystemfilename);
+            fprintf(stderr, "Cannot open '%s' for writing. Abort...\n", param.binarysystemfilename);
             exit(1);
         }
         fprintf(binarysystemfile, "#         1.time            2.semi-major-axis   3.eccentricity       4.Binary angular momentum");
@@ -1104,18 +1102,15 @@ int main(int argc, char *argv[])
     // initialise the memory
     init_allocate_memory();
 
-    // read particle data from input file
-    if (param.verbose)
-        fprintf(stdout, "\nReading input file %s...\n", inputFile.name);
     if ((inputFile.data = fopen(inputFile.name, "r")) == NULL) {
-        fprintf(stderr, "Error: File %s not found.\n", inputFile.name);
         if (param.hdf5input) {
-            fprintf(stderr, "Hope you know what you're up to and search for a h5 file\n");
+            fprintf(stdout, "\nReading input file %s.h5\n", inputFile.name);
             read_particles_from_file(inputFile);
         } else {
             exit(1);
         }
     } else {
+        fprintf(stdout, "\nReading input file %s\n", inputFile.name);
         read_particles_from_file(inputFile);
         fclose(inputFile.data);
     }
