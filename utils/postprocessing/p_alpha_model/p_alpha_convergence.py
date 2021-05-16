@@ -16,7 +16,7 @@ The input has to be HDF5 file(s) with the following data sets:
 authors: Christoph Schaefer, Christoph Burger
 comments to: ch.schaefer@uni-tuebingen.de
 
-last updated: 30/Apr/2021
+last updated: 16/May/2021
 """
 
 
@@ -49,7 +49,7 @@ except Exception as e:
 
 parser = argparse.ArgumentParser(description="Plots alpha(p) from miluphcuda HDF5 output files + the theoretical crush curve (parameters hardcoded in the script!).")
 parser.add_argument("-v", help = "be verbose", action = 'store_true')
-parser.add_argument("--files", help = "specify one or more files to process", nargs='+', default = None)
+parser.add_argument("--files", help = "specify one or more (.h5) files to process", nargs='+', default = None)
 parser.add_argument("--imagefile", help = "filename to write image to (default: p_vs_alpha.png)", default = "p_vs_alpha.png")
 args = parser.parse_args()
 

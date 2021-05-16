@@ -4,7 +4,7 @@ Impact example for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 04/May/2021
+last updated: 16/May/2021
 
 -----------------------------------------
 
@@ -31,7 +31,7 @@ The scenario uses ~60k SPH particles, with a runtime on the order of several hou
 
 1. Compile miluphcuda using the `parameter.h` file from this directory.  
    Don't forget to also adapt the miluphcuda Makefile to your system.
-2. Unpack `impact.0000.gz`.
+2. Unpack `initials/impact.0000.gz` and move `impact.0000` to this directory.
 3. Adapt the start script `run.sh` to your system (path to CUDA libs and to miluphcuda executable) and execute it.
 4. Wait for the simulation to finish (200 output files).
    Output to stdout and stderr is written to `miluphcuda.output` and `miluphcuda.error`, respectively.
