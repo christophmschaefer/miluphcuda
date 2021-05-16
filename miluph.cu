@@ -606,7 +606,7 @@ void usage(char *name)
             "\t-m, --materialconfig <name>\t Name of libconfig file including material config (default: material.cfg)\n"
             "\t-M, --maxtimestep <value>\t Upper limit for the timestep (rk2_adaptive), or timestep size (euler), respectively.\n"
             "\t-n, --num <int>\t\t\t Number of simulation steps.\n"
-            "\t-Q, --precision <value>\t\t Precision of the rk2_adaptive integrator (default: 1e-6).\n"
+            "\t-Q, --precision <value>\t\t Precision of the rk2_adaptive integrator (default: 1e-5).\n"
             "\t-r, --restart\t\t\t Assume that ASCII input file (specified with -f) is old output file.\n"
             "\t\t\t\t\t To restart from old HDF5 output file use -X instead of this.\n"
             "\t-s, --selfgravity\t\t Activate selfgravity.\n"
@@ -683,7 +683,7 @@ int main(int argc, char *argv[])
     param.ascii_output = TRUE;
     param.maxtimestep = -1.0;
     param.firsttimestep = -1.0;
-    param.rk_epsrel = 1e-6;
+    param.rk_epsrel = 1e-5;
     param.angular_momentum_check = -1.0;
     strcpy(inputFile.name, "disk.0000");
     strcpy(configFile, "material.cfg");

@@ -29,15 +29,23 @@
 #include "parameter.h"
 
 
-/* rk2_adaptive integration parameters */
+/* rk2_adaptive integrator settings */
 
-/* pre-timestep checks to limit timestep in advance (all for particles only) */
+/* pre-timestep checks to limit timestep in advance (all for particles only)
+ * recommended:
+ *   - use COURANT_LIMIT
+ *   - for sims with FRAGMENTATION: use DAMAGE_LIMIT
+ */
 #define RK2_USE_COURANT_LIMIT 1  // CFL condition, with dt ~ sml/cs
 #define RK2_USE_FORCES_LIMIT 0   // local forces/acceleration, with dt ~ sqrt(sml/a)
 #define RK2_USE_DAMAGE_LIMIT 1   // rate of damage change
 
-/* specify quantities for post-timestep error estimate, where positions are always used (for particles) */
-/* for pointmasses, no error checking is done by default, but can be set for velocities */
+/* specify quantities for post-timestep error estimate, where positions are always used (for particles)
+ * for pointmasses, no error checking is done by default, but can be set for velocities
+ * recommended:
+ *   - use DENSITY_ERROR
+ *   - for sims with PALPHA_POROSITY: use LIMIT_PRESSURE_CHANGE and LIMIT_ALPHA_CHANGE
+ */
 #define RK2_USE_VELOCITY_ERROR 0
 #define RK2_USE_DENSITY_ERROR 1
 #define RK2_USE_ENERGY_ERROR 0
@@ -45,15 +53,21 @@
 #define RK2_LIMIT_PRESSURE_CHANGE 1   // special check for PALPHA_POROSITY for crush curve convergence
 #define RK2_LIMIT_ALPHA_CHANGE 1   // special check for PALPHA_POROSITY for crush curve convergence
 
-/* specific parameters */
+/* important parameters
+ * recommended:
+ *   - LOCATION_SAFETY: around 0.1
+ *   - TIMESTEP_SAFETY: around 0.9
+ *   - MAX_DAMAGE_CHANGE: 0.1 - 0.2  (for RK2_USE_DAMAGE_LIMIT)
+ *   - MAX_ALPHA_CHANGE: 1e-3 - 1e-2  (for RK2_LIMIT_ALPHA_CHANGE)
+ */
 #define RK2_LOCATION_SAFETY 0.1    // this times the sml defines the min length to consider in error check for positions
 #define MIN_VEL_CHANGE_RK2 10.0    // defines min vel to consider in error check for velocities
-#define RK2_TINY_DENSITY 1e-2
-#define RK2_TINY_ENERGY 10.0
+#define RK2_TINY_DENSITY 1e-2    // small density eps compared to typical densities
+#define RK2_TINY_ENERGY 10.0     // small energy eps compared to typical energies
 #define RK2_TIMESTEP_SAFETY 0.9    // safety factor for setting next timestep
-#define SMALLEST_DT_ALLOWED 1e-16
-#define RK2_MAX_DAMAGE_CHANGE 2e-2
-#define RK2_MAX_ALPHA_CHANGE 1e-3
+#define SMALLEST_DT_ALLOWED 1e-16  // simulation aborts if timestep falls below
+#define RK2_MAX_DAMAGE_CHANGE 0.15   // max allowed (absolute) damage (DIM-root of tensile) change per timestep (for RK2_USE_DAMAGE_LIMIT)
+#define RK2_MAX_ALPHA_CHANGE 2e-3    // max allowed (absolute) distention change per timestep (for RK2_LIMIT_ALPHA_CHANGE)
 
 
 /**
