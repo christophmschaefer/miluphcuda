@@ -4,7 +4,7 @@ Giant Collision examples for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 04/May/2021
+last updated: 18/May/2021
 
 -----------------------------------------
 
@@ -20,8 +20,8 @@ You can choose between two material rheologies:
 
 The Tillotson EoS is applied to model the thermodynamic response.
 
-The scenarios use ~60k SPH particles, with runtimes around 1.5h for *hydro*,
-and 3h for *solid* on most current GPUs (benchmarked on a GTX 970).
+The scenarios use ~60k SPH particles, with runtimes around 1h for *hydro*,
+and 2h for *solid* on most current GPUs (benchmarked on a GTX 970).
 
 -----------------------------------------
 
@@ -29,7 +29,7 @@ and 3h for *solid* on most current GPUs (benchmarked on a GTX 970).
 
 1. Compile miluphcuda using the `parameter.h` file from the respective directory (hydro or solid).  
    Don't forget to also adapt the miluphcuda Makefile to your system.
-2. Unpack `impact.0000.gz`.
+2. Unpack `initials/impact.0000.gz` and move it one dir level up.
 3. Adapt the start script `run.sh` to your system (path to CUDA libs and to miluphcuda executable) and execute it.
 4. Wait for the simulation to finish (75 output files).
    Output to stdout and stderr is written to `miluphcuda.output` and `miluphcuda.error`, respectively.
@@ -47,7 +47,7 @@ and 3h for *solid* on most current GPUs (benchmarked on a GTX 970).
   so no need to set anything explicitly. Then start Paraview and either
 
     * directly open the created paraview.xdmf and choose settings yourself
-    * load the prepared Paraview state in *paraview.pvsm* (*File -> Load State*), and select
+    * load the prepared Paraview state in `results/paraview.pvsm` (*File -> Load State*), and select
       the created `paraview.xdmf` file under *Choose File Names*
 
 * Compare your results (e.g., visualized with Paraview) to the animations in the `results/` directories,

@@ -4,7 +4,7 @@ Impact example for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 16/May/2021
+last updated: 17/May/2021
 
 -----------------------------------------
 
@@ -23,7 +23,7 @@ Applied rheology models:
 
 A zero-gravity environment is assumed.
 
-The scenario uses ~60k SPH particles, with a runtime on the order of several hours on most current GPUs (benchmarked on a GTX 970).
+The scenario uses ~60k SPH particles, with a runtime on the order of one hour on most current GPUs (benchmarked on a GTX 970).
 
 -----------------------------------------
 

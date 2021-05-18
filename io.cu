@@ -2929,7 +2929,7 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
 
     if (currentDiskIO) {
         if (param.verbose)
-            fprintf(stderr, "Waiting for i/o thread...\n");
+            fprintf(stderr, "Note: waiting for previous i/o thread when writing timestep %d / %d to file...\n", timestep+1, lastTimestep);
         rc = pthread_join(fileIOthread, NULL);
         assert(0 == rc);
     }
