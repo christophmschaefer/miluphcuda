@@ -19,12 +19,11 @@ last updated: 18/May/2021
 
 # set plasticity params (from material.cfg)
 yield_stress = 1.5e9
-cohesion = 1e5
+cohesion = 90e6
 friction_angle = 1.11   # this is mu_i = 2.0
-#friction_angle = 0.98   # this is mu_i = 1.5
 cohesion_damaged = 0.0
 friction_angle_damaged = 0.675   # this is mu_d = 0.8
-melt_energy = 1e6
+#melt_energy = 1e6
 
 
 try:
@@ -202,7 +201,7 @@ for currentfile in args.files:
 
     # plot it (add current subplot to fig)
     ax = fig.add_subplot(n_files, 1, n)
-    ax.plot(x, y_DP, '--', c='cyan', label=r'$Y_\mathrm{Drucker-Prager}$')
+#    ax.plot(x, y_DP, '--', c='cyan', label=r'$Y_\mathrm{Drucker-Prager}$')
     ax.plot(x, y_i, '--', c='blue', label=r'$Y_\mathrm{intact}$')
     ax.plot(x, y_d, '--', c='red', label=r'$Y_\mathrm{damaged}$')
     ax.axhline(y=cohesion, linestyle='--', c='darkgray', label='cohesion')
