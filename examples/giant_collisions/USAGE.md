@@ -53,8 +53,9 @@ and 2h for *solid* on most current GPUs (benchmarked on a GTX 970).
 * Compare your results (e.g., visualized with Paraview) to the animations in `results/`, which
   show the interior structure of the colliding bodies (cut views) for various quantities.
 
-* You can also visualize the workings of the Collins plasticity model by running `results/plot_plastic_yielding.sh`.
-  This produces plots for shear stress vs. pressure, including the respective yield limit curves.
+* For the *solid* example, you can also visualize the workings of the Collins plasticity model by
+  running `results/plot_plastic_yielding.sh`. This produces plots for shear stress vs. pressure,
+  including the respective yield limit curves.
 
 -----------------------------------------
 

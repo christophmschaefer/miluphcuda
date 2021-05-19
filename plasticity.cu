@@ -269,7 +269,7 @@ __global__ void plasticityModel(void) {
 #else // simple von Mises yield criterion without *any* dependency
         y = matYieldStress[p_rhs.materialId[i]];
 # if SIRONO_POROSITY
-        // Shear Strength using Sironos Model
+        // shear strength using Sironos model
         if (matEOS[p_rhs.materialId[i]] == EOS_TYPE_SIRONO) {
             y = sqrt((-1.0) * p.tensile_strength[i] * p.compressive_strength[i]);
             p.shear_strength[i] = y;

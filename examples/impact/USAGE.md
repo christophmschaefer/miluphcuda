@@ -4,7 +4,7 @@ Impact example for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 17/May/2021
+last updated: 19/May/2021
 
 -----------------------------------------
 
@@ -50,14 +50,14 @@ The scenario uses ~60k SPH particles, with a runtime on the order of one hour on
   so no need to set anything explicitly. Then start Paraview and either
 
     * directly open the created paraview.xdmf and choose settings yourself
-    * load the prepared Paraview state in *paraview.pvsm* (*File -> Load State*), and select
+    * load the prepared Paraview state in `results/paraview.pvsm` (*File -> Load State*), and select
       the created `paraview.xdmf` file under *Choose File Names*
       (note that this shows you a slice of the target by default, for better visibility of the cratering process)
 
-* Compare your results (e.g., visualized with Paraview) to the animations in the `results/` directory,
+* Compare your results (e.g., visualized with Paraview) to the animations in `results/animations/`,
   which show the cratering process (a sclice of the target) for various quantities.
 
-* A full view of the (half-sphere) target and the impact process is visualized in *full.mp4*.
+* A full view of the (half-sphere) target and the impact process is visualized in `results/animations/full.mp4`.
 
 * An important aspect of the porosity model is that the *crush curve* (the curve distention vs. pressure which is
   followed during compaction) is modeled correctly. Since the pressures that lead to compaction are typically released
@@ -67,8 +67,11 @@ The scenario uses ~60k SPH particles, with a runtime on the order of one hour on
         results/plot_p_alpha_convergence.py -v --files impact.000[1-4].h5
 
   which plots SPH particles + the theoretical crush curve for output frames 1 through 4. Take a look at
-  *results/p_vs_alpha.first4frames.png* to see what the plots should qualitatively look like for the above four frames.
+  `results/p_vs_alpha.first4frames.png` to see what the plots should qualitatively look like for the above four frames.
   You can of course specify any number/sequence of frames you are interested in for plotting.
+
+* You can also visualize the workings of the Collins plasticity model by running `results/plot_plastic_yielding.sh`.
+  This produces plots for shear stress vs. pressure, including the respective yield limit curves.
 
 -----------------------------------------
 
