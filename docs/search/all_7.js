@@ -29,5 +29,5 @@ var searchData=
   ['gravity_2eh',['gravity.h',['../gravity_8h.html',1,'']]],
   ['gravity_5findex',['gravity_index',['../rhs_8cu.html#a65e40618a0b734a702121cda7864cafc',1,'gravity_index():&#160;timeintegration.cu'],['../timeintegration_8cu.html#a65e40618a0b734a702121cda7864cafc',1,'gravity_index():&#160;timeintegration.cu']]],
   ['giant_20collision_20examples_20for_20miluphcuda',['Giant Collision examples for miluphcuda',['../md__home_schaefer_src_miluphcuda_documentation_miluphcuda_main_examples_giant_collisions__u_s_a_g_e.html',1,'']]],
-  ['gravity_20merging_20test_20case_20for_20miluphcuda',['Gravity merging test case for miluphcuda',['../md__home_schaefer_src_miluphcuda_documentation_miluphcuda_main_test_cases_gravity_merging__usage.html',1,'']]]
+  ['gravity_20merging_20test_20case_20for_20miluphcuda',['Gravity merging test case for miluphcuda',['../md__home_schaefer_src_miluphcuda_documentation_miluphcuda_main_test_cases_gravity_merging__u_s_a_g_e.html',1,'']]]
 ];
