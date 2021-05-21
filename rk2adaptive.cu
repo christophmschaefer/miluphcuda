@@ -161,12 +161,14 @@ void rk2Adaptive()
                 fprintf(stdout, "    starting with timestep: %g\n", dt_host);
         } else {
             dt_host = dt_suggested;   // use previously suggested next timestep as starting point
+            if (dt_host < SMALLEST_DT_ALLOWED)
+                dt_host = 1.1 * SMALLEST_DT_ALLOWED;
             if (dt_host > timePerStep)
                 dt_host = timePerStep;
             if (param.verbose)
                 fprintf(stdout, "    continuing with timestep: %g\n", dt_host);
         }
-        assert(dt_host > 0);
+        assert(dt_host > 0.0);
         assert(dt_host <= timePerStep);
         cudaVerify(cudaMemcpyToSymbol(dt, &dt_host, sizeof(double)));
         nsteps_cnt++;
@@ -268,7 +270,7 @@ void rk2Adaptive()
 
                 // check for SMALLEST_DT_ALLOWED
                 cudaVerify(cudaMemcpyFromSymbol(&dt_host, dt, sizeof(double)));
-                if (dt_host < SMALLEST_DT_ALLOWED) {
+                if (dt_host < SMALLEST_DT_ALLOWED && !approaching_output_time) {
                     fprintf(stderr, "Timestep %e is below SMALLEST_DT_ALLOWED. Stopping here.\n", dt_host);
                     exit(1);
                 }
