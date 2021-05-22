@@ -1,6 +1,6 @@
 2D tensile rod test case, for plasticity and fragmentation/damage models.
 The test case is set up in dimensionless units.
-See Gray (2001) and Schäfer (2005) for details.
+See Gray (2001), Gray et al. (2001), and Schäfer (2005) for details.
 See also Schäfer et al. (2016), Sect. 4.1 for the used units.
 
 A constant velocity (5e-3) for slices of particles pulls the rod apart, defining the strain rate.
@@ -26,8 +26,13 @@ How to run it:
 The simulation typically runs for few minutes and produces 250 output files (8 MB each).
 
 
+The results/ directory contains accuracy-converged animations of the crack growth process,
+with the regular particle spacing of 0.0125 cm and in higher resolution with 0.005 cm.
+They were produced with an rk2_adaptive eps = 1e-6 and MAX_DAMAGE_CHANGE = 0.01.
+
+
 Christoph Schaefer, Christoph Burger
 ch.schaefer@uni-tuebingen.de
 
-last updated: 2021-05-11
+last updated: 2021-05-22
 
