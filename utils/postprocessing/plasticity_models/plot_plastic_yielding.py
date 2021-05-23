@@ -13,7 +13,7 @@ The input has to be HDF5 file(s) with the following data sets:
 authors: Christoph Schaefer, Patricia Buzzatto, Christoph Burger
 comments to: christoph.burger@uni-tuebingen.de
 
-last updated: 18/May/2021
+last updated: 23/May/2021
 """
 
 
@@ -126,10 +126,8 @@ for currentfile in args.files:
                     color.append(colortmp[i])
         p = np.asarray(p, dtype=float)
         S = np.asarray(S, dtype=float)
-        assert len(p) == len(S), "ERROR. Strange mismatch in array lengths..."
         if args.color is not None:
             color = np.asarray(color, dtype=float)
-            assert len(p) == len(color), "ERROR. Strange mismatch in array lengths..."
 
         if args.v:
             print("    found {} particles with mat-type {}".format(len(p), args.mat_type) )
@@ -146,6 +144,14 @@ for currentfile in args.files:
             color = color**3
         elif args.color == 'DAMAGE_TOTAL':
             color = f['damage_total'][:]
+
+        if args.v:
+            print("    found {} particles".format(len(p)) )
+
+    assert len(p) == len(S), "ERROR. Strange mismatch in array lengths..."
+    if args.color is not None:
+        assert len(p) == len(color), "ERROR. Strange mismatch in array lengths..."
+
 
     # compute sqrt(J2)
     s11 = S[:, 0]   # list of S_11 for all particles

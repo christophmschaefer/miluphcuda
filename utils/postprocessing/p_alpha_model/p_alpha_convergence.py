@@ -16,7 +16,7 @@ The input has to be HDF5 file(s) with the following data sets:
 authors: Christoph Schaefer, Christoph Burger
 comments to: ch.schaefer@uni-tuebingen.de
 
-last updated: 16/May/2021
+last updated: 23/May/2021
 """
 
 
@@ -51,6 +51,7 @@ parser = argparse.ArgumentParser(description="Plots alpha(p) from miluphcuda HDF
 parser.add_argument("-v", help = "be verbose", action = 'store_true')
 parser.add_argument("--files", help = "specify one or more (.h5) files to process", nargs='+', default = None)
 parser.add_argument("--imagefile", help = "filename to write image to (default: p_vs_alpha.png)", default = "p_vs_alpha.png")
+parser.add_argument("--mat_type", help = "select material type for plotting (default: all particles are plotted)", type=int, default = None)
 args = parser.parse_args()
 
 if args.files == None:
@@ -83,10 +84,42 @@ for currentfile in args.files:
         print("Processing {}...".format(currentfile) )
 
     time = f['time'][0]
-    p = f['p'][:]
-    alpha = f['alpha_jutzi'][:]
-    dalphadt = f['dalphadt'][:]
+
+    # extract only particles with fitting mat-type
+    if args.mat_type is not None:
+        mat_types = f['material_type'][:]
+        pTmp = f['p'][:]
+        alphaTmp = f['alpha_jutzi'][:]
+        dalphadtTmp = f['dalphadt'][:]
+
+        p = []
+        alpha = []
+        dalphadt = []
+        for i in range(0, len(mat_types)):
+            if mat_types[i] == args.mat_type:
+                p.append(pTmp[i])
+                alpha.append(alphaTmp[i])
+                dalphadt.append(dalphadtTmp[i])
+        p = np.asarray(p, dtype=float)
+        alpha = np.asarray(alpha, dtype=float)
+        dalphadt = np.asarray(dalphadt, dtype=float)
+
+        if args.v:
+            print("    found {} particles with mat-type {}".format(len(p), args.mat_type) )
+
+    # extract all particles (all mat-types)
+    else:
+        p = f['p'][:]
+        alpha = f['alpha_jutzi'][:]
+        dalphadt = f['dalphadt'][:]
+
+        if args.v:
+            print("    found {} particles".format(len(p)) )
+
+    assert len(p) == len(alpha) == len(dalphadt), "ERROR. Strange mismatch in array lengths..."
+
     f.close()
+
 
     # set plot limits
     p_min = np.amin(p)
@@ -139,7 +172,12 @@ for currentfile in args.files:
     elif crushcurve_style == 1:
         ax.plot(x, y1, '--', c='darkgray', label='crush curve')
         ax.plot(x, y2, '--', c='darkgray', label='crush curve')
-    sc = ax.scatter(p, alpha, c=dalphadt, s=2, label='SPH particles')
+
+    if args.mat_type is not None:
+        labeltext = "SPH particles (mat-type: {})".format(args.mat_type)
+    else:
+        labeltext = "SPH particles"
+    sc = ax.scatter(p, alpha, c=dalphadt, s=2, label=labeltext)
 
     ax.set_xlim(p_min, p_max)
     ax.set_ylim(alpha_min, alpha_max)
@@ -159,4 +197,3 @@ if n != n_files:
 if args.v:
     print("\nWriting image to {}...\n".format(args.imagefile) )
 fig.savefig(args.imagefile, dpi=200)
-
