@@ -1,7 +1,7 @@
 How to set up the material config file for miluphcuda
 =====================================================
 
-last updated: 05/Mar/2021
+last updated: 28/May/2021
 
 Christoph Burger, Christoph Schäfer  
 christoph.burger@uni-tuebingen.de
@@ -205,11 +205,16 @@ and the following parameters:
         eos.till_alpha      float   0.
         eos.till_beta       float   0.
 
-        eos.rho_limit       float   0.9                 for expanded states with rho/rho_0 < rho_limit
-                                                        the pressure is set to zero (if e < till_E_cv)
+        eos.rho_limit       float   0.9                 for cold (i.e., if e < till_E_cv) expanded states
+                                                        with rho/rho_0 < rho_limit the pressure is set to
+                                                        zero; intended to avoid unphysically high negative
+                                                        pressures where the material would actually
+                                                        fragment or form droplets
 
-        eos.cs_limit        float   1% of approx.       lower limit for sound speed (in m/s),
-                                    bulk sound speed    default is 1% of sqrt(till_A/till_rho_0)
+        eos.cs_limit        float   1% of approx.       lower limit for sound speed (in m/s), default
+                                    bulk sound speed    is 1% of sqrt(till_A/till_rho_0); can be used
+                                                        to avoid unphysical values, like imaginary sound
+                                                        speeds for negative pressures
 
 --------------------------------
 
@@ -326,15 +331,38 @@ when used together with the P-alpha model:
 
 In addition to the parameters for the respective EoS, you need the following:
 
-        Key                 Type    Default             Details
-        _______________________________________________________
+        Key                         Type    Default             Details
+        _______________________________________________________________
 
-        ...
-        ...
-        ...
+        eos.crushcurve_style        int     0                   0 ... simple quadratic crush curve
+                                                                1 ... realistic crush curve
+        eos.porjutzi_p_elastic      float   0.
+        eos.porjutzi_p_transition   float   0.                  only required for crush curve style 1
+        eos.porjutzi_p_compacted    float   0.
 
-        eos.cs_porous       float   50% of approx.      sound speed in uncompacted material (in m/s),
-                                    bulk sound speed    the actual sound speed is interpolation between
-                                                        this and the matrix cs, based on distention
+        eos.porjutzi_alpha_0        float   1.
+        eos.porjutzi_alpha_e        float   1.
+        eos.porjutzi_alpha_t        float   1.                  only required for crush curve style 1
+
+        eos.porjutzi_n1             float   0.                  only required for crush curve style 1
+        eos.porjutzi_n2             float   0.                  only required for crush curve style 1
+
+        eos.cs_porous               float   50% of approx.      sound speed in uncompacted material
+                                            bulk sound speed    (in m/s), where the actual sound speed
+                                                                is a linear interpolation between this
+                                                                and the sound speed in the matrix
+                                                                material, based on distention
+
+--------------------------------
+
+**Porosity model: eps-alpha**
+
+...
+
+--------------------------------
+
+**Porosity model: Sirono**
+
+...
 
 

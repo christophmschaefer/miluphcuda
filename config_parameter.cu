@@ -595,9 +595,12 @@ void transferMaterialsToGPU()
                 max_abs_pressure_change_host = fmin(max_abs_pressure_change_host, porjutzi_p_elastic[ID]);
             config_setting_lookup_float(subset, "porjutzi_p_transition", &porjutzi_p_transition[ID]);
             config_setting_lookup_float(subset, "porjutzi_p_compacted", &porjutzi_p_compacted[ID]);
-            config_setting_lookup_float(subset, "porjutzi_alpha_0", &porjutzi_alpha_0[ID]);
-            config_setting_lookup_float(subset, "porjutzi_alpha_e", &porjutzi_alpha_e[ID]);
-            config_setting_lookup_float(subset, "porjutzi_alpha_t", &porjutzi_alpha_t[ID]);
+            if( !config_setting_lookup_float(subset, "porjutzi_alpha_0", &porjutzi_alpha_0[ID]) )
+                porjutzi_alpha_0[ID] = 1.0;
+            if( !config_setting_lookup_float(subset, "porjutzi_alpha_e", &porjutzi_alpha_e[ID]) )
+                porjutzi_alpha_e[ID] = 1.0;
+            if( !config_setting_lookup_float(subset, "porjutzi_alpha_t", &porjutzi_alpha_t[ID]) )
+                porjutzi_alpha_t[ID] = 1.0;
             config_setting_lookup_float(subset, "porjutzi_n1", &porjutzi_n1[ID]);
             config_setting_lookup_float(subset, "porjutzi_n2", &porjutzi_n2[ID]);
             // read cs_porous or set default

@@ -142,11 +142,11 @@
 
 // Porosity models:
 // p-alpha model implemented following Jutzi (200x)
-#define PALPHA_POROSITY 0          // pressure depends on distention
-#define STRESS_PALPHA_POROSITY 0 // deviatoric stress is also affected by distention
+#define PALPHA_POROSITY 0         // pressure depends on distention
+#define STRESS_PALPHA_POROSITY 0  // deviatoric stress is also affected by distention
 // Sirono model modified by Geretshauser (2009/10)
 #define SIRONO_POROSITY 0
-// Epsilon-Alpha model implemented following Wuennemann
+// eps-alpha model implemented following Wuennemann
 #define EPSALPHA_POROSITY 0
 
 // max number of activation thresholds per particle, only required for FRAGMENTATION, otherwise set to 1

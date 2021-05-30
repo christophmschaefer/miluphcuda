@@ -605,7 +605,7 @@ void usage(char *name)
             "\t\t\t\t\t Simulation stops once the relative difference between current and initial angular momentum is larger than <value>.\n"
             "\t-m, --materialconfig <name>\t Name of libconfig file including material config (default: material.cfg)\n"
             "\t-M, --maxtimestep <value>\t Upper limit for the timestep (rk2_adaptive), or timestep size (euler), respectively.\n"
-            "\t-n, --num <int>\t\t\t Number of simulation steps.\n"
+            "\t-n, --num <int>\t\t\t Number of simulation steps (additional ones in case of restart).\n"
             "\t-Q, --precision <value>\t\t Precision of the rk2_adaptive integrator (default: 1e-5).\n"
             "\t-r, --restart\t\t\t Assume that ASCII input file (specified with -f) is old output file.\n"
             "\t\t\t\t\t To restart from old HDF5 output file use -X instead of this.\n"
