@@ -68,7 +68,7 @@ $(function() {
 <div class="title">How to set up the material config file for miluphcuda </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>last updated: 05/Mar/2021</p>
+<div class="textblock"><p>last updated: 28/May/2021</p>
 <p>Christoph Burger, Christoph Schäfer <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a> </p><hr/>
 <h2>Purpose </h2>
 <p>miluphcuda supports multiple materials, and multiple rheologies. Many important settings for the material model, especially material parameters, are parsed in a structured config file, typically named <em>material.cfg</em>. In addition to material parameters, some numerical settings (e.g., for the smoothing length) are also configured via that file.</p>
@@ -193,11 +193,16 @@ $(function() {
     eos.till_alpha      float   0.
     eos.till_beta       float   0.
 
-    eos.rho_limit       float   0.9                 for expanded states with rho/rho_0 &lt; rho_limit
-                                                    the pressure is set to zero (if e &lt; till_E_cv)
+    eos.rho_limit       float   0.9                 for cold (i.e., if e &lt; till_E_cv) expanded states
+                                                    with rho/rho_0 &lt; rho_limit the pressure is set to
+                                                    zero; intended to avoid unphysically high negative
+                                                    pressures where the material would actually
+                                                    fragment or form droplets
 
-    eos.cs_limit        float   1% of approx.       lower limit for sound speed (in m/s),
-                                bulk sound speed    default is 1% of sqrt(till_A/till_rho_0)
+    eos.cs_limit        float   1% of approx.       lower limit for sound speed (in m/s), default
+                                bulk sound speed    is 1% of sqrt(till_A/till_rho_0); can be used
+                                                    to avoid unphysical values, like imaginary sound
+                                                    speeds for negative pressures
 </pre><hr/>
 <p><b>Plasticity model: von Mises</b></p>
 <p>The von Mises model constitutes a single, constant yield strength.</p>
@@ -269,20 +274,37 @@ $(function() {
 <li><em>eos.type = 6</em> ... P-alpha + Murnaghan EoS</li>
 <li><em>eos.type = 13</em> ... P-alpha + ANEOS</li>
 </ul>
-<p>In addition to the parameters for the respective EoS, you need the following: </p><pre class="fragment">    Key                 Type    Default             Details
-    _______________________________________________________
+<p>In addition to the parameters for the respective EoS, you need the following: </p><pre class="fragment">    Key                         Type    Default             Details
+    _______________________________________________________________
 
-    ...
-    ...
-    ...
+    eos.crushcurve_style        int     0                   0 ... simple quadratic crush curve
+                                                            1 ... realistic crush curve
+    eos.porjutzi_p_elastic      float   0.
+    eos.porjutzi_p_transition   float   0.                  only required for crush curve style 1
+    eos.porjutzi_p_compacted    float   0.
 
-    eos.cs_porous       float   50% of approx.      sound speed in uncompacted material (in m/s),
-                                bulk sound speed    the actual sound speed is interpolation between
-                                                    this and the matrix cs, based on distention</pre> </div></div><!-- contents -->
+    eos.porjutzi_alpha_0        float   1.
+    eos.porjutzi_alpha_e        float   1.
+    eos.porjutzi_alpha_t        float   1.                  only required for crush curve style 1
+
+    eos.porjutzi_n1             float   0.                  only required for crush curve style 1
+    eos.porjutzi_n2             float   0.                  only required for crush curve style 1
+
+    eos.cs_porous               float   50% of approx.      sound speed in uncompacted material
+                                        bulk sound speed    (in m/s), where the actual sound speed
+                                                            is a linear interpolation between this
+                                                            and the sound speed in the matrix
+                                                            material, based on distention
+</pre><hr/>
+<p><b>Porosity model: eps-alpha</b></p>
+<p>... </p><hr/>
+<p><b>Porosity model: Sirono</b></p>
+<p>... </p>
+</div></div><!-- contents -->
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - How to set up the material config file for miluphcuda<br />
-    Generated on Sun May 30 2021 07:05:14 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Mon May 31 2021 07:05:13 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
