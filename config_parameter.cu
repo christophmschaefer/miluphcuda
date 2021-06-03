@@ -654,11 +654,14 @@ void transferMaterialsToGPU()
             }
             // read rho_limit or set default
             if( !config_setting_lookup_float(subset, "rho_limit", &rho_limit[ID]) ) {
-                if (eos[ID] == EOS_TYPE_TILLOTSON  ||  eos[ID] == EOS_TYPE_JUTZI) {
+                if (eos[ID] == EOS_TYPE_TILLOTSON  ||  eos[ID] == EOS_TYPE_JUTZI || eos[ID] == EOS_TYPE_MURNAGHAN || eos[ID] == EOS_TYPE_JUTZI_MURNAGHAN) {
                     rho_limit[ID] = 0.9;
                 }
             }
-            config_setting_lookup_float(subset, "n", &n[ID]);
+            // read n (for Murnaghan EoS) or set default
+            if( !config_setting_lookup_float(subset, "n", &n[ID]) ) {
+                n[ID] = 1.0;
+            }
             config_setting_lookup_float(subset, "cohesion", &cohesion[ID]);
             config_setting_lookup_float(subset, "cohesion_damaged", &cohesion_damaged[ID]);
             config_setting_lookup_float(subset, "friction_angle", &friction_angle[ID]);

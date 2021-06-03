@@ -1,7 +1,7 @@
 How to set up the material config file for miluphcuda
 =====================================================
 
-last updated: 28/May/2021
+last updated: 03/Jun/2021
 
 Christoph Burger, Christoph Schäfer  
 christoph.burger@uni-tuebingen.de
@@ -180,6 +180,30 @@ This list is currently not exhaustive.
         density_floor   float   1% of bulk/reference density, or    minimum density (absolute value)
                                 1% of matrix if porous, or          allowed for material
                                 0. for gases
+
+--------------------------------
+
+**EoS: Murnaghan**
+
+To use the Murnaghan EoS for some material, set
+
+        eos.type = 1
+
+and the following parameters:
+
+        Key                 Type    Default             Details
+        _______________________________________________________
+
+        eos.rho_0           float   0.                  reference density
+        eos.bulk_modulus    float   0.
+        eos.n               float   1.
+
+        eos.rho_limit       float   0.9                 for rho/rho_0 < rho_limit the pressure is set
+                                                        to zero; intended to avoid unphysically high
+                                                        negative pressures where the material would
+                                                        actually fragment or form droplets
+
+Note: For n=1 the Murnaghan EoS reduces to the simple *liquid EoS*.
 
 --------------------------------
 
