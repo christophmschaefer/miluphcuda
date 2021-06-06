@@ -16,7 +16,7 @@ The input has to be HDF5 file(s) with the following data sets:
 authors: Christoph Schaefer, Christoph Burger
 comments to: ch.schaefer@uni-tuebingen.de
 
-last updated: 23/May/2021
+last updated: 06/Jun/2021
 """
 
 
@@ -147,11 +147,12 @@ for currentfile in args.files:
     if alpha_max < 1.01*alpha_0:
         alpha_max = 1.01*alpha_0
 
+
     # compute crush curve
     x = np.linspace(p_min, p_max, 1000)
+    y = np.ones(1000)*alpha_0
     if crushcurve_style == 0:
         # quadratic crush curve
-        y = np.ones(1000)*alpha_0
         for i in range(0, len(x)):
             if x[i] > p_e:
                 y[i] = 1. + (alpha_e-1.) * (p_c-x[i])**2 / (p_c-p_e)**2
@@ -159,19 +160,22 @@ for currentfile in args.files:
                 y[i] = 1.
     elif crushcurve_style == 1:
         # real/steep crush curve
-        y1 = (alpha_0-1)/(alpha_e-1) * (alpha_e-alpha_t) *  (p_t - x)**n1 / (p_t - p_e)**n1 + (alpha_0-1)/(alpha_e-1) * (alpha_t - 1) * (p_c - x)**n2 / (p_c - p_e)**n2 + 1
-        y2 = (alpha_0-1)/(alpha_e-1) * (alpha_t - 1) * (p_c - x)**n2 / (p_c - p_e)**n2 + 1
+        for i in range(0, len(x)):
+            if x[i] > p_e and x[i] <= p_t:
+                y[i] = (alpha_0-1.)/(alpha_e-1.) * (alpha_e-alpha_t) * (p_t-x[i])**n1 / (p_t-p_e)**n1 + (alpha_0-1.)/(alpha_e-1.) * (alpha_t-1.) * (p_c-x[i])**n2 / (p_c-p_e)**n2 + 1.
+            elif x[i] > p_t and x[i] < p_c:
+                y[i] = (alpha_0-1.)/(alpha_e-1.) * (alpha_t-1.) * (p_c-x[i])**n2 / (p_c-p_e)**n2 + 1.
+            elif x[i] >= p_c:
+                y[i] = 1.
     else:
         print("Invalid crushcurve_style. Exiting...")
         sys.exit(1)
 
+
     # plot it (add current subplot to fig)
     ax = fig.add_subplot(n_files, 1, n)
-    if crushcurve_style == 0:
-        ax.plot(x, y, '--', c='darkgray', label='crush curve')
-    elif crushcurve_style == 1:
-        ax.plot(x, y1, '--', c='darkgray', label='crush curve')
-        ax.plot(x, y2, '--', c='darkgray', label='crush curve')
+
+    ax.plot(x, y, '--', c='darkgray', label='crush curve')
 
     if args.mat_type is not None:
         labeltext = "SPH particles (mat-type: {})".format(args.mat_type)
