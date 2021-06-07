@@ -20,118 +20,64 @@
  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 #ifndef _CHECKS_H
 #define _CHECKS_H
-
-
-#if VON_MISES_PLASTICITY || MOHR_COLOUMB_PLASTICITY || DRUCKER_PRAGER_PLASTICITY || COLLINS_PLASTICITY || COLLINS_PLASTICITY_SIMPLE
-# define PLASTICITY 1
-#endif
-
-
-// basic checks
-#if (!SOLID && !HYDRO) || (SOLID && HYDRO)
-# error Choose either SOLID or HYDRO in parameter.h.
-#endif
-
-// checks for plasticity models
-#if VON_MISES_PLASTICITY && COLLINS_PLASTICITY
-# error You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY at the same time.
-#endif
-
-#if VON_MISES_PLASTICITY && COLLINS_PLASTICITY_SIMPLE
-# error You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY_SIMPLE at the same time.
-#endif
-
 #if MOHR_COULOMB_PLASTICITY && DRUCKER_PRAGER_PLASTICITY
-# error You cannot choose MOHR_COULOMB_PLASTICITY and DRUCKER_PRAGER_PLASTICITY at the same time.
+#error choose only one of the three available plastic flow rules
+#endif
+#if MOHR_COULOMB_PLASTICITY && COLLINS_PRESSURE_DEPENDENT_YIELD_STRENGTH
+#error choose only one of the three available plastic flow rules
+#endif
+#if DRUCKER_PRAGER_PLASTICITY && COLLINS_PRESSURE_DEPENDENT_YIELD_STRENGTH
+#error choose only one of the three available plastic flow rules
 #endif
 
-#if MOHR_COULOMB_PLASTICITY && COLLINS_PLASTICITY
-# error You cannot choose MOHR_COULOMB_PLASTICITY and COLLINS_PLASTICITY at the same time.
-#endif
-
-#if DRUCKER_PRAGER_PLASTICITY && COLLINS_PLASTICITY
-# error You cannot choose DRUCKER_PRAGER_PLASTICITY and COLLINS_PLASTICITY at the same time.
-#endif
-
-#if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY && !COLLINS_PLASTICITY
-# error You have chosen COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY but not also COLLINS_PLASTICITY in parameter.h. That is not what you want.
-#endif
-
-#if COLLINS_PLASTICITY && COLLINS_PLASTICITY_SIMPLE
-# error You have chosen COLLINS_PLASTICITY and also COLLINS_PLASTICITY_SIMPLE in parameter.h. Choose either one, not both.
-#endif
-
-#if COLLINS_PLASTICITY_SIMPLE && COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
-# error You have chosen COLLINS_PLASTICITY_SIMPLE and also COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY in parameter.h. This combination is not implemented yet...
-#endif
-
-#if COLLINS_PLASTICITY && DAMAGE_ACTS_ON_S
-# error You chose COLLINS_PLASTICITY and also DAMAGE_ACTS_ON_S in parameter.h. Not a good idea.
+#if USE_BSPLINE_KERNEL && USE_WENDLAND_KERNEL
+#error specifiy only one kernel
 #endif
 
 #if VISCOUS_REGOLITH && !SOLID
-# error turn SOLID on when using VISCOUS_REGOLITH
+#error turn SOLID on when using VISCOUS_REGOLITH
 #endif
 
-#if KLEY_VISCOSITY && !NAVIER_STOKES
-# error turn on NAVIER_STOKES when using KLEY_VISCOSITY
-#endif
-
-#if PURE_REGOLITH && !SOLID
-# error turn SOLID on when using PURE_REGOLITH
-#endif
-
-#if PLASTICITY && !SOLID
-# error Using a PLASTICITY model is only possible in combination with SOLID...
+#if VON_MISES_PLASTICITY && !SOLID
+#error turn SOLID on when using VON_MISES_PLASTICITY
 #endif
 
 #if JC_PLASTICITY && !SOLID
-# error turn SOLID on when using JC_PLASTICITY
+#error turn SOLID on when using JC_PLASTICITY
 #endif
 
-#if PLASTICITY && JC_PLASTICITY
-# error Cannot use another PLASTICITY model along with JC_PLASTICITY at the same time. Decide for one and recompile.
-#endif
-
-
-// checks for fragmentation model
 #if FRAGMENTATION && !SOLID
-# error turn SOLID on when using FRAGMENTATION
-#endif
-
-#if DAMAGE_ACTS_ON_S && !FRAGMENTATION
-# error You set DAMAGE_ACTS_ON_S but not FRAGMENTATION in parameter.h. Not working...
+#error turn SOLID on when using FRAGMENTATION
 #endif
 
 
-// misc checks
 #if SYMMETRIC_STRESSTENSOR && !SOLID
-# error turn SOLID on when using SYMMETRIC_STRESSTENSOR
+#error turn SOLID on when using SYMMETRIC_STRESSTENSOR
 #endif
 
-#if SHAKURA_SUNYAEV_ALPHA && CONSTANT_KINEMATIC_VISCOSITY
+#if COHESION_FOR_DAMAGED_MATERIAL && !FRAGMENTATION
+# error turn on FRAGMENTATION when using COHESION_FOR_DAMAGED_MATERIAL
+#endif
+
+#if SHAKURA_SUNYAEV_ALPHA && CONSTANT_KINEMATIC_VISCOSITY 
 # error choose only one viscosity model
 #endif
 
 #if NAVIER_STOKES
 # if !SHAKURA_SUNYAEV_ALPHA && !CONSTANT_KINEMATIC_VISCOSITY
-#  error set either SHAKURA_SUNYAEV_ALPHA or CONSTANT_KINEMATIC_VISCOSITY
-# endif
+#error set either SHAKURA_SUNYAEV_ALPHA or CONSTANT_KINEMATIC_VISCOSITY
+#endif
 #endif
 
 #if DIM == 1 && PARTICLE_ACCRETION
-# error Particle accretion only if DIM > 1.
+#error Particle accretion only if DIM > 1
 #endif
 
-#if USE_BSPLINE_KERNEL && USE_WENDLAND_KERNEL
-# error specifiy only one kernel
-#endif
 
 #if ARTIFICIAL_STRESS && !SOLID
-# error turn off ARTIFICIAL_STRESS when running hydro sims
+# error turn off ARTIFICIAL_STRESS when running pure hydro
 #endif
 
 #if VARIABLE_SML
@@ -140,9 +86,8 @@
 # endif
 #endif
 
-#if STRESS_PALPHA_POROSITY && !PALPHA_POROSITY
-# error You set STRESS_PALPHA_POROSITY but not PALPHA_POROSITY in parameter.h.
+#if MOVING_COM_CORRECTION && !GRAVITATING_POINT_MASSES
+# error the COM correction is for gravitating pointmasses that feel the particles 
 #endif
-
 
 #endif

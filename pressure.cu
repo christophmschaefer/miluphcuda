@@ -33,10 +33,6 @@ __global__ void calculatePressure() {
     register double eta, e, rho, mu, p1, p2;
     int i_rho, i_e;
     double pressure;
-#if COLLINS_PLASTICITY_SIMPLE
-    double p_limit;
-#endif
-
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         pressure = 0.0;
@@ -179,7 +175,7 @@ __global__ void calculatePressure() {
             double dp; 			/* pressure change for the calculation of dalphadp */
             double rho_0 = matTillRho0[matId];      /* parameters for Tillotson EOS -> calc pressure solid */
             double eta = p.rho[i] * p.alpha_jutzi[i] / rho_0;
-			int crushcurve_style = matcrushcurve_style[matId]; /* crushcurve_style from material.cfg -> 0 is the quadratic crush curve, 1 is the real/steep crush curve by jutzi */
+			int crushcurve_style = matcrushcurve_style[matId]; /* int crushcurve_style from mat.cfg -> 0 is the quadratic crush curve, 1 is the real/steep crush curve by jutzi */
             if (matEOS[matId] == EOS_TYPE_JUTZI) {
                 double alpha_till = matTillAlpha[matId];
                 double beta_till = matTillBeta[matId];
@@ -283,7 +279,7 @@ __global__ void calculatePressure() {
             // double h = 1 + (p.alpha_jutzi[i] - 1.0) * (c_e - c_0) / (c_0 * (alpha_e - 1.0));	  	/* needs to have c_e and c_0 set */
             // dalphadp_elastic = p.alpha_jutzi[i] * p.alpha_jutzi[i] / (c_0 * c_0 * rho_0) * (1.0 - (1.0 / (h * h)));
             p.dalphadp[i] = 0.0;
-            if (crushcurve_style == 0) {   // quadratic crush curve
+            if (crushcurve_style == 0) {
                 if (pressure <= p_e) {
                     p.dalphadp[i] = dalphadp_elastic;
                 } else if (pressure > p_e && pressure < p_s) {
@@ -292,7 +288,7 @@ __global__ void calculatePressure() {
                     p.dalphadp[i] = 0.0;
 //                    p.alpha_jutzi[i] = 1.0;
 				}
-            } else if (crushcurve_style == 1) {   // real/steep crush curve
+            } else if (crushcurve_style == 1) {
                 if (pressure <= p_e) {
                     p.dalphadp[i] = dalphadp_elastic;
                 } else if (pressure > p_e && pressure < p_t) {
@@ -389,15 +385,6 @@ __global__ void calculatePressure() {
             p.alpha_jutzi_old[i] = p.alpha_jutzi[i];
         }
 #endif
-
-#if COLLINS_PLASTICITY_SIMPLE
-        // limit negative pressures to value at zero of yield strength curve
-        // (zero is at -y_0/mu_i if assumed linear for p<0)
-        p_limit = - matCohesion[matId] / matInternalFriction[matId];
-        if( p.p[i] < p_limit)
-            p.p[i] = p_limit;
-#endif
-
 #if REAL_HYDRO
         if (p.p[i] < 0.0)
             p.p[i] = 0.0;

@@ -35,27 +35,23 @@
 #include "kernel.h"
 #include "extrema.h"
 #include "sinking.h"
-
-
-// Courant (CFL) number
-#define COURANT_FACT 0.7
-// factor for limiting timestep based on local forces/acceleration
-#define FORCES_FACT 0.2
-
+#include "com_correction.h"
 
 extern int startTimestep;
 extern int numberOfTimesteps;
 extern double startTime;
 extern double timePerStep;
 extern double dt_host;
+extern int maxNodeIndex_host;
 
 extern double currentTime;
 extern double h5time;
 
+
+
 extern __device__ int numParticles;
 extern __device__ int numPointmasses;
 extern int *relaxedPerBlock;
-
 
 extern void (*integrator)();
 
@@ -71,15 +67,23 @@ void heun_rk4(void);
 
 double calculate_angular_momentum(void);
 
+
 void copyToHostAndWriteToFile(int timestep, int lastTimestep);
 
 __device__ int childListIndex(int nodeIndex, int childNumber);
 __global__ void detectVelocityRelaxation(int *relaxedPerBlock);
 __device__ int stressIndex(int particleIndex, int row, int col);
+__global__ void damageLimit(void);
 
 void afterIntegrationStep(void);
 
 __global__ void symmetrizeStress(void);
+
+#if FIXED_BINARY
+__global__ void bufferAccretedParticles(double *, double *, double *, double *, double *, double *);
+void fixedParticlesAccretion(void);
+#endif
+
 
 
 #define NUM_THREADS_512 512
@@ -121,14 +125,13 @@ __global__ void symmetrizeStress(void);
 
 #define MAXDEPTH 128
 
+// the Courant (CFL) number
+#define COURANT 0.7
 
-// Runge-Kutta constants
-#define B21 0.5
-#define B31 -1.0
-#define B32 2.0
-#define C1 1.0
-#define C2 4.0
-#define C3 1.0
+
+// Buffer size for accreting particles 
+#define ACCRETION_BUFFER 10000
+
 
 
 #endif

@@ -27,32 +27,48 @@
 
 #include "timeintegration.h"
 
-/// implemented equation of states
 enum EquationOfStates {
-    EOS_TYPE_ACCRETED = -2, /// special flag for particles that got accreted by a gravitating point mass
-    EOS_TYPE_IGNORE = -1, /// particle is ignored 
-    EOS_TYPE_POLYTROPIC_GAS = 0, /// polytropic EOS for gas, needs polytropic_K and polytropic_gamma in material.cfg file
-    EOS_TYPE_MURNAGHAN = 1, /// Murnaghan EOS for solid bodies, see Melosh "Impact Cratering", needs in material.cfg: rho_0, bulk_modulus, n
-    EOS_TYPE_TILLOTSON = 2, /// Tillotson EOS for solid bodies, see Melosh "Impact Cratering", needs in material.cfg: till_rho_0, till_A, till_B, till_E_0, till_E_iv, till_E_cv, till_a, till_b, till_alpha, till_beta; bulk_modulus and shear_modulus are needed to calculate the sound speed and crack growth speed for FRAGMENTATION
-    EOS_TYPE_ISOTHERMAL_GAS = 3, /// this is pure molecular hydrogen at 10 K
-    EOS_TYPE_REGOLITH = 4, /// The Bui et al. 2008 soil model
-    EOS_TYPE_JUTZI = 5, /// Tillotson EOS with p-alpha model by Jutzi et al.
-    EOS_TYPE_JUTZI_MURNAGHAN = 6, /// Murnaghan EOS with p-alpha model by Jutzi et al.
-    EOS_TYPE_ANEOS = 7, /// ANEOS (or tabulated EOS in ANEOS format)
-    EOS_TYPE_VISCOUS_REGOLITH = 8, /// describe regolith as a viscous material -> EXPERIMENTAL DO NOT USE
-    EOS_TYPE_IDEAL_GAS = 9, /// ideal gas equation, set polytropic_gamma in material.cfg
-    EOS_TYPE_SIRONO = 10, /// Sirono EOS modifed by Geretshauser in 2009/10
-    EOS_TYPE_EPSILON = 11, /// Tillotson EOS with epsilon-alpha model by Wuennemann, Collins et al.
-    EOS_TYPE_LOCALLY_ISOTHERMAL_GAS = 12, /// locally isothermal gas: \f$ p = c_s^2 \times \varrho \f$
-    EOS_TYPE_JUTZI_ANEOS = 13/// ANEOS EOS with p-alpha model by Jutzi et al.
+    EOS_TYPE_ACCRETED = -2,
+    EOS_TYPE_ACCRETED_BY_STAR1 = -100,
+    EOS_TYPE_ACCRETED_BY_STAR2 = -200,
+    EOS_TYPE_ACCRETED_BY_INNER_BOUNDARY = -1000,
+    EOS_TYPE_ACCRETED_BY_OUTER_BOUNDARY = -2000,
+    EOS_TYPE_IGNORE = -1,
+// polytropic EOS for gas, needs polytropic_K and polytropic_gamma in material.cfg file
+    EOS_TYPE_POLYTROPIC_GAS = 0,
+// Murnaghan EOS for solid bodies, see Melosh "Impact Cratering" for reference
+// needs bulk_modulus, rho_0 and n in material.cfg
+    EOS_TYPE_MURNAGHAN = 1,
+// Tillotson EOS for solid bodies, see Melosh "Impact Cratering" for reference
+// needs alot of parameters in material.cfg:
+// yield_stress till_rho_0 till_A till_B till_E_0 till_E_iv till_E_cv till_a till_b till_alpha till_beta
+// bulk modulus and shear modulus are needed to calculate the sound speed and the crack growth speed
+    EOS_TYPE_TILLOTSON = 2,
+// this is pure molecular hydrogen at 10 K
+    EOS_TYPE_ISOTHERMAL_GAS = 3,
+// The Bui et al. 2008 soil model
+    EOS_TYPE_REGOLITH = 4,
+// Tillotson EOS with p-alpha model by Jutzi et al.
+    EOS_TYPE_JUTZI = 5,
+// Murnaghan EOS with p-alpha model by Jutzi et al.
+    EOS_TYPE_JUTZI_MURNAGHAN = 6,
+// ANEOS
+    EOS_TYPE_ANEOS = 7,
+// describe regolith as a viscous material -> EXPERIMENTAL DO NOT USE
+    EOS_TYPE_VISCOUS_REGOLITH = 8,
+// ideal gas equation, set polytropic_gamma in material.cfg
+    EOS_TYPE_IDEAL_GAS = 9,
+// Sirono EOS modifed by Geretshauser in 2009/10
+    EOS_TYPE_SIRONO = 10,
+// Tillotson EOS with espilon-alpha model by Wuennemann Collins ..
+    EOS_TYPE_EPSILON = 11,
+// locally isothermal gas: p = c_s**2 \times rho
+    EOS_TYPE_LOCALLY_ISOTHERMAL_GAS = 12,
+// ANEOS EOS with p-alpha model by Jutzi et al.
+	EOS_TYPE_JUTZI_ANEOS = 13
 };
 
-/**
- * @brief Calculates the pressure for all particles
- * @details Depending on the EOS_TYPE which is set in material.cfg for the material, the pressure is calculated for all particles.
- * 
- * @return __global__ 
- */
+
 __global__ void calculatePressure(void);
 
 #endif

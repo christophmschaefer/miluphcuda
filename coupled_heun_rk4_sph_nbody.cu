@@ -45,7 +45,6 @@
 #include "pressure.h"
 #include "rhs.h"
 #include "gravity.h"
-#include "damage.h"
 #include <float.h>
 
 
@@ -113,7 +112,7 @@ __global__ void CorrectorStep_heun()
         p.dTdt[i] = 0.5*(predictor.dTdt[i] + p.dTdt[i]);
 #endif
 #if FRAGMENTATION
-# if PALPHA_POROSITY
+#if PALPHA_POROSITY
 //        if (p.drhodt[i] > 0 && predictor.p[i] > predictor.pold[i]) {
 		if (predictor.p[i] > predictor.pold[i]) {
             p.damage_porjutzi[i] = p.damage_porjutzi[i] + dt/2 *(predictor.ddamage_porjutzidt[i] + p.ddamage_porjutzidt[i]);
@@ -121,7 +120,7 @@ __global__ void CorrectorStep_heun()
             p.d[i] = p.d[i];
             p.damage_porjutzi[i] = p.damage_porjutzi[i];
         }
-# endif
+#endif
         p.numActiveFlaws[i] = predictor.numActiveFlaws[i];
 #endif
         // change drhodt after PALPHA_POROSITY
@@ -228,7 +227,7 @@ __global__ void PredictorStep_heun()
 #if FRAGMENTATION
         predictor.d[i] = p.d[i] + dt * p.dddt[i];
         predictor.numActiveFlaws[i] = p.numActiveFlaws[i];
-# if PALPHA_POROSITY
+#if PALPHA_POROSITY
         predictor.damage_porjutzi[i] = p.damage_porjutzi[i] + dt * p.ddamage_porjutzidt[i];
         // cms 2019-06-25
         // pressuremaxchange function will compare predictor.p - predictor.pold and
@@ -236,7 +235,7 @@ __global__ void PredictorStep_heun()
         // step
         //predictor.p[i] = p.p[i];
         predictor.pold[i] = p.p[i];
-# endif
+#endif
 #endif
 #if SIRONO_POROSITY
         predictor.rho_0prime[i] = p.rho_0prime[i];
@@ -418,7 +417,7 @@ __global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock
         courant = min(courant, temp);
 
 #if ARTIFICIAL_VISCOSITY
-        temp = COURANT_FACT * sml / (p.cs[i] + 1.2 * (matAlpha[matId]) * p.cs[i] + matBeta[matId] * p.muijmax[i]);
+        temp = COURANT * sml / (p.cs[i] + 1.2 * (matAlpha[matId]) * p.cs[i] + matBeta[matId] * p.muijmax[i]);
         dtartvisc = min(dtartvisc, temp);
 #endif
 #if INVISCID_SPH
@@ -482,8 +481,9 @@ __global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock
             dtdamage = min(temp, dtdamage);
         }
 #endif
-    }
 
+
+    }
     i = threadIdx.x;
     sharedForces[i] = forces;
     sharedCourant[i] = courant;
@@ -560,7 +560,7 @@ __global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock
 #endif
             }
             // set new timestep
-            dt = dtx = min(COURANT_FACT*courant, FORCES_FACT*forces);
+            dt = dtx = min(COURANT*courant, forces*0.2);
 #if SOLID
             dt = min(dt, dtS);
 #endif

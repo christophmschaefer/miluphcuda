@@ -15,6 +15,7 @@ set tabstop=4
 set shiftwidth=4
 set expandtab
 set softtabstop=4
+set colorscheme=industry
 
 If you do not need vim settings because your default editor is not vim, I'd strongly suggest to
 change your default editor :^)

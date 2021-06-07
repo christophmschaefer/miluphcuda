@@ -27,6 +27,7 @@
 #include "config_parameter.h"
 #include "kernel.h"
 #include "parameter.h"
+#include "pressure.h"
 
 extern __device__ SPH_kernel kernel;
 
@@ -39,6 +40,9 @@ __global__ void calculate_kinematic_viscosity(void)
 	inc = blockDim.x * gridDim.x;
     //Particle Loop
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numRealParticles; i += inc) {
+        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+            continue;
+        }
 #if SHAKURA_SUNYAEV_ALPHA
 	    double R = sqrt(p.x[i]*p.x[i] + p.y[i]*p.y[i]);
 	    p_rhs.eta[i] = matalpha_shakura[p_rhs.materialId[i]] * p.cs[i] * p.rho[i] * scale_height * R ;
@@ -50,7 +54,8 @@ __global__ void calculate_kinematic_viscosity(void)
 #endif
     }
 }
-#endif
+#endif // NAVIER_STOKES
+
 
 #if NAVIER_STOKES
 __global__ void calculate_shear_stress_tensor(int *interactions)
@@ -62,12 +67,15 @@ __global__ void calculate_shear_stress_tensor(int *interactions)
 	inc = blockDim.x * gridDim.x;
     //Particle Loop
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numRealParticles; i += inc) {
+        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+            continue;
+        }
         double dv[DIM];
         double dr[DIM];
         double r;
         double sml;
-        double dWdr, dWdrj, W, Wj;
-        double dWdx[DIM], dWdxj[DIM];
+        double dWdr, W;
+        double dWdx[DIM];
 
         for (k = 0; k < DIM*DIM; k++) {
             p.Tshear[i*DIM*DIM+k] = 0.0;
@@ -75,6 +83,9 @@ __global__ void calculate_shear_stress_tensor(int *interactions)
 
         for (k = 0; k < p.noi[i]; k++) {
             j = interactions[i * MAX_NUM_INTERACTIONS + k];
+            if (p_rhs.materialId[j] == EOS_TYPE_IGNORE) {
+                continue;
+            }
 
             dv[0] = p.vx[i] - p.vx[j];
 #if DIM > 1
@@ -159,25 +170,25 @@ __global__ void calculate_shear_stress_tensor(int *interactions)
 #else
             double trace = 0;
             for (e = 0; e < DIM; e++) {
-# if (SPH_EQU_VERSION == 1)
+# if (SPHEQUATIONS == SPH_VERSION1)
                 trace +=  p.m[j]/p.rho[i] * (-dv[e])*dWdx[e] ;
-# elif (SPH_EQU_VERSION == 2)
+# elif (SPHEQUATIONS == SPH_VERSION2)
                 trace +=  p.m[j]/p.rho[j] * (-dv[e])*dWdx[e] ;
 #endif
             }
 
             for (e = 0; e < DIM; e++) {
                 for (f = 0; f < DIM; f++) {
-# if (SPH_EQU_VERSION == 1)
+# if (SPHEQUATIONS == SPH_VERSION1)
                     p.Tshear[i*DIM*DIM+e*DIM+f] += p.m[j]/p.rho[i] * (-dv[e]*dWdx[f] - dv[f]*dWdx[e]);
-# elif (SPH_EQU_VERSION == 2)
+# elif (SPHEQUATIONS == SPH_VERSION2)
                     p.Tshear[i*DIM*DIM+e*DIM+f] += p.m[j]/p.rho[j] * (-dv[e]*dWdx[f] - dv[f]*dWdx[e]);
 #endif
                     // traceless
                     if (e == f) {
-# if (SPH_EQU_VERSION == 1)
+# if (SPHEQUATIONS == SPH_VERSION1)
                         p.Tshear[i*DIM*DIM+e*DIM+f] -= 2./3 * trace;
-# elif (SPH_EQU_VERSION == 2)
+# elif (SPHEQUATIONS == SPH_VERSION2)
                         p.Tshear[i*DIM*DIM+e*DIM+f] -= 2./3 * trace;
 #endif
                     }
@@ -214,6 +225,9 @@ __global__ void betaviscosity(int *interactions)
 
     //Particle Loop
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numRealParticles; i += inc) {
+        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+            continue;
+        }
     	numInteractions = p.noi[i];
     	sml = p.h[i];
     	csound = p.cs[i];
@@ -227,6 +241,9 @@ __global__ void betaviscosity(int *interactions)
         //Interaction Partner Loop
 		for(k = 0; k < numInteractions; k++) {
     		j = interactions[i * MAX_NUM_INTERACTIONS + k];
+            if (p_rhs.materialId[j] == EOS_TYPE_IGNORE) {
+                continue;
+            }
             dx[0] = p.x[i] - p.x[j];
             dv[0] = p.vx[i] - p.vx[j];
 #if DIM > 1

@@ -25,8 +25,6 @@
 #include "parameter.h"
 #include "miluph.h"
 #include "pressure.h"
-#include "config_parameter.h"
-
 
 #if PARTICLE_ACCRETION
 #if UPDATE_SINK_VALUES
@@ -50,8 +48,6 @@ __device__ void UpdateSinkValues(int sink_num, int particle_id)
     pointmass.m[sink_num] += p.m[particle_id];
 }
 #endif //UPDATE_SINK_VALUES
-
-
 
 //function checks if particle is to be accreted on sink particle
 __global__ void ParticleSinking()
@@ -89,7 +85,7 @@ __global__ void ParticleSinking()
 		    }
 
     	    //escape velocity at r_acc(rmin)
-	        vel_esc = sqrt(2. * gravConst * pointmass.m[n] / distance);
+	        vel_esc = sqrt(2 * C_GRAVITY * pointmass.m[n] / distance);
                   
             //specific angular momentum of each particle about the sink particle
 	    	r_x = pointmass.x[n] - p.x[i];
@@ -115,13 +111,15 @@ __global__ void ParticleSinking()
 #endif //DIM == 3
 
             //specific angular momentum to form circular orbit at semi-major axis
-            h_circ = sqrt(gravConst * pointmass.m[n] * distance);
+            h_circ = sqrt(C_GRAVITY * pointmass.m[n] * distance);
 
 		    //check if particle is to be accreted (bound) to sink: particle velocity < escape velocity && specific angular momentum of particle < angular momentum to form circular orbit
 		    if (vel < vel_esc && h < h_circ) {
 #if UPDATE_SINK_VALUES
 			    UpdateSinkValues(n, i);
-#endif //UPDATE_SINK_VALUES
+#endif //UPDATE_SINK_VALUES                                                         // HERE implementation of buffers
+                                                                                    //for storing accretion data needed
+                                                                                    //WORK IN PROGRESS LIFE IS GOOD <3
 			    p_rhs.materialId[i] = EOS_TYPE_IGNORE;
 			} 
             else {

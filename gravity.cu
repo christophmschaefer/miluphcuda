@@ -1,5 +1,4 @@
-/**
- * @author      Christoph Schaefer cm.schaefer@gmail.com and Thomas I. Maindl
+ /* @author      Christoph Schaefer cm.schaefer@gmail.com and Thomas I. Maindl
  *
  * @section     LICENSE
  * Copyright (c) 2019 Christoph Schaefer
@@ -32,6 +31,9 @@
 extern __device__ volatile double radius;
 extern __device__ int blockCount;
 
+// flag for FIXED_BINARY
+int feedback_cnt = 0;
+
 // add acceleration due to gravity to particle acceleration
 __global__ void addoldselfgravity()
 {
@@ -55,9 +57,12 @@ __global__ void addoldselfgravity()
 void backreaction_from_disk_to_point_masses(int calculate_nbody)
 {
     int n = 0;
+    int do_calculate = 0;
     // value for the time being
     const int h_blocksize = 256;
     double *g_x, *g_y, *g_z;
+    double *torque_x, *torque_y, *torque_z;
+    double *Power_x, *Power_y, *Power_z;
 
     // check flag if we use the coupled heun_rk4 integrator
     // if so, return
@@ -66,31 +71,65 @@ void backreaction_from_disk_to_point_masses(int calculate_nbody)
     }
 
     cudaMalloc((void **) &g_x, h_blocksize*sizeof(double));
+    cudaMalloc((void **) &Power_x, h_blocksize*sizeof(double));
+#if DIM > 1
     cudaMalloc((void **) &g_y, h_blocksize*sizeof(double));
+    cudaMalloc((void **) &Power_y, h_blocksize*sizeof(double));
+    cudaMalloc((void **) &torque_z, h_blocksize*sizeof(double));
+#if DIM > 2
     cudaMalloc((void **) &g_z, h_blocksize*sizeof(double));
-
+    cudaMalloc((void **) &torque_x, h_blocksize*sizeof(double));
+    cudaMalloc((void **) &torque_y, h_blocksize*sizeof(double));
+    cudaMalloc((void **) &Power_z, h_blocksize*sizeof(double));
+#endif
+#endif
 
     for (n = 0; n < numberOfPointmasses; n++) {
-
+// fixed binary always ignores the backreaction of the disc but needs to calculate it for the torque measurement
+#if !(FIXED_BINARY)
         if (!pointmass_host.feels_particles[n]) {
             continue;
         }
-#if DEBUG_GRAVITY
-        fprintf(stdout, "Calculating force from particles on star/planet no. %d\n", n);
 #endif
-        cudaVerifyKernel((particles_gravitational_feedback<<<h_blocksize, NUM_THREADS_REDUCTION>>>(n, g_x, g_y, g_z)));
-        cudaVerify(cudaDeviceSynchronize());
-
+#if FIXED_BINARY
+        if (n == 0 && feedback_cnt <= 9) {
+            fprintf(stdout, "SKIPPING FEEDBACK CALC SINCE COUNTER IS %d\n", feedback_cnt);
+            feedback_cnt += 1;
+        }
+        if (feedback_cnt == 10) {   // calculate torques only every 10th rhs call since it's so expensive
+            do_calculate = 1;
+        }
+#else
+        do_calculate = 1;
+#endif
+        if (do_calculate) {
+            fprintf(stdout, "Calculating force from particles on star/planet no. %d\n", n);
+            cudaVerifyKernel((particles_gravitational_feedback<<<h_blocksize, NUM_THREADS_REDUCTION>>>(n, g_x, g_y, g_z, torque_x, torque_y, torque_z, Power_x, Power_y, Power_z)));
+            cudaVerify(cudaDeviceSynchronize());
+            if (n == numberOfPointmasses-1) {
+                feedback_cnt = 0;
+            }
+        }
     }
 
 
     cudaFree(g_x);
+    cudaFree(Power_x);
+#if DIM > 1
     cudaFree(g_y);
+    cudaFree(Power_y);
+    cudaFree(torque_z);
+#if DIM > 2
     cudaFree(g_z);
+    cudaFree(torque_x);
+    cudaFree(torque_y);
+    cudaFree(Power_z);
+#endif
+#endif
 }
 
 
-__device__ void get_acceleration_by_particle(int n, double *ax, double *ay, double *az, int i)
+__device__ void get_acceleration_by_particle(int n, double *ax, double *ay, double *az, double *tx, double *ty, double *tz, double *Px, double *Py, double *Pz,  int i)
 {
     // do some more magic here
     int d;
@@ -98,12 +137,21 @@ __device__ void get_acceleration_by_particle(int n, double *ax, double *ay, doub
     double rrr;
     double smlcubed;
     double dr[DIM];
+    double v_star[DIM];
+    double r_star[DIM];
 
     dr[0] = pointmass.x[n] - p.x[i];
+    v_star[0] = pointmass.vx[n];
+    r_star[0] = pointmass.x[n];
+    m_star = pointmass.m[n];
 #if DIM > 1
     dr[1] = pointmass.y[n] - p.y[i];
+    v_star[1] = pointmass.vy[n];
+    r_star[1] = pointmass.y[n];
 #if DIM > 2
     dr[2] = pointmass.z[n] - p.z[i];
+    v_star[2] = pointmass.vz[n];
+    r_star[2] = pointmass.z[n];
 #endif
 #endif
     for (d = 0; d < DIM; d++) {
@@ -116,67 +164,128 @@ __device__ void get_acceleration_by_particle(int n, double *ax, double *ay, doub
         rrr = smlcubed;
     }
     if (r < pointmass.rmax[n]) {
-        *ax = -gravConst * p.m[i] * dr[0]/(rrr);
+        *ax = -C_GRAVITY * p.m[i] * dr[0]/(rrr);
+        *Px = *ax * v_star[0];
 #if DIM > 1
-        *ay = -gravConst * p.m[i] * dr[1]/(rrr);
+        *ay = -C_GRAVITY * p.m[i] * dr[1]/(rrr);
+        *tz = m_star * (r_star[0] * (*ay) - r_star[1] * (*ax));
+        *Py = *ay * v_star[1];
 #if DIM > 2
-        *az = -gravConst * p.m[i] * dr[2]/(rrr);
+        *az = -C_GRAVITY * p.m[i] * dr[2]/(rrr);
+        *tx = m_star * (r_star[1] * (*az) - r_star[2] * (*ay));
+        *ty = m_star * (r_star[2] * (*ax) - r_star[0] * (*az));
+        *Pz = *az * v_star[2];
+    
+    //printf("Device function check: torque_z from single particule is %.9f \n", *tz);
 #endif
 #endif
     } else {
         *ax = 0.0;
         *ay = 0.0;
         *az = 0.0;
+        *tx = 0.0;
+        *ty = 0.0;
+        *tz = 0.0;
+        *Px = 0.0;
+        *Py = 0.0;
+        *Pz = 0.0;
     }
 }
 
 
 
-__global__ void particles_gravitational_feedback(int n, double *g_ax, double *g_ay, double *g_az)
+__global__ void particles_gravitational_feedback(int n, double *g_ax, double *g_ay, double *g_az, double *g_tx, double *g_ty, double *g_tz, double *g_Px, double *g_Py, double *g_Pz)
 {
     int idx, inc;
     int i;
     int tid;
     int j, k, m;
     volatile double local_ax, local_ay, local_az;
+    volatile double local_tx, local_ty, local_tz;
+    volatile double local_Px, local_Py, local_Pz;
     double ax, ay, az;
+    double tx, ty, tz;
+    double Px, Py, Pz;
     __shared__ double sh_ax[NUM_THREADS_REDUCTION];
     __shared__ double sh_ay[NUM_THREADS_REDUCTION];
     __shared__ double sh_az[NUM_THREADS_REDUCTION];
+    __shared__ double sh_tx[NUM_THREADS_REDUCTION];
+    __shared__ double sh_ty[NUM_THREADS_REDUCTION];
+    __shared__ double sh_tz[NUM_THREADS_REDUCTION];
+    __shared__ double sh_Px[NUM_THREADS_REDUCTION];
+    __shared__ double sh_Py[NUM_THREADS_REDUCTION];
+    __shared__ double sh_Pz[NUM_THREADS_REDUCTION];
 
     tid = threadIdx.x;
     idx = threadIdx.x + blockIdx.x * blockDim.x;
     inc = blockDim.x * gridDim.x;
     local_ax = local_ay = local_az = 0.0;
+    local_tx = local_ty = local_tz = 0.0;
+    local_Px = local_Py = local_Pz = 0.0;
+   
+            //Reset torques and power
+    pointmass_rhs.Power_x[n] = 0.0;
+#if DIM > 1
+    pointmass_rhs.torque_z[n] = 0.0;
+    pointmass_rhs.Power_y[n] = 0.0;
+#if DIM > 2
+    pointmass_rhs.Power_z[n] = 0.0;
+    pointmass_rhs.torque_x[n] = 0.0;
+    pointmass_rhs.torque_y[n] = 0.0;
+#endif
+#endif
+ 
+
     for (i = idx; i < numParticles; i += inc) {
         if (p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
             continue;
         }
         ax = ay = az = 0.0;
-        get_acceleration_by_particle(n, &ax, &ay, &az, i);
+        tx = ty = tz = 0.0;
+        Px = Py = Pz = 0.0;
+        get_acceleration_by_particle(n, &ax, &ay, &az, &tx, &ty, &tz, &Px, &Py, &Pz, i);
+        //printf("Device function check: torque_z from single particule is %.9f \n", tz);
         local_ax += ax;
+        local_Px += Px;
 #if DIM > 1
         local_ay += ay;
+        local_tz += tz;
+        local_Py += Py; 
 #if DIM > 2
         local_az += az;
+        local_tx += tx;
+        local_ty += ty;
+        local_Pz += Pz;
 #endif
 #endif
     }
     sh_ax[tid] = local_ax;
+    sh_Px[tid] = local_Px;
 #if DIM > 1
     sh_ay[tid] = local_ay;
+    sh_tz[tid] = local_tz;
+    sh_Py[tid] = local_Py;
 #if DIM > 2
     sh_az[tid] = local_az;
+    sh_tx[tid] = local_tx;
+    sh_ty[tid] = local_ty;
+    sh_Pz[tid] = local_Pz;
 #endif
 #endif
     for (j = NUM_THREADS_REDUCTION/2; j > 0; j>>=1) {
         __syncthreads();
         if (tid < j) {
             sh_ax[tid] = local_ax = sh_ax[tid+j] + local_ax;
+            sh_Px[tid] = local_Px = sh_Px[tid+j] + local_Px;
 #if DIM > 1
             sh_ay[tid] = local_ay = sh_ay[tid+j] + local_ay;
+            sh_tz[tid] = local_tz = sh_tz[tid+j] + local_tz;
+            sh_Py[tid] = local_Py = sh_Py[tid+j] + local_Py;
 #if DIM > 2
             sh_az[tid] = local_az = sh_az[tid+j] + local_az;
+            sh_tx[tid] = local_tx = sh_tx[tid+j] + local_tx;
+            sh_ty[tid] = local_ty = sh_ty[tid+j] + local_ty;
+            sh_Pz[tid] = local_Pz = sh_Pz[tid+j] + local_Pz;
 #endif
 #endif
         }
@@ -185,14 +294,26 @@ __global__ void particles_gravitational_feedback(int n, double *g_ax, double *g_
     ax = 0;
     ay = 0;
     az = 0;
+    tx = 0;
+    ty = 0;
+    tz = 0;
+    Px = 0;
+    Py = 0;
+    Pz = 0;
     // only first thread in each block
     if (tid == 0) {
         k = blockIdx.x;
         g_ax[k] = local_ax;
+        g_Px[k] = local_Px;
 #if DIM > 1
         g_ay[k] = local_ay;
+        g_Py[k] = local_Py;
+        g_tz[k] = local_tz;
 #if DIM > 2
         g_az[k] = local_az;
+        g_Pz[k] = local_Pz;
+        g_tx[k] = local_tx;
+        g_ty[k] = local_ty;
 #endif
 #endif
         m = gridDim.x-1;
@@ -200,31 +321,49 @@ __global__ void particles_gravitational_feedback(int n, double *g_ax, double *g_
             // last block, combine all results
             for (j = 0; j <= m; j++) {
                 ax += g_ax[j];
+                Px += g_Px[j];
 #if DIM > 1
                 ay += g_ay[j];
+                Py += g_Py[j];
+                tz += g_tz[j];
 #if DIM > 2
                 az += g_az[j];
+                Pz += g_Pz[j];
+                tx += g_tx[j];
+                ty += g_ty[j];
 #endif
 #endif
             }
             // set the accels and remember the feedback values in extra variables
-            pointmass.ax[n] += ax;
-            pointmass.feedback_ax[n] = ax;
-#if DIM > 1
-            pointmass.ay[n] += ay;
-            pointmass.feedback_ay[n] = ay;
-#if DIM > 2
-            pointmass.az[n] += az;
-            pointmass.feedback_az[n] = az;
+#if !(FIXED_BINARY)
+            pointmass.ax[n] += ax;               
 #endif
-#endif    
-#if DEBUG_GRAVITY
-            printf("id:%d ax=%e ay=%e az=%e\n", n, ax, ay, az);
+            pointmass.feedback_ax[n] += ax;
+            pointmass_rhs.Power_x[n] += Px;
+#if DIM > 1
+#if !(FIXED_BINARY)
+            pointmass.ay[n] += ay; 
+#endif
+            pointmass.feedback_ay[n] += ay;
+            pointmass_rhs.Power_y[n] += Py;  // minus here because we consider the star PoV
+            pointmass_rhs.torque_z[n] += tz;
+            if (idx == 0) {
+                printf("The gravitational torque on the binary is %.17le \n", tz);
+                printf("The power exerted on the binary is %.17le and %.17le \n", Px, Py);
+            }
+#if DIM > 2
+#if !(FIXED_BINARY)
+            pointmass.az[n] += az;
+#endif 
+            pointmass.feedback_az[n] += az;
+            pointmass_rhs.Power_z[n] += Pz;   // minus here because star PoV
+            pointmass_rhs.torque_x[n] += tx;
+            pointmass_rhs.torque_y[n] += ty;
+#endif
 #endif
             blockCount = 0;
         }
     }
-
 }
 
 
@@ -256,11 +395,11 @@ __global__ void gravitation_from_point_masses(int calculate_nbody)
                 }
                 r = sqrt(r);
                 rrr = r*r*r;
-                pointmass.ax[i] += gravConst * pointmass.m[j] * dr[0]/(rrr);
+                pointmass.ax[i] += C_GRAVITY * pointmass.m[j] * dr[0]/(rrr);
     #if DIM > 1
-                pointmass.ay[i] += gravConst * pointmass.m[j] * dr[1]/(rrr);
+                pointmass.ay[i] += C_GRAVITY * pointmass.m[j] * dr[1]/(rrr);
     #if DIM > 2
-                pointmass.az[i] += gravConst * pointmass.m[j] * dr[2]/(rrr);
+                pointmass.az[i] += C_GRAVITY * pointmass.m[j] * dr[2]/(rrr);
     #endif
     #endif
             }
@@ -294,24 +433,21 @@ __global__ void gravitation_from_point_masses(int calculate_nbody)
 	        if (rrr < smlcubed) {
 	    	    rrr = smlcubed;
 	        }
-            if (r < pointmass.rmax[j]) {
-                p.ax[i] += gravConst * pointmass.m[j] * dr[0]/(rrr);
+            if (r < pointmass.rmax[j] & r > pointmass.rmin[j]) {
+                p.ax[i] += C_GRAVITY * pointmass.m[j] * dr[0]/(rrr);
 #if DIM > 1
-                p.ay[i] += gravConst * pointmass.m[j] * dr[1]/(rrr);
+                p.ay[i] += C_GRAVITY * pointmass.m[j] * dr[1]/(rrr);
 #if DIM > 2
-                p.az[i] += gravConst * pointmass.m[j] * dr[2]/(rrr);
+                p.az[i] += C_GRAVITY * pointmass.m[j] * dr[2]/(rrr);
 #endif
 #endif
-            } else {
-                p_rhs.materialId[i] = EOS_TYPE_IGNORE;
             }
+#if PARTICLE_ACCRETION                                    // Need to add r.max criteria for deactivation but later because
+                                                          // now current work on torks
             if (r < pointmass.rmin[j]) {
-#if PARTICLE_ACCRETION
                 p_rhs.materialId[i] = EOS_TYPE_ACCRETED;
-#else
-                p_rhs.materialId[i] = EOS_TYPE_IGNORE;
-#endif  // PARTICLE_ACCRETION
             }
+#endif
         }
     }
 }
@@ -357,7 +493,7 @@ __global__ void direct_selfgravity()
                 dist += dx[d]*dx[d];
             }
             dist = sqrt(dist);
-		    f = gravConst * p.m[j]; // / (distance*distance*distance);
+		    f = C_GRAVITY * p.m[j]; // / (distance*distance*distance);
 		    f /= dist > sml ? (dist*dist*dist) : (sml*sml*sml);
             for (d = 0; d < DIM; d++) {
                 a_grav[d] -= f*dx[d];
@@ -456,7 +592,7 @@ __global__ void selfgravity()
 					if (child < numParticles || distance * thetasq > cellsize[depth]) {
 						distance = sqrt(distance);
                         //distance += 1e10;
-						f = gravConst * p.m[child]; // / (distance*distance*distance);
+						f = C_GRAVITY * p.m[child]; // / (distance*distance*distance);
 						f /= distance > sml ? (distance*distance*distance) : (sml*sml*sml);
            //             f = 0.0;
 						ax += f*dx;

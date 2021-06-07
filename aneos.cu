@@ -1,6 +1,6 @@
 /**
  * @author      Christoph Burger
- * @brief       Functions for handling tabulated equations of state.
+ *
  * @section     LICENSE
  * Copyright (c) 2019 Christoph Burger, Christoph Schaefer
  *
@@ -29,6 +29,7 @@
 #include "parameter.h"
 
 
+
 // global variables (on the host)
 int *g_eos_is_aneos;    // TRUE if eos of material is ANEOS
 const char **g_aneos_tab_file;
@@ -36,6 +37,7 @@ int *g_aneos_n_rho;
 int *g_aneos_n_e;
 double *g_aneos_rho_0;
 double *g_aneos_bulk_cs;
+double *g_aneos_cs_limit;
 double **g_aneos_rho;
 double **g_aneos_e;
 double ***g_aneos_p;
@@ -47,140 +49,66 @@ int ***g_aneos_phase_flag;
 #endif
 
 
+
 #if MORE_ANEOS_OUTPUT
 void initialize_aneos_eos_full(const char *aneos_tab_file, int n_rho, int n_e, double *rho, double *e, double **p, double **T, double **cs, double **entropy, int **phase_flag)
+/* Fully initializes ANEOS EOS for one material by reading full lookup table from file.*/
 {
     int i,j;
     FILE *f;
-    int read_lines = 0;
-    int read_values;
-    double read_rho, read_e, current_rho, min_rho, max_e;
 
-    double *all_es = (double *)calloc(n_e, sizeof(double));
-
+    // open file containing ANEOS lookup table
     if ( (f = fopen(aneos_tab_file,"r")) == NULL )
-        ERRORVAR("ERROR. Cannot open '%s' for reading.\n", aneos_tab_file)
+        ERRORVAR("FILE ERROR! Cannot open %s for reading!\n", aneos_tab_file)
 
-    // skip first three lines (comments)
+    // read rho and e (vectors) and p, T, cs, entropy and phase-flag (matrices) from file
     for(i=0; i<3; i++)
-        fscanf(f, "%*[^\n]\n");
-
-    // read rho and e (vectors) and p, T, cs, entropy, and phase-flag (matrices) from file
-    for(i=0; i<n_rho; i++) {
-        for(j=0; j<n_e; j++) {
-            read_values = fscanf(f, "%le %le %le %le %le %le %d%*[^\n]\n", &read_rho, &read_e,
-                                 &p[i][j], &T[i][j], &cs[i][j], &entropy[i][j], &phase_flag[i][j] );
-            rho[i] = read_rho;
-            e[j] = read_e;
-            read_lines++;
-
-            if( read_values != 7 )
-                ERRORVAR3("ERROR when reading EoS table '%s'. Found %d values instead of 7 in line no. %d ...\n", aneos_tab_file, read_values, read_lines+3)
-
-            if( i==0 && j==0 )
-                min_rho = read_rho;
-
-            // check density
-            if( j==0 ) {
-                // set new density
-                current_rho = read_rho;
-            } else {
-                // make sure that densities are identical for one set of energies
-                if( fabs( (read_rho - current_rho)/min_rho ) > 1.0e-3 )
-                    ERRORVAR2("ERROR when reading EoS table '%s'. Found significant difference in rho in line no. %d, even though it should be the same for one set of energies ...\n", aneos_tab_file, read_lines+3)
-            }
-            
-            // check energy
-            if( i==0 ) {
-                // fill energy vector
-                all_es[j] = read_e;
-                if( j == n_e-1 )
-                    max_e = read_e;
-            } else {
-                // check energy vector
-                if( fabs( (read_e - all_es[j])/max_e ) > 1.0e-6 )
-                    ERRORVAR2("ERROR when reading EoS table '%s'. Found significant difference in energy vectors in line no. %d, even though it should be the same for all densities ...\n", aneos_tab_file, read_lines+3)
-            }
-        }
+        fscanf(f, "%*[^\n]\n");     // ignore first three lines
+    if ( fscanf(f, "%le %le %le %le %le %le %d%*[^\n]\n", rho, e, &p[0][0], &T[0][0], &cs[0][0], &entropy[0][0], &phase_flag[0][0] ) != 7 )
+        ERRORVAR("ERROR! Something's wrong with the ANEOS lookup table in %s\n", aneos_tab_file)
+    for(j=1; j<n_e; j++)
+        fscanf(f, "%*le %le %le %le %le %le %d%*[^\n]\n", &e[j], &p[0][j], &T[0][j], &cs[0][j], &entropy[0][j], &phase_flag[0][j] );
+    for(i=1; i<n_rho; i++) {
+        fscanf(f, "%le %*le %le %le %le %le %d%*[^\n]\n", &rho[i], &p[i][0], &T[i][0], &cs[i][0], &entropy[i][0], &phase_flag[i][0] );
+        for(j=1; j<n_e; j++)
+            fscanf(f, "%*le %*le %le %le %le %le %d%*[^\n]\n", &p[i][j], &T[i][j], &cs[i][j], &entropy[i][j], &phase_flag[i][j] );
     }
-
-    if( read_lines != n_rho*n_e )
-        ERRORVAR4("ERROR when reading EoS table '%s'. Read %d lines, but n_rho = %d and n_e = %d ...\n", aneos_tab_file, read_lines, n_rho, n_e)
-
     fclose(f);
-    free(all_es);
 }
 
 
 
 #else
 void initialize_aneos_eos_basic(const char *aneos_tab_file, int n_rho, int n_e, double *rho, double *e, double **p, double **cs)
+/* Initializes basic quantities of the ANEOS EOS for one material by reading only these quantities from the lookup table file.*/
 {
     int i,j;
     FILE *f;
-    int read_lines = 0;
-    int read_values;
-    double read_rho, read_e, current_rho, min_rho, max_e;
 
-    double *all_es = (double *)calloc(n_e, sizeof(double));
-
+    // open file containing ANEOS lookup table
     if ( (f = fopen(aneos_tab_file,"r")) == NULL )
-        ERRORVAR("ERROR. Cannot open '%s' for reading.\n", aneos_tab_file)
-
-    // skip first three lines (comments)
-    for(i=0; i<3; i++)
-        fscanf(f, "%*[^\n]\n");
+        ERRORVAR("FILE ERROR! Cannot open %s for reading!\n", aneos_tab_file)
 
     // read rho and e (vectors) and p and cs (matrices) from file
-    for(i=0; i<n_rho; i++) {
-        for(j=0; j<n_e; j++) {
-            read_values = fscanf(f, "%le %le %le %*le %le%*[^\n]\n", &read_rho, &read_e,
-                                 &p[i][j], &cs[i][j] );
-            rho[i] = read_rho;
-            e[j] = read_e;
-            read_lines++;
-
-            if( read_values != 4 )
-                ERRORVAR3("ERROR when reading EoS table '%s'. Found %d values instead of 4 in line no. %d ...\n", aneos_tab_file, read_values, read_lines+3)
-
-            if( i==0 && j==0 )
-                min_rho = read_rho;
-
-            // check density
-            if( j==0 ) {
-                // set new density
-                current_rho = read_rho;
-            } else {
-                // make sure that densities are identical for one set of energies
-                if( fabs( (read_rho - current_rho)/min_rho ) > 1.0e-3 )
-                    ERRORVAR2("ERROR when reading EoS table '%s'. Found significant difference in rho in line no. %d, even though it should be the same for one set of energies ...\n", aneos_tab_file, read_lines+3)
-            }
-            
-            // check energy
-            if( i==0 ) {
-                // fill energy vector
-                all_es[j] = read_e;
-                if( j == n_e-1 )
-                    max_e = read_e;
-            } else {
-                // check energy vector
-                if( fabs( (read_e - all_es[j])/max_e ) > 1.0e-6 )
-                    ERRORVAR2("ERROR when reading EoS table '%s'. Found significant difference in energy vectors in line no. %d, even though it should be the same for all densities ...\n", aneos_tab_file, read_lines+3)
-            }
-        }
+    for(i=0; i<3; i++)
+        fscanf(f, "%*[^\n]\n");     // ignore first three lines
+    if ( fscanf(f, "%le %le %le %*le %le%*[^\n]\n", rho, e, &p[0][0], &cs[0][0] ) != 4 )
+        ERRORVAR("ERROR! Something's wrong with the ANEOS lookup table in %s\n", aneos_tab_file)
+    for(j=1; j<n_e; j++)
+        fscanf(f, "%*le %le %le %*le %le%*[^\n]\n", &e[j], &p[0][j], &cs[0][j] );
+    for(i=1; i<n_rho; i++) {
+        fscanf(f, "%le %*le %le %*le %le%*[^\n]\n", &rho[i], &p[i][0], &cs[i][0] );
+        for(j=1; j<n_e; j++)
+            fscanf(f, "%*le %*le %le %*le %le%*[^\n]\n", &p[i][j], &cs[i][j] );
     }
-
-    if( read_lines != n_rho*n_e )
-        ERRORVAR4("ERROR when reading EoS table '%s'. Read %d lines, but n_rho = %d and n_e = %d ...\n", aneos_tab_file, read_lines, n_rho, n_e)
-
     fclose(f);
-    free(all_es);
 }
 #endif
 
 
 
 void free_aneos_memory()
+/* Frees (global) ANEOS memory on the host */
 {
     int i,j;
 
@@ -221,11 +149,15 @@ void free_aneos_memory()
     free(g_aneos_n_e);
     free(g_aneos_rho_0);
     free(g_aneos_bulk_cs);
+    free(g_aneos_cs_limit);
 }
 
 
 
 __device__ int array_index(double x, double* array, int n)
+/* Uses simple bisection to find the index i in an ordered array (length n)
+ * that satisfies 'array[i] <= x < array[i+1]'. If x lies outside the array-covered values it returns -1.
+ */
 {
     int i,i1,i2;    // current index and its lower and upper bound
 
@@ -238,9 +170,9 @@ __device__ int array_index(double x, double* array, int n)
     do {
         i = (int)( (double)(i1+i2)/2.0 );
         if( array[i] <= x )
-            i1 = i;    // i becomes new lower bound
+            i1 = i;    // 'i' becomes new lower bound
         else
-            i2 = i;    // i becomes new upper bound
+            i2 = i;    // 'i' becomes new upper bound
     }
     while( (i2-i1)>1 );
 
@@ -251,6 +183,9 @@ __device__ int array_index(double x, double* array, int n)
 
 #if MORE_ANEOS_OUTPUT
 int array_index_host(double x, double* array, int n)
+/* Uses simple bisection to find the index i in an ordered array (length n)
+ * that satisfies 'array[i] <= x < array[i+1]'. If x lies outside the array-covered values it returns -1.
+ */
 {
     int i,i1,i2;    // current index and its lower and upper bound
 
@@ -263,9 +198,9 @@ int array_index_host(double x, double* array, int n)
     do {
         i = (int)( (double)(i1+i2)/2.0 );
         if( array[i] <= x )
-            i1 = i;    // i becomes new lower bound
+            i1 = i;    // 'i' becomes new lower bound
         else
-            i2 = i;    // i becomes new upper bound
+            i2 = i;    // 'i' becomes new upper bound
     }
     while( (i2-i1)>1 );
 
@@ -276,6 +211,12 @@ int array_index_host(double x, double* array, int n)
 
 
 __device__ double bilinear_interpolation_from_linearized(double x, double y, double* table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y)
+/* Performs bilinear interpolation (2d lin. interp.) of values in 'table' which correspond to x- and y-values in 'xtab' and 'ytab'.
+ * 'table' is a linearized array where rows (connected y-values for a single x-value) are saved successively.
+ * The target values are 'x' and 'y'. 'ix' holds the index that satisfies 'xtab[ix] <= x < xtab[ix+1]' (similar for 'iy').
+ * 'n_x' holds the length of a row of x-values for a single y-value (similar for 'n_y').
+ * If (x,y) lies outside the table then ix<0 || iy<0 and the table values are (somewhat linearly) extrapolated.
+ */
 {
     double normx, normy, a, b, p;
 
@@ -376,11 +317,18 @@ __device__ double bilinear_interpolation_from_linearized(double x, double y, dou
 
     // linear interpolation in y-direction between a and b
     return( a + normy*(b-a) );
-}
+}   // end 'bilinear_interpolation_from_linearized()'
 
 
 
 __device__ void bilinear_interpolation_from_linearized_plus_derivatives(double x, double y, double* table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y, double* z, double* dz_dx, double* dz_dy)
+/* Performs bilinear interpolation (2d lin. interp.) of values in 'table' which correspond to x- and y-values in 'xtab' and 'ytab'.
+ * Returns 'z' (interpolated value) and 'dz_dx' and 'dz_dy' (interpolated derivatives in x- and y-directions).
+ * 'table' is a linearized array where rows (connected y-values for a single x-value) are saved successively.
+ * The target values are 'x' and 'y'. 'ix' holds the index that satisfies 'xtab[ix] <= x < xtab[ix+1]' (similar for 'iy').
+ * 'n_x' holds the length of a row of x-values for a single y-value (similar for 'n_y').
+ * If (x,y) lies outside the table then ix<0 || iy<0 and the table values are (somewhat linearly) extrapolated.
+ */
 {
     double normx, normy, delta_x, delta_y, delta_x_grid, delta_y_grid, a, b, k_a, k_b;
 
@@ -525,12 +473,16 @@ __device__ void bilinear_interpolation_from_linearized_plus_derivatives(double x
         // linear interpolation in y-direction between 'a' and 'b' to obtain target 'z' value
         *z = a + delta_y*(*dz_dy);
     }
-}
+}   // end 'bilinear_interpolation_from_linearized_plus_derivatives()'
 
 
 
 #if MORE_ANEOS_OUTPUT
 double bilinear_interpolation_from_matrix(double x, double y, double** table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y)
+// Performs bilinear interpolation (2d lin. interp.) of values in 'table' which correspond to x- and y-values in 'xtab' and 'ytab'.
+// The target values are 'x' and 'y'. 'ix' holds the index that satisfies 'xtab[ix] <= x < xtab[ix+1]' (similar for iy).
+// 'n_x' holds the length of a row of x-values for a single y-value (similar for n_y).
+// If (x,y) lies outside the table then ix<0 || iy<0 and the table values are (somewhat linearly) extrapolated.
 {
     double normx = -1.0, normy = -1.0;
     double a, b, p = -1.0;
@@ -641,13 +593,18 @@ double bilinear_interpolation_from_matrix(double x, double y, double** table, do
     // linear interpolation in y-direction between a and b
     return( a + normy*(b-a) );
 
-}
+}   // end function 'bilinear_interpolation()'
 #endif
 
 
 
 #if MORE_ANEOS_OUTPUT
 int discrete_value_table_lookup_from_matrix(double x, double y, int** table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y)
+// Discrete (int) values in 'table' correspond to x- and y-values (doubles) in 'xtab' and 'ytab'.
+// This function finds the closest "corner" (in the x-y-plane) of the respective cell and returns the value of 'table' in that corner.
+// The target values are 'x' and 'y'. 'ix' holds the index that satisfies 'xtab[ix] <= x < xtab[ix+1]' (similar for iy).
+// 'n_x' holds the length of a row of x-values for a single y-value (similar for n_y).
+// If (x,y) lies outside the table then ix<0 || iy<0 and the closest (in the x-y-plane) value of 'table' is returned.
 {
     int phase_flag = -1;
     double normx = -1.0, normy = -1.0;
@@ -781,5 +738,5 @@ int discrete_value_table_lookup_from_matrix(double x, double y, int** table, dou
 
     return( phase_flag );
 
-}
+}   // end function 'discrete_value_table_lookup()'
 #endif

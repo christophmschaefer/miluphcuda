@@ -24,12 +24,16 @@
 #include "boundary.h"
 #include "miluph.h"
 #include "pressure.h"
-#include "config_parameter.h"
 
 
 extern __device__ double substep_currentTimeD;
 extern __device__ double currentTimeD;
 extern __device__ double dt;
+
+#if DENSITY_FLOOR
+extern __device__ double density_floor_d;
+#endif
+
 
 #if GHOST_BOUNDARIES
 /* these are the locations and the properties of the boundary walls */
@@ -45,8 +49,6 @@ __device__ double nz[numWalls] = {1};
 #define FREE_SLIP_BOUNDARY_TYPE 1
 __device__ int boundaryType[numWalls] = {NO_SLIP_BOUNDARY_TYPE};
 #endif
-
-
 
 /* set quantities for Fixed Virtual Particles with matId == BOUNDARY_PARTICLE_ID */
 __device__ void setQuantitiesFixedVirtualParticles(int i, int j, double *vxj, double *vyj, double *vzj, double *densityj, double *pressurej, double *Sj)
@@ -83,8 +85,8 @@ __device__ void setQuantitiesFixedVirtualParticles(int i, int j, double *vxj, do
 
     *pressurej = p.p[i];
     *densityj = p.rho[i];
-}
 
+}
 
 
 // declare some boundary conditions here: this is called at the beginning of each RHS step
@@ -95,64 +97,60 @@ __global__ void BoundaryConditionsBeforeRHS(int *interactions)
     int matId, d, e;
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        matId = p_rhs.materialId[i];
-        
-        if (matId == EOS_TYPE_IGNORE) {
-            p.ax[i] = 0;
-#if DIM > 1
-            p.ay[i] = 0;
-            p.dydt[i] = 0;
-            p.vy[i] = 0;
-#endif
-            p.dxdt[i] = 0;
-            p.vx[i] = 0;
-#if DIM > 2
-            p.az[i] = 0;
-            p.dzdt[i] = 0;
-            p.vz[i] = 0;
+            matId = p_rhs.materialId[i];
+            if (matId == EOS_TYPE_IGNORE) {
+                p.ax[i] = 0;
+                p.ay[i] = 0;
+                p.dxdt[i] = 0;
+                p.dydt[i] = 0;
+                p.vx[i] = 0;
+                p.vy[i] = 0;
+#if DIM == 3
+                p.az[i] = 0;
+                p.dzdt[i] = 0;
+                p.vz[i] = 0;
 #endif
 #if SOLID
-            for (d = 0; d < DIM*DIM; d++) {
-                p.dSdt[i*DIM*DIM + d] = 0;
-            }
+                for (d = 0; d < DIM*DIM; d++) {
+                    p.dSdt[i*DIM*DIM + d] = 0;
+                }
 #endif
 #if INTEGRATE_DENSITY
-            p.drhodt[i] = 0;
+                p.drhodt[i] = 0;
 #endif
-        }
+            }
 
-        if (matId == BOUNDARY_PARTICLE_ID) {
-            p.ax[i] = 0;
-            p.vx[i] = 0;
-            p.dxdt[i] = 0;
-#if DIM > 1
-            p.dydt[i] = 0;
-            p.ay[i] = 0;
-            p.vy[i] = 0;
-#endif
-#if DIM > 2
-            p.az[i] = 0;
-            p.dzdt[i] = 0;
-            p.vz[i] = 0;
+            if (matId == BOUNDARY_PARTICLE_ID) {
+                p.ax[i] = 0;
+                p.ay[i] = 0;
+                p.dxdt[i] = 0;
+                p.dydt[i] = 0;
+                p.vx[i] = 0;
+                p.vy[i] = 0;
+#if DIM == 3
+                p.az[i] = 0;
+                p.dzdt[i] = 0;
+                p.vz[i] = 0;
 #endif
 #if SOLID
-            for (d = 0; d < DIM*DIM; d++) {
-                p.dSdt[i*DIM*DIM + d] = 0;
+                for (d = 0; d < DIM*DIM; d++) {
+                    p.dSdt[i*DIM*DIM + d] = 0;
+                }
+#endif
+#if INTEGRATE_DENSITY
+                p.drhodt[i] = 0;
+#endif
+#if DENSITY_FLOOR
+            } else if (p.rho[i] < 1e-2*density_floor_d) {
+                p.rho[i] = 1e-2*density_floor_d;
+#if INTEGRATE_DENSITY
+                p.drhodt[i] = 0.0;
+#endif
+#endif
             }
-#endif
-#if INTEGRATE_DENSITY
-            p.drhodt[i] = 0;
-#endif
-        } else if( p.rho[i] < matDensityFloor[matId] ) {
-            p.rho[i] = matDensityFloor[matId];
-#if INTEGRATE_DENSITY
-            p.drhodt[i] = 0.0;
-#endif
-        }
     }
 #endif
 }
-
 
 
 // boundary conditions called after the integration step of rk2adaptive only
@@ -168,8 +166,6 @@ __global__ void BoundaryConditionsAfterIntegratorStep(int *interactions)
     }
 }
 
-
-
 // declare some boundary conditions here: this is called at the end of each RHS step
 __global__ void BoundaryConditionsAfterRHS(int *interactions) 
 {
@@ -180,50 +176,70 @@ __global__ void BoundaryConditionsAfterRHS(int *interactions)
     double ddistance;
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        matId = p_rhs.materialId[i];
+            matId = p_rhs.materialId[i];
+/*
 
-        if (matId == EOS_TYPE_IGNORE) {
-            p.ax[i] = 0;
-            p.dxdt[i] = 0;
-            p.vx[i] = 0;
-#if DIM > 1
-            p.dydt[i] = 0;
-            p.ay[i] = 0;
-            p.vy[i] = 0;
-#endif
-#if DIM > 2
-            p.az[i] = 0;
-            p.dzdt[i] = 0;
-            p.vz[i] = 0;
-#endif
+            if (matId == EOS_TYPE_IGNORE) {
+                p.ax[i] = 0;
+                p.ay[i] = 0;
+                p.dxdt[i] = 0;
+                p.dydt[i] = 0;
+                p.vx[i] = 0;
+                p.vy[i] = 0;
+#if DIM == 3
+                p.az[i] = 0;
+                p.dzdt[i] = 0;
+                p.vz[i] = 0;
+
+#endif  */
 #if SOLID
-            for (d = 0; d < DIM*DIM; d++) {
-                p.dSdt[i*DIM*DIM + d] = 0;
+            if (matId == EOS_TYPE_IGNORE) {
+
+                for (d = 0; d < DIM*DIM; d++) {
+                    p.dSdt[i*DIM*DIM + d] = 0;
+                }
             }
 #endif
 #if INTEGRATE_DENSITY
-            p.drhodt[i] = 0;
+            if (matId == EOS_TYPE_IGNORE) {
+
+                p.drhodt[i] = 0;
+            }
 #endif
-        }
 
 // adding central star with one solar mass
 // at (0,0)            
 
 #if 0
-        distance = 0.0;
-        ddistance = p.x[i]*p.x[i] + p.y[i]*p.y[i];
-        distance = sqrt(ddistance);
-        distance *= ddistance;
-        p.ax[i] -= 1.327474512e+20 * p.x[i] / distance;
-        p.ay[i] -= 1.327474512e+20 * p.y[i] / distance;
+            distance = 0.0;
+            ddistance = p.x[i]*p.x[i] + p.y[i]*p.y[i];
+            distance = sqrt(ddistance);
+            distance *= ddistance;
+            p.ax[i] -= 1.327474512e+20 * p.x[i] / distance;
+            p.ay[i] -= 1.327474512e+20 * p.y[i] / distance;
 #endif
             
-//        p.az[i] -= 9.81;
+//            p.az[i] -= 9.81;
 
-        /* let's stick to the ground */
+            /* let's stick to the ground */
 
 #if 0
-        if (p.z[i] <= 1e-3) {
+            if (p.z[i] <= 1e-3) {
+                p.ax[i] = 0;
+                p.ay[i] = 0;
+                p.dxdt[i] = 0;
+                p.dydt[i] = 0;
+                p.vx[i] = 0;
+                p.vy[i] = 0;
+#if DIM == 3
+                p.az[i] = 0;
+                p.dzdt[i] = 0;
+                p.vz[i] = 0;
+#endif
+            }
+#endif
+
+            if (matId == BOUNDARY_PARTICLE_ID) {
             p.ax[i] = 0;
             p.ay[i] = 0;
             p.dxdt[i] = 0;
@@ -235,40 +251,29 @@ __global__ void BoundaryConditionsAfterRHS(int *interactions)
             p.dzdt[i] = 0;
             p.vz[i] = 0;
 #endif
-        }
-#endif
-
-        if (matId == BOUNDARY_PARTICLE_ID) {
-            p.ax[i] = 0;
-            p.vx[i] = 0;
-            p.dxdt[i] = 0;
-#if DIM > 1
-            p.dydt[i] = 0;
-            p.ay[i] = 0;
-            p.vy[i] = 0;
-#endif
-#if DIM > 2
-            p.az[i] = 0;
-            p.dzdt[i] = 0;
-            p.vz[i] = 0;
-#endif
 #if SOLID
             for (d = 0; d < DIM*DIM; d++) {
                 p.dSdt[i*DIM*DIM + d] = 0;
             }
 #endif
 #if INTEGRATE_DENSITY
-            p.drhodt[i] = 0;
+                p.drhodt[i] = 0;
 #endif
-        } else if( p.rho[i] < matDensityFloor[matId] ) {
-            p.rho[i] = matDensityFloor[matId];
+#if DENSITY_FLOOR
+            } else if (p.rho[i] < 1e-2*density_floor_d) {
+                p.rho[i] = 1e-2*density_floor_d;
 #if INTEGRATE_DENSITY
-            p.drhodt[i] = 0.0;
+                p.drhodt[i] = 0.0;
 #endif
-        }
+#endif
+            }
     }
+
 #endif
 }
+
+
+
 
 
 
@@ -278,8 +283,6 @@ __global__ void removeGhostParticles()
     //call with only one thread and one block
     numParticles = numRealParticles;
 }
-
-
 
 /* set the density, pressure and other quantities for the ghost particles */
 __global__ void setQuantitiesGhostParticles() 
@@ -341,8 +344,6 @@ __global__ void setQuantitiesGhostParticles()
 
     }
 }
-
-
 
 /* sets the location, mass, sml for the ghost particles */
 __global__ void insertGhostParticles()
@@ -493,7 +494,6 @@ __global__ void insertGhostParticles()
 #endif
 
 
-
 /* this function places the brushes according to their rotation speed */
 __global__ void BoundaryConditionsBrushesBefore(int *interactions) 
 {
@@ -572,7 +572,6 @@ __global__ void BoundaryConditionsBrushesBefore(int *interactions)
     }
 #endif
 }
-
 
 
 __global__ void BoundaryConditionsBrushesAfter(int *interactions) 

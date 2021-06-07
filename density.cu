@@ -88,9 +88,6 @@ __global__ void calculateDensity(int *interactions) {
             W /= p_rhs.shepard_correction[i];
 #endif
             rho = p.m[i] * W;
-            if (rho == 0.0) {
-                printf("rho is %f W: %e \n", rho, W);
-            }
             // sph sum for particle i
             for (j = 0; j < p.noi[i]; j++) {
                 ip = interactions[i * MAX_NUM_INTERACTIONS + j];

@@ -41,6 +41,8 @@ extern double *sml;
 extern double *bulk_modulus;
 extern double *cs_porous;
 extern double *till_rho_0;
+extern int numberOfMaterials;
+
 
 extern double *matporjutzi_p_elastic_d;
 extern double *matporjutzi_p_transition_d;
@@ -53,6 +55,7 @@ extern double *matporjutzi_n2_d;
 extern double *matcs_porous_d;
 extern double *matcs_solid_d;
 extern int *crushcurve_style_d;
+
 
 extern double *matzeta_d;
 extern double *matalpha_shakura_d;
@@ -100,7 +103,7 @@ extern double *matTillA_d;
 extern double *matTillB_d;
 extern double *matTillAlpha_d;
 extern double *matTillBeta_d;
-extern double *matcsLimit_d;
+extern double *matTillcsLimit_d;
 extern double *matRhoLimit_d;
 extern double *matN_d;
 extern double *matCohesion_d;
@@ -109,12 +112,11 @@ extern double *matFrictionAngle_d;
 extern double *matFrictionAngleDamaged_d;
 extern double *matAlphaPhi_d;
 extern double *matCohesionCoefficient_d;
-extern double *matMeltEnergy_d;
-extern double *matDensityFloor_d;
-// ANEOS device variables
+//begin ANEOS device variables
 extern int *aneos_n_rho_d;
 extern int *aneos_n_e_d;
 extern double *aneos_bulk_cs_d;
+extern double *aneos_cs_limit_d;
 extern double *aneos_rho_d;
 extern double *aneos_e_d;
 extern double *aneos_p_d;
@@ -125,6 +127,7 @@ extern int *aneos_matrix_id_d;
 extern __constant__ int *aneos_n_rho_c;
 extern __constant__ int *aneos_n_e_c;
 extern __constant__ double *aneos_bulk_cs_c;
+extern __constant__ double *aneos_cs_limit_c;
 extern __constant__ double *aneos_rho_c;
 extern __constant__ double *aneos_e_c;
 extern __constant__ double *aneos_p_c;
@@ -132,7 +135,7 @@ extern __constant__ double *aneos_cs_c;
 extern __constant__ int *aneos_rho_id_c;
 extern __constant__ int *aneos_e_id_c;
 extern __constant__ int *aneos_matrix_id_c;
-
+//end ANEOS device variables
 #if JC_PLASTICITY
 extern double *matjc_y0_d;
 extern double *matjc_B_d;
@@ -145,12 +148,10 @@ extern double *matjc_Tmelt_d;
 extern double *matCp_d;
 extern double *matCV_d;
 #endif
-
 #if SOLID
 extern double *matYoungModulus_d;
 extern __constant__ double *matYoungModulus;
 #endif
-
 extern __constant__ double *matSml;
 extern __constant__ double *mat_f_sml_min;
 extern __constant__ double *mat_f_sml_max;
@@ -176,7 +177,7 @@ extern __constant__ double *matTillA;
 extern __constant__ double *matTillB;
 extern __constant__ double *matTillAlpha;
 extern __constant__ double *matTillBeta;
-extern __constant__ double *matcsLimit;
+extern __constant__ double *matTillcsLimit;
 
 extern __constant__ double *matporjutzi_p_elastic;
 extern __constant__ double *matporjutzi_p_transition;
@@ -219,11 +220,13 @@ extern __constant__ double *matCp;
 extern __constant__ double *matCV;
 #endif
 
+
 #if ARTIFICIAL_STRESS
 extern __constant__ double *matexponent_tensor;
 extern __constant__ double *matepsilon_stress;
 extern __constant__ double *matmean_particle_distance;
-#endif
+#endif // ARTIFICIAL_STRESS
+
 
 extern __constant__ int *materialId;
 extern __constant__ double *matRhoLimit;
@@ -234,8 +237,6 @@ extern __constant__ double *matFrictionAngle;
 extern __constant__ double *matFrictionAngleDamaged;
 extern __constant__ double *matAlphaPhi;
 extern __constant__ double *matCohesionCoefficient;
-extern __constant__ double *matMeltEnergy;
-extern __constant__ double *matDensityFloor;
 extern __constant__ double *tensorialCorrectionMatrix;
 extern __constant__ double *tensorialCorrectiondWdrr;
 extern __device__ double scale_height;
@@ -247,13 +248,8 @@ extern __constant__ int numNodes;
 extern __constant__ int maxNumFlaws;
 extern __constant__ double theta; // tree theta
 
-extern int numberOfMaterials;
-
-extern double grav_const;
-extern __device__ double gravConst;
 
 
-void transferMaterialsToGPU();
 void cleanupMaterials(void);
 
 #endif

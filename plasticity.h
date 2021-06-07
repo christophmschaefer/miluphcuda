@@ -27,28 +27,10 @@
 #include "timeintegration.h"
 
 
-#if PURE_REGOLITH
-/**
- * @brief Scales the deviatoric stresses for material model `PURE_REGOLITH`.
- */
+#if SOLID
 __global__ void plasticity(void);
-#endif
-
-#if PLASTICITY
-/**
- * @brief Limits the deviatoric stresses for various material models.
- * @details Here the deviatoric stress tensor is reduced once the yield limit is exceeded, which is either
- * a simple constant for `VON_MISES_PLASTICITY`, or a more complicated function of pressure, etc. for
- * `MOHR_COULOMB_PLASTICITY`, `DRUCKER_PRAGER_PLASTICITY`, and `COLLINS_PLASTICITY`.
- */
-__global__ void plasticityModel(void);
-#endif
-
-#if JC_PLASTICITY
-/**
- * @brief This is the Johnson-Cook plasticity model.
- */
 __global__ void JohnsonCookPlasticity(void);
+__global__ void vonMisesPlasticity(void);
 #endif
 
 
