@@ -6,7 +6,8 @@ christoph.burger@uni-tuebingen.de
 
 last updated: 18/May/2021
 
------------------------------------------
+----------------------------------------------------------------------------------
+
 
 These examples represent a collision of a ~1/10 Moon-mass body with a ~Moon-mass target.
 Both bodies have a 30 mass% iron core and a 70 mass% rocky mantle.
@@ -23,7 +24,8 @@ The Tillotson EoS is applied to model the thermodynamic response.
 The scenarios use ~60k SPH particles, with runtimes around 1h for *hydro*,
 and 2h for *solid* on most current GPUs (benchmarked on a GTX 970).
 
------------------------------------------
+----------------------------------------------------------------------------------
+
 
 **To run the examples:**
 
@@ -34,7 +36,8 @@ and 2h for *solid* on most current GPUs (benchmarked on a GTX 970).
 4. Wait for the simulation to finish (75 output files).
    Output to stdout and stderr is written to `miluphcuda.output` and `miluphcuda.error`, respectively.
 
------------------------------------------
+----------------------------------------------------------------------------------
+
 
 **Check/visualize the results**
 
@@ -43,10 +46,12 @@ and 2h for *solid* on most current GPUs (benchmarked on a GTX 970).
   First, enter the simulation directory and run
 
         utils/postprocessing/create_xdmf.py
-  which creates an xdmf file (*paraview.xdmf* by default). You can use the default cmd-line options,
-  so no need to set anything explicitly. Then start Paraview and either
+  which creates an xdmf file (*paraview.xdmf* by default). You can use the default cmd-line options, so no need to
+  set anything explicitly. Note that the xdmf file contains only metadata, i.e., you still need the .h5 files it
+  points to in the same directory.  
+  Then start Paraview and either
 
-    * directly open the created paraview.xdmf and choose settings yourself
+    * directly open the created xdmf file and choose settings yourself
     * load the prepared Paraview state in `results/paraview.pvsm` (*File -> Load State*), and select
       the created `paraview.xdmf` file under *Choose File Names*
 
@@ -57,7 +62,8 @@ and 2h for *solid* on most current GPUs (benchmarked on a GTX 970).
   running `results/plot_plastic_yielding.sh`. This produces plots for shear stress vs. pressure,
   including the respective yield limit curves.
 
------------------------------------------
+----------------------------------------------------------------------------------
+
 
 **Where to go from here?**
 

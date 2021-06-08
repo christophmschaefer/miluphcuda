@@ -6,7 +6,8 @@ last updated: 03/Jun/2021
 Christoph Burger, Christoph Schäfer  
 christoph.burger@uni-tuebingen.de
 
---------------------------------
+----------------------------------------------------------------
+
 
 Purpose
 -------
@@ -26,7 +27,8 @@ Check http://hyperrealm.github.io/libconfig/ for the latest version and document
 
 The config file is passed to miluphcuda by the `-m` cmd-line option.
 
---------------------------------
+----------------------------------------------------------------
+
 
 File structure
 --------------
@@ -96,7 +98,8 @@ The `material.cfg` file in this directory contains an example setup, comprising 
 Note that, for now, the `eos = {...}` group regularly contains not only equation-of-state-specific entries,
 but also further parameters related to the material model.
 
---------------------------------
+----------------------------------------------------------------
+
 
 Where to find material parameters?
 ----------------------------------
@@ -105,7 +108,8 @@ Where to find material parameters?
 
 * You can also check the `test_cases/` and `examples/` directories for various material setups.
 
---------------------------------
+----------------------------------------------------------------
+
 
 Good to know...
 ---------------
@@ -125,11 +129,11 @@ Good to know...
 
 * If values are ommitted, default values are assumed (see below). In most cases, these default values are not what you want.
 
+----------------------------------------------------------------
 
---------------------------------
 
 Global settings
--------------------------
+---------------
 
 The group *global* (see file structure above) contains options affecting all materials:
 
@@ -139,8 +143,8 @@ The group *global* (see file structure above) contains options affecting all mat
         c_gravity   float   6.67408e-11     grav. constant, determining code units (default is SI),
                                             check material_data/grav-const.cfg for some options
 
+----------------------------------------------------------------
 
---------------------------------
 
 Individual material settings
 ----------------------------

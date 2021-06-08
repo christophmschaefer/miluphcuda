@@ -4,9 +4,10 @@ Impact example for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 19/May/2021
+last updated: 08/Jun/2021
 
------------------------------------------
+----------------------------------------------------------------------------------
+
 
 This example represent an impact scenario of a basalt projectile onto a basalt, half-sphere target.
 
@@ -25,7 +26,8 @@ A zero-gravity environment is assumed.
 
 The scenario uses ~60k SPH particles, with a runtime on the order of one hour on most current GPUs (benchmarked on a GTX 970).
 
------------------------------------------
+----------------------------------------------------------------------------------
+
 
 **To run the example:**
 
@@ -36,7 +38,8 @@ The scenario uses ~60k SPH particles, with a runtime on the order of one hour on
 4. Wait for the simulation to finish (200 output files).
    Output to stdout and stderr is written to `miluphcuda.output` and `miluphcuda.error`, respectively.
 
------------------------------------------
+----------------------------------------------------------------------------------
+
 
 **Check/visualize the results**
 
@@ -46,12 +49,14 @@ The scenario uses ~60k SPH particles, with a runtime on the order of one hour on
 
         utils/postprocessing/create_xdmf.py
 
-  which creates an xdmf file (*paraview.xdmf* by default). You can use the default cmd-line options,
-  so no need to set anything explicitly. Then start Paraview and either
+  which creates an xdmf file (*paraview.xdmf* by default). You can use the default cmd-line options, so no need to set
+  anything explicitly. Note that the xdmf file contains only metadata, i.e., you still need the .h5 files it points to
+  in the same directory.  
+  Then start Paraview and either
 
-    * directly open the created paraview.xdmf and choose settings yourself
+    * directly open the created xdmf file and choose settings yourself
     * load the prepared Paraview state in `results/paraview.pvsm` (*File -> Load State*), and select
-      the created `paraview.xdmf` file under *Choose File Names*
+      the created paraview.xdmf file under *Choose File Names*
       (note that this shows you a slice of the target by default, for better visibility of the cratering process)
 
 * Compare your results (e.g., visualized with Paraview) to the animations in `results/animations/`,
@@ -73,13 +78,13 @@ The scenario uses ~60k SPH particles, with a runtime on the order of one hour on
 * You can also visualize the workings of the Collins plasticity model by running `results/plot_plastic_yielding.sh`.
   This produces plots for shear stress vs. pressure, including the respective yield limit curves.
 
------------------------------------------
+----------------------------------------------------------------------------------
+
 
 **Where to go from here?**
 
 You can easily build on this example for setting up your own simulations. It is straight-forward to run different
 scenarios, with varying impactor masses, impact parameters, and even material compositions and parameters.
-
 We use an external tool for creating the required initial conditions, which is easy to use.
 Just drop me an e-mail if you are interested.
 
