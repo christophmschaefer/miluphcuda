@@ -69,7 +69,7 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>Christoph Burger <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a></p>
-<p>last updated: 19/May/2021 </p><hr/>
+<p>last updated: 08/Jun/2021 </p><hr/>
 <p>This example represent an impact scenario of a basalt projectile onto a basalt, half-sphere target.</p>
 <p>The spherical projectile has a radius of 0.5m, impacts with 6km/s, at an impact angle (to the vertical) of 30 deg.</p>
 <p>All material is modeled as a porous solid, with a porosity of 20% (i.e., an initial distention of 1.25).</p>
@@ -94,9 +94,9 @@ $(function() {
 <ul>
 <li><p class="startli">You can visualize the simulation for example with <em>Paraview</em>. Find the latest release at <a href="https://www.paraview.org/">https://www.paraview.org/</a>.</p>
 <p class="startli">First, enter the simulation directory and run </p><pre class="fragment">  utils/postprocessing/create_xdmf.py
-</pre><p class="startli">which creates an xdmf file (<em>paraview.xdmf</em> by default). You can use the default cmd-line options, so no need to set anything explicitly. Then start Paraview and either</p><ul>
-<li>directly open the created paraview.xdmf and choose settings yourself</li>
-<li>load the prepared Paraview state in <code>results/paraview.pvsm</code> (<em><a class="el" href="struct_file.html">File</a> -&gt; Load State</em>), and select the created <code>paraview.xdmf</code> file under <em>Choose <a class="el" href="struct_file.html">File</a> Names</em> (note that this shows you a slice of the target by default, for better visibility of the cratering process)</li>
+</pre><p class="startli">which creates an xdmf file (<em>paraview.xdmf</em> by default). You can use the default cmd-line options, so no need to set anything explicitly. Note that the xdmf file contains only metadata, i.e., you still need the .h5 files it points to in the same directory. Then start Paraview and either</p><ul>
+<li>directly open the created xdmf file and choose settings yourself</li>
+<li>load the prepared Paraview state in <code>results/paraview.pvsm</code> (<em><a class="el" href="struct_file.html">File</a> -&gt; Load State</em>), and select the created paraview.xdmf file under <em>Choose <a class="el" href="struct_file.html">File</a> Names</em> (note that this shows you a slice of the target by default, for better visibility of the cratering process)</li>
 </ul>
 </li>
 <li>Compare your results (e.g., visualized with Paraview) to the animations in <code>results/animations/</code>, which show the cratering process (a sclice of the target) for various quantities.</li>
@@ -108,15 +108,14 @@ $(function() {
 </li>
 </ul>
 <p><b>Where to go from here?</b></p>
-<p>You can easily build on this example for setting up your own simulations. It is straight-forward to run different scenarios, with varying impactor masses, impact parameters, and even material compositions and parameters.</p>
-<p>We use an external tool for creating the required initial conditions, which is easy to use. Just drop me an e-mail if you are interested.</p>
+<p>You can easily build on this example for setting up your own simulations. It is straight-forward to run different scenarios, with varying impactor masses, impact parameters, and even material compositions and parameters. We use an external tool for creating the required initial conditions, which is easy to use. Just drop me an e-mail if you are interested.</p>
 <p>Take a look at the timestep statistics at the very bottom of <em>miluphcuda.output</em>. If you are not satisfied you may try to adjust the integrator accuracy on the cmd-line and/or the compile-time settings for the integrator in <em><a class="el" href="rk2adaptive_8h.html">rk2adaptive.h</a></em>.</p>
 <p>Enjoy! </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - Impact example for miluphcuda<br />
-    Generated on Tue Jun 8 2021 07:05:14 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Wed Jun 9 2021 07:05:13 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>

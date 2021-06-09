@@ -90,8 +90,8 @@ $(function() {
 <ul>
 <li><p class="startli">You can visualize the simulation for example with <em>Paraview</em>. Find the latest release at <a href="https://www.paraview.org/">https://www.paraview.org/</a>.</p>
 <p class="startli">First, enter the simulation directory and run </p><pre class="fragment">  utils/postprocessing/create_xdmf.py
-</pre><p> which creates an xdmf file (<em>paraview.xdmf</em> by default). You can use the default cmd-line options, so no need to set anything explicitly. Then start Paraview and either</p><ul>
-<li>directly open the created paraview.xdmf and choose settings yourself</li>
+</pre><p> which creates an xdmf file (<em>paraview.xdmf</em> by default). You can use the default cmd-line options, so no need to set anything explicitly. Note that the xdmf file contains only metadata, i.e., you still need the .h5 files it points to in the same directory. Then start Paraview and either</p><ul>
+<li>directly open the created xdmf file and choose settings yourself</li>
 <li>load the prepared Paraview state in <code>results/paraview.pvsm</code> (<em><a class="el" href="struct_file.html">File</a> -&gt; Load State</em>), and select the created <code>paraview.xdmf</code> file under <em>Choose <a class="el" href="struct_file.html">File</a> Names</em></li>
 </ul>
 </li>
@@ -109,7 +109,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - Giant Collision examples for miluphcuda<br />
-    Generated on Tue Jun 8 2021 07:05:14 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Wed Jun 9 2021 07:05:13 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
