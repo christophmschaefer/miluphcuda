@@ -1297,11 +1297,17 @@ void read_particles_from_file(File inputFile)
                     tab_endings++;
                 } else {
                     fprintf(stderr, "ERROR in input file, particle no. %d. End of line not reached.\n", i+1);
+                    if (param.restart) {
+                        fprintf(stderr, "restart switch was set on command line (-r, --restart). Was this intended?\n");
+                    }
                     exit(1);
                 }
             }
             else {
                 fprintf(stderr, "ERROR in input file, particle no. %d. Expected end of line but found something else...\n", i+1);
+                if (param.restart) {
+                    fprintf(stderr, "restart switch was set on command line (-r, --restart). Was this intended?\n");
+                }
                 exit(1);
             }
 
