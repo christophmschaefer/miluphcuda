@@ -79,6 +79,7 @@ double *matAlphaPhi_d;
 double *matCohesionCoefficient_d;
 double *matMeltEnergy_d;
 double *matDensityFloor_d;
+double *matEnergyFloor_d;
 // viscosity coefficients for Navier-Stokes
 double *matnu_d;
 double *matalpha_shakura_d;
@@ -269,6 +270,7 @@ __constant__ double *matAlphaPhi;
 __constant__ double *matCohesionCoefficient;
 __constant__ double *matMeltEnergy;
 __constant__ double *matDensityFloor;
+__constant__ double *matEnergyFloor;
 __constant__ double *tensorialCorrectionMatrix;
 __constant__ double *tensorialCorrectiondWdrr;
 __device__ int numParticles;
@@ -421,6 +423,7 @@ void transferMaterialsToGPU()
         double *cohesion_coefficient = (double*)calloc(numberOfElements, sizeof(double));
         double *melt_energy = (double*)calloc(numberOfElements, sizeof(double));
         double *density_floor = (double*)calloc(numberOfElements,sizeof(double));
+        double *energy_floor = (double*)calloc(numberOfElements,sizeof(double));
 #if ARTIFICIAL_STRESS
         double *exponent_tensor = (double*) calloc(numberOfElements, sizeof(double));
         double *epsilon_stress = (double*) calloc(numberOfElements, sizeof(double));
@@ -737,6 +740,10 @@ void transferMaterialsToGPU()
                         break;
                 }
             }
+            
+            // read energy_floor or set to -inf
+            if( !config_setting_lookup_float(material, "energy_floor", &energy_floor[ID]) )
+                energy_floor[ID] = -1e30;
 
         }  // loop over materials
 
@@ -832,6 +839,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matCohesionCoefficient_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matMeltEnergy_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matDensityFloor_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matEnergyFloor_d, numberOfElements*sizeof(double)));
 #if JC_PLASTICITY
         cudaVerify(cudaMalloc((void **)&matjc_y0_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matjc_B_d, numberOfElements*sizeof(double)));
@@ -929,6 +937,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpy(matCohesionCoefficient_d, cohesion_coefficient, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matMeltEnergy_d, melt_energy, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matDensityFloor_d, density_floor, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matEnergyFloor_d, energy_floor, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         //begin copying ANEOS data from host to (global) device memory
         cudaVerify(cudaMemcpy(aneos_n_rho_d, g_aneos_n_rho, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(aneos_n_e_d, g_aneos_n_e, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));
@@ -1082,6 +1091,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(matCohesionCoefficient, &matCohesionCoefficient_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matMeltEnergy, &matMeltEnergy_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matDensityFloor, &matDensityFloor_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matEnergyFloor, &matEnergyFloor_d, sizeof(void*)));
 #if JC_PLASTICITY
         cudaVerify(cudaMemcpyToSymbol(matjc_y0, &matjc_y0_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matjc_B, &matjc_B_d, sizeof(void*)));
@@ -1097,10 +1107,10 @@ void transferMaterialsToGPU()
 
         fprintf(stdout, "\nUsing following values for SPH:\n");
         fprintf(stdout, "grav-constant: %e\n", grav_const);
-        fprintf(stdout, "Material No \t smoothing length or number of interactions \t density floor \t alpha \t\t beta\n");
-        fprintf(stdout, "------------\t--------------------------------------------\t---------------\t-------\t\t-----\n");
+        fprintf(stdout, "Material No \t smoothing length or number of interactions \t density floor \t energy floor \t alpha \t\t beta\n");
+        fprintf(stdout, "------------\t--------------------------------------------\t---------------\t--------------\t-------\t\t-----\n");
         for (i = 0; i < numberOfMaterials; i++) {
-            fprintf(stdout, "  %d \t\t %e  or  %d \t\t\t\t %g \t\t %e \t %e \n", i, sml[i], noi[i], density_floor[i], alpha[i], beta[i]);
+            fprintf(stdout, "  %d \t\t %e  or  %d \t\t\t\t %g \t\t %g \t\t %e \t %e \n", i, sml[i], noi[i], density_floor[i], energy_floor[i], alpha[i], beta[i]);
         }
 #if VARIABLE_SML
         fprintf(stdout, "Material No \t factor for maximum and minimum smoothing length and corresponding smoothing lengths\n");
@@ -1361,6 +1371,7 @@ void transferMaterialsToGPU()
         free(friction_angle);
         free(friction_angle_damaged);
         free(density_floor);
+        free(energy_floor);
 #if SOLID
         free(young_modulus);
 #endif
@@ -1468,6 +1479,7 @@ void cleanupMaterials()
     cudaVerify(cudaFree(matFrictionAngle_d));
     cudaVerify(cudaFree(matFrictionAngleDamaged_d));
     cudaVerify(cudaFree(matDensityFloor_d));
+    cudaVerify(cudaFree(matEnergyFloor_d));
     cudaVerify(cudaFree(matporjutzi_p_elastic_d));
     cudaVerify(cudaFree(matporjutzi_p_transition_d));
     cudaVerify(cudaFree(matporjutzi_p_compacted_d));

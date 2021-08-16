@@ -111,6 +111,7 @@ extern double *matAlphaPhi_d;
 extern double *matCohesionCoefficient_d;
 extern double *matMeltEnergy_d;
 extern double *matDensityFloor_d;
+extern double *matEnergyFloor_d;
 // ANEOS device variables
 extern int *aneos_n_rho_d;
 extern int *aneos_n_e_d;
@@ -236,6 +237,7 @@ extern __constant__ double *matAlphaPhi;
 extern __constant__ double *matCohesionCoefficient;
 extern __constant__ double *matMeltEnergy;
 extern __constant__ double *matDensityFloor;
+extern __constant__ double *matEnergyFloor;
 extern __constant__ double *tensorialCorrectionMatrix;
 extern __constant__ double *tensorialCorrectiondWdrr;
 extern __device__ double scale_height;

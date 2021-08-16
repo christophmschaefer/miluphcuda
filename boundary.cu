@@ -143,11 +143,19 @@ __global__ void BoundaryConditionsBeforeRHS(int *interactions)
 #if INTEGRATE_DENSITY
             p.drhodt[i] = 0;
 #endif
-        } else if( p.rho[i] < matDensityFloor[matId] ) {
-            p.rho[i] = matDensityFloor[matId];
+        } else {
+            if( p.rho[i] < matDensityFloor[matId] ) {
+                p.rho[i] = matDensityFloor[matId];
 #if INTEGRATE_DENSITY
-            p.drhodt[i] = 0.0;
+                p.drhodt[i] = 0.0;
 #endif
+            }
+            if( p.e[i] < matEnergyFloor[matId] ) {
+                p.e[i] = matEnergyFloor[matId];
+#if INTEGRATE_ENERGY
+                p.dedt[i] = 0.0;
+#endif
+            }
         }
     }
 #endif
@@ -260,11 +268,19 @@ __global__ void BoundaryConditionsAfterRHS(int *interactions)
 #if INTEGRATE_DENSITY
             p.drhodt[i] = 0;
 #endif
-        } else if( p.rho[i] < matDensityFloor[matId] ) {
-            p.rho[i] = matDensityFloor[matId];
+        } else {
+            if( p.rho[i] < matDensityFloor[matId] ) {
+                p.rho[i] = matDensityFloor[matId];
 #if INTEGRATE_DENSITY
-            p.drhodt[i] = 0.0;
+                p.drhodt[i] = 0.0;
 #endif
+            }
+            if( p.e[i] < matEnergyFloor[matId] ) {
+                p.e[i] = matEnergyFloor[matId];
+#if INTEGRATE_ENERGY
+                p.dedt[i] = 0.0;
+#endif
+            }
         }
     }
 #endif

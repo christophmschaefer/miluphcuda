@@ -1,7 +1,7 @@
 How to set up the material config file for miluphcuda
 =====================================================
 
-last updated: 03/Jun/2021
+last updated: 16/Aug/2021
 
 Christoph Burger, Christoph Schäfer  
 christoph.burger@uni-tuebingen.de
@@ -184,6 +184,9 @@ This list is currently not exhaustive.
         density_floor   float   1% of bulk/reference density, or    minimum density (absolute value)
                                 1% of matrix if porous, or          allowed for material
                                 0. for gases
+
+        energy_floor    float   none                                minimum energy (absolute value)
+                                                                    allowed for material
 
 --------------------------------
 
