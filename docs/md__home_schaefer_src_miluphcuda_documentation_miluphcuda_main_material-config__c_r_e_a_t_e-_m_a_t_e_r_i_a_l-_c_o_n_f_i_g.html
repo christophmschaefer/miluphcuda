@@ -68,7 +68,7 @@ $(function() {
 <div class="title">How to set up the material config file for miluphcuda </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>last updated: 03/Jun/2021</p>
+<div class="textblock"><p>last updated: 16/Aug/2021</p>
 <p>Christoph Burger, Christoph Schäfer <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a> </p><hr/>
 <h2>Purpose </h2>
 <p>miluphcuda supports multiple materials, and multiple rheologies. Many important settings for the material model, especially material parameters, are parsed in a structured config file, typically named <em>material.cfg</em>. In addition to material parameters, some numerical settings (e.g., for the smoothing length) are also configured via that file.</p>
@@ -176,6 +176,9 @@ $(function() {
     density_floor   float   1% of bulk/reference density, or    minimum density (absolute value)
                             1% of matrix if porous, or          allowed for material
                             0. for gases
+
+    energy_floor    float   none                                minimum energy (absolute value)
+                                                                allowed for material
 </pre><hr/>
 <p><b>EoS: Murnaghan</b></p>
 <p>To use the Murnaghan EoS for some material, set </p><pre class="fragment">    eos.type = 1
@@ -318,7 +321,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - How to set up the material config file for miluphcuda<br />
-    Generated on Mon Aug 16 2021 07:05:11 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Tue Aug 17 2021 07:05:12 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
