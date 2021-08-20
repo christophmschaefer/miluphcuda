@@ -1464,7 +1464,7 @@ void print_rk2_adaptive_settings()
     fprintf(stdout, "    no output times: %d\n", numberOfTimesteps);
     fprintf(stdout, "    duration between output times: %g\n", timePerStep);
     fprintf(stdout, "\n");
-    fprintf(stdout, "    first timestep: %g\n", param.firsttimestep);
+    fprintf(stdout, "    first timestep from cmd-line: %g\n", param.firsttimestep);
     fprintf(stdout, "    max allowed timestep: %g\n", param.maxtimestep);
     fprintf(stdout, "\n");
     fprintf(stdout, "    pre-timestep checks to limit timestep in advance:\n");

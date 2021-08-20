@@ -1382,7 +1382,7 @@ void read_particles_from_file(File inputFile)
             } else {
                 pointmass_host.feels_particles[i] = atoi(iotmp);
             }
-            printf("Mass no %d feels particles (no 0/ yes 1) %d\n", i, pointmass_host.feels_particles[i]);
+            printf("Mass no %d feels particles (0/1): %d\n", i, pointmass_host.feels_particles[i]);
             columns++;
         }
 
