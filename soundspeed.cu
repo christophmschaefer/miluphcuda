@@ -105,7 +105,7 @@ __global__ void calculateSoundSpeed()
             i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
             i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
             // interpolate (bi)linearly to obtain the sound speed
-            p.cs[i] = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId]);
+            p.cs[i] = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], i);
             // set to >= lower limit
             if (p.cs[i] < matcsLimit[matId]) {
                 p.cs[i] = matcsLimit[matId];
@@ -137,7 +137,7 @@ __global__ void calculateSoundSpeed()
             i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
             i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
             // interpolate (bi)linearly to obtain the sound speed
-            cs = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId]);
+            cs = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], i);
             // do interpolation only if computed sound speed is above cs_porous, to capture
             // only compaction process, but not expanded states for example...
             if( cs > matcs_porous[matId] ) {

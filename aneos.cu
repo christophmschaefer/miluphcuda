@@ -275,7 +275,7 @@ int array_index_host(double x, double* array, int n)
 
 
 
-__device__ double bilinear_interpolation_from_linearized(double x, double y, double* table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y)
+__device__ double bilinear_interpolation_from_linearized(double x, double y, double* table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y, int pid)
 {
     double normx, normy, a, b, p;
 
@@ -309,7 +309,7 @@ __device__ double bilinear_interpolation_from_linearized(double x, double y, dou
                 p = table[n_x*n_y-1] + normx*(table[n_x*n_y-1]-table[(n_x-1)*n_y-1]) + normy*(table[n_x*n_y-1]-table[n_x*n_y-2]);
             }
             else
-                printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e !\n", x, y);
+                printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e (particle ID: %d)...\n", x, y, pid);
         }
         else if( ix < 0 )
         {
@@ -333,7 +333,7 @@ __device__ double bilinear_interpolation_from_linearized(double x, double y, dou
                 p = a + normx*(a-b);
             }
             else
-                printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e !\n", x, y);
+                printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e (particle ID: %d)...\n", x, y, pid);
         }
         else if( iy < 0 )
         {
@@ -357,12 +357,12 @@ __device__ double bilinear_interpolation_from_linearized(double x, double y, dou
                 p = a + normy*(a-b);
             }
             else
-                printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e !\n", x, y);
+                printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e (particle ID: %d)...\n", x, y, pid);
         }
         else
-            printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e !\n", x, y);
+            printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e (particle ID: %d)...\n", x, y, pid);
 
-        printf("WARNING: Out of ANEOS table for rho = %e and e = %e. Use extrapolated f(rho,e) = %e\n", x, y, p);
+        printf("Warning: Out of ANEOS table for rho = %e and e = %e (particle ID: %d). Use extrapolated f(rho,e) = %e\n", x, y, pid, p);
         return(p);
     }
 
@@ -380,7 +380,7 @@ __device__ double bilinear_interpolation_from_linearized(double x, double y, dou
 
 
 
-__device__ void bilinear_interpolation_from_linearized_plus_derivatives(double x, double y, double* table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y, double* z, double* dz_dx, double* dz_dy)
+__device__ void bilinear_interpolation_from_linearized_plus_derivatives(double x, double y, double* table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y, double* z, double* dz_dx, double* dz_dy, int pid)
 {
     double normx, normy, delta_x, delta_y, delta_x_grid, delta_y_grid, a, b, k_a, k_b;
 
@@ -433,7 +433,7 @@ __device__ void bilinear_interpolation_from_linearized_plus_derivatives(double x
                 *dz_dy = (table[n_x*n_y-1]-table[n_x*n_y-2]) / delta_y_grid;
             }
             else
-                printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e !\n", x, y);
+                printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e (particle ID: %d)...\n", x, y, pid);
         }
         else if( ix < 0 )   // (x,y) lies either "left" or "right" of the lookup table domain
         {
@@ -466,7 +466,7 @@ __device__ void bilinear_interpolation_from_linearized_plus_derivatives(double x
                 *dz_dy = (table[(n_x-1)*n_y+iy+1]-table[(n_x-1)*n_y+iy]) / delta_y_grid;
             }
             else
-                printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e !\n", x, y);
+                printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e (particle ID: %d)...\n", x, y, pid);
         }
         else if( iy < 0 )   // (x,y) lies either "below" or "above" of the lookup table domain
         {
@@ -499,12 +499,12 @@ __device__ void bilinear_interpolation_from_linearized_plus_derivatives(double x
                 *dz_dy = (a-b) / delta_y_grid;
             }
             else
-                printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e !\n", x, y);
+                printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e (particle ID: %d)...\n", x, y, pid);
         }
         else
-            printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e !\n", x, y);
+            printf("WARNING: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e (particle ID: %d)...\n", x, y, pid);
 
-        printf("WARNING: Out of ANEOS table for rho = %e and e = %e. Use extrapolated f(rho,e) = %e, df/drho = %e, df/de = %e ...\n", x, y, *z, *dz_dx, *dz_dy);
+        printf("Warning: Out of ANEOS table for rho = %e and e = %e (particle ID: %d). Use extrapolated f(rho,e) = %e, df/drho = %e, df/de = %e\n", x, y, pid, *z, *dz_dx, *dz_dy);
     }
     else    // (x,y) lies inside the table
     {
@@ -530,7 +530,7 @@ __device__ void bilinear_interpolation_from_linearized_plus_derivatives(double x
 
 
 #if MORE_ANEOS_OUTPUT
-double bilinear_interpolation_from_matrix(double x, double y, double** table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y)
+double bilinear_interpolation_from_matrix(double x, double y, double** table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y, int pid)
 {
     double normx = -1.0, normy = -1.0;
     double a, b, p = -1.0;
@@ -567,7 +567,7 @@ double bilinear_interpolation_from_matrix(double x, double y, double** table, do
                 p = table[n_x-1][n_y-1] + normx*(table[n_x-1][n_y-1]-table[n_x-2][n_y-1]) + normy*(table[n_x-1][n_y-1]-table[n_x-1][n_y-2]);
             }
             else
-                ERRORVAR2("ERROR: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e !\n", x, y)
+                ERRORVAR3("ERROR: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e (particle ID: %d).\n", x, y, pid)
         }
         else if( ix < 0 )
         {
@@ -591,7 +591,7 @@ double bilinear_interpolation_from_matrix(double x, double y, double** table, do
                 p = a + normx*(a-b);
             }
             else
-                ERRORVAR2("ERROR: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e !\n", x, y)
+                ERRORVAR3("ERROR: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e (particle ID: %d).\n", x, y, pid)
         }
         else if( iy < 0 )
         {
@@ -615,10 +615,10 @@ double bilinear_interpolation_from_matrix(double x, double y, double** table, do
                 p = a + normy*(a-b);
             }
             else
-                ERRORVAR2("ERROR: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e !\n", x, y)
+                ERRORVAR3("ERROR: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e (particle ID: %d).\n", x, y, pid)
         }
         else
-            ERRORVAR2("ERROR: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e !\n", x, y)
+            ERRORVAR3("ERROR: Some odd behavior during extrapolation from ANEOS table encountered for rho = %e and e = %e (particle ID: %d).\n", x, y, pid)
 
         // write a warning to warnings file
 //        if ( (f = fopen("miluphcuda.warnings", "a")) == NULL )
@@ -647,7 +647,7 @@ double bilinear_interpolation_from_matrix(double x, double y, double** table, do
 
 
 #if MORE_ANEOS_OUTPUT
-int discrete_value_table_lookup_from_matrix(double x, double y, int** table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y)
+int discrete_value_table_lookup_from_matrix(double x, double y, int** table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y, int pid)
 {
     int phase_flag = -1;
     double normx = -1.0, normy = -1.0;
@@ -676,7 +676,7 @@ int discrete_value_table_lookup_from_matrix(double x, double y, int** table, dou
                 phase_flag = table[n_x-1][n_y-1];
             }
             else
-                ERRORVAR2("ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete_value_table_lookup()' encountered for rho = %e and e = %e !\n", x, y)
+                ERRORVAR3("ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete_value_table_lookup()' encountered for rho = %e and e = %e (particle ID: %d).\n", x, y, pid)
         }
         else if( ix < 0 )
         {
@@ -692,7 +692,7 @@ int discrete_value_table_lookup_from_matrix(double x, double y, int** table, dou
                     phase_flag = table[n_x-1][iy+1];
                 }
                 else
-                    ERRORVAR2("ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete_value_table_lookup()' encountered for rho = %e and e = %e !\n", x, y)
+                    ERRORVAR3("ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete_value_table_lookup()' encountered for rho = %e and e = %e (particle ID: %d).\n", x, y, pid)
             }
             else if( normy < 0.5 && normy >= 0.0 )
             {
@@ -705,10 +705,10 @@ int discrete_value_table_lookup_from_matrix(double x, double y, int** table, dou
                     phase_flag = table[n_x-1][iy];
                 }
                 else
-                    ERRORVAR2("ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete_value_table_lookup()' encountered for rho = %e and e = %e !\n", x, y)
+                    ERRORVAR3("ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete_value_table_lookup()' encountered for rho = %e and e = %e (particle ID: %d).\n", x, y, pid)
             }
             else
-                ERRORVAR("ERROR! 'normy' = %e (is not in [0,1]) in 'discrete_value_table_lookup()' ...\n", normy)
+                ERRORVAR2("ERROR! 'normy' = %e is not in [0,1] (particle ID: %d) in 'discrete_value_table_lookup()' ...\n", normy, pid)
         }
         else if( iy < 0 )
         {
@@ -724,7 +724,7 @@ int discrete_value_table_lookup_from_matrix(double x, double y, int** table, dou
                     phase_flag = table[ix+1][n_y-1];
                 }
                 else
-                    ERRORVAR2("ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete_value_table_lookup()' encountered for rho = %e and e = %e !\n", x, y)
+                    ERRORVAR3("ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete_value_table_lookup()' encountered for rho = %e and e = %e (particle ID: %d).\n", x, y, pid)
             }
             else if( normx < 0.5 && normx >= 0.0 )
             {
@@ -737,18 +737,18 @@ int discrete_value_table_lookup_from_matrix(double x, double y, int** table, dou
                     phase_flag = table[ix][n_y-1];
                 }
                 else
-                    ERRORVAR2("ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete_value_table_lookup()' encountered for rho = %e and e = %e !\n", x, y)
+                    ERRORVAR3("ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete_value_table_lookup()' encountered for rho = %e and e = %e (particle ID: %d).\n", x, y, pid)
             }
             else
-                ERRORVAR("ERROR! 'normx' = %e (is not in [0,1]) in 'discrete_value_table_lookup()' ...\n", normx)
+                ERRORVAR2("ERROR! 'normx' = %e is not in [0,1] (particle ID: %d) in 'discrete_value_table_lookup()' ...\n", normx, pid)
         }
         else
-            ERRORVAR2("ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete_value_table_lookup()' encountered for rho = %e and e = %e !\n", x, y)
+            ERRORVAR3("ERROR: Some odd behavior during extrapolation from ANEOS table in 'discrete_value_table_lookup()' encountered for rho = %e and e = %e (particle ID: %d).\n", x, y, pid)
 
         // write a warning to warnings file
 //        if ( (f = fopen("miluphcuda.warnings", "a")) == NULL )
 //            ERRORTEXT("FILE ERROR! Cannot open 'miluphcuda.warnings' for appending!\n")
-//        fprintf(f, "WARNING: At least one of rho = %e and e = %e is out of ANEOS lookup table range! Use extrapolated phase-flag = %d\n", x, y, phase_flag);
+//        fprintf(f, "Warning: At least one of rho = %e and e = %e (particle ID: %d) is out of ANEOS lookup table range. Use extrapolated phase-flag = %d\n", x, y, pid, phase_flag);
 //        fclose(f);
 
         return(phase_flag);
@@ -777,7 +777,7 @@ int discrete_value_table_lookup_from_matrix(double x, double y, int** table, dou
         phase_flag = table[ix][iy];
     }
     else
-        ERRORVAR2("ERROR: Some odd behavior during \"discrete interpolation\" from ANEOS table in 'discrete_value_table_lookup()' encountered for rho = %e and e = %e !\n", x, y)
+        ERRORVAR3("ERROR: Some odd behavior during \"discrete interpolation\" from ANEOS table in 'discrete_value_table_lookup()' encountered for rho = %e and e = %e (particle ID: %d).\n", x, y, pid)
 
     return( phase_flag );
 

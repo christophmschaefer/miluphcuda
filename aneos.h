@@ -84,8 +84,9 @@ __device__ int array_index(double x, double* array, int n);
  * @param table is linearized array, where rows (connected y-values for a single x-value) are saved successively.
  * @param ix holds the index that satisfies `xtab[ix] <= x < xtab[ix+1]` (same for `iy`).
  * @param n_x holds the length of a row of x-values for a single y-value (same for `n_y`).
+ * @param pid is the index in the particle array.
  */
-__device__ double bilinear_interpolation_from_linearized(double x, double y, double* table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y);
+__device__ double bilinear_interpolation_from_linearized(double x, double y, double* table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y, int pid);
 
 
 /**
@@ -99,8 +100,9 @@ __device__ double bilinear_interpolation_from_linearized(double x, double y, dou
  * @param n_x holds the length of a row of x-values for a single y-value (same for `n_y`).
  * @param z is the interpolated value.
  * @param dz_dx is the interpolated derivative in x-direction (same for `dz_dy`).
+ * @param pid is the index in the particle array.
  */
-__device__ void bilinear_interpolation_from_linearized_plus_derivatives(double x, double y, double* table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y, double* z, double* dz_dx, double* dz_dy);
+__device__ void bilinear_interpolation_from_linearized_plus_derivatives(double x, double y, double* table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y, double* z, double* dz_dx, double* dz_dy, int pid);
 
 
 #if MORE_ANEOS_OUTPUT
@@ -121,8 +123,9 @@ int array_index_host(double x, double* array, int n);
  * @param table is 2D array holding the lookup table.
  * @param ix holds the index that satisfies `xtab[ix] <= x < xtab[ix+1]` (same for `iy`).
  * @param n_x holds the length of a row of x-values for a single y-value (same for `n_y`).
+ * @param pid is the index in the particle array.
  */
-double bilinear_interpolation_from_matrix(double x, double y, double** table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y);
+double bilinear_interpolation_from_matrix(double x, double y, double** table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y, int pid);
 
 
 /**
@@ -134,8 +137,9 @@ double bilinear_interpolation_from_matrix(double x, double y, double** table, do
  * @param table is 2D integer array holding the lookup table
  * @param ix holds the index that satisfies `xtab[ix] <= x < xtab[ix+1]` (same for `iy`).
  * @param n_x holds the length of a row of x-values for a single y-value (same for `n_y`).
+ * @param pid is the index in the particle array.
  */
-int discrete_value_table_lookup_from_matrix(double x, double y, int** table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y);
+int discrete_value_table_lookup_from_matrix(double x, double y, int** table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y, int pid);
 #endif
 
 

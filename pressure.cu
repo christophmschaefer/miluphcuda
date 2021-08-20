@@ -95,7 +95,7 @@ __global__ void calculatePressure() {
             i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
             i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
             /* interpolate (bi)linearly to obtain the pressure */
-            p.p[i] = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId]);
+            p.p[i] = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], i);
 #if SIRONO_POROSITY
         } else if (matEOS[matId] == EOS_TYPE_SIRONO) {
             double K_0 = matporsirono_K_0[matId];
@@ -272,7 +272,7 @@ __global__ void calculatePressure() {
                 i_rho = array_index(p.alpha_jutzi[i] * p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
                 i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
                 /* interpolate (bi)linearly to obtain the pressure and dp/drho and dp/de */
-                bilinear_interpolation_from_linearized_plus_derivatives(p.alpha_jutzi[i] * p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], &pressure_solid, &(p.delpdelrho[i]), &(p.delpdele[i]) );
+                bilinear_interpolation_from_linearized_plus_derivatives(p.alpha_jutzi[i] * p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], &pressure_solid, &(p.delpdelrho[i]), &(p.delpdele[i]), i);
             }
 
             pressure = pressure_solid / p.alpha_jutzi[i]; /* from the P-alpha model */
