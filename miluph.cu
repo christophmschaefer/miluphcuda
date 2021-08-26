@@ -1003,7 +1003,7 @@ int main(int argc, char *argv[])
     if (0 == strcmp(integrationscheme, "rk2_adaptive")) {
         integrator = &rk2Adaptive;
         param.integrator_type = RK2_ADAPTIVE;
-        fprintf(stdout, "rk2_adaptive - with accurary rk_epsrel: %g\n", param.rk_epsrel);
+        fprintf(stdout, "rk2_adaptive - with accuracy rk_epsrel: %g\n", param.rk_epsrel);
     } else if (0 == strcmp(integrationscheme, "euler")) {
         fprintf(stdout, "euler\n");
         integrator = &euler;
@@ -1055,11 +1055,11 @@ int main(int argc, char *argv[])
     // print out self-gravity information
     fprintf(stdout, "Self-gravity: ");
     if (param.selfgravity) {
-        fprintf(stdout, "calculating selfgravity with Barnes Hut tree with theta: %g\n", treeTheta);
+        fprintf(stdout, "yes - calculated with Barnes Hut tree with theta: %g\n", treeTheta);
     } else if (param.directselfgravity) {
-        fprintf(stdout, "calculating selfgravity using direct particle-particle force.\n");
+        fprintf(stdout, "yes - calculated using direct particle-particle force.\n");
     } else {
-        fprintf(stdout, "neglecting selfgravity.\n");
+        fprintf(stdout, "none.\n");
     }
 
     if (param.maxtimestep < 0)

@@ -1688,7 +1688,7 @@ void write_particles_to_file(File file) {
         }
     totalDL = sqrt(totalDL);
     totalBL = sqrt(totalBL);
-#endif // GRAVITATINT_POINT_MASSES
+#endif // GRAVITATING_POINT_MASSES
 
     totalkineticenergy *= 0.5;
     totalp = totalpx*totalpx;
