@@ -190,6 +190,22 @@ This list is currently not exhaustive.
 
 --------------------------------
 
+**Elastic constants**
+
+Which elastic constants are required depends on the used material model and equation of state.
+The shear modulus is always required for solid simulations (`SOLID` is set in parameter.h).
+The bulk modulus may be required for sound speed estimates, the Grady-Kipp fragmentation model, etc.
+
+        Key                 Type    Default
+        ___________________________________
+
+        eos.bulk_modulus    float   0.
+        eos.shear_modulus   float   0.
+
+Note: The other two elastic constants (Young's modulus and Poisson's ratio) are computed from them as needed.
+
+--------------------------------
+
 **EoS: Murnaghan**
 
 To use the Murnaghan EoS for some material, set

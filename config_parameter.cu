@@ -1277,11 +1277,12 @@ void transferMaterialsToGPU()
         }
 
 #if SOLID
-        fprintf(stdout, "\nUsing following values for bulk and shear modulus:\n");
-        fprintf(stdout, "    material no.    bulk modulus    shear modulus\n");
-        fprintf(stdout, "    ------------    ------------    -------------\n");
+        fprintf(stdout, "\nUsing following values for elastic constants:\n");
+        fprintf(stdout, "    material no.    bulk modulus    shear modulus        Poisson's ratio    Young's modulus\n");
+        fprintf(stdout, "    ------------    ------------    -------------        ---------------    ---------------\n");
         for (i = 0; i < numberOfMaterials; i++) {
-            fprintf(stdout, "    %12d    %12g    %13g\n", i, bulk_modulus[i], shear_modulus[i]);
+            double poisson_ratio = (3.0*bulk_modulus[i] - 2.0*shear_modulus[i]) / 2.0 / (3.0*bulk_modulus[i] + shear_modulus[i]);
+            fprintf(stdout, "    %12d    %12g    %13g        %15g    %15g\n", i, bulk_modulus[i], shear_modulus[i], poisson_ratio, young_modulus[i]);
         }
 #endif
 

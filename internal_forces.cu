@@ -883,53 +883,53 @@ __global__ void internalForces(int *interactions) {
         double bulk = matBulkmodulus[matId];
         double young = matYoungModulus[matId];
         int f;
-#if JC_PLASTICITY
+# if JC_PLASTICITY
 	    double edotp[DIM][DIM]; // plastic strain rate
-#endif
-#if SIRONO_POROSITY
+# endif
+# if SIRONO_POROSITY
         if (matEOS[matId] == EOS_TYPE_SIRONO) {
             shear = 0.5 * p.K[i];
             bulk = p.K[i];
             young = (9.0 * bulk * shear / (3.0 * bulk + shear));
         }
-#endif
+# endif
 
         if (matEOS[matId] != EOS_TYPE_REGOLITH && matEOS[matId] != EOS_TYPE_VISCOUS_REGOLITH) {
             for (d = 0; d < DIM; d++) {
                 for (e = 0; e < DIM; e++) {
                     // Hooke's law
                     p.dSdt[stressIndex(i,d,e)] = 2.0 * shear * edot[d][e];
-#if JC_PLASTICITY
+# if JC_PLASTICITY
 		            edotp[d][e] = (1 - p.jc_f[i]) * edot[d][e];
-#endif
+# endif
                     // rotation terms
                     for (f = 0; f < DIM; f++) {
                         // trace
                         if (d == e) {
                             p.dSdt[stressIndex(i,d,e)] -= 2.0 * shear * edot[f][f] / 3.0;
-#if JC_PLASTICITY
+# if JC_PLASTICITY
 		            	    edotp[d][e] += (-1./3)*(1-p.jc_f[i])*edot[f][f];
-#endif
+# endif
                         }
                         p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,d,f)] * rdot[e][f];
                         p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,e,f)] * rdot[d][f];
                     }
-#if PALPHA_POROSITY && STRESS_PALPHA_POROSITY
+# if PALPHA_POROSITY && STRESS_PALPHA_POROSITY
                     if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
                         p.dSdt[stressIndex(i,d,e)] = p.f[i] / p.alpha_jutzi[i] * p.dSdt[stressIndex(i,d,e)]
                                                             - 1.0 / (p.alpha_jutzi[i]*p.alpha_jutzi[i])
-# if FRAGMENTATION && DAMAGE_ACTS_ON_S
+#  if FRAGMENTATION && DAMAGE_ACTS_ON_S
                                                             * (1-di)*p.S[stressIndex(i,d,e)]
-# else
+#  else
                                                             * p.S[stressIndex(i,d,e)]
-# endif
+#  endif
                                                             * p.dalphadt[i];
                     }
-#endif
+# endif
                 }
             }
 
-#if JC_PLASTICITY
+# if JC_PLASTICITY
             /* calculate plastic strain rate tensor from dSdt */
             double K2 = 0;
             for (d = 0; d < DIM; d++) {
@@ -961,18 +961,17 @@ __global__ void internalForces(int *interactions) {
             }
             if (p.noi[i] < 1)
                 p.dTdt[i] = 0.0;
-#endif
+# endif
 
-#if ARTIFICIAL_VISCOSITY
+# if ARTIFICIAL_VISCOSITY
             p.muijmax[i] = muijmax;
-#endif
+# endif
 
             double tensileMax = 0.0;
-#if SOLID
             tensileMax = calculateMaxEigenvalue(sigma_i);
             p.local_strain[i] = tensileMax/young;
-#endif
-#if FRAGMENTATION
+
+# if FRAGMENTATION
             // calculate damage evolution dd/dt...
             // 1st: get max eigenvalue (max principle stress) of sigma_i
             // 2nd: get local scalar strain out of max tensile stress
@@ -1008,7 +1007,7 @@ __global__ void internalForces(int *interactions) {
                 p.dddt[i] = 0.0;
                 p.d[i] = 1.0;
             }
-#if PALPHA_POROSITY
+#  if PALPHA_POROSITY
             if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
                 double deld = 0.01; 	/* variation in the damage to avoid infinity problem */
                 double alpha_0 = matporjutzi_alpha_0[matId];
@@ -1017,8 +1016,8 @@ __global__ void internalForces(int *interactions) {
                                             / (pow(1.0 + deld, 1.0/DIM) - pow(deld, 1.0/DIM)) * 1.0/(alpha_0 - 1.0) * p.dalphadt[i];
                 }
             }
-#endif
-#endif // FRAGMENTATION
+#  endif
+# endif // FRAGMENTATION
 
         } else if (matEOS[matId] != EOS_TYPE_VISCOUS_REGOLITH) { // if materialtype = regolith
             alpha_phi = matAlphaPhi[matId];
@@ -1027,12 +1026,12 @@ __global__ void internalForces(int *interactions) {
             for (d = 0; d < DIM; d++) {
                 tr_edot += edot[d][d];
             }
-#if DIM == 2
+# if DIM == 2
             double poissons_ratio = (3*bulk - 2*shear) / (2*(3*bulk + shear));
             I1 = (1 + poissons_ratio) * (p.S[stressIndex(i, 0, 0)] + p.S[stressIndex(i, 1, 1)]);
-#else
+# else
             I1 = p.S[stressIndex(i,0,0)] + p.S[stressIndex(i,1,1)] + p.S[stressIndex(i,2,2)];
-#endif
+# endif
             //get S
             for (d = 0; d < DIM; d++) {
                 for (e = 0; e < DIM; e++) {
@@ -1040,9 +1039,9 @@ __global__ void internalForces(int *interactions) {
                 }
                 S_i[d][d] -= I1/3.0;
             }
-#if DIM == 2
+# if DIM == 2
             double sz = poissons_ratio*(S_i[0][0] + S_i[1][1]);
-#endif
+# endif
             //calculate sqrt(J2)
             sqrt_J2 = 0.0;
             for (d = 0; d < DIM; d++) {
@@ -1050,9 +1049,9 @@ __global__ void internalForces(int *interactions) {
                     sqrt_J2 += S_i[d][e]*S_i[d][e];
                 }
             }
-#if DIM == 2
+# if DIM == 2
             sqrt_J2 += sz*sz;
-#endif
+# endif
             sqrt_J2 *= 0.5;
             sqrt_J2 = sqrt(sqrt_J2);
 
