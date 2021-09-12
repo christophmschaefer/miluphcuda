@@ -180,6 +180,13 @@ $(function() {
     energy_floor    float   none                                minimum energy (absolute value)
                                                                 allowed for material
 </pre><hr/>
+<p><b>Elastic constants</b></p>
+<p>Which elastic constants are required depends on the used material model and equation of state. The shear modulus is always required for solid simulations (<code>SOLID</code> is set in parameter.h). The bulk modulus may be required for sound speed estimates, the Grady-Kipp fragmentation model, etc. </p><pre class="fragment">    Key                 Type    Default
+    ___________________________________
+
+    eos.bulk_modulus    float   0.
+    eos.shear_modulus   float   0.
+</pre><p>Note: The other two elastic constants (Young's modulus and Poisson's ratio) are computed from them as needed. </p><hr/>
 <p><b>EoS: Murnaghan</b></p>
 <p>To use the Murnaghan EoS for some material, set </p><pre class="fragment">    eos.type = 1
 </pre><p>and the following parameters: </p><pre class="fragment">    Key                 Type    Default             Details
@@ -321,7 +328,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - How to set up the material config file for miluphcuda<br />
-    Generated on Sat Sep 11 2021 07:05:12 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
+    Generated on Sun Sep 12 2021 07:05:11 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.8.13
   </small></address>
 </body>
 </html>
