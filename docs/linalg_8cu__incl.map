@@ -1,12 +1,12 @@
 <map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/linalg.cu" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/linalg.cu">
-<area shape="rect" id="node2" href="$timeintegration_8h.html" title="timeintegration.h" alt="" coords="965,109,1084,136"/>
-<area shape="rect" id="node7" href="$parameter_8h.html" title="parameter.h" alt="" coords="1238,259,1329,285"/>
-<area shape="rect" id="node8" href="$miluph_8h.html" title="miluph.h" alt="" coords="737,184,808,211"/>
-<area shape="rect" id="node22" href="$linalg_8h.html" title="linalg.h" alt="" coords="1577,109,1640,136"/>
-<area shape="rect" id="node15" href="$cuda__utils_8h.html" title="cuda_utils.h" alt="" coords="907,259,999,285"/>
-<area shape="rect" id="node16" href="$io_8h.html" title="io.h" alt="" coords="789,259,831,285"/>
-<area shape="rect" id="node19" href="$kernel_8h.html" title="kernel.h" alt="" coords="1433,184,1501,211"/>
-<area shape="rect" id="node20" href="$extrema_8h.html" title="extrema.h" alt="" coords="985,184,1065,211"/>
-<area shape="rect" id="node21" href="$sinking_8h.html" title="sinking.h" alt="" coords="1089,184,1163,211"/>
-<area shape="rect" id="node18" href="$checks_8h.html" title="checks.h" alt="" coords="690,259,765,285"/>
+<area shape="rect" id="node2" href="$timeintegration_8h.html" title="timeintegration.h" alt="" coords="1014,109,1149,136"/>
+<area shape="rect" id="node7" href="$parameter_8h.html" title="parameter.h" alt="" coords="1305,259,1407,285"/>
+<area shape="rect" id="node8" href="$miluph_8h.html" title="miluph.h" alt="" coords="781,184,859,211"/>
+<area shape="rect" id="node22" href="$linalg_8h.html" title="linalg.h" alt="" coords="1663,109,1734,136"/>
+<area shape="rect" id="node15" href="$cuda__utils_8h.html" title="cuda_utils.h" alt="" coords="958,259,1058,285"/>
+<area shape="rect" id="node16" href="$io_8h.html" title="io.h" alt="" coords="835,259,882,285"/>
+<area shape="rect" id="node19" href="$kernel_8h.html" title="kernel.h" alt="" coords="1513,184,1588,211"/>
+<area shape="rect" id="node20" href="$extrema_8h.html" title="extrema.h" alt="" coords="1037,184,1126,211"/>
+<area shape="rect" id="node21" href="$sinking_8h.html" title="sinking.h" alt="" coords="1150,184,1231,211"/>
+<area shape="rect" id="node18" href="$checks_8h.html" title="checks.h" alt="" coords="733,259,811,285"/>
 </map>

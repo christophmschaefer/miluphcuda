@@ -1,11 +1,11 @@
 <map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/config_parameter.h" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/config_parameter.h">
-<area shape="rect" id="node6" href="$parameter_8h.html" title="parameter.h" alt="" coords="1284,348,1375,375"/>
-<area shape="rect" id="node7" href="$miluph_8h.html" title="miluph.h" alt="" coords="611,124,682,151"/>
-<area shape="rect" id="node14" href="$cuda__utils_8h.html" title="cuda_utils.h" alt="" coords="33,273,125,300"/>
-<area shape="rect" id="node15" href="$io_8h.html" title="io.h" alt="" coords="625,273,668,300"/>
-<area shape="rect" id="node17" href="$kernel_8h.html" title="kernel.h" alt="" coords="1246,273,1314,300"/>
-<area shape="rect" id="node18" href="$extrema_8h.html" title="extrema.h" alt="" coords="1339,273,1419,300"/>
-<area shape="rect" id="node19" href="$sinking_8h.html" title="sinking.h" alt="" coords="1443,273,1517,300"/>
-<area shape="rect" id="node16" href="$timeintegration_8h.html" title="timeintegration.h" alt="" coords="849,199,967,225"/>
-<area shape="rect" id="node21" href="$checks_8h.html" title="checks.h" alt="" coords="472,199,547,225"/>
+<area shape="rect" id="node6" href="$parameter_8h.html" title="parameter.h" alt="" coords="1333,348,1436,375"/>
+<area shape="rect" id="node7" href="$miluph_8h.html" title="miluph.h" alt="" coords="643,124,721,151"/>
+<area shape="rect" id="node14" href="$cuda__utils_8h.html" title="cuda_utils.h" alt="" coords="35,273,135,300"/>
+<area shape="rect" id="node15" href="$io_8h.html" title="io.h" alt="" coords="659,273,705,300"/>
+<area shape="rect" id="node17" href="$kernel_8h.html" title="kernel.h" alt="" coords="1294,273,1369,300"/>
+<area shape="rect" id="node18" href="$extrema_8h.html" title="extrema.h" alt="" coords="1393,273,1483,300"/>
+<area shape="rect" id="node19" href="$sinking_8h.html" title="sinking.h" alt="" coords="1507,273,1588,300"/>
+<area shape="rect" id="node16" href="$timeintegration_8h.html" title="timeintegration.h" alt="" coords="884,199,1019,225"/>
+<area shape="rect" id="node21" href="$checks_8h.html" title="checks.h" alt="" coords="503,199,581,225"/>
 </map>

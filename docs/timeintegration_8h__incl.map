@@ -1,10 +1,10 @@
 <map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/timeintegration.h" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/timeintegration.h">
-<area shape="rect" id="node6" href="$parameter_8h.html" title="parameter.h" alt="" coords="1082,184,1173,211"/>
-<area shape="rect" id="node7" href="$miluph_8h.html" title="miluph.h" alt="" coords="501,109,572,136"/>
-<area shape="rect" id="node14" href="$cuda__utils_8h.html" title="cuda_utils.h" alt="" coords="965,184,1057,211"/>
-<area shape="rect" id="node15" href="$io_8h.html" title="io.h" alt="" coords="83,184,126,211"/>
-<area shape="rect" id="node18" href="$kernel_8h.html" title="kernel.h" alt="" coords="777,109,845,136"/>
-<area shape="rect" id="node19" href="$extrema_8h.html" title="extrema.h" alt="" coords="891,109,971,136"/>
-<area shape="rect" id="node20" href="$sinking_8h.html" title="sinking.h" alt="" coords="1006,109,1081,136"/>
-<area shape="rect" id="node17" href="$checks_8h.html" title="checks.h" alt="" coords="497,184,571,211"/>
+<area shape="rect" id="node6" href="$parameter_8h.html" title="parameter.h" alt="" coords="1143,184,1246,211"/>
+<area shape="rect" id="node7" href="$miluph_8h.html" title="miluph.h" alt="" coords="531,109,610,136"/>
+<area shape="rect" id="node14" href="$cuda__utils_8h.html" title="cuda_utils.h" alt="" coords="1019,184,1119,211"/>
+<area shape="rect" id="node15" href="$io_8h.html" title="io.h" alt="" coords="89,184,135,211"/>
+<area shape="rect" id="node18" href="$kernel_8h.html" title="kernel.h" alt="" coords="820,109,895,136"/>
+<area shape="rect" id="node19" href="$extrema_8h.html" title="extrema.h" alt="" coords="942,109,1031,136"/>
+<area shape="rect" id="node20" href="$sinking_8h.html" title="sinking.h" alt="" coords="1066,109,1147,136"/>
+<area shape="rect" id="node17" href="$checks_8h.html" title="checks.h" alt="" coords="529,184,607,211"/>
 </map>

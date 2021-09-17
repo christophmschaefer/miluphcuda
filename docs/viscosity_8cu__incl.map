@@ -1,14 +1,14 @@
 <map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/viscosity.cu" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/viscosity.cu">
-<area shape="rect" id="node2" href="$viscosity_8h.html" title="viscosity.h" alt="" coords="1145,109,1230,136"/>
-<area shape="rect" id="node3" href="$timeintegration_8h.html" title="timeintegration.h" alt="" coords="943,184,1061,211"/>
-<area shape="rect" id="node8" href="$parameter_8h.html" title="parameter.h" alt="" coords="1289,333,1379,360"/>
-<area shape="rect" id="node9" href="$miluph_8h.html" title="miluph.h" alt="" coords="703,259,773,285"/>
-<area shape="rect" id="node20" href="$kernel_8h.html" title="kernel.h" alt="" coords="1500,259,1568,285"/>
-<area shape="rect" id="node23" href="$soundspeed_8h.html" title="soundspeed.h" alt="" coords="1745,109,1848,136"/>
-<area shape="rect" id="node24" href="$config__parameter_8h.html" title="config_parameter.h" alt="" coords="1267,184,1401,211"/>
-<area shape="rect" id="node16" href="$cuda__utils_8h.html" title="cuda_utils.h" alt="" coords="5,333,97,360"/>
-<area shape="rect" id="node17" href="$io_8h.html" title="io.h" alt="" coords="887,333,930,360"/>
-<area shape="rect" id="node21" href="$extrema_8h.html" title="extrema.h" alt="" coords="1294,259,1374,285"/>
-<area shape="rect" id="node22" href="$sinking_8h.html" title="sinking.h" alt="" coords="1195,259,1270,285"/>
-<area shape="rect" id="node19" href="$checks_8h.html" title="checks.h" alt="" coords="701,333,775,360"/>
+<area shape="rect" id="node2" href="$viscosity_8h.html" title="viscosity.h" alt="" coords="1199,109,1290,136"/>
+<area shape="rect" id="node3" href="$timeintegration_8h.html" title="timeintegration.h" alt="" coords="983,184,1117,211"/>
+<area shape="rect" id="node8" href="$parameter_8h.html" title="parameter.h" alt="" coords="1355,333,1457,360"/>
+<area shape="rect" id="node9" href="$miluph_8h.html" title="miluph.h" alt="" coords="741,259,820,285"/>
+<area shape="rect" id="node20" href="$kernel_8h.html" title="kernel.h" alt="" coords="1577,259,1651,285"/>
+<area shape="rect" id="node23" href="$soundspeed_8h.html" title="soundspeed.h" alt="" coords="1827,109,1939,136"/>
+<area shape="rect" id="node24" href="$config__parameter_8h.html" title="config_parameter.h" alt="" coords="1331,184,1481,211"/>
+<area shape="rect" id="node16" href="$cuda__utils_8h.html" title="cuda_utils.h" alt="" coords="5,333,105,360"/>
+<area shape="rect" id="node17" href="$io_8h.html" title="io.h" alt="" coords="936,333,983,360"/>
+<area shape="rect" id="node21" href="$extrema_8h.html" title="extrema.h" alt="" coords="1361,259,1451,285"/>
+<area shape="rect" id="node22" href="$sinking_8h.html" title="sinking.h" alt="" coords="1256,259,1337,285"/>
+<area shape="rect" id="node19" href="$checks_8h.html" title="checks.h" alt="" coords="741,333,820,360"/>
 </map>

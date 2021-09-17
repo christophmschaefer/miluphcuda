@@ -1,7 +1,7 @@
 <map id="calculate_all_eigenvalues" name="calculate_all_eigenvalues">
-<area shape="rect" id="node2" href="$linalg_8cu.html#a4dafeaf0a8b28945534511113dc0b7bf" title="max_Matrix" alt="" coords="234,5,325,32"/>
-<area shape="rect" id="node3" href="$linalg_8cu.html#a4645103d033d7dc5c15618754fad7e04" title="rotate_matrix" alt="" coords="230,56,329,83"/>
-<area shape="rect" id="node4" href="$linalg_8cu.html#abdaad85f464e14306a632d3bfbcaaf3b" title="identity_matrix" alt="" coords="226,107,333,133"/>
-<area shape="rect" id="node5" href="$linalg_8cu.html#a8e3167823205861c3e20313b183e60e4" title="multiply_matrix" alt="" coords="224,157,335,184"/>
-<area shape="rect" id="node6" href="$linalg_8cu.html#a7bfd4dc8feccfdf93b17adf078b728a3" title="copy_matrix" alt="" coords="233,208,326,235"/>
+<area shape="rect" id="node2" href="$linalg_8cu.html#a4dafeaf0a8b28945534511113dc0b7bf" title="max_Matrix" alt="" coords="257,5,357,32"/>
+<area shape="rect" id="node3" href="$linalg_8cu.html#a4645103d033d7dc5c15618754fad7e04" title="rotate_matrix" alt="" coords="252,56,363,83"/>
+<area shape="rect" id="node4" href="$linalg_8cu.html#abdaad85f464e14306a632d3bfbcaaf3b" title="identity_matrix" alt="" coords="246,107,369,133"/>
+<area shape="rect" id="node5" href="$linalg_8cu.html#a8e3167823205861c3e20313b183e60e4" title="multiply_matrix" alt="" coords="244,157,371,184"/>
+<area shape="rect" id="node6" href="$linalg_8cu.html#a7bfd4dc8feccfdf93b17adf078b728a3" title="copy_matrix" alt="" coords="256,208,359,235"/>
 </map>
