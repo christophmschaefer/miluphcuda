@@ -1,51 +1,52 @@
 <map id="main" name="main">
-<area shape="rect" id="node2" href="$miluph_8cu.html#a1ad940455be56209415d328d78622715" title="usage" alt="" coords="175,288,236,315"/>
-<area shape="rect" id="node3" href="$little__helpers_8cu.html#af675374954cdabdf63d036fe3c12d348" title="signal_handler" alt="" coords="147,339,264,365"/>
-<area shape="rect" id="node4" href="$device__tools_8cu.html#a172be47d064fb8a136950d979240d87b" title="printfDeviceInformation" alt="" coords="116,389,295,416"/>
-<area shape="rect" id="node6" href="$miluph_8cu.html#aa601b44445ec30a1a67517a7e03e3ac1" title="format_information" alt="" coords="131,440,280,467"/>
-<area shape="rect" id="node7" href="$miluph_8cu.html#ae1b43c7b6462cfd16d879de2e2df4a5d" title="print_compile_information" alt="" coords="108,491,303,517"/>
-<area shape="rect" id="node8" href="$rk2adaptive_8cu.html#a8d37d229e9c2b5972c19177be715137b" title="Runge Kutta 2nd order integrator with adaptive timestep. " alt="" coords="155,920,256,947"/>
-<area shape="rect" id="node34" href="$euler_8cu.html#ab5588f9c6592f89ee9f4f6b1d79e7d23" title="euler" alt="" coords="178,541,233,568"/>
-<area shape="rect" id="node36" href="$predictor__corrector_8cu.html#aad03bc1ec5cfee88ac62bfd7f63a7643" title="predictor_corrector" alt="" coords="133,869,278,896"/>
-<area shape="rect" id="node39" href="$coupled__heun__rk4__sph__nbody_8cu.html#a3e3b6a1b7380d7136f6537473e8fa06b" title="heun_rk4" alt="" coords="164,621,247,648"/>
-<area shape="rect" id="node40" href="$predictor__corrector__euler_8cu.html#a55e13bd2d6559d856e36cee04c399915" title="predictor_corrector\l_euler" alt="" coords="133,677,278,718"/>
-<area shape="rect" id="node41" href="$io_8cu.html#a5ec360b371f7ac6d5f2cbba38ba5fdd1" title="Reading the material properties using libconfig. " alt="" coords="132,971,279,997"/>
-<area shape="rect" id="node42" href="$io_8cu.html#aa2816e51a2a9737be6ade00f28d8412b" title="clear_performance_file" alt="" coords="119,1021,291,1048"/>
-<area shape="rect" id="node43" href="$memory__handling_8cu.html#ae9bfe8253c19cec99b9895c85986bb03" title="init_allocate_memory" alt="" coords="123,1072,287,1099"/>
-<area shape="rect" id="node44" href="$io_8cu.html#ace12b259be57c81c83b0cb51acc2a9be" title="read_particles_from_file" alt="" coords="115,1123,295,1149"/>
-<area shape="rect" id="node45" href="$io_8cu.html#aef0cd6aaa0444c426650bcea58b03b20" title="init_values" alt="" coords="159,1173,252,1200"/>
-<area shape="rect" id="node46" href="$rk2adaptive_8cu.html#ad41c9afc6ce2b6ec216161b61768bcbb" title="print_rk2_adaptive\l_settings" alt="" coords="133,1225,277,1266"/>
-<area shape="rect" id="node47" href="$memory__handling_8cu.html#a26059997f676bae5b6d9e6bda207131d" title="copy_particle_data\l_to_device" alt="" coords="133,1290,278,1331"/>
-<area shape="rect" id="node48" href="$io_8cu.html#a07ed6f675c3146b0fddf941b31f7615a" title="write_particles_to_file" alt="" coords="122,1356,289,1383"/>
-<area shape="rect" id="node49" href="$timeintegration_8cu.html#a85829c92f580c4ba75418f706a9b867f" title="timeIntegration" alt="" coords="144,1407,267,1433"/>
-<area shape="rect" id="node50" href="$memory__handling_8cu.html#ae66970ba9a8b4180f277c61e41e83a04" title="free_memory" alt="" coords="150,1457,261,1484"/>
-<area shape="rect" id="node5" href="$device__tools_8cu.html#a1d4e590d5ed3de8d5b87a04aae952725" title="_ConvertSMVer2Cores" alt="" coords="406,5,573,32"/>
-<area shape="rect" id="node9" href="$memory__handling_8cu.html#a83017b6658aa7eaf464e864932fc1b47" title="allocate_particles\l_memory" alt="" coords="421,614,558,655"/>
-<area shape="rect" id="node10" href="$memory__handling_8cu.html#a00388f6cb86dd667c058df18b8f7d3ea" title="copy_particles_immutables\l_device_to_device" alt="" coords="389,679,590,721"/>
-<area shape="rect" id="node11" href="$memory__handling_8cu.html#a320620af346b15f6f7da698b78548ac5" title="allocate_pointmass\l_memory" alt="" coords="415,745,564,786"/>
-<area shape="rect" id="node12" href="$memory__handling_8cu.html#ac4196d9a93284642b2ed484e0ac26391" title="copy_pointmass_immutables\l_device_to_device" alt="" coords="383,1182,596,1223"/>
-<area shape="rect" id="node13" href="$timeintegration_8cu.html#aacee04f8bf23d8594794f6952451678c" title="calculate_angular_momentum" alt="" coords="379,411,599,437"/>
-<area shape="rect" id="node14" href="$memory__handling_8cu.html#a3ae09c6f873144aeac3dd424fc56005d" title="copy_particles_variables\l_device_to_device" alt="" coords="398,1365,581,1406"/>
-<area shape="rect" id="node15" href="$memory__handling_8cu.html#a6762d0c5bec9943020b8f70c0211f9cb" title="copy_pointmass_variables\l_device_to_device" alt="" coords="392,1299,587,1341"/>
-<area shape="rect" id="node16" href="$rhs_8cu.html#aaa69e1e6250e714b978b8f83f260a28d" title="rightHandSide" alt="" coords="432,512,547,539"/>
-<area shape="rect" id="node17" href="$io_8cu.html#aeb07186d62049f2b5568dedb0264bdd2" title="copyToHostAndWriteToFile" alt="" coords="676,385,869,412"/>
-<area shape="rect" id="node19" href="$damage_8h.html#a21afcc6e2f3ce13ddaad8f60b8982f75" title="Limits the damage to what is supported by the number of activated flaws. " alt="" coords="719,563,827,589"/>
-<area shape="rect" id="node20" href="$rk2adaptive_8cu.html#a3a7a96c59b53a445b89f46dd54de7871" title="Limits the timestep by the CFL condition, with dt ~ sml/cs. " alt="" coords="408,1836,571,1863"/>
-<area shape="rect" id="node21" href="$rk2adaptive_8h.html#a50c5449bcb1aa80263db8a7f1f5b3260" title="Limits the timestep based on local forces/acceleration, with dt ~ sqrt(sml/a). " alt="" coords="695,1861,850,1888"/>
-<area shape="rect" id="node22" href="$rk2adaptive_8h.html#a15dded8dbb117ac6fe0bb4d81956c1d2" title="Limits the timestep based on the rate of damage change. " alt="" coords="689,1811,856,1837"/>
-<area shape="rect" id="node23" href="$memory__handling_8cu.html#a5d88d1ba1f3e7e4d44a43aa6f06c2311" title="copy_particles_derivatives\l_device_to_device" alt="" coords="391,1938,587,1979"/>
-<area shape="rect" id="node24" href="$memory__handling_8cu.html#ad1ed0ecd3f7be7d1b032da6b1fb4898e" title="copy_pointmass_derivatives\l_device_to_device" alt="" coords="385,2003,593,2045"/>
-<area shape="rect" id="node25" href="$memory__handling_8cu.html#aa5336b131f7abee34ab1147ba5217521" title="copy_gravitational\l_accels_device_to_device" alt="" coords="394,913,585,954"/>
-<area shape="rect" id="node26" href="$rk2adaptive_8cu.html#ae845fa1a6860cd81b051bf8efa13d2ae" title="integrateFirstStep" alt="" coords="421,1431,558,1457"/>
-<area shape="rect" id="node27" href="$rk2adaptive_8cu.html#a7fc5e6003a94d1b86a72334ff19a14ab" title="integrateSecondStep" alt="" coords="411,1633,568,1660"/>
-<area shape="rect" id="node28" href="$rk2adaptive_8cu.html#a6927b6b75fda2ade3605df5545a20c54" title="integrateThirdStep" alt="" coords="418,1684,561,1711"/>
-<area shape="rect" id="node29" href="$rk2adaptive_8cu.html#aa4e60801bdeec04da75b0dda529a1334" title="Post&#45;timestep error checks for rk2_adaptive. " alt="" coords="444,1735,535,1761"/>
-<area shape="rect" id="node30" href="$boundary_8cu.html#a44e4bfe25445a2670dad98922f1d2be3" title="BoundaryConditionsAfterIntegratorStep" alt="" coords="351,1785,628,1812"/>
-<area shape="rect" id="node31" href="$timeintegration_8cu.html#a78edde5c20a29ae558ad63db1c2749b5" title="afterIntegrationStep" alt="" coords="413,461,566,488"/>
-<area shape="rect" id="node32" href="$memory__handling_8cu.html#a98496f47800965844494c86dc0fe4923" title="free_particles_memory" alt="" coords="403,811,576,837"/>
-<area shape="rect" id="node33" href="$memory__handling_8cu.html#a0f9affd655eca13484593d5eeec73294" title="free_pointmass_memory" alt="" coords="397,861,582,888"/>
-<area shape="rect" id="node18" href="$pressure_8cu.html#a4c983e72593c81e8ad8c3da244750599" title="Calculates the pressure for all particles. " alt="" coords="917,385,1055,412"/>
-<area shape="rect" id="node35" href="$euler_8cu.html#ab7bf8e59141534c2e94cb115e33f1144" title="integrateEuler" alt="" coords="432,107,547,133"/>
-<area shape="rect" id="node37" href="$predictor__corrector_8cu.html#a4d2f2ba6819afac49231653ca3f0ca2a" title="setTimestep" alt="" coords="438,979,541,1005"/>
-<area shape="rect" id="node38" href="$predictor__corrector_8cu.html#a00599c504de772718a68607bf15c421d" title="PredictorStep" alt="" coords="435,1029,544,1056"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,1063,60,1089"/>
+<area shape="rect" id="node2" href="$io_8cu.html#aa2816e51a2a9737be6ade00f28d8412b" title=" " alt="" coords="119,200,291,227"/>
+<area shape="rect" id="node4" href="$memory__handling_8cu.html#a26059997f676bae5b6d9e6bda207131d" title=" " alt="" coords="133,497,278,538"/>
+<area shape="rect" id="node5" href="$euler_8cu.html#ab5588f9c6592f89ee9f4f6b1d79e7d23" title=" " alt="" coords="178,715,233,741"/>
+<area shape="rect" id="node14" href="$miluph_8cu.html#aa601b44445ec30a1a67517a7e03e3ac1" title=" " alt="" coords="131,613,280,640"/>
+<area shape="rect" id="node15" href="$memory__handling_8cu.html#ae66970ba9a8b4180f277c61e41e83a04" title=" " alt="" coords="150,563,261,589"/>
+<area shape="rect" id="node17" href="$coupled__heun__rk4__sph__nbody_8cu.html#a3e3b6a1b7380d7136f6537473e8fa06b" title=" " alt="" coords="164,816,247,843"/>
+<area shape="rect" id="node31" href="$memory__handling_8cu.html#ae9bfe8253c19cec99b9895c85986bb03" title=" " alt="" coords="123,765,287,792"/>
+<area shape="rect" id="node32" href="$io_8cu.html#aef0cd6aaa0444c426650bcea58b03b20" title=" " alt="" coords="159,664,252,691"/>
+<area shape="rect" id="node34" href="$io_8cu.html#a5ec360b371f7ac6d5f2cbba38ba5fdd1" title="Reading the material properties using libconfig." alt="" coords="132,975,279,1001"/>
+<area shape="rect" id="node35" href="$predictor__corrector_8cu.html#aad03bc1ec5cfee88ac62bfd7f63a7643" title=" " alt="" coords="133,1361,278,1388"/>
+<area shape="rect" id="node41" href="$predictor__corrector__euler_8cu.html#a55e13bd2d6559d856e36cee04c399915" title=" " alt="" coords="133,1026,278,1067"/>
+<area shape="rect" id="node42" href="$miluph_8cu.html#ae1b43c7b6462cfd16d879de2e2df4a5d" title=" " alt="" coords="108,1143,303,1169"/>
+<area shape="rect" id="node43" href="$rk2adaptive_8cu.html#ad41c9afc6ce2b6ec216161b61768bcbb" title=" " alt="" coords="133,1194,277,1235"/>
+<area shape="rect" id="node44" href="$device__tools_8cu.html#a172be47d064fb8a136950d979240d87b" title=" " alt="" coords="116,1260,295,1287"/>
+<area shape="rect" id="node45" href="$io_8cu.html#ace12b259be57c81c83b0cb51acc2a9be" title=" " alt="" coords="115,1311,295,1337"/>
+<area shape="rect" id="node46" href="$rk2adaptive_8cu.html#a8d37d229e9c2b5972c19177be715137b" title="Runge Kutta 2nd order integrator with adaptive timestep." alt="" coords="155,1092,256,1119"/>
+<area shape="rect" id="node47" href="$little__helpers_8cu.html#af675374954cdabdf63d036fe3c12d348" title=" " alt="" coords="147,1412,264,1439"/>
+<area shape="rect" id="node48" href="$timeintegration_8cu.html#a85829c92f580c4ba75418f706a9b867f" title=" " alt="" coords="144,1463,267,1489"/>
+<area shape="rect" id="node49" href="$miluph_8cu.html#a1ad940455be56209415d328d78622715" title=" " alt="" coords="175,1513,236,1540"/>
+<area shape="rect" id="node50" href="$io_8cu.html#a07ed6f675c3146b0fddf941b31f7615a" title=" " alt="" coords="122,1564,289,1591"/>
+<area shape="rect" id="node3" href="$io_8cu.html#a733680662d6a3823c31fa1471512f2b1" title=" " alt="" coords="380,5,541,32"/>
+<area shape="rect" id="node6" href="$timeintegration_8cu.html#a78edde5c20a29ae558ad63db1c2749b5" title=" " alt="" coords="384,1019,537,1045"/>
+<area shape="rect" id="node7" href="$timeintegration_8cu.html#aacee04f8bf23d8594794f6952451678c" title=" " alt="" coords="351,765,571,792"/>
+<area shape="rect" id="node8" href="$io_8cu.html#aeb07186d62049f2b5568dedb0264bdd2" title=" " alt="" coords="629,769,822,796"/>
+<area shape="rect" id="node10" href="$euler_8cu.html#ab7bf8e59141534c2e94cb115e33f1144" title=" " alt="" coords="403,157,518,184"/>
+<area shape="rect" id="node11" href="$rhs_8cu.html#aaa69e1e6250e714b978b8f83f260a28d" title=" " alt="" coords="403,613,518,640"/>
+<area shape="rect" id="node9" href="$pressure_8cu.html#a4c983e72593c81e8ad8c3da244750599" title="Calculates the pressure for all particles." alt="" coords="880,769,1017,796"/>
+<area shape="rect" id="node12" href="$gravity_8h.html#aca45c20940674a89aa043f2c4109ffc5" title=" " alt="" coords="636,585,815,626"/>
+<area shape="rect" id="node13" href="$damage_8h.html#a21afcc6e2f3ce13ddaad8f60b8982f75" title="Limits the damage to what is supported by the number of activated flaws." alt="" coords="671,917,779,944"/>
+<area shape="rect" id="node16" href="$aneos_8cu.html#a2d74db1bec8d1ed600601eeacb1e9067" title="Frees (global) ANEOS memory on the host." alt="" coords="383,56,539,83"/>
+<area shape="rect" id="node18" href="$memory__handling_8cu.html#a83017b6658aa7eaf464e864932fc1b47" title=" " alt="" coords="392,1369,529,1410"/>
+<area shape="rect" id="node19" href="$memory__handling_8cu.html#a320620af346b15f6f7da698b78548ac5" title=" " alt="" coords="386,1070,535,1111"/>
+<area shape="rect" id="node20" href="$memory__handling_8cu.html#aa5336b131f7abee34ab1147ba5217521" title=" " alt="" coords="365,1135,556,1177"/>
+<area shape="rect" id="node21" href="$memory__handling_8cu.html#a00388f6cb86dd667c058df18b8f7d3ea" title=" " alt="" coords="360,1201,561,1242"/>
+<area shape="rect" id="node22" href="$coupled__heun__rk4__sph__nbody_8cu.html#a61faa2ac00b82cca31161bf20edc3ee3" title=" " alt="" coords="385,309,536,336"/>
+<area shape="rect" id="node23" href="$memory__handling_8cu.html#a98496f47800965844494c86dc0fe4923" title=" " alt="" coords="374,1267,547,1293"/>
+<area shape="rect" id="node24" href="$memory__handling_8cu.html#a0f9affd655eca13484593d5eeec73294" title=" " alt="" coords="368,1317,553,1344"/>
+<area shape="rect" id="node25" href="$coupled__heun__rk4__sph__nbody_8cu.html#a7a9c50894f9b9ecf1734d362f04ab75d" title=" " alt="" coords="387,360,535,387"/>
+<area shape="rect" id="node26" href="$coupled__heun__rk4__sph__nbody_8h.html#a0cb2ea539e9f6322c5cbb6fb9c70c651" title=" " alt="" coords="357,411,564,437"/>
+<area shape="rect" id="node27" href="$rk4__pointmass_8cu.html#ac9143c681e44a7fffe9e864a23f4ce43" title=" " alt="" coords="410,715,511,741"/>
+<area shape="rect" id="node30" href="$coupled__heun__rk4__sph__nbody_8cu.html#a419e90be993e7d78882e7c299ef3b187" title=" " alt="" coords="390,461,531,488"/>
+<area shape="rect" id="node28" href="$memory__handling_8cu.html#ac4196d9a93284642b2ed484e0ac26391" title=" " alt="" coords="619,1241,832,1282"/>
+<area shape="rect" id="node29" href="$memory__handling_8cu.html#a6762d0c5bec9943020b8f70c0211f9cb" title=" " alt="" coords="628,1579,823,1621"/>
+<area shape="rect" id="node33" href="$config__parameter_8cu.html#af4180e83b791f21f9663f2017fa159ca" title=" " alt="" coords="373,107,549,133"/>
+<area shape="rect" id="node36" href="$memory__handling_8cu.html#a3ae09c6f873144aeac3dd424fc56005d" title=" " alt="" coords="369,1638,552,1679"/>
+<area shape="rect" id="node37" href="$predictor__corrector_8cu.html#abcb531b2ba4bdace5f2f8d50ad8a39dc" title=" " alt="" coords="405,1856,516,1883"/>
+<area shape="rect" id="node38" href="$predictor__corrector_8cu.html#a00599c504de772718a68607bf15c421d" title=" " alt="" coords="406,1907,515,1933"/>
+<area shape="rect" id="node39" href="$predictor__corrector_8h.html#a991109d335da5f924146ebcc8c7ed5f2" title=" " alt="" coords="377,2008,544,2035"/>
+<area shape="rect" id="node40" href="$predictor__corrector_8cu.html#a4d2f2ba6819afac49231653ca3f0ca2a" title=" " alt="" coords="409,1805,512,1832"/>
 </map>

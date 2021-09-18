@@ -1,6 +1,7 @@
 <map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/xsph.h" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/xsph.h">
-<area shape="rect" id="node2" href="$config__parameter_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/config\l_parameter.cu" alt="" coords="5,109,212,180"/>
-<area shape="rect" id="node3" href="$rhs_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/rhs.cu" alt="" coords="236,117,443,173"/>
-<area shape="rect" id="node4" href="$timeintegration_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/timeintegration.cu" alt="" coords="467,117,734,173"/>
-<area shape="rect" id="node5" href="$xsph_8cu.html" title="/home/schaefer/src\l/miluphcuda_documentation\l/miluphcuda_main/xsph.cu" alt="" coords="759,117,965,173"/>
+<area shape="rect" id="node1" title=" " alt="" coords="367,5,573,61"/>
+<area shape="rect" id="node2" href="$config__parameter_8cu.html" title=" " alt="" coords="5,109,212,180"/>
+<area shape="rect" id="node3" href="$rhs_8cu.html" title=" " alt="" coords="236,117,443,173"/>
+<area shape="rect" id="node4" href="$timeintegration_8cu.html" title=" " alt="" coords="467,117,734,173"/>
+<area shape="rect" id="node5" href="$xsph_8cu.html" title=" " alt="" coords="759,117,965,173"/>
 </map>

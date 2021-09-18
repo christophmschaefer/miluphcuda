@@ -1,5 +1,6 @@
 <map id="init_values" name="init_values">
-<area shape="rect" id="node2" href="$config__parameter_8cu.html#af4180e83b791f21f9663f2017fa159ca" title="transferMaterialsToGPU" alt="" coords="147,35,323,61"/>
-<area shape="rect" id="node3" href="$io_8cu.html#a00eed732ff15367664201d10fed171ba" title="set_integration_parameters" alt="" coords="371,5,573,32"/>
-<area shape="rect" id="node4" href="$aneos_8cu.html#a1c9b9c241d3f63c75390dede3b352df0" title="Initializes EoS lookup table for one material. " alt="" coords="395,57,549,98"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,42,99,69"/>
+<area shape="rect" id="node2" href="$config__parameter_8cu.html#af4180e83b791f21f9663f2017fa159ca" title=" " alt="" coords="147,42,323,69"/>
+<area shape="rect" id="node3" href="$aneos_8cu.html#a1c9b9c241d3f63c75390dede3b352df0" title="Initializes EoS lookup table for one material." alt="" coords="395,5,549,47"/>
+<area shape="rect" id="node4" href="$io_8cu.html#a00eed732ff15367664201d10fed171ba" title=" " alt="" coords="371,71,573,98"/>
 </map>

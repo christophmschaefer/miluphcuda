@@ -1,4 +1,5 @@
 <map id="calculateSoundSpeed" name="calculateSoundSpeed">
-<area shape="rect" id="node2" href="$aneos_8cu.html#ad5dd6ed2014d005b54212cef5b69ae7f" title="Find index in ordered array. " alt="" coords="246,5,345,32"/>
-<area shape="rect" id="node3" href="$aneos_8cu.html#a56741449f1dee1f54d0a6f5f2e897467" title="Bilinear interpolation of lookup table values. " alt="" coords="215,57,376,98"/>
+<area shape="rect" id="node1" title="Compute sound speed depending on equation of state." alt="" coords="5,35,167,61"/>
+<area shape="rect" id="node2" href="$aneos_8cu.html#ad5dd6ed2014d005b54212cef5b69ae7f" title="Find index in ordered array." alt="" coords="246,5,345,32"/>
+<area shape="rect" id="node3" href="$aneos_8cu.html#a56741449f1dee1f54d0a6f5f2e897467" title="Bilinear interpolation of lookup table values." alt="" coords="215,57,376,98"/>
 </map>

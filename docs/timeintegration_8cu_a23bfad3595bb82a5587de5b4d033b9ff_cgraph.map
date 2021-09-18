@@ -1,4 +1,5 @@
 <map id="initIntegration" name="initIntegration">
-<area shape="rect" id="node2" href="$timeintegration_8cu.html#aacee04f8bf23d8594794f6952451678c" title="calculate_angular_momentum" alt="" coords="168,5,388,32"/>
-<area shape="rect" id="node3" href="$soundspeed_8cu.html#a2894dc2df81383ee16d93d76da189e4b" title="Initialize sound speed for all materials. " alt="" coords="199,56,357,83"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,120,57"/>
+<area shape="rect" id="node2" href="$timeintegration_8cu.html#aacee04f8bf23d8594794f6952451678c" title=" " alt="" coords="168,5,388,32"/>
+<area shape="rect" id="node3" href="$soundspeed_8cu.html#a2894dc2df81383ee16d93d76da189e4b" title="Initialize sound speed for all materials." alt="" coords="199,56,357,83"/>
 </map>

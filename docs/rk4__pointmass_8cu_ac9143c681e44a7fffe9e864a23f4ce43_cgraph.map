@@ -1,10 +1,11 @@
 <map id="rk4_nbodies" name="rk4_nbodies">
-<area shape="rect" id="node2" href="$memory__handling_8cu.html#ac4196d9a93284642b2ed484e0ac26391" title="copy_pointmass_immutables\l_device_to_device" alt="" coords="155,5,368,47"/>
-<area shape="rect" id="node3" href="$memory__handling_8cu.html#a6762d0c5bec9943020b8f70c0211f9cb" title="copy_pointmass_variables\l_device_to_device" alt="" coords="164,71,359,112"/>
-<area shape="rect" id="node4" href="$rk4__pointmass_8cu.html#a9b92bc19490d57bf918cb46b4a810547" title="rhs_pointmass" alt="" coords="203,137,320,163"/>
-<area shape="rect" id="node5" href="$memory__handling_8cu.html#ad1ed0ecd3f7be7d1b032da6b1fb4898e" title="copy_pointmass_derivatives\l_device_to_device" alt="" coords="157,188,365,229"/>
-<area shape="rect" id="node6" href="$rk4__pointmass_8cu.html#a609fb9c59254f0c222aea6915775e7be" title="rk4_integrateFirstStep" alt="" coords="179,254,344,281"/>
-<area shape="rect" id="node7" href="$rk4__pointmass_8cu.html#a43c91886625271be8cad70bb6e2422b2" title="rk4_integrateSecondStep" alt="" coords="169,305,354,331"/>
-<area shape="rect" id="node8" href="$rk4__pointmass_8cu.html#aeba4b1c9d1763999d42b3da543e67868" title="rk4_integrateThirdStep" alt="" coords="176,355,347,382"/>
-<area shape="rect" id="node9" href="$rk4__pointmass_8cu.html#af22612d5e2a1e625d619bb99d0925f75" title="rk4_integrateFourthStep" alt="" coords="172,406,351,433"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,227,107,254"/>
+<area shape="rect" id="node2" href="$memory__handling_8cu.html#ad1ed0ecd3f7be7d1b032da6b1fb4898e" title=" " alt="" coords="157,5,365,47"/>
+<area shape="rect" id="node3" href="$memory__handling_8cu.html#ac4196d9a93284642b2ed484e0ac26391" title=" " alt="" coords="155,71,368,112"/>
+<area shape="rect" id="node4" href="$memory__handling_8cu.html#a6762d0c5bec9943020b8f70c0211f9cb" title=" " alt="" coords="164,136,359,177"/>
+<area shape="rect" id="node5" href="$rk4__pointmass_8cu.html#a9b92bc19490d57bf918cb46b4a810547" title=" " alt="" coords="203,202,320,229"/>
+<area shape="rect" id="node6" href="$rk4__pointmass_8cu.html#a609fb9c59254f0c222aea6915775e7be" title=" " alt="" coords="179,253,344,279"/>
+<area shape="rect" id="node7" href="$rk4__pointmass_8cu.html#af22612d5e2a1e625d619bb99d0925f75" title=" " alt="" coords="172,303,351,330"/>
+<area shape="rect" id="node8" href="$rk4__pointmass_8cu.html#a43c91886625271be8cad70bb6e2422b2" title=" " alt="" coords="169,354,354,381"/>
+<area shape="rect" id="node9" href="$rk4__pointmass_8cu.html#aeba4b1c9d1763999d42b3da543e67868" title=" " alt="" coords="176,405,347,431"/>
 </map>
