@@ -725,6 +725,11 @@ __global__ void integrateFirstStep(void)
 #if INTEGRATE_ENERGY
         rk[RKFIRST].e[i] = rk[RKSTART].e[i] + dt * B21 * rk[RKSTART].dedt[i];
 #endif
+
+#if DISPH
+        rk[RKFIRST].DISPH_Y[i] = rk[RKSTART].DISPH_Y[i] + dt * B21 * rk[RKSTART].dDISPH_Ydt[i];
+#endif
+
 #if FRAGMENTATION
         rk[RKFIRST].d[i] = rk[RKSTART].d[i] + dt * B21 * rk[RKSTART].dddt[i];
         rk[RKFIRST].numActiveFlaws[i] = rk[RKSTART].numActiveFlaws[i];
@@ -826,6 +831,11 @@ __global__ void integrateSecondStep(void)
 #if INTEGRATE_ENERGY
         rk[RKSECOND].e[i] = rk[RKSTART].e[i] + dt * (B31 * rk[RKSTART].dedt[i] + B32 * rk[RKFIRST].dedt[i]);
 #endif
+
+#if DISPH
+        rk[RKSECOND].DISPH_Y[i] = rk[RKSTART].DISPH_Y[i] + dt * (B31 * rk[RKSTART].dDISPH_Ydt[i] + B32 * rk[RKFIRST].dDISPH_Ydt[i]);
+#endif
+
 #if FRAGMENTATION
         rk[RKSECOND].d[i] = rk[RKSTART].d[i] + dt * (B31 * rk[RKSTART].dddt[i] + B32 * rk[RKFIRST].dddt[i]);
         rk[RKSECOND].numActiveFlaws[i] = rk[RKFIRST].numActiveFlaws[i];
@@ -950,6 +960,16 @@ __global__ void integrateThirdStep(void)
         p.dedt[i] = 1./6.* (C1 * rk[RKSTART].dedt[i]
                + C2 * rk[RKFIRST].dedt[i]
                + C3 * rk[RKSECOND].dedt[i]);
+#endif
+
+#if DISPH
+        p.DISPH_Y[i] = rk[RKSTART].DISPH_Y[i] + dt/6.0 *
+            (  c1 * rk[RKSTART].dDISPH_Ydt[i]
+               + c2 * rk[RKFIRST].dDISPH_Ydt[i]
+               + c3 * rk[RKSECOND].dDISPH_Ydt[i]);
+        p.DISPH_Y[i] = 1./6.* (c1 * rk[RKSTART].dDISPH_Ydt[i]
+               + c2 * rk[RKFIRST].dDISPH_Ydt[i]
+               + c3 * rk[RKSECOND].dDISPH_Ydt[i]);
 #endif
 
 #if PALPHA_POROSITY
@@ -1464,7 +1484,7 @@ void print_rk2_adaptive_settings()
     fprintf(stdout, "    no output times: %d\n", numberOfTimesteps);
     fprintf(stdout, "    duration between output times: %g\n", timePerStep);
     fprintf(stdout, "\n");
-    fprintf(stdout, "    first timestep: %g\n", param.firsttimestep);
+    fprintf(stdout, "    first timestep from cmd-line: %g\n", param.firsttimestep);
     fprintf(stdout, "    max allowed timestep: %g\n", param.maxtimestep);
     fprintf(stdout, "\n");
     fprintf(stdout, "    pre-timestep checks to limit timestep in advance:\n");

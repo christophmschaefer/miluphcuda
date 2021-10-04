@@ -130,6 +130,11 @@ struct Particle {
     double *p; ///< the pressure of the particle
     double *e; ///< the specific internal energy of the particle
 
+#if DISPH
+    double *DISPH_rho; ///< density in DISPH
+    double *DISPH_Y; ///< another basic quantity of DISPH
+#endif
+
 #if MORE_OUTPUT
     double *p_min; ///< the smallest pressure that the particle is exerted during the simulation
     double *p_max; ///< the highest pressure that the particle is exerted during the simulation
@@ -142,6 +147,10 @@ struct Particle {
 #endif
 #if INTEGRATE_ENERGY
     double *dedt; ///< the time derivative of the specific internal energy of the particle
+#endif
+
+#if DISPH
+    double *dDISPH_Ydt; ///< derivative of Y
 #endif
 
 #if NAVIER_STOKES
@@ -178,7 +187,7 @@ struct Particle {
 #endif
 #endif
 
-#if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH || INTEGRATE_ENERGY)
+#if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH || INTEGRATE_ENERGY || DISPH)
     double *curlv; ///< \f$\nabla \times \vec{v}\f$
     double *divv; ///< \f$ \nabla \cdot \vec{v} \f$
 #endif

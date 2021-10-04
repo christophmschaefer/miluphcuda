@@ -1297,11 +1297,17 @@ void read_particles_from_file(File inputFile)
                     tab_endings++;
                 } else {
                     fprintf(stderr, "ERROR in input file, particle no. %d. End of line not reached.\n", i+1);
+                    if (param.restart) {
+                        fprintf(stderr, "restart switch was set on command line (-r, --restart). Was this intended?\n");
+                    }
                     exit(1);
                 }
             }
             else {
                 fprintf(stderr, "ERROR in input file, particle no. %d. Expected end of line but found something else...\n", i+1);
+                if (param.restart) {
+                    fprintf(stderr, "restart switch was set on command line (-r, --restart). Was this intended?\n");
+                }
                 exit(1);
             }
 
@@ -1376,7 +1382,7 @@ void read_particles_from_file(File inputFile)
             } else {
                 pointmass_host.feels_particles[i] = atoi(iotmp);
             }
-            printf("Mass no %d feels particles (no 0/ yes 1) %d\n", i, pointmass_host.feels_particles[i]);
+            printf("Mass no %d feels particles (0/1): %d\n", i, pointmass_host.feels_particles[i]);
             columns++;
         }
 
@@ -1442,6 +1448,11 @@ void write_particles_to_file(File file) {
     hid_t x_id, v_id, m_id, rho_id, e_id, sml_id, noi_id, mtype_id;
     hid_t a_id;
     hid_t g_a_id;
+
+#if DISPH
+    hid_t DISPH_Y_id, DISPH_rho_id;
+#endif
+
 #if MORE_ANEOS_OUTPUT
     hid_t aneos_T_id, aneos_cs_id, aneos_entropy_id, aneos_phase_flag_id;
 #endif
@@ -1540,10 +1551,21 @@ void write_particles_to_file(File file) {
 #endif
 #endif
             fprintf(file.data, "%e\t", p_host.m[i]);
+
+#if DISPH
+            fprintf(file.data, "%e\t", p_host.DISPH_rho[i]);
+#else
             fprintf(file.data, "%e\t", p_host.rho[i]);
+#endif
+
 #if INTEGRATE_ENERGY
             fprintf(file.data, "%e\t", p_host.e[i]);
 #endif
+
+#if DISPH
+            fprintf(file.data, "%e\t", p_host.DISPH_Y[i]);
+#endif
+
             fprintf(file.data, "%.6le\t", p_host.h[i]);
             fprintf(file.data, "%d\t", p_host.noi[i]);
             fprintf(file.data, "%d\t", p_host.materialId[i]);
@@ -1682,7 +1704,7 @@ void write_particles_to_file(File file) {
         }
     totalDL = sqrt(totalDL);
     totalBL = sqrt(totalBL);
-#endif // GRAVITATINT_POINT_MASSES
+#endif // GRAVITATING_POINT_MASSES
 
     totalkineticenergy *= 0.5;
     totalp = totalpx*totalpx;
@@ -2081,6 +2103,17 @@ void write_particles_to_file(File file) {
         status = H5Dwrite(m_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(m_id);
 
+ #if DISPH
+        /* DISPH_density */
+        DISPH_rho_id = H5Dcreate2(file_id, "/DISPH_rho", H5T_NATIVE_DOUBLE, dataspace_id,
+                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        for (i = 0; i < numberOfParticles; i++)
+            x[i] = p_host.DISPH_rho[i];
+
+        status = H5Dwrite(DISPH_rho_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(DISPH_rho_id);
+ #else
+
         /* density */
         rho_id = H5Dcreate2(file_id, "/rho", H5T_NATIVE_DOUBLE, dataspace_id,
                 H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -2089,7 +2122,7 @@ void write_particles_to_file(File file) {
 
         status = H5Dwrite(rho_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(rho_id);
-
+#endif
         /* energy */
         e_id = H5Dcreate2(file_id, "/e", H5T_NATIVE_DOUBLE, dataspace_id,
                 H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -2098,6 +2131,19 @@ void write_particles_to_file(File file) {
 
         status = H5Dwrite(e_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(e_id);
+
+#if DISPH
+
+            /* DISPH_Y */
+            DISPH_Y_id = H5Dcreate2(file_id, "/DISPH_Y", H5T_NATIVE_DOUBLE, dataspace_id,
+                    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+            for (i = 0; i < numberOfParticles; i++)
+                x[i] = p_host.DISPH_Y[i];
+
+            status = H5Dwrite(DISPH_Y_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+            status = H5Dclose(DISPH_Y_id);
+ #endif
+
 
 #if MORE_ANEOS_OUTPUT
         // compute ANEOS quantities
@@ -2111,10 +2157,10 @@ void write_particles_to_file(File file) {
             if( g_eos_is_aneos[j] == TRUE ) {
                 aneos_i_rho = array_index_host(p_host.rho[i], g_aneos_rho[j], g_aneos_n_rho[j]);
                 aneos_i_e = array_index_host(p_host.e[i], g_aneos_e[j], g_aneos_n_e[j]);
-                x_aneos_T[i] = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_T[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j]);
-                x_aneos_cs[i] = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_cs[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j]);
-                x_aneos_entropy[i] = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_entropy[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j]);
-                x_aneos_phase_flag[i] = discrete_value_table_lookup_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_phase_flag[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j]);
+                x_aneos_T[i] = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_T[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
+                x_aneos_cs[i] = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_cs[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
+                x_aneos_entropy[i] = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_entropy[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
+                x_aneos_phase_flag[i] = discrete_value_table_lookup_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_phase_flag[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
             }
             else {
                 x_aneos_T[i] = -1.0;
@@ -2993,6 +3039,11 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
 #endif
     cudaVerify(cudaMemcpy(p_host.m, p_device.m, memorySizeForTree, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.depth, p_device.depth, memorySizeForInteractions, cudaMemcpyDeviceToHost));
+
+#if DISPH
+    cudaVerify(cudaMemcpy(p_host.DISPH_rho, p_device.DISPH_rho, memorySizeForParticles, cudaMemcpyDeviceToHost));
+#endif
+
     cudaVerify(cudaMemcpy(p_host.rho, p_device.rho, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #if INTEGRATE_DENSITY
     cudaVerify(cudaMemcpy(p_host.drhodt, p_device.drhodt, memorySizeForParticles, cudaMemcpyDeviceToHost));
@@ -3041,6 +3092,12 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     cudaVerify(cudaMemcpy(p_host.e, p_device.e, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.dedt, p_device.dedt, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #endif
+
+#if DISPH
+    cudaVerify(cudaMemcpy(p_host.DISPH_Y, p_device.DISPH_Y, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.dDISPH_Ydt, p_device.dDISPH_Ydt, memorySizeForParticles, cudaMemcpyDeviceToHost));
+#endif
+
 #if JC_PLASTICITY
     cudaVerify(cudaMemcpy(p_host.ep, p_device.ep, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.T, p_device.T, memorySizeForParticles, cudaMemcpyDeviceToHost));

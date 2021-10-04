@@ -30,6 +30,7 @@
 #include "pressure.h"
 #include "linalg.h"
 #include "viscosity.h"
+#include "DISPH_pressure.h"
 
 
 
@@ -110,6 +111,10 @@ __global__ void internalForces(int *interactions) {
     double dedt;
 #endif
 
+#if DISPH
+    double dDISPH_Ydt;
+#endif
+
     double dvx;
 #if DIM > 1
     double dvy;
@@ -164,6 +169,11 @@ __global__ void internalForces(int *interactions) {
 #if INTEGRATE_ENERGY
         dedt = 0;
 #endif
+
+#if DISPH
+        dDISPH_Ydt = 0.0;
+#endif
+
 #if INTEGRATE_SML
         p.dhdt[i] = 0.0;
 #endif
@@ -225,6 +235,11 @@ __global__ void internalForces(int *interactions) {
 #if INTEGRATE_ENERGY
         p.dedt[i] = 0.0;
 #endif
+
+#if DISPH
+        p.dDISPH_Ydt[i] = 0.0;
+#endif
+
 #if INTEGRATE_SML
         p.dhdt[i] = 0.0;
 #endif
@@ -610,6 +625,31 @@ __global__ void internalForces(int *interactions) {
                 }
             }
 #else // NOT SOLID
+
+
+#if DISPH // has different eq. of motion
+
+    double Y_p_i, Y_p_j;   
+    // check if p is approaching zero in Y/p
+    if (fabs(p.p[i])<1.0e-20){
+        matId = p_rhs.materialId[i];
+        Y_p_i = p.m[i]/ matRho0[matId];
+    } else{
+        Y_p_i = p.DISPH_Y[i]/p.p[i];
+    }
+    if (fabs(p.p[j])<1.0e-20) {
+        matId = p_rhs.materialId[j];
+        Y_p_j = p.m[j]/ matRho0[matId];
+    } else{
+        Y_p_j = p.DISPH_Y[j]/p.p[j];
+    }
+
+    for (d = 0; d < DIM; d++) {
+        accelsj[d] =  -1/p.m[i] * (p.DISPH_Y[j]*Y_p_i + p.DISPH_Y[i]*Y_p_j) * dWdx[d];
+        accels[d] += accelsj[d];
+    }
+#else
+
 # if (SPH_EQU_VERSION == 1)
 #  if SML_CORRECTION
             for (d = 0; d < DIM; d++) {
@@ -635,6 +675,7 @@ __global__ void internalForces(int *interactions) {
             }
 #  endif
 # endif // SPH_EQU_VERSION
+#endif // DISPH
 #endif // SOLID
 
 #if NAVIER_STOKES
@@ -735,6 +776,17 @@ __global__ void internalForces(int *interactions) {
 #endif // 0 deactivation from cms 2019-07-02
 
 # else // dedt for non-solid
+
+# if DISPH // different eq. of energy
+            dedt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.m[i]/p.p[i] * dWdx[0] * dvx;
+    #  if DIM > 1
+                dedt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.m[i]/p.p[i] * dWdx[1] * dvy;
+    #  endif
+    #  if DIM > 2
+                dedt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.m[i]/p.p[i] * dWdx[2] * dvz;
+    #  endif
+# else
+
             // remember, accelsj  are accelerations by particle j, and dv = v_i - v_j
             dedt += 0.5 * accelsj[0] * -dvx;
 #  if DIM > 1
@@ -812,6 +864,108 @@ __global__ void internalForces(int *interactions) {
 #endif // INTEGRATE_ENERGY
 
 
+
+
+
+// DISPH eq. for Y
+#if DISPH
+    register double eta, mu, p1, p2;
+    matId = p_rhs.materialId[i];
+        if (EOS_TYPE_MURNAGHAN == matEOS[matId]) {
+            dDISPH_Ydt = (matN[matId] + matBulkmodulus[matId]/p.p[i] - 1) * p.m[i]*dedt;
+        }
+        if (EOS_TYPE_IGNORE == matEOS[matId] || matId == EOS_TYPE_IGNORE) {
+            continue;
+        }
+        if (EOS_TYPE_POLYTROPIC_GAS == matEOS[matId]) {
+            dDISPH_Ydt = (matPolytropicGamma[matId] - 1) * p.m[i]*dedt;
+
+        } else if (EOS_TYPE_IDEAL_GAS == matEOS[matId]) {
+            dDISPH_Ydt = (matPolytropicGamma[matId] - 1) * p.m[i]*dedt;
+
+        } else if (EOS_TYPE_LOCALLY_ISOTHERMAL_GAS == matEOS[matId]) {
+            dDISPH_Ydt = 0.0;
+
+        } else if (EOS_TYPE_ISOTHERMAL_GAS == matEOS[matId]) {
+            /* this is pure molecular hydrogen at 10 K */
+            dDISPH_Ydt = 0.0;
+
+        } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
+            T_r = p.DISPH_rho[i];
+            T_u = p.e[i];
+            eta = rho / matTillRho0[matId];
+            mu = eta - 1.0;
+            T_a = matTilla[matId];
+            T_b = matTillb[matId];
+            T_A = matTillA[matId];
+            T_B = matTillB[matId];
+            T_alpha = matTillAlpha[matId];
+            T_beta = matTillBeta[matId];
+            T_r0 = matTillRho0[matId];
+            T_u0 = matTillE0[matId];
+            T_Y = T_u0*eta*eta;
+            T_X = p.e[i]/(T_Y) + 1;
+            T_eb = exp(-matTillBeta[matId]*(matTillRho0[matId]/rho -1.0))
+            T_ea = exp(-matTillAlpha[matId] * (pow(matTillRho0[matId]/rho-1.0, 2)))
+
+            if (eta < matRhoLimit[matId] && e < matTillEcv[matId]) {
+                p.p[i] = 0.0;
+            } else {
+                if (p.e[i] <= matTillEiv[matId] || eta >= 1.0) {
+                    dDISPH_Ydt = (matTillb[matId]*p.e[i]/(T_X*T_X*T_Y)*(2*p.e[i]/p.p[i] - 1)
+                                + T_A*(1/p.p[i] - mu/(p.DISPH_rho[i]*p.e[i]))
+                                + matTillB[matId]*(mu*(eta+1)/p.p[i] - mu*mu/(p.DISPH_rho[i]*p.e[i]))
+                                + p.p[i]/(p.DISPH_rho[i]*p.e[i])) * p.m[i]*dedt;
+
+                } else if (p.e[i] >= matTillEcv[matId] && eta >= 0.0) {
+                    dDISPH_Ydt = (2*matTilla[matId]lpha*matTillRho0[matId]/p.DISPH_rho[i] * (matTillRho0[matId]/p.DISPH_rho[i] - 1) * (1-matTilla[matId]*p.DISPH_rho[i]*p.e[i]/p.p[i])
+                                + 1/p.p[i] * (2*matTillb[matId]*p.DISPH_rho[i]*p.e[i]*p.e[i]/(T_X*T_X*T_Y) + A*(mu + mu*T_beta*matTillRho0[matId]/p.DISPH_rho[i] + eta*eta)*T_eb)*T_ea
+                                + matTilla[matId] + (matTillb[matId]/T_X - matTillb[matId]*p.e[i]/(T_X*T_X*T_Y))*T_ea) * p.m[i]*dedt;
+
+
+
+                } else if (p.e[i] > matTillEiv[matId] && p.e[i] < matTillEcv[matId]) {
+                    // for intermediate states:
+                    // weighted average of pressures calculated by expanded
+                    // and compressed versions of Tillotson (both evaluated at e)
+                    gamma_1 = (matTillb[matId]*p.e[i]/(T_X*T_X*T_Y)*(2*p.e[i]/p.p[i] - 1)
+                                + T_A*(1/p.p[i] - mu/(p.DISPH_rho[i]*p.e[i]))
+                                + matTillB[matId]*(mu*(eta+1)/p.p[i] - mu*mu/(p.DISPH_rho[i]*p.e[i]))
+                                + p.p[i]/(p.DISPH_rho[i]*p.e[i])) + 1;
+
+                    gamma_2 = (2*matTilla[matId]lpha*matTillRho0[matId]/p.DISPH_rho[i] * (matTillRho0[matId]/p.DISPH_rho[i] - 1) * (1-matTilla[matId]*p.DISPH_rho[i]*p.e[i]/p.p[i])
+                                + 1/p.p[i] * (2*matTillb[matId]*p.DISPH_rho[i]*p.e[i]*p.e[i]/(T_X*T_X*T_Y) + A*(mu + mu*T_beta*matTillRho0[matId]/p.DISPH_rho[i] + eta*eta)*T_eb)*T_ea
+                                + matTilla[matId] + (matTillb[matId]/T_X - matTillb[matId]*p.e[i]/(T_X*T_X*T_Y))*T_ea) + 1;
+
+                    p1 = (matTilla[matId] + matTillb[matId]/T_X) * p.DISPH_rho[i]*p.e[i]
+                        + T_A*mu + matTillB[matId]*mu*mu;
+
+                    p2 = matTilla[matId]* p.DISPH_rho[i]*p.e[i] + (matTillb[matId]*p.DISPH_rho[i]*p.e[i]/T_X
+                        + T_A * mu * T_eb)* T_ea;
+
+                    dDISPH_Ydt = (( gamma_1*(matTillEcv[matId]-p.e[i]) + gamma_2*(p.e[i]-matTillEiv[matId]) - 1/p.DISPH_rho[i]*(p1 + p2)) / (matTillEcv[matId]-matTillEiv[matId]) - 1) * p.m[i]*dedt;
+                } else {
+                    printf("\n\nDeep trouble in pressure.\nenergy[%d] = %e\nE_iv = %e, E_cv = %e\n\n", i, e, matTillEiv[matId], matTillEcv[matId]);
+                    dDISPH_Ydt = 0.0;
+                }
+            }
+            
+        } else if (EOS_TYPE_ANEOS == matEOS[matId]) {
+            printf("ANEOS not implemented with DISPH");
+                dDISPH_Ydt = 0.0;
+                    }
+
+#endif // DISPH eq. for Y
+
+#if DISPH
+        p.dDISPH_Ydt[i] = dDISPH_Ydt;
+#endif // DISPH
+
+
+
+
+
+
 #if PALPHA_POROSITY
         if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
             if (p.alpha_jutzi[i] <= 1.0) {
@@ -883,53 +1037,53 @@ __global__ void internalForces(int *interactions) {
         double bulk = matBulkmodulus[matId];
         double young = matYoungModulus[matId];
         int f;
-#if JC_PLASTICITY
+# if JC_PLASTICITY
 	    double edotp[DIM][DIM]; // plastic strain rate
-#endif
-#if SIRONO_POROSITY
+# endif
+# if SIRONO_POROSITY
         if (matEOS[matId] == EOS_TYPE_SIRONO) {
             shear = 0.5 * p.K[i];
             bulk = p.K[i];
             young = (9.0 * bulk * shear / (3.0 * bulk + shear));
         }
-#endif
+# endif
 
         if (matEOS[matId] != EOS_TYPE_REGOLITH && matEOS[matId] != EOS_TYPE_VISCOUS_REGOLITH) {
             for (d = 0; d < DIM; d++) {
                 for (e = 0; e < DIM; e++) {
                     // Hooke's law
                     p.dSdt[stressIndex(i,d,e)] = 2.0 * shear * edot[d][e];
-#if JC_PLASTICITY
+# if JC_PLASTICITY
 		            edotp[d][e] = (1 - p.jc_f[i]) * edot[d][e];
-#endif
+# endif
                     // rotation terms
                     for (f = 0; f < DIM; f++) {
                         // trace
                         if (d == e) {
                             p.dSdt[stressIndex(i,d,e)] -= 2.0 * shear * edot[f][f] / 3.0;
-#if JC_PLASTICITY
+# if JC_PLASTICITY
 		            	    edotp[d][e] += (-1./3)*(1-p.jc_f[i])*edot[f][f];
-#endif
+# endif
                         }
                         p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,d,f)] * rdot[e][f];
                         p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,e,f)] * rdot[d][f];
                     }
-#if PALPHA_POROSITY && STRESS_PALPHA_POROSITY
+# if PALPHA_POROSITY && STRESS_PALPHA_POROSITY
                     if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
                         p.dSdt[stressIndex(i,d,e)] = p.f[i] / p.alpha_jutzi[i] * p.dSdt[stressIndex(i,d,e)]
                                                             - 1.0 / (p.alpha_jutzi[i]*p.alpha_jutzi[i])
-# if FRAGMENTATION && DAMAGE_ACTS_ON_S
+#  if FRAGMENTATION && DAMAGE_ACTS_ON_S
                                                             * (1-di)*p.S[stressIndex(i,d,e)]
-# else
+#  else
                                                             * p.S[stressIndex(i,d,e)]
-# endif
+#  endif
                                                             * p.dalphadt[i];
                     }
-#endif
+# endif
                 }
             }
 
-#if JC_PLASTICITY
+# if JC_PLASTICITY
             /* calculate plastic strain rate tensor from dSdt */
             double K2 = 0;
             for (d = 0; d < DIM; d++) {
@@ -961,18 +1115,17 @@ __global__ void internalForces(int *interactions) {
             }
             if (p.noi[i] < 1)
                 p.dTdt[i] = 0.0;
-#endif
+# endif
 
-#if ARTIFICIAL_VISCOSITY
+# if ARTIFICIAL_VISCOSITY
             p.muijmax[i] = muijmax;
-#endif
+# endif
 
             double tensileMax = 0.0;
-#if SOLID
             tensileMax = calculateMaxEigenvalue(sigma_i);
             p.local_strain[i] = tensileMax/young;
-#endif
-#if FRAGMENTATION
+
+# if FRAGMENTATION
             // calculate damage evolution dd/dt...
             // 1st: get max eigenvalue (max principle stress) of sigma_i
             // 2nd: get local scalar strain out of max tensile stress
@@ -1008,7 +1161,7 @@ __global__ void internalForces(int *interactions) {
                 p.dddt[i] = 0.0;
                 p.d[i] = 1.0;
             }
-#if PALPHA_POROSITY
+#  if PALPHA_POROSITY
             if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
                 double deld = 0.01; 	/* variation in the damage to avoid infinity problem */
                 double alpha_0 = matporjutzi_alpha_0[matId];
@@ -1017,8 +1170,8 @@ __global__ void internalForces(int *interactions) {
                                             / (pow(1.0 + deld, 1.0/DIM) - pow(deld, 1.0/DIM)) * 1.0/(alpha_0 - 1.0) * p.dalphadt[i];
                 }
             }
-#endif
-#endif // FRAGMENTATION
+#  endif
+# endif // FRAGMENTATION
 
         } else if (matEOS[matId] != EOS_TYPE_VISCOUS_REGOLITH) { // if materialtype = regolith
             alpha_phi = matAlphaPhi[matId];
@@ -1027,12 +1180,12 @@ __global__ void internalForces(int *interactions) {
             for (d = 0; d < DIM; d++) {
                 tr_edot += edot[d][d];
             }
-#if DIM == 2
+# if DIM == 2
             double poissons_ratio = (3*bulk - 2*shear) / (2*(3*bulk + shear));
             I1 = (1 + poissons_ratio) * (p.S[stressIndex(i, 0, 0)] + p.S[stressIndex(i, 1, 1)]);
-#else
+# else
             I1 = p.S[stressIndex(i,0,0)] + p.S[stressIndex(i,1,1)] + p.S[stressIndex(i,2,2)];
-#endif
+# endif
             //get S
             for (d = 0; d < DIM; d++) {
                 for (e = 0; e < DIM; e++) {
@@ -1040,9 +1193,9 @@ __global__ void internalForces(int *interactions) {
                 }
                 S_i[d][d] -= I1/3.0;
             }
-#if DIM == 2
+# if DIM == 2
             double sz = poissons_ratio*(S_i[0][0] + S_i[1][1]);
-#endif
+# endif
             //calculate sqrt(J2)
             sqrt_J2 = 0.0;
             for (d = 0; d < DIM; d++) {
@@ -1050,9 +1203,9 @@ __global__ void internalForces(int *interactions) {
                     sqrt_J2 += S_i[d][e]*S_i[d][e];
                 }
             }
-#if DIM == 2
+# if DIM == 2
             sqrt_J2 += sz*sz;
-#endif
+# endif
             sqrt_J2 *= 0.5;
             sqrt_J2 = sqrt(sqrt_J2);
 

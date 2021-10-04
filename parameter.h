@@ -190,6 +190,9 @@
 // see Morris and Monaghan 1984
 #define XSPH 0
 
+// different formulation of SPH for handling contact discontinuities
+#define DISPH 1
+
 // boundaries EXPERIMENTAL, please do not use this....
 #define BOUNDARY_PARTICLE_ID -1
 #define GHOST_BOUNDARIES 0

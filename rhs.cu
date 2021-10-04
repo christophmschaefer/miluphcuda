@@ -86,6 +86,11 @@ __global__ void zero_all_derivatives(int *interactions)
 #if INTEGRATE_ENERGY
         p.dedt[i] = 0.0;
 #endif
+
+#if DISPH
+        p.dDISPH_Ydt[i] = 0.0;
+#endif
+
 #if SHEPARD_CORRECTION
         p_rhs.shepard_correction[i] = 1.0;
 #endif
@@ -400,7 +405,7 @@ void rightHandSide()
     totalTime += time[timerCounter++];
 #endif
 
-#if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH)
+#if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH || DISPH)
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
 # endif
@@ -447,6 +452,21 @@ void rightHandSide()
 # endif
 #endif
 
+#if DISPH
+# if DEBUG_RHS_RUNTIMES
+    cudaEventRecord(start, 0);
+# endif
+    cudaVerifyKernel((calculate_pressure_and_DISPH_Y<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>( interactions)));
+    cudaVerify(cudaDeviceSynchronize());
+# if DEBUG_RHS_RUNTIMES
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time[timerCounter], start, stop);
+    if (param.verbose) printf("duration DISPH_pressure: %.7f ms\n", time[timerCounter]);
+    totalTime += time[timerCounter++];
+# endif
+#else
+
 #if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
 #endif
@@ -459,6 +479,8 @@ void rightHandSide()
     printf("duration pressure: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
 #endif
+#endif //DISPH
+
 /*  function is not in porosity.cu anymore but in timeintecration.cu internal forces
 #if PALPHA_POROSITY
     cudaVerifyKernel((calculateDistensionChange<<<numberOfMultiprocessors * 4, NUM_THREADS_PALPHA_POROSITY>>>()));

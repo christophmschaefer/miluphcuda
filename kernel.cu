@@ -290,7 +290,7 @@ __device__ double fixTensileInstability(int a, int b)
 #endif // ARTIFICIAL_STRESS
 
 
-#if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH || INTEGRATE_ENERGY)
+#if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH || INTEGRATE_ENERGY || DISPH)
 __global__ void CalcDivvandCurlv(int *interactions)
 {
     int i, inc, j, k, m, d, dd;
@@ -377,6 +377,8 @@ __global__ void CalcDivvandCurlv(int *interactions)
                 for (dd = 0; dd < DIM; dd++) {
                     divv += p.m[j]/p.rho[j] * (vj[d] - vi[d]) * p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
                 }
+#elif DISPH
+                divv += p.DISPH_Y[j]/p.p[i] * (vj[d] - vi[d]) * dWdx[d];
 #else
                 divv += p.m[j]/p.rho[j] * (vj[d] - vi[d]) * dWdx[d];
 #endif
@@ -386,17 +388,35 @@ __global__ void CalcDivvandCurlv(int *interactions)
 #if (DIM == 1 && BALSARA_SWITCH)
 #error unset BALSARA SWITCH in 1D
 #elif DIM == 2
+
+    #if DISPH
+            // only one component in 2D
+            curlv[0] -= p.DISPH_Y[j]/p.p[i] * ((vi[0] - vj[0]) * dWdx[1]
+                        - (vi[1] - vj[1]) * dWdx[0]);
+            curlv[1] = 0;
+    #else
             // only one component in 2D
             curlv[0] += p.m[j]/p.rho[i] * ((vi[0] - vj[0]) * dWdx[1]
                         - (vi[1] - vj[1]) * dWdx[0]);
             curlv[1] = 0;
+    #endif
 #elif DIM == 3
+
+    #if DISPH
+            curlv[0] -= p.DISPH_Y[j]/p.p[i] * ((vi[1] - vj[1]) * dWdx[2]
+                        - (vi[2] - vj[2]) * dWdx[1]);
+            curlv[1] -= p.DISPH_Y[j]/p.p[i] * ((vi[2] - vj[2]) * dWdx[0]
+                        - (vi[0] - vj[0]) * dWdx[2]);
+            curlv[2] -= p.DISPH_Y[j]/p.p[i] * ((vi[0] - vj[0]) * dWdx[1]
+                        - (vi[1] - vj[1]) * dWdx[0]);
+    #else
             curlv[0] += p.m[j]/p.rho[i] * ((vi[1] - vj[1]) * dWdx[2]
                         - (vi[2] - vj[2]) * dWdx[1]);
             curlv[1] += p.m[j]/p.rho[i] * ((vi[2] - vj[2]) * dWdx[0]
                         - (vi[0] - vj[0]) * dWdx[2]);
             curlv[2] += p.m[j]/p.rho[i] * ((vi[0] - vj[0]) * dWdx[1]
                         - (vi[1] - vj[1]) * dWdx[0]);
+    #endif
 #endif
         }
         for (d = 0; d < DIM; d++) {
