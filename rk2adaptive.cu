@@ -964,12 +964,12 @@ __global__ void integrateThirdStep(void)
 
 #if DISPH
         p.DISPH_Y[i] = rk[RKSTART].DISPH_Y[i] + dt/6.0 *
-            (  c1 * rk[RKSTART].dDISPH_Ydt[i]
-               + c2 * rk[RKFIRST].dDISPH_Ydt[i]
-               + c3 * rk[RKSECOND].dDISPH_Ydt[i]);
-        p.DISPH_Y[i] = 1./6.* (c1 * rk[RKSTART].dDISPH_Ydt[i]
-               + c2 * rk[RKFIRST].dDISPH_Ydt[i]
-               + c3 * rk[RKSECOND].dDISPH_Ydt[i]);
+            (  C1 * rk[RKSTART].dDISPH_Ydt[i]
+               + C2 * rk[RKFIRST].dDISPH_Ydt[i]
+               + C3 * rk[RKSECOND].dDISPH_Ydt[i]);
+        p.DISPH_Y[i] = 1./6.* (C1 * rk[RKSTART].dDISPH_Ydt[i]
+               + C2 * rk[RKFIRST].dDISPH_Ydt[i]
+               + C3 * rk[RKSECOND].dDISPH_Ydt[i]);
 #endif
 
 #if PALPHA_POROSITY

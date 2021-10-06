@@ -24,13 +24,13 @@
 #define _PARAMETER_H
 
 // Dimension of the problem
-#define DIM 3
+#define DIM 2
 
 // Basic physical model, choose one of the following:
 // SOLID solves continuum mechanics with material strength, and stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
 // HYDRO solves only the Euler equation, and there is only (scalar) pressure
-#define SOLID 1
-#define HYDRO 0
+#define SOLID 0
+#define HYDRO 1
 // set additionally p to 0 if p < 0
 #define REAL_HYDRO 0
 
@@ -45,11 +45,11 @@
 
 // integrate the energy equation
 // when setting up a SOLID simulation with Tillotson or ANEOS, it must be set to 1
-#define INTEGRATE_ENERGY 0
+#define INTEGRATE_ENERGY 1
 
 // integrate the continuity equation
 // if set to 0, the density will be calculated using the standard SPH sum \sum_i m_j W_ij
-#define INTEGRATE_DENSITY 1
+#define INTEGRATE_DENSITY 0
 
 // adds viscosity to the Euler equation
 #define NAVIER_STOKES 0
@@ -73,7 +73,7 @@
 //                                     HYDRO dv_a/dt ~ - (p_a+p_b)/(rho_a*rho_b)  \nabla_a W_ab
 //                                     SOLID dv_a/dt ~ (sigma_a+sigma_b)/(rho_a*rho_b)  \nabla_a W_ab
 // If you do not know what to do, choose SPH_EQU_VERSION 1.
-#define SPH_EQU_VERSION 1
+#define SPH_EQU_VERSION 0
 
 // for the tensile instability fix
 // you do not need this
@@ -82,7 +82,7 @@
 // standard SPH alpha/beta viscosity
 #define ARTIFICIAL_VISCOSITY 1
 // Balsara switch: lowers the artificial viscosity in regions without shocks
-#define BALSARA_SWITCH 0
+#define BALSARA_SWITCH 1
 
 // INVISCID SPH (see Cullen & Dehnen paper)
 #define INVISCID_SPH 0
@@ -92,7 +92,7 @@
 #define SHEPARD_CORRECTION 0
 // for linear consistency
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
-#define TENSORIAL_CORRECTION 1
+#define TENSORIAL_CORRECTION 0
 
 // Available plastic flow conditions:
 // (if you do not know what this is, choose (1) or nothing)
@@ -172,7 +172,7 @@
 
 // if set to 0, h = (h_i + h_j)/2  is used to calculate W_ij
 // if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2
-#define AVERAGE_KERNELS 1
+#define AVERAGE_KERNELS 0
 
 
 // important switch: if the simulations yields at some point too many interactions for
@@ -194,7 +194,7 @@
 #define DISPH 1
 
 // boundaries EXPERIMENTAL, please do not use this....
-#define BOUNDARY_PARTICLE_ID -1
+#define BOUNDARY_PARTICLE_ID 2
 #define GHOST_BOUNDARIES 0
 // note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions
 

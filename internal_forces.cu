@@ -795,6 +795,7 @@ __global__ void internalForces(int *interactions) {
 #  if DIM > 2
             dedt += 0.5 * accelsj[2] * -dvz;
 #  endif
+# endif // DISPH
 # endif // SOLID
 
 #endif // INTEGRATE ENERGY
@@ -874,10 +875,10 @@ __global__ void internalForces(int *interactions) {
         if (EOS_TYPE_MURNAGHAN == matEOS[matId]) {
             dDISPH_Ydt = (matN[matId] + matBulkmodulus[matId]/p.p[i] - 1) * p.m[i]*dedt;
         }
-        if (EOS_TYPE_IGNORE == matEOS[matId] || matId == EOS_TYPE_IGNORE) {
+        else if (EOS_TYPE_IGNORE == matEOS[matId] || matId == EOS_TYPE_IGNORE) {
             continue;
         }
-        if (EOS_TYPE_POLYTROPIC_GAS == matEOS[matId]) {
+        else if (EOS_TYPE_POLYTROPIC_GAS == matEOS[matId]) {
             dDISPH_Ydt = (matPolytropicGamma[matId] - 1) * p.m[i]*dedt;
 
         } else if (EOS_TYPE_IDEAL_GAS == matEOS[matId]) {
@@ -891,66 +892,68 @@ __global__ void internalForces(int *interactions) {
             dDISPH_Ydt = 0.0;
 
         } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
-            T_r = p.DISPH_rho[i];
-            T_u = p.e[i];
-            eta = rho / matTillRho0[matId];
+	    register double eta, mu, k;
+            eta = p.DISPH_rho[i] / matTillRho0[matId];
             mu = eta - 1.0;
-            T_a = matTilla[matId];
-            T_b = matTillb[matId];
-            T_A = matTillA[matId];
-            T_B = matTillB[matId];
-            T_alpha = matTillAlpha[matId];
-            T_beta = matTillBeta[matId];
-            T_r0 = matTillRho0[matId];
-            T_u0 = matTillE0[matId];
-            T_Y = T_u0*eta*eta;
-            T_X = p.e[i]/(T_Y) + 1;
-            T_eb = exp(-matTillBeta[matId]*(matTillRho0[matId]/rho -1.0))
-            T_ea = exp(-matTillAlpha[matId] * (pow(matTillRho0[matId]/rho-1.0, 2)))
+            k = p.e[i]*pow(matTillRho0[matId], 2)/matTillE0[matId];
 
             if (eta < matRhoLimit[matId] && e < matTillEcv[matId]) {
                 p.p[i] = 0.0;
-            } else {
-                if (p.e[i] <= matTillEiv[matId] || eta >= 1.0) {
-                    dDISPH_Ydt = (matTillb[matId]*p.e[i]/(T_X*T_X*T_Y)*(2*p.e[i]/p.p[i] - 1)
-                                + T_A*(1/p.p[i] - mu/(p.DISPH_rho[i]*p.e[i]))
-                                + matTillB[matId]*(mu*(eta+1)/p.p[i] - mu*mu/(p.DISPH_rho[i]*p.e[i]))
-                                + p.p[i]/(p.DISPH_rho[i]*p.e[i])) * p.m[i]*dedt;
+            // condensed state (co)
+            } else if (p.e[i] <= matTillEiv[matId] || eta >= 1.0) {
+                    register double dp_co_drho, dp_co_de, gamma_co;
 
+                    dp_co_drho = (2*matTillB[matId]*mu + matTillA[matId])/matTillRho0[matId] + (2*matTillb[matId]*k*p.e[i])/(pow(p.DISPH_rho[i], 2)*pow(k/pow(p.DISPH_rho[i], 2) + 1, 2)) + p.e[i]*(matTillb[matId]/(k/pow(p.DISPH_rho[i], 2) + 1) + matTilla[matId]);
+
+                    dp_co_de = p.DISPH_rho[i]*(matTilla[matId] + matTillb[matId]/(k/pow(p.DISPH_rho[i], 2) + 1)) - (matTillb[matId]*k*p.e[i])/(p.DISPH_rho[i]*pow(k/pow(p.DISPH_rho[i], 2) + 1, 2));
+
+                    gamma_co = p.DISPH_rho[i]/p.p[i] * dp_co_drho + 1/p.DISPH_rho[i] * dp_co_de;
+
+                    dDISPH_Ydt = (gamma_co - 1) * p.m[i]*dedt;
+
+            // expanded state (ex)
                 } else if (p.e[i] >= matTillEcv[matId] && eta >= 0.0) {
-                    dDISPH_Ydt = (2*matTilla[matId]lpha*matTillRho0[matId]/p.DISPH_rho[i] * (matTillRho0[matId]/p.DISPH_rho[i] - 1) * (1-matTilla[matId]*p.DISPH_rho[i]*p.e[i]/p.p[i])
-                                + 1/p.p[i] * (2*matTillb[matId]*p.DISPH_rho[i]*p.e[i]*p.e[i]/(T_X*T_X*T_Y) + A*(mu + mu*T_beta*matTillRho0[matId]/p.DISPH_rho[i] + eta*eta)*T_eb)*T_ea
-                                + matTilla[matId] + (matTillb[matId]/T_X - matTillb[matId]*p.e[i]/(T_X*T_X*T_Y))*T_ea) * p.m[i]*dedt;
+                register double dp_ex_drho, dp_ex_de, gamma_ex;
 
+                    dp_ex_drho = exp(-matTillBeta[matId] * pow(1/eta-1.0, 2))*(matTillA[matId] *((matTillAlpha[matId]*matTillRho0[matId]*mu)/pow(p.DISPH_rho[i], 2) + 1/matTillRho0[matId]) * exp(-matTillAlpha[matId]*(1/eta -1.0)) + (matTillb[matId]*p.e[i]*(3*k/pow(p.DISPH_rho[i], 2) + 1))/pow(k/pow(p.DISPH_rho[i], 2) + 1, 2)) + 2*matTillBeta[matId]*matTillRho0[matId]*mu/pow(p.DISPH_rho[i], 2) * exp(-matTillBeta[matId] * pow(1/eta-1.0, 2))*(matTillA[matId]*mu*exp(-matTillAlpha[matId]*(1/eta -1.0)) + matTillb[matId]*p.e[i]*p.DISPH_rho[i]/(k/pow(p.DISPH_rho[i], 2) + 1)) + matTilla[matId]*p.e[i];
+
+                    dp_ex_de = ((matTillb[matId]*p.DISPH_rho[i])/(k/pow(p.DISPH_rho[i], 2) + 1) - (matTillb[matId]*k*p.e[i])/(p.DISPH_rho[i]*pow(k/pow(p.DISPH_rho[i], 2) + 1, 2)) )* exp(-matTillBeta[matId] * pow(1/eta-1.0, 2)) + matTilla[matId]*p.DISPH_rho[i];
+
+                    gamma_ex = p.DISPH_rho[i]/p.p[i] * dp_ex_drho + 1/p.DISPH_rho[i] * dp_ex_de;
+                    dDISPH_Ydt = (gamma_ex - 1) * p.m[i]*dedt;
 
 
                 } else if (p.e[i] > matTillEiv[matId] && p.e[i] < matTillEcv[matId]) {
+		    register double gamma_tr, dp_co_drho, dp_co_de, dp_ex_drho, dp_ex_de, dp_tr_drho, p_co, p_ex, dp_tr_de;
                     // for intermediate states:
                     // weighted average of pressures calculated by expanded
                     // and compressed versions of Tillotson (both evaluated at e)
-                    gamma_1 = (matTillb[matId]*p.e[i]/(T_X*T_X*T_Y)*(2*p.e[i]/p.p[i] - 1)
-                                + T_A*(1/p.p[i] - mu/(p.DISPH_rho[i]*p.e[i]))
-                                + matTillB[matId]*(mu*(eta+1)/p.p[i] - mu*mu/(p.DISPH_rho[i]*p.e[i]))
-                                + p.p[i]/(p.DISPH_rho[i]*p.e[i])) + 1;
 
-                    gamma_2 = (2*matTilla[matId]lpha*matTillRho0[matId]/p.DISPH_rho[i] * (matTillRho0[matId]/p.DISPH_rho[i] - 1) * (1-matTilla[matId]*p.DISPH_rho[i]*p.e[i]/p.p[i])
-                                + 1/p.p[i] * (2*matTillb[matId]*p.DISPH_rho[i]*p.e[i]*p.e[i]/(T_X*T_X*T_Y) + A*(mu + mu*T_beta*matTillRho0[matId]/p.DISPH_rho[i] + eta*eta)*T_eb)*T_ea
-                                + matTilla[matId] + (matTillb[matId]/T_X - matTillb[matId]*p.e[i]/(T_X*T_X*T_Y))*T_ea) + 1;
+                    dp_co_drho = (2*matTillB[matId]*mu + matTillA[matId])/matTillRho0[matId] + (2*matTillb[matId]*k*p.e[i])/(pow(p.DISPH_rho[i], 2)*pow(k/pow(p.DISPH_rho[i], 2) + 1, 2)) + p.e[i]*(matTillb[matId]/(k/pow(p.DISPH_rho[i], 2) + 1) + matTilla[matId]);
 
-                    p1 = (matTilla[matId] + matTillb[matId]/T_X) * p.DISPH_rho[i]*p.e[i]
-                        + T_A*mu + matTillB[matId]*mu*mu;
+                    dp_co_de = p.DISPH_rho[i]*(matTilla[matId] + matTillb[matId]/(k/pow(p.DISPH_rho[i], 2) + 1)) - (matTillb[matId]*k*p.e[i])/(p.DISPH_rho[i]*pow(k/pow(p.DISPH_rho[i], 2) + 1, 2));
 
-                    p2 = matTilla[matId]* p.DISPH_rho[i]*p.e[i] + (matTillb[matId]*p.DISPH_rho[i]*p.e[i]/T_X
-                        + T_A * mu * T_eb)* T_ea;
+                    dp_ex_drho = exp(-matTillBeta[matId] * pow(1/eta-1.0, 2))*(matTillA[matId] *((matTillAlpha[matId]*matTillRho0[matId]*mu)/pow(p.DISPH_rho[i], 2) + 1/matTillRho0[matId]) * exp(-matTillAlpha[matId]*(1/eta -1.0)) + (matTillb[matId]*p.e[i]*(3*k/pow(p.DISPH_rho[i], 2) + 1))/pow(k/pow(p.DISPH_rho[i], 2) + 1, 2)) + 2*matTillBeta[matId]*matTillRho0[matId]*mu/pow(p.DISPH_rho[i], 2) * exp(-matTillBeta[matId] * pow(1/eta-1.0, 2))*(matTillA[matId]*mu*exp(-matTillAlpha[matId]*(1/eta -1.0)) + matTillb[matId]*p.e[i]*p.DISPH_rho[i]/(k/pow(p.DISPH_rho[i], 2) + 1)) + matTilla[matId]*p.e[i];
 
-                    dDISPH_Ydt = (( gamma_1*(matTillEcv[matId]-p.e[i]) + gamma_2*(p.e[i]-matTillEiv[matId]) - 1/p.DISPH_rho[i]*(p1 + p2)) / (matTillEcv[matId]-matTillEiv[matId]) - 1) * p.m[i]*dedt;
+                    dp_ex_de = ((matTillb[matId]*p.DISPH_rho[i])/(k/pow(p.DISPH_rho[i], 2) + 1) - (matTillb[matId]*k*p.e[i])/(p.DISPH_rho[i]*pow(k/pow(p.DISPH_rho[i], 2) + 1, 2)) )* exp(-matTillBeta[matId] * pow(1/eta-1.0, 2)) + matTilla[matId]*p.DISPH_rho[i];
+
+                    dp_tr_drho = ((p.e[i] - matTillEiv[matId])*dp_ex_drho + (matTillEcv[matId] - p.e[i])*dp_co_drho)/(matTillEcv[matId] - matTillEiv[matId]);
+
+                    p_co = (matTilla[matId] + matTillb[matId]/(k/pow(p.DISPH_rho[i], 2) + 1))*p.DISPH_rho[i]*p.e[i] + matTillA[matId]*mu + matTillB[matId]*pow(mu, 2);
+
+                    p_ex =  matTilla[matId]*p.DISPH_rho[i]*p.e[i] + ((matTillb[matId]*p.DISPH_rho[i]*p.e[i])/(k/pow(p.DISPH_rho[i], 2) + 1) + matTillA[matId]*mu*exp(-matTillAlpha[matId]*(1/eta -1.0)))*exp(-matTillBeta[matId] * pow(1/eta-1.0, 2));
+
+                    dp_tr_de = (p_ex + (p.e[i] - matTillEiv[matId])*dp_ex_de - p_co + (matTillEcv[matId] - p.e[i])*dp_co_drho)/(matTillEcv[matId] - matTillEiv[matId]);
+
+                    gamma_tr = p.DISPH_rho[i]/p.p[i] * dp_tr_drho + 1/p.DISPH_rho[i] * dp_tr_de;
+                    dDISPH_Ydt = (gamma_tr - 1) * p.m[i]*dedt;
+
+
                 } else {
                     printf("\n\nDeep trouble in pressure.\nenergy[%d] = %e\nE_iv = %e, E_cv = %e\n\n", i, e, matTillEiv[matId], matTillEcv[matId]);
                     dDISPH_Ydt = 0.0;
                 }
-            }
-            
-        } else if (EOS_TYPE_ANEOS == matEOS[matId]) {
+            }  else if (EOS_TYPE_ANEOS == matEOS[matId]) {
             printf("ANEOS not implemented with DISPH");
                 dDISPH_Ydt = 0.0;
                     }

@@ -41,6 +41,7 @@
 #include "artificial_stress.h"
 #include "stress.h"
 #include "damage.h"
+#include "DISPH_pressure.h"
 
 extern int flag_force_gravity_calc;
 extern int gravity_index;
