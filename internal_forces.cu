@@ -779,11 +779,14 @@ __global__ void internalForces(int *interactions) {
 
 # if DISPH // different eq. of energy
             dedt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.m[i]/p.p[i] * dWdx[0] * dvx;
+            dDISPH_Ydt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.m[i]/p.p[i] * dWdx[0] * dvx;
     #  if DIM > 1
                 dedt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.m[i]/p.p[i] * dWdx[1] * dvy;
+                dDISPH_Ydt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.m[i]/p.p[i] * dWdx[1] * dvx;
     #  endif
     #  if DIM > 2
                 dedt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.m[i]/p.p[i] * dWdx[2] * dvz;
+                dDISPH_Ydt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.m[i]/p.p[i] * dWdx[2] * dvx;
     #  endif
 # else
 
@@ -873,16 +876,16 @@ __global__ void internalForces(int *interactions) {
     register double eta, mu, p1, p2;
     matId = p_rhs.materialId[i];
         if (EOS_TYPE_MURNAGHAN == matEOS[matId]) {
-            dDISPH_Ydt = (matN[matId] + matBulkmodulus[matId]/p.p[i] - 1) * p.m[i]*dedt;
+            dDISPH_Ydt = (matN[matId] + matBulkmodulus[matId]/p.p[i] - 1) * p.m[i]*dDISPH_Ydt;
         }
         else if (EOS_TYPE_IGNORE == matEOS[matId] || matId == EOS_TYPE_IGNORE) {
             continue;
         }
         else if (EOS_TYPE_POLYTROPIC_GAS == matEOS[matId]) {
-            dDISPH_Ydt = (matPolytropicGamma[matId] - 1) * p.m[i]*dedt;
+            dDISPH_Ydt = (matPolytropicGamma[matId] - 1) * p.m[i]*dDISPH_Ydt;
 
         } else if (EOS_TYPE_IDEAL_GAS == matEOS[matId]) {
-            dDISPH_Ydt = (matPolytropicGamma[matId] - 1) * p.m[i]*dedt;
+            dDISPH_Ydt = (matPolytropicGamma[matId] - 1) * p.m[i]*dDISPH_Ydt;
 
         } else if (EOS_TYPE_LOCALLY_ISOTHERMAL_GAS == matEOS[matId]) {
             dDISPH_Ydt = 0.0;
@@ -909,7 +912,7 @@ __global__ void internalForces(int *interactions) {
 
                     gamma_co = p.DISPH_rho[i]/p.p[i] * dp_co_drho + 1/p.DISPH_rho[i] * dp_co_de;
 
-                    dDISPH_Ydt = (gamma_co - 1) * p.m[i]*dedt;
+                    dDISPH_Ydt = (gamma_co - 1) * p.m[i]*dDISPH_Ydt;
 
             // expanded state (ex)
                 } else if (p.e[i] >= matTillEcv[matId] && eta >= 0.0) {
@@ -920,7 +923,7 @@ __global__ void internalForces(int *interactions) {
                     dp_ex_de = ((matTillb[matId]*p.DISPH_rho[i])/(k/pow(p.DISPH_rho[i], 2) + 1) - (matTillb[matId]*k*p.e[i])/(p.DISPH_rho[i]*pow(k/pow(p.DISPH_rho[i], 2) + 1, 2)) )* exp(-matTillBeta[matId] * pow(1/eta-1.0, 2)) + matTilla[matId]*p.DISPH_rho[i];
 
                     gamma_ex = p.DISPH_rho[i]/p.p[i] * dp_ex_drho + 1/p.DISPH_rho[i] * dp_ex_de;
-                    dDISPH_Ydt = (gamma_ex - 1) * p.m[i]*dedt;
+                    dDISPH_Ydt = (gamma_ex - 1) * p.m[i]*dDISPH_Ydt;
 
 
                 } else if (p.e[i] > matTillEiv[matId] && p.e[i] < matTillEcv[matId]) {
@@ -946,7 +949,7 @@ __global__ void internalForces(int *interactions) {
                     dp_tr_de = (p_ex + (p.e[i] - matTillEiv[matId])*dp_ex_de - p_co + (matTillEcv[matId] - p.e[i])*dp_co_drho)/(matTillEcv[matId] - matTillEiv[matId]);
 
                     gamma_tr = p.DISPH_rho[i]/p.p[i] * dp_tr_drho + 1/p.DISPH_rho[i] * dp_tr_de;
-                    dDISPH_Ydt = (gamma_tr - 1) * p.m[i]*dedt;
+                    dDISPH_Ydt = (gamma_tr - 1) * p.m[i]*dDISPH_Ydt;
 
 
                 } else {
@@ -958,11 +961,8 @@ __global__ void internalForces(int *interactions) {
                 dDISPH_Ydt = 0.0;
                     }
 
+    p.dDISPH_Ydt[i] = dDISPH_Ydt;
 #endif // DISPH eq. for Y
-
-#if DISPH
-        p.dDISPH_Ydt[i] = dDISPH_Ydt;
-#endif // DISPH
 
 
 

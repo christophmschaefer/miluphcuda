@@ -46,155 +46,35 @@ __global__ void calculate_pressure_and_DISPH_Y(int *interactions) {
     double dx[DIM];
     double dWdx[DIM];
     double dWdr;
-    double p_stored[numParticles];
+    double p_initial;
+    double dp;
+    double max_dp;
     double sml;
-    double tolerance;
-
-
-	
     int cnt = 0;
-
-// Zero step: Calculate p_i = sum_j Y_j W_ij, where the Y are initial guesses obtained by the corresponding differential eq. 
-            inc = blockDim.x * gridDim.x;
-            for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-            sml = p.h[i];
-            for (d = 0; d < DIM; d++) {
-                dx[d] = 0;
-            }
-            kernel(&W, dWdx, &dWdr, dx, sml);
-
-            p.p[i] = p.DISPH_Y[i] * W;
-
-            if (p == 0.0) {
-                printf("p is %f W: %e \n", p, W);
-            }
-            // sph sum for particle i over neighbour particles
-            for (j = 0; j < p.noi[i]; j++) {
-                ip = interactions[i * MAX_NUM_INTERACTIONS + j];
-
-
-
-                                dx[0] = p.x[i] - p.x[ip];
-                #if DIM > 1
-                                dx[1] = p.y[i] - p.y[ip];
-                #if DIM > 2
-                                dx[2] = p.z[i] - p.z[ip];
-                #endif
-                #endif  
-                kernel(&W, dWdx, &dWdr, dx, sml);
-
-
-
-                p.p[i] += p.DISPH_Y[ip] * W;
-
-
-            }
-            }
-
 
 // start iteration procedure to solve implicit p-Y-relation
 do {
 
-cnt += 1;
-tolerance = 0.0;
-
-
-
-
-
-
             
-            // Start loop over all particles (the first 3 steps can be done in one loop)
+            max_dp = 0.0;
+
+            // Start loop over all particles
             inc = blockDim.x * gridDim.x;
             for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-
-            // First step: Calculate rho = m*p/Y
-            p.DISPH_rho[i] = p.m[i]*p.p[i]/p.DISPH_Y[i];
             
 
 
+            // First step: Calculate p_i = sum_j Y_j W_ij
 
 
+		// Store pressure values for comparison -> tolerance
+				p_initial = p.p[i];
+                
 
-
-
-            // Second step: Calculate pressure by using eos
-
-            //pressure = 0.0;
-        matId = p_rhs.materialId[i];
-        if (EOS_TYPE_IGNORE == matEOS[matId] || matId == EOS_TYPE_IGNORE) {
-            continue;
-        }
-        if (EOS_TYPE_POLYTROPIC_GAS == matEOS[matId]) {
-            p.p[i] = matPolytropicK[matId] * pow(p.DISPH_rho[i], matPolytropicGamma[matId]);
-        } else if (EOS_TYPE_IDEAL_GAS == matEOS[matId]) {
-            p.p[i] = (matPolytropicGamma[matId] - 1) * p.DISPH_rho[i] * p.e[i];
-        } else if (EOS_TYPE_LOCALLY_ISOTHERMAL_GAS == matEOS[matId]) {
-            p.p[i] = p.cs[i]*p.cs[i] * p._DISPH_rho[i];
-        } else if (EOS_TYPE_ISOTHERMAL_GAS == matEOS[matId]) {
-        /* this is pure molecular hydrogen at 10 K */
-            p.p[i] = 41255.407 * p._DISPH_rho[i];
-        } else if (EOS_TYPE_MURNAGHAN == matEOS[matId] || EOS_TYPE_VISCOUS_REGOLITH == matEOS[matId]) {
-            eta = p._DISPH_rho[i] / matRho0[matId];
-            if (eta < matRhoLimit[matId]) {
-                p.p[i] = 0.0;
-            } else {
-                p.p[i] = (matBulkmodulus[matId]/matN[matId])*(pow(eta, matN[matId]) - 1.0);
-            }
-            
-        } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
-            rho = p._DISPH_rho[i];
-            e = p.e[i];
-            eta = rho / matTillRho0[matId];
-            mu = eta - 1.0;
-            if (eta < matRhoLimit[matId] && e < matTillEcv[matId]) {
-                p.p[i] = 0.0;
-            } else {
-                if (e <= matTillEiv[matId] || eta >= 1.0) {
-                    p.p[i] = (matTilla[matId] + matTillb[matId]/(e/(eta*eta*matTillE0[matId])+1.0))
-                        * rho * e + matTillA[matId]*mu + matTillB[matId]*mu*mu;
-                } else if (e >= matTillEcv[matId] && eta >= 0.0) {
-                    p.p[i] = matTilla[matId]*rho*e + (matTillb[matId]*rho*e/(e/(eta*eta*matTillE0[matId])+1.0)
-                        + matTillA[matId] * mu * exp(-matTillBeta[matId]*(matTillRho0[matId]/rho - 1.0)))
-                        * exp(-matTillAlpha[matId] * (pow(matTillRho0[matId]/rho-1.0, 2)));
-                } else if (e > matTillEiv[matId] && e < matTillEcv[matId]) {
-                    // for intermediate states:
-                    // weighted average of pressures calculated by expanded
-                    // and compressed versions of Tillotson (both evaluated at e)
-                    p1 = (matTilla[matId]+matTillb[matId]/(e/(eta*eta*matTillE0[matId])+1.0)) * rho*e
-                        + matTillA[matId]*mu + matTillB[matId]*mu*mu;
-                    p2 = matTilla[matId]*rho*e + (matTillb[matId]*rho*e/(e/(eta*eta*matTillE0[matId])+1.0)
-                        + matTillA[matId] * mu * exp(-matTillBeta[matId]*(matTillRho0[matId]/rho -1.0)))
-                        * exp(-matTillAlpha[matId] * (pow(matTillRho0[matId]/rho-1.0, 2)));
-                    p.p[i] = ( p1*(matTillEcv[matId]-e) + p2*(e-matTillEiv[matId]) ) / (matTillEcv[matId]-matTillEiv[matId]);
-                } else {
-                    printf("\n\nDeep trouble in pressure.\nenergy[%d] = %e\nE_iv = %e, E_cv = %e\n\n", i, e, matTillEiv[matId], matTillEcv[matId]);
-                    p.p[i] = 0.0;
-                }
-            
-            }
-            }
-	// Store pressure values for comparison -> tolerance
-	p_stored[i] = p.p[i];
-
-
-
-            // Third step: Calculate Y = m*p/DISPH_rho
-
-                p.DISPH_Y[i] = p.m[i]*p.p[i]/p.DISPH_rho[i];
-
-
-            } // end loop over all particles 
-
-
-
-            // another loop over all particles
-            inc = blockDim.x * gridDim.x;
-            for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-
-            // Fourth step: Calculate p_i = sum_j Y_j W_ij
 
             sml = p.h[i];
+            
+            // self-contribution of particle i
             for (d = 0; d < DIM; d++) {
                 dx[d] = 0;
             }
@@ -202,9 +82,7 @@ tolerance = 0.0;
 
             p.p[i] = p.DISPH_Y[i] * W;
 
-            if (p == 0.0) {
-                printf("p is %f W: %e \n", p, W);
-            }
+
             // sph sum for particle i over neighbour particles
             for (j = 0; j < p.noi[i]; j++) {
                 ip = interactions[i * MAX_NUM_INTERACTIONS + j];
@@ -226,24 +104,132 @@ tolerance = 0.0;
 
 
             }
+
+
 
 
 
             // calculate pressure differences
             
-            tolerance += fabs((p_stored[i] - p.p[i])/p.p[i]);
+            dp = fabs((p_initial - p.p[i])/p_initial);
 
+            if (dp > max_dp) {
+                max_dp = dp;
+                }
+
+
+
+            // Second step: Calculate Y(p) by using eos
+
+        matId = p_rhs.materialId[i];
+        if (EOS_TYPE_IGNORE == matEOS[matId] || matId == EOS_TYPE_IGNORE) {
+            continue;
+        }
+        // For Polytropic gas: Y(p) = K^(1/gamma) * m * p^(1-1/gamma)
+        if (EOS_TYPE_POLYTROPIC_GAS == matEOS[matId]) {
+            p.DISPH_Y[i] = pow(matPolytropicK[matId], 1/matPolytropicGamma[matId]) *p.m[i]* pow(p.p[i], 1 - 1/matPolytropicGamma[matId]);
+
+        } else if (EOS_TYPE_IDEAL_GAS == matEOS[matId]) {
+            // nothing has to be done here
+
+        } else if (EOS_TYPE_LOCALLY_ISOTHERMAL_GAS == matEOS[matId]) {
+           // nothing has to be done here
+
+        } else if (EOS_TYPE_ISOTHERMAL_GAS == matEOS[matId]) {
+        /* this is pure molecular hydrogen at 10 K */
+            // nothing has to be done here
+
+        // For Murnaghan: Y(p) = m*p/rho0 * (K/(np+K))^(1/n)
+        } else if (EOS_TYPE_MURNAGHAN == matEOS[matId] || EOS_TYPE_VISCOUS_REGOLITH == matEOS[matId]) {
+                p.DISPH_Y[i] = p.m[i]*p.p[i]/matRho0[matId] * 1/pow(1 + matN[matId]*p.p[i]/matBulkmodulus[matId], 1/matN[matId]);
+        
+        // For Tillotson Y(p) has to be calculated numerically
+        } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
+
+        double rho;
+        double rho_guess;
+        double T_eta;
+        double T_mu;
+        double ex_a;
+        double ex_b;
+        double eos_minus_p;
+        double eos_minus_p_der;
+        double accuracy_newton;
+        double k;
             
-          
+            
+            	// Newton method for calculating DISPH_rho first, then Y = m*p/rho
+            	accuracy_newton = 1.0e-6;
+            	
+            	// Y comes from the solution of dY/dt = ..., using factor 2 in rho to ensure that the higher rho will be determined
+            	rho = 2*p.m[i]*p.p[i]/p.DISPH_Y[i];
+        	rho_guess = 1.0e8*rho;
+        	int it = 0;
+        	
+            // Newton loop
+        	do {
+
+		    it += 1;
+		    rho_guess = rho;
+
+		    // calc p_eos(rho_guess, u) - p_i
+				T_eta = rho_guess/matTillRho0[matId];
+				T_mu = T_eta - 1;
+				if  (T_eta >= 1.0 || p.e[i] <= matTillEiv[matId]){
+				    eos_minus_p = (matTilla[matId] + matTillb[matId]/(p.e[i]/(matTillE0[matId]*pow(T_eta, 2)) + 1))*rho_guess * p.e[i] + matTillA[matId]*T_mu + matTillB[matId]* pow(T_mu,2) - p.p[i];
+				    }
+				else if (T_eta >=0.0 && p.e[i] >= matTillEcv[matId]){
+				    eos_minus_p = matTilla[matId]*rho_guess*p.e[i] + (matTillb[matId]*rho_guess*p.e[i]/(p.e[i]/(matTillE0[matId]*pow(T_eta,2)) + 1) + matTillA[matId]*T_mu *exp(-matTillAlpha[matId]*(1/T_eta - 1)))*exp(-matTillBeta[matId]*pow((1/T_eta - 1),2)) - p.p[i];
+				    }
+				else if (matTillEiv[matId] < p.e[i] && p.e[i] < matTillEcv[matId]){
+				    eos_minus_p = ((p.e[i] - matTillEiv[matId])*(matTilla[matId]*rho_guess*p.e[i] + (matTillb[matId]*rho_guess*p.e[i]/(p.e[i]/(matTillE0[matId]*pow(T_eta,2)) + 1) + matTillA[matId]*T_mu *exp(-matTillAlpha[matId]*(1/T_eta - 1)))*exp(-matTillBeta[matId]*pow((1/T_eta - 1),2))) + (matTillEcv[matId] - p.e[i])* ((matTilla[matId] + matTillb[matId]/(p.e[i]/(matTillE0[matId]*pow(T_eta,2)) + 1))*rho_guess * p.e[i] + matTillA[matId]*T_mu + matTillB[matId]* pow(T_mu,2)))/(matTillEcv[matId] - matTillEiv[matId]) - p.p[i];
+				}
+			    
+			    
+		// calc derivative of calc p_eos(rho_guess, u) - p_i
+			    k = p.e[i]*pow(matTillRho0[matId],2)/matTillE0[matId];
+			    ex_a = exp(-matTillAlpha[matId]*(1/T_eta - 1));
+			    ex_b = exp(-matTillBeta[matId]*pow((1/T_eta - 1),2));
+
+			    if  (T_eta >= 1 || p.e[i] <= matTillEiv[matId]){
+				double der1;
+				der1 = (2*matTillB[matId]*T_mu + matTillA[matId])/matTillRho0[matId] + (2*matTillb[matId]*k*p.e[i])/(pow(rho_guess,2)*pow((k/pow(rho_guess,2) + 1),2)) + p.e[i]*(matTillb[matId]/(k/pow(rho_guess,2) + 1) + matTilla[matId]);
+				eos_minus_p_der = der1;
+				}
+
+			    else if (T_eta >=0.0 && p.e[i] >= matTillEcv[matId]){
+				double der2;    
+				der2 = ex_b*(matTillA[matId]*((matTillAlpha[matId]*matTillRho0[matId]*p.e[i])/pow(rho_guess,2) + 1/matTillRho0[matId])*ex_a + (matTillb[matId]*p.e[i]*(3*k/pow(rho_guess,2) + 1))/pow((k/pow(rho_guess,2) + 1),2)) + (2*matTillBeta[matId]*matTillRho0[matId]*T_mu)/pow(rho_guess,2) * ex_b * (matTillA[matId]*T_mu*ex_a + (matTillb[matId]*p.e[i]*rho_guess)/(k/pow(rho_guess,2) + 1)) + matTilla[matId]*p.e[i];
+				eos_minus_p_der = der2;
+				}
+
+			    else if (matTillEiv[matId] < p.e[i] && p.e[i] < matTillEcv[matId]){
+				double der1;
+				double der2;
+				der1 = (2*matTillB[matId]*T_mu + matTillA[matId])/matTillRho0[matId] + (2*matTillb[matId]*k*p.e[i])/(pow(rho_guess,2)*pow((k/pow(rho_guess,2) + 1),2)) + p.e[i]*(matTillb[matId]/(k/pow(rho_guess,2) + 1) + matTilla[matId]);
+				der2 = ex_b*(matTillA[matId]*((matTillAlpha[matId]*matTillRho0[matId]*p.e[i])/pow(rho_guess,2) + 1/matTillRho0[matId])*ex_a + (matTillb[matId]*p.e[i]*(3*k/pow(rho_guess,2) + 1))/pow((k/pow(rho_guess,2) + 1),2)) + (2*matTillBeta[matId]*matTillRho0[matId]*T_mu)/pow(rho_guess,2) * ex_b * (matTillA[matId]*T_mu*ex_a + (matTillb[matId]*p.e[i]*rho_guess)/(k/pow(rho_guess,2) + 1)) + matTilla[matId]*p.e[i];
+				eos_minus_p_der = ((p.e[i]-matTillEiv[matId])*der2 + (matTillEcv[matId] - p.e[i])*der1)/(matTillEcv[matId] - matTillEiv[matId]);
+
+		        } else {
+                    printf("\n\nDeep trouble in pressure.\nenergy[%d] = %e\nE_iv = %e, E_cv = %e\n\n", i, e, matTillEiv[matId], matTillEcv[matId]);
+                }
+		    
+		    
+		    
+		    rho = rho_guess - eos_minus_p/eos_minus_p_der;
+		        
+            	} while (fabs((rho - rho_guess)/rho)>accuracy_newton && it < 50);
+            	
+   		p.DISPH_Y[i] = p.m[i]*p.p[i]/rho;
+            
+            } // end if tillotson
+	
+
+
             } // end loop over all particles 
 
-
-            printf("In Pressure calculation: average pressure deviation is %e", tolerance/numParticles);
-    } while (tolerance/numParticles > 1e-2 && cnt < 10);     
-
-
-    // calculate the DISPH-density from the true values for p and Y
-    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-            p.DISPH_rho[i] = p.m[i]*p.p[i]/p.DISPH_Y[i];
-        }
+	
+	cnt += 1;
+    } while (max_dp > 1e-3 && cnt < 100);     
+    printf("\n\n max_dp is \n %e \n", max_dp);
 }

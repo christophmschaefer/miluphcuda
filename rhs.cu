@@ -453,6 +453,25 @@ void rightHandSide()
 # endif
 #endif
 
+
+
+#if 0 // DISPH
+// marker, here, we add the do while loop for calculate_pressure and DISPH
+    double tolerance;
+    cudaverifyKernelLOOP1() // sets p_rhs.p_stored
+
+do {
+	calculatePressure(); <- needs changes in pressure.cu (exchange rho with DISPH_rho), sets p.p
+	
+	cudaverifykernel(calculatetolerance); //returns maximum deviation from p_stored - p
+
+	cudaverifykernelLOOP2 // sets p.p[i] += p.DISPH_Y[ip] * W; p.p[i] += p.DISPH_Y[ip] * W;
+
+
+} while ( tolerance > eps ) ;
+
+#endif
+
 #if DISPH
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);

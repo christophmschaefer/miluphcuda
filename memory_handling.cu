@@ -897,6 +897,7 @@ int init_allocate_memory(void)
 #if DISPH
     cudaVerify(cudaMallocHost((void**)&p_host.dDISPH_Ydt, memorySizeForParticles));
     cudaVerify(cudaMalloc((void**)&p_device.dDISPH_Ydt, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&p_device.p_stored, memorySizeForParticles));
 #endif
 
 	cudaVerify(cudaMallocHost((void**)&p_host.drhodt, memorySizeForParticles));
@@ -1323,6 +1324,7 @@ int free_memory()
 	cudaVerify(cudaFree(p_device.noi));
 #if DISPH
 	cudaVerify(cudaFree(p_device.DISPH_rho));
+	cudaVerify(cudaFree(p_device.p_stored));
     cudaVerify(cudaFree(p_device.DISPH_Y));
 #endif
 
