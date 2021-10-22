@@ -50,6 +50,10 @@ extern __device__ int reset_movingparticles;
 
 extern __device__ volatile int maxNodeIndex;
 
+#if DISPH
+__device__ double max_dp;
+#endif
+
 // tree computational domain
 extern double *minxPerBlock, *maxxPerBlock;
 extern __device__ double minx, maxx;
@@ -455,29 +459,30 @@ void rightHandSide()
 
 
 
-#if 0 // DISPH
-// marker, here, we add the do while loop for calculate_pressure and DISPH
-    double tolerance;
-    cudaverifyKernelLOOP1() // sets p_rhs.p_stored
-
-do {
-	calculatePressure(); <- needs changes in pressure.cu (exchange rho with DISPH_rho), sets p.p
-	
-	cudaverifykernel(calculatetolerance); //returns maximum deviation from p_stored - p
-
-	cudaverifykernelLOOP2 // sets p.p[i] += p.DISPH_Y[ip] * W; p.p[i] += p.DISPH_Y[ip] * W;
-
-
-} while ( tolerance > eps ) ;
-
-#endif
 
 #if DISPH
+
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
 # endif
-    cudaVerifyKernel((calculate_pressure_and_DISPH_Y<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>( interactions)));
-    cudaVerify(cudaDeviceSynchronize());
+
+
+
+    double max_dp_host;
+    
+    int cnt = 0;
+    max_dp_host = 1.0;
+
+// start iteration procedure to solve implicit p-Y-relation
+do {
+
+cudaVerifyKernel((calculate_pressure_and_DISPH_Y<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>( interactions)));
+cudaVerify(cudaDeviceSynchronize());
+cudaVerify(cudaMemcpyFromSymbol(&max_dp_host, max_dp, sizeof(double)));
+cnt += 1;
+
+} while (max_dp_host > 1e-3 && cnt < 50);
+
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
@@ -485,6 +490,9 @@ do {
     if (param.verbose) printf("duration DISPH_pressure: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
 # endif
+
+printf("\n\n max_dp is \n %e \n", max_dp);
+
 #else
 
 #if DEBUG_RHS_RUNTIMES

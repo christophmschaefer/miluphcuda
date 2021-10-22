@@ -1450,7 +1450,7 @@ void write_particles_to_file(File file) {
     hid_t g_a_id;
 
 #if DISPH
-    hid_t DISPH_Y_id, DISPH_rho_id;
+    hid_t DISPH_Y_id, DISPH_rho_id, DISPH_y_id;
 #endif
 
 #if MORE_ANEOS_OUTPUT
@@ -1564,6 +1564,7 @@ void write_particles_to_file(File file) {
 
 #if DISPH
             fprintf(file.data, "%e\t", p_host.DISPH_Y[i]);
+            fprintf(file.data, "%e\t", p_host.DISPH_y[i]);
 #endif
 
             fprintf(file.data, "%.6le\t", p_host.h[i]);
@@ -2142,8 +2143,15 @@ void write_particles_to_file(File file) {
 
             status = H5Dwrite(DISPH_Y_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
             status = H5Dclose(DISPH_Y_id);
- #endif
+            /* DISPH_y */
+            DISPH_y_id = H5Dcreate2(file_id, "/DISPH_y", H5T_NATIVE_DOUBLE, dataspace_id,
+                    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+            for (i = 0; i < numberOfParticles; i++)
+                x[i] = p_host.DISPH_y[i];
 
+            status = H5Dwrite(DISPH_y_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+            status = H5Dclose(DISPH_y_id);
+ #endif
 
 #if MORE_ANEOS_OUTPUT
         // compute ANEOS quantities
@@ -3095,6 +3103,7 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
 
 #if DISPH
     cudaVerify(cudaMemcpy(p_host.DISPH_Y, p_device.DISPH_Y, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.DISPH_y, p_device.DISPH_y, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.dDISPH_Ydt, p_device.dDISPH_Ydt, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #endif
 

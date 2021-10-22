@@ -85,6 +85,7 @@ __global__ void checkNaNs(int *interactions)
 #if DISPH
         assert(!isnan(p.DISPH_rho[i]));
         assert(!isnan(p.DISPH_Y[i]));
+        assert(!isnan(p.DISPH_y[i]));
         assert(!isnan(p.dDISPH_Ydt[i]));
 #endif
 

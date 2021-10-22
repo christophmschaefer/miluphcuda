@@ -378,7 +378,7 @@ __global__ void CalcDivvandCurlv(int *interactions)
                     divv += p.m[j]/p.rho[j] * (vj[d] - vi[d]) * p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
                 }
 #elif DISPH
-                divv += p.DISPH_Y[j]/p.p[i] * (vj[d] - vi[d]) * dWdx[d];
+                divv += p.DISPH_Y[j]/p.DISPH_y[i] * (vj[d] - vi[d]) * dWdx[d];
 #else
                 divv += p.m[j]/p.rho[j] * (vj[d] - vi[d]) * dWdx[d];
 #endif
@@ -391,7 +391,7 @@ __global__ void CalcDivvandCurlv(int *interactions)
 
     #if DISPH
             // only one component in 2D
-            curlv[0] -= p.DISPH_Y[j]/p.p[i] * ((vi[0] - vj[0]) * dWdx[1]
+            curlv[0] -= p.DISPH_Y[j]/p.DISPH_y[i] * ((vi[0] - vj[0]) * dWdx[1]
                         - (vi[1] - vj[1]) * dWdx[0]);
             curlv[1] = 0;
     #else
@@ -403,11 +403,11 @@ __global__ void CalcDivvandCurlv(int *interactions)
 #elif DIM == 3
 
     #if DISPH
-            curlv[0] -= p.DISPH_Y[j]/p.p[i] * ((vi[1] - vj[1]) * dWdx[2]
+            curlv[0] -= p.DISPH_Y[j]/p.DISPH_y[i] * ((vi[1] - vj[1]) * dWdx[2]
                         - (vi[2] - vj[2]) * dWdx[1]);
-            curlv[1] -= p.DISPH_Y[j]/p.p[i] * ((vi[2] - vj[2]) * dWdx[0]
+            curlv[1] -= p.DISPH_Y[j]/p.DISPH_y[i] * ((vi[2] - vj[2]) * dWdx[0]
                         - (vi[0] - vj[0]) * dWdx[2]);
-            curlv[2] -= p.DISPH_Y[j]/p.p[i] * ((vi[0] - vj[0]) * dWdx[1]
+            curlv[2] -= p.DISPH_Y[j]/p.DISPH_y[i] * ((vi[0] - vj[0]) * dWdx[1]
                         - (vi[1] - vj[1]) * dWdx[0]);
     #else
             curlv[0] += p.m[j]/p.rho[i] * ((vi[1] - vj[1]) * dWdx[2]
