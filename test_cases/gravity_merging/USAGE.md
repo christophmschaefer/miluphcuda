@@ -4,7 +4,7 @@ Gravity merging test case for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 19/May/2021
+last updated: 22/Oct/2021
 
 -----------------------------------------
 
@@ -18,7 +18,7 @@ The default settings are self-gravity + Collins strength model (including fragme
 
 1. Compile miluphcuda with the `parameter.h` file from this directory.  
    Don't forget to also adapt the Makefile to your system.
-2. Unpack `initials/impact.0000.gz` and move it to this directory.
+2. Unpack `impact.0000.gz`.
 3. Adapt the start script `run.sh` to your system (path to CUDA libs and to miluphcuda executable) and execute it.
 4. Wait for the simulation to finish (75 output files).
 

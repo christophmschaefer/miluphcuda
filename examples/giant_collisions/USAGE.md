@@ -4,7 +4,7 @@ Giant Collision examples for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 18/May/2021
+last updated: 22/Oct/2021
 
 ----------------------------------------------------------------------------------
 
@@ -31,7 +31,7 @@ and 2h for *solid* on most current GPUs (benchmarked on a GTX 970).
 
 1. Compile miluphcuda using the `parameter.h` file from the respective directory (hydro or solid).  
    Don't forget to also adapt the miluphcuda Makefile to your system.
-2. Unpack `initials/impact.0000.gz` and move it one dir level up.
+2. Unpack `impact.0000.gz`.
 3. Adapt the start script `run.sh` to your system (path to CUDA libs and to miluphcuda executable) and execute it.
 4. Wait for the simulation to finish (75 output files).
    Output to stdout and stderr is written to `miluphcuda.output` and `miluphcuda.error`, respectively.
@@ -46,20 +46,20 @@ and 2h for *solid* on most current GPUs (benchmarked on a GTX 970).
   First, enter the simulation directory and run
 
         utils/postprocessing/create_xdmf.py
-  which creates an xdmf file (*paraview.xdmf* by default). You can use the default cmd-line options, so no need to
-  set anything explicitly. Note that the xdmf file contains only metadata, i.e., you still need the .h5 files it
-  points to in the same directory.  
+  (without any arguments) which creates an xdmf file (*paraview.xdmf* by default). You can use the default cmd-line
+  options, so no need to set anything explicitly. Note that the xdmf file contains only metadata, i.e., you still
+  need the .h5 files it points to in the same directory.  
   Then start Paraview and either
 
     * directly open the created xdmf file and choose settings yourself
-    * load the prepared Paraview state in `results/paraview.pvsm` (*File -> Load State*), and select
-      the created `paraview.xdmf` file under *Choose File Names*
+    * load the prepared Paraview state in `analyze-results/paraview.pvsm` (*File -> Load State*),
+      and select the created `paraview.xdmf` file under *Choose File Names*
 
-* Compare your results (e.g., visualized with Paraview) to the animations in `results/`, which
-  show the interior structure of the colliding bodies (cut views) for various quantities.
+* Compare your results (e.g., visualized with Paraview) to the animations in `expected-results/`,
+  which show the interior structure of the colliding bodies (cut views) for various quantities.
 
 * For the *solid* example, you can also visualize the workings of the Collins plasticity model by
-  running `results/plot_plastic_yielding.sh`. This produces plots for shear stress vs. pressure,
+  running `analyze-results/plot_plastic_yielding.sh`. This produces plots for shear stress vs. pressure,
   including the respective yield limit curves.
 
 ----------------------------------------------------------------------------------
@@ -67,9 +67,10 @@ and 2h for *solid* on most current GPUs (benchmarked on a GTX 970).
 
 **Where to go from here?**
 
-You can easily build on those examples for setting up your own simulations. It is straight-forward to run different scenarios,
-with varying masses, collision parameters, and even material compositions, and pre-collision rotation. We use an external
-tool for creating the required initial conditions, which is easy to use. Just drop me an e-mail if you are interested.
+You can easily build on those examples for setting up your own simulations.
+We use an external tool for creating the required initial conditions (i.e., `impact.0000`), which you can use to run
+different scenarios, with varying masses, collision parameters, and even material compositions, and pre-collision
+rotation. Just drop me an e-mail if you are interested.
 
 Take a look at the timestep statistics at the very bottom of *miluphcuda.output*. If you are not satisfied you may try
 to adjust the integrator accuracy on the cmd-line and/or the compile-time settings for the integrator in *rk2adaptive.h*.
