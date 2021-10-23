@@ -141,7 +141,7 @@
 #define JC_PLASTICITY 0
 
 // Porosity models:
-// p-alpha model implemented following Jutzi (200x)
+// p-alpha model implemented following Jutzi (200x); if in doubt activate both of the following options
 #define PALPHA_POROSITY 0         // pressure depends on distention
 #define STRESS_PALPHA_POROSITY 0  // deviatoric stress is also affected by distention
 // Sirono model modified by Geretshauser (2009/10)

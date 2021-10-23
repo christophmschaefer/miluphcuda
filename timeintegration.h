@@ -37,8 +37,8 @@
 #include "sinking.h"
 
 
-// Courant (CFL) number
-#define COURANT_FACT 0.7
+// Courant (CFL) number (note that our sml is defined up to the zero of the kernel, not half of it)
+#define COURANT_FACT 0.4
 // factor for limiting timestep based on local forces/acceleration
 #define FORCES_FACT 0.2
 

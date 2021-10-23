@@ -181,6 +181,12 @@ static void print_compile_information(void)
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "P-alpha porosity model:\t  %s\n", yesno);
+#if STRESS_PALPHA_POROSITY
+    strcpy(yesno, "yes");
+#else
+    strcpy(yesno, "no");
+#endif
+    fprintf(stdout, "P-alpha model (distention) affects S tensor:\t  %s\n", yesno);
 #if SIRONO_POROSITY
     strcpy(yesno, "yes");
 #else
