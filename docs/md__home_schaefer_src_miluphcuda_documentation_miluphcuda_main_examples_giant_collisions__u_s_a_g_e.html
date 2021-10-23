@@ -73,7 +73,7 @@ $(function() {
 <div class="contents">
 <div class="textblock"><p>Christoph Burger <br  />
  <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a></p>
-<p>last updated: 18/May/2021</p>
+<p>last updated: 22/Oct/2021</p>
 <hr  />
 <p>These examples represent a collision of a ~1/10 Moon-mass body with a ~Moon-mass target. Both bodies have a 30 mass% iron core and a 70 mass% rocky mantle. The collision velocity is two times the mutual escape velocity (at the moment of first contact). The impact angle is 45 deg.</p>
 <p>You can choose between two material rheologies:</p>
@@ -88,7 +88,7 @@ $(function() {
 <ol type="1">
 <li>Compile miluphcuda using the <code>parameter.h</code> file from the respective directory (hydro or solid). <br  />
  Don't forget to also adapt the miluphcuda Makefile to your system.</li>
-<li>Unpack <code>initials/impact.0000.gz</code> and move it one dir level up.</li>
+<li>Unpack <code>impact.0000.gz</code>.</li>
 <li>Adapt the start script <code>run.sh</code> to your system (path to CUDA libs and to miluphcuda executable) and execute it.</li>
 <li>Wait for the simulation to finish (75 output files). Output to stdout and stderr is written to <code>miluphcuda.output</code> and <code>miluphcuda.error</code>, respectively.</li>
 </ol>
@@ -98,18 +98,18 @@ $(function() {
 <li><p class="startli">You can visualize the simulation for example with <em>Paraview</em>. Find the latest release at <a href="https://www.paraview.org/">https://www.paraview.org/</a>. <br  />
 </p>
 <p class="startli">First, enter the simulation directory and run </p><pre class="fragment">  utils/postprocessing/create_xdmf.py
-</pre><p> which creates an xdmf file (<em>paraview.xdmf</em> by default). You can use the default cmd-line options, so no need to set anything explicitly. Note that the xdmf file contains only metadata, i.e., you still need the .h5 files it points to in the same directory. <br  />
+</pre><p> (without any arguments) which creates an xdmf file (<em>paraview.xdmf</em> by default). You can use the default cmd-line options, so no need to set anything explicitly. Note that the xdmf file contains only metadata, i.e., you still need the .h5 files it points to in the same directory. <br  />
  Then start Paraview and either</p><ul>
 <li>directly open the created xdmf file and choose settings yourself</li>
-<li>load the prepared Paraview state in <code>results/paraview.pvsm</code> (<em><a class="el" href="struct_file.html">File</a> -&gt; Load State</em>), and select the created <code>paraview.xdmf</code> file under <em>Choose <a class="el" href="struct_file.html">File</a> Names</em></li>
+<li>load the prepared Paraview state in <code>analyze-results/paraview.pvsm</code> (<em><a class="el" href="struct_file.html">File</a> -&gt; Load State</em>), and select the created <code>paraview.xdmf</code> file under <em>Choose <a class="el" href="struct_file.html">File</a> Names</em></li>
 </ul>
 </li>
-<li>Compare your results (e.g., visualized with Paraview) to the animations in <code>results/</code>, which show the interior structure of the colliding bodies (cut views) for various quantities.</li>
-<li>For the <em>solid</em> example, you can also visualize the workings of the Collins plasticity model by running <code>results/plot_plastic_yielding.sh</code>. This produces plots for shear stress vs. pressure, including the respective yield limit curves.</li>
+<li>Compare your results (e.g., visualized with Paraview) to the animations in <code>expected-results/</code>, which show the interior structure of the colliding bodies (cut views) for various quantities.</li>
+<li>For the <em>solid</em> example, you can also visualize the workings of the Collins plasticity model by running <code>analyze-results/plot_plastic_yielding.sh</code>. This produces plots for shear stress vs. pressure, including the respective yield limit curves.</li>
 </ul>
 <hr  />
 <p><b>Where to go from here?</b></p>
-<p>You can easily build on those examples for setting up your own simulations. It is straight-forward to run different scenarios, with varying masses, collision parameters, and even material compositions, and pre-collision rotation. We use an external tool for creating the required initial conditions, which is easy to use. Just drop me an e-mail if you are interested.</p>
+<p>You can easily build on those examples for setting up your own simulations. We use an external tool for creating the required initial conditions (i.e., <code>impact.0000</code>), which you can use to run different scenarios, with varying masses, collision parameters, and even material compositions, and pre-collision rotation. Just drop me an e-mail if you are interested.</p>
 <p>Take a look at the timestep statistics at the very bottom of <em>miluphcuda.output</em>. If you are not satisfied you may try to adjust the integrator accuracy on the cmd-line and/or the compile-time settings for the integrator in <em><a class="el" href="rk2adaptive_8h.html">rk2adaptive.h</a></em>.</p>
 <p>You can also run further postprocessing on the results, e.g., to find all collision fragments and gravitationally bound aggregates of those. The necessary tools are included in </p><pre class="fragment">    miluphcuda/utils/postprocessing/fast_identify_fragments_and_calc_aggregates/
 </pre><p> Check the QuickStart guide there for more details.</p>
@@ -119,7 +119,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - Giant Collision examples for miluphcuda<br />
-    Generated on Fri Oct 22 2021 07:05:12 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
+    Generated on Sat Oct 23 2021 07:05:16 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
   </small></address>
 </body>
 </html>

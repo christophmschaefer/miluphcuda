@@ -73,7 +73,7 @@ $(function() {
 <div class="contents">
 <div class="textblock"><p>Christoph Burger <br  />
  <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a></p>
-<p>last updated: 08/Jun/2021</p>
+<p>last updated: 22/Oct/2021</p>
 <hr  />
 <p>This example represent an impact scenario of a basalt projectile onto a basalt, half-sphere target.</p>
 <p>The spherical projectile has a radius of 0.5m, impacts with 6km/s, at an impact angle (to the vertical) of 30 deg.</p>
@@ -92,7 +92,7 @@ $(function() {
 <ol type="1">
 <li>Compile miluphcuda using the <code>parameter.h</code> file from this directory. <br  />
  Don't forget to also adapt the miluphcuda Makefile to your system.</li>
-<li>Unpack <code>initials/impact.0000.gz</code> and move <code>impact.0000</code> to this directory.</li>
+<li>Unpack <code>impact.0000.gz</code> to this directory.</li>
 <li>Adapt the start script <code>run.sh</code> to your system (path to CUDA libs and to miluphcuda executable) and execute it.</li>
 <li>Wait for the simulation to finish (200 output files). Output to stdout and stderr is written to <code>miluphcuda.output</code> and <code>miluphcuda.error</code>, respectively.</li>
 </ol>
@@ -102,22 +102,22 @@ $(function() {
 <li><p class="startli">You can visualize the simulation for example with <em>Paraview</em>. Find the latest release at <a href="https://www.paraview.org/">https://www.paraview.org/</a>. <br  />
 </p>
 <p class="startli">First, enter the simulation directory and run </p><pre class="fragment">  utils/postprocessing/create_xdmf.py
-</pre><p> which creates an xdmf file (<em>paraview.xdmf</em> by default). You can use the default cmd-line options, so no need to set anything explicitly. Note that the xdmf file contains only metadata, i.e., you still need the .h5 files it points to in the same directory. <br  />
+</pre><p> (without any arguments) which creates an xdmf file (<em>paraview.xdmf</em> by default). You can use the default cmd-line options, so no need to set anything explicitly. Note that the xdmf file contains only metadata, i.e., you still need the .h5 files it points to in the same directory. <br  />
  Then start Paraview and either</p><ul>
 <li>directly open the created xdmf file and choose settings yourself</li>
-<li>load the prepared Paraview state in <code>results/paraview.pvsm</code> (<em><a class="el" href="struct_file.html">File</a> -&gt; Load State</em>), and select the created paraview.xdmf file under <em>Choose <a class="el" href="struct_file.html">File</a> Names</em> (note that this shows you a slice of the target by default, for better visibility of the cratering process)</li>
+<li>load the prepared Paraview state in <code>analyze-results/paraview.pvsm</code> (<em><a class="el" href="struct_file.html">File</a> -&gt; Load State</em>), and select the created paraview.xdmf file under <em>Choose <a class="el" href="struct_file.html">File</a> Names</em> (note that this shows you a slice of the target by default, for better visibility of the cratering process)</li>
 </ul>
 </li>
-<li>Compare your results (e.g., visualized with Paraview) to the animations in <code>results/animations/</code>, which show the cratering process (a sclice of the target) for various quantities.</li>
-<li>A full view of the (half-sphere) target and the impact process is visualized in <code>results/animations/full.mp4</code>.</li>
+<li>Compare your results (e.g., visualized with Paraview) to the animations in <code>expected-results/animations/</code>, which show the cratering process (a sclice of the target) for various quantities.</li>
+<li>A full view of the (half-sphere) target and the impact process is visualized in <code>expected-results/animations/full.mp4</code>.</li>
 <li>An important aspect of the porosity model is that the <em>crush curve</em> (the curve distention vs. pressure which is followed during compaction) is modeled correctly. Since the pressures that lead to compaction are typically released again quickly, the SPH particles will eventually lie either on or below the crush curve &ndash; if the model is accurate. <br  />
- You can check this by running for example <pre class="fragment">  results/plot_p_alpha_convergence.py -v --files impact.000[1-4].h5
-</pre> which plots SPH particles + the theoretical crush curve for output frames 1 through 4. Take a look at <code>results/p_vs_alpha.first4frames.png</code> to see what the plots should qualitatively look like for the above four frames. You can of course specify any number/sequence of frames you are interested in for plotting.</li>
-<li>You can also visualize the workings of the Collins plasticity model by running <code>results/plot_plastic_yielding.sh</code>. This produces plots for shear stress vs. pressure, including the respective yield limit curves.</li>
+ You can check this by running for example <pre class="fragment">  analyze-results/plot_p_alpha_convergence.py -v --files impact.000[1-4].h5
+</pre> which plots SPH particles + the theoretical crush curve for output frames 1 through 4. Take a look at <code>expected-results/p_vs_alpha.first4frames.png</code> to see what the plots should qualitatively look like for the above four frames. You can of course specify any number/sequence of frames you are interested in for plotting.</li>
+<li>You can also visualize the workings of the Collins plasticity model by running <code>analyze-results/plot_plastic_yielding.sh</code>. This produces plots for shear stress vs. pressure, including the respective yield limit curves.</li>
 </ul>
 <hr  />
 <p><b>Where to go from here?</b></p>
-<p>You can easily build on this example for setting up your own simulations. It is straight-forward to run different scenarios, with varying impactor masses, impact parameters, and even material compositions and parameters. We use an external tool for creating the required initial conditions, which is easy to use. Just drop me an e-mail if you are interested.</p>
+<p>You can easily build on this example for setting up your own simulations. We use an external tool for creating the required initial conditions (i.e., <code>impact.0000</code>), which you can use to run different scenarios, with varying impactor masses, impact parameters, and even material compositions and parameters. Just drop me an e-mail if you are interested.</p>
 <p>Take a look at the timestep statistics at the very bottom of <em>miluphcuda.output</em>. If you are not satisfied you may try to adjust the integrator accuracy on the cmd-line and/or the compile-time settings for the integrator in <em><a class="el" href="rk2adaptive_8h.html">rk2adaptive.h</a></em>.</p>
 <p>Enjoy! </p>
 </div></div><!-- contents -->
@@ -125,7 +125,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - Impact example for miluphcuda<br />
-    Generated on Fri Oct 22 2021 07:05:12 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
+    Generated on Sat Oct 23 2021 07:05:16 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
   </small></address>
 </body>
 </html>
