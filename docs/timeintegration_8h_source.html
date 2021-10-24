@@ -88,8 +88,8 @@ $(function() {
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="sinking_8h.html">sinking.h</a>&quot;</span></div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="comment">// Courant (CFL) number</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="timeintegration_8h.html#a6ffbcf2ba306e9583d21988f8a1acaaa">   41</a></span>&#160;<span class="preprocessor">#define COURANT_FACT 0.7</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="comment">// Courant (CFL) number (note that our sml is defined up to the zero of the kernel, not half of it)</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="timeintegration_8h.html#a6ffbcf2ba306e9583d21988f8a1acaaa">   41</a></span>&#160;<span class="preprocessor">#define COURANT_FACT 0.4</span></div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="comment">// factor for limiting timestep based on local forces/acceleration</span></div>
 <div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="timeintegration_8h.html#ae9a0ef30d7f55ac5740a18f33c60ba28">   43</a></span>&#160;<span class="preprocessor">#define FORCES_FACT 0.2</span></div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
@@ -219,7 +219,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_main/timeintegration.h Source File<br />
-    Generated on Sat Oct 23 2021 07:05:14 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
+    Generated on Sun Oct 24 2021 07:05:10 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
   </small></address>
 </body>
 </html>
