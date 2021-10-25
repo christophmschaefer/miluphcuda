@@ -30,7 +30,7 @@
 #include "pressure.h"
 #include "linalg.h"
 #include "viscosity.h"
-#include "DISPH_pressure.h"
+#include "DISPH_yY.h"
 
 
 

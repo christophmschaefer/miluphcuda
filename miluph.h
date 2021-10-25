@@ -132,7 +132,7 @@ struct Particle {
 
 #if DISPH
     double *DISPH_rho; ///< density in DISPH
-    double *p_stored; ///< temporary pressure in DISPH
+    double *DISPH_dp; ///< temporary pressure in DISPH
     double *DISPH_Y; ///< basic quantity in  DISPH
     double *DISPH_y; ///< basic quantity in DISPH
 #endif

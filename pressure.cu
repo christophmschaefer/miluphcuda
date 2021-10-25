@@ -39,29 +39,35 @@ __global__ void calculatePressure() {
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+	    
+	#if DISPH
+    		rho = p.DISPH_rho[i];	
+	#else
+    		rho = p.rho[i];
+	#endif
+
         pressure = 0.0;
         matId = p_rhs.materialId[i];
         if (EOS_TYPE_IGNORE == matEOS[matId] || matId == EOS_TYPE_IGNORE) {
             continue;
         }
         if (EOS_TYPE_POLYTROPIC_GAS == matEOS[matId]) {
-            p.p[i] = matPolytropicK[matId] * pow(p.rho[i], matPolytropicGamma[matId]);
+            p.p[i] = matPolytropicK[matId] * pow(rho, matPolytropicGamma[matId]);
         } else if (EOS_TYPE_IDEAL_GAS == matEOS[matId]) {
-            p.p[i] = (matPolytropicGamma[matId] - 1) * p.rho[i] * p.e[i];
+            p.p[i] = (matPolytropicGamma[matId] - 1) * rho * p.e[i];
         } else if (EOS_TYPE_LOCALLY_ISOTHERMAL_GAS == matEOS[matId]) {
-            p.p[i] = p.cs[i]*p.cs[i] * p.rho[i];
+            p.p[i] = p.cs[i]*p.cs[i] * rho;
         } else if (EOS_TYPE_ISOTHERMAL_GAS == matEOS[matId]) {
             /* this is pure molecular hydrogen at 10 K */
-            p.p[i] = 41255.407 * p.rho[i];
+            p.p[i] = 41255.407 * rho;
         } else if (EOS_TYPE_MURNAGHAN == matEOS[matId] || EOS_TYPE_VISCOUS_REGOLITH == matEOS[matId]) {
-            eta = p.rho[i] / matRho0[matId];
+            eta = rho / matRho0[matId];
             if (eta < matRhoLimit[matId]) {
                 p.p[i] = 0.0;
             } else {
                 p.p[i] = (matBulkmodulus[matId]/matN[matId])*(pow(eta, matN[matId]) - 1.0);
             }
         } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
-            rho = p.rho[i];
             e = p.e[i];
             eta = rho / matTillRho0[matId];
             mu = eta - 1.0;
@@ -92,23 +98,23 @@ __global__ void calculatePressure() {
             }
         } else if (EOS_TYPE_ANEOS == matEOS[matId]) {
             /* find array-indices just below the actual values of rho and e */
-            i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
+            i_rho = array_index(rho, aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
             i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
             /* interpolate (bi)linearly to obtain the pressure */
-            p.p[i] = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId]);
+            p.p[i] = bilinear_interpolation_from_linearized(rho, p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId]);
 #if SIRONO_POROSITY
         } else if (matEOS[matId] == EOS_TYPE_SIRONO) {
             double K_0 = matporsirono_K_0[matId];
             double rho_0 = matporsirono_rho_0[matId];
             double gamma_K = matporsirono_gamma_K[matId];
-            pressure = p.K[i] * (p.rho[i] / p.rho_0prime[i] - 1.0);
+            pressure = p.K[i] * (rho / p.rho_0prime[i] - 1.0);
             p.flag_rho_0prime[i] = -1;
             if (pressure >= 0.0) {
-                if (p.rho[i] >= p.rho_c_plus[i]) {
+                if (rho >= p.rho_c_plus[i]) {
                     if (pressure >= p.compressive_strength[i]) {
                         pressure = p.compressive_strength[i];
                         p.flag_plastic[i] = 1;
-                        p.rho_c_plus[i] = p.rho[i];
+                        p.rho_c_plus[i] = rho;
                         p.flag_rho_0prime[i] = 1;
                     } else {
                         p.flag_plastic[i] = -1;
@@ -127,11 +133,11 @@ __global__ void calculatePressure() {
                     }
                 }
             } else {
-                if (p.rho[i] <= p.rho_c_minus[i]) {
+                if (rho <= p.rho_c_minus[i]) {
                     if (pressure <= p.tensile_strength[i]) {
                         pressure = p.tensile_strength[i];
                         p.flag_plastic[i] = 1;
-                        p.rho_c_minus[i] = p.rho[i];
+                        p.rho_c_minus[i] = rho;
                         p.flag_rho_0prime[i] = 1;
                     } else {
                         p.flag_plastic[i] = -1;
@@ -154,12 +160,12 @@ __global__ void calculatePressure() {
             if (p.flag_rho_0prime[i] == 1) {
                 p.flag_rho_0prime[i] = -1;
                 p.flag_plastic[i] = -1;
-                p.K[i] = K_0 * pow((p.rho[i] / rho_0), gamma_K);
+                p.K[i] = K_0 * pow((rho / rho_0), gamma_K);
                 if (p.K[i] < 2000.0) {
                     p.K[i] = 2000.0;
                     printf("p.K[%d] is small and set to 2000.0", i);
                 }
-                p.rho_0prime[i] = p.rho[i] / (1.0 + (pressure / p.K[i]));
+                p.rho_0prime[i] = rho / (1.0 + (pressure / p.K[i]));
             }
             p.p[i] = pressure;
 #endif
@@ -178,7 +184,7 @@ __global__ void calculatePressure() {
             int flag_alpha_quad;	/* if this flag is set -> alpha gets calculated by a quadradic equation and not via the crush curve */
             double dp; 			/* pressure change for the calculation of dalphadp */
             double rho_0 = matTillRho0[matId];      /* parameters for Tillotson EOS -> calc pressure solid */
-            double eta = p.rho[i] * p.alpha_jutzi[i] / rho_0;
+            double eta = rho * p.alpha_jutzi[i] / rho_0;
 			int crushcurve_style = matcrushcurve_style[matId]; /* crushcurve_style from material.cfg -> 0 is the quadratic crush curve, 1 is the real/steep crush curve by jutzi */
             if (matEOS[matId] == EOS_TYPE_JUTZI) {
                 double alpha_till = matTillAlpha[matId];
@@ -200,54 +206,54 @@ __global__ void calculatePressure() {
                     mu = eta - 1.0;
                     if (p.e[i] < E_iv || eta  >= 1.0) {
                         pressure_solid = (a + b / (p.e[i] / (eta * eta * E_0) + 1.0))
-                                       * p.rho[i] * p.alpha_jutzi[i] * p.e[i] + A * mu + B * mu * mu;
-                        p.delpdele[i] = a * p.rho[i] * p.alpha_jutzi[i] + p.rho[i] * p.alpha_jutzi[i]
+                                       * rho * p.alpha_jutzi[i] * p.e[i] + A * mu + B * mu * mu;
+                        p.delpdele[i] = a * rho * p.alpha_jutzi[i] + p.rho[i] * p.alpha_jutzi[i]
                                       * b / (pow(p.e[i] / (E_0 * eta * eta) + 1.0, 2));
                         p.delpdelrho[i] = a * p.e[i] + p.e[i] * b * (1.0 + 3.0 * p.e[i] / (E_0 * eta * eta))
                                         / (pow(p.e[i] / (E_0 * eta * eta) + 1.0, 2))
                                         + A / rho_0 + 2.0 * B / rho_0 * (eta - 1.0);
                     } else if (p.e[i] > E_cv && eta < 1.0) {
-                        pressure_solid = a * p.rho[i] * p.alpha_jutzi[i] * p.e[i]
-                                       + (b * p.rho[i] * p.alpha_jutzi[i] * p.e[i] / (p.e[i] / (eta * eta * E_0) + 1.0)
-                                       + A * mu * exp(-beta_till * (rho_0 / (p.rho[i] * p.alpha_jutzi[i]) - 1.0)))
-                                       * exp(-alpha_till * (pow(rho_0 / (p.rho[i] * p.alpha_jutzi[i]) - 1.0, 2)));
-                        p.delpdele[i] = a * p.rho[i] * p.alpha_jutzi[i] + p.rho[i] * p.alpha_jutzi[i] * b / (pow(p.e[i]/(E_0 * eta * eta) + 1.0, 2))
-                                      * exp(-alpha_till * (pow(rho_0 / (p.rho[i] * p.alpha_jutzi[i]) - 1.0, 2)));
-                        p.delpdelrho[i] = a * p.e[i] + exp(-alpha_till * (pow(rho_0 / (p.rho[i] * p.alpha_jutzi[i]) - 1.0, 2)))
-                                        * (2.0 * alpha_till * rho_0 / (p.rho[i] * p.rho[i] * p.alpha_jutzi[i]
-                                        * p.alpha_jutzi[i]) * (rho_0 / (p.rho[i] * p.alpha_jutzi[i]) - 1.0)
-                                        * (b * p.rho[i] * p.alpha_jutzi[i] * p.e[i] / (p.e[i] / (E_0 * eta * eta) + 1.0)
-                                        + A * mu * exp(-beta_till * (rho_0 / (p.rho[i] * p.alpha_jutzi[i]) - 1.0)))
+                        pressure_solid = a * rho * p.alpha_jutzi[i] * p.e[i]
+                                       + (b * rho * p.alpha_jutzi[i] * p.e[i] / (p.e[i] / (eta * eta * E_0) + 1.0)
+                                       + A * mu * exp(-beta_till * (rho_0 / (rho * p.alpha_jutzi[i]) - 1.0)))
+                                       * exp(-alpha_till * (pow(rho_0 / (rho * p.alpha_jutzi[i]) - 1.0, 2)));
+                        p.delpdele[i] = a * rho * p.alpha_jutzi[i] + p.rho[i] * p.alpha_jutzi[i] * b / (pow(p.e[i]/(E_0 * eta * eta) + 1.0, 2))
+                                      * exp(-alpha_till * (pow(rho_0 / (rho * p.alpha_jutzi[i]) - 1.0, 2)));
+                        p.delpdelrho[i] = a * p.e[i] + exp(-alpha_till * (pow(rho_0 / (rho * p.alpha_jutzi[i]) - 1.0, 2)))
+                                        * (2.0 * alpha_till * rho_0 / (rho * p.rho[i] * p.alpha_jutzi[i]
+                                        * p.alpha_jutzi[i]) * (rho_0 / (rho * p.alpha_jutzi[i]) - 1.0)
+                                        * (b * rho * p.alpha_jutzi[i] * p.e[i] / (p.e[i] / (E_0 * eta * eta) + 1.0)
+                                        + A * mu * exp(-beta_till * (rho_0 / (rho * p.alpha_jutzi[i]) - 1.0)))
                                         + b * p.e[i] * (1.0 + 3.0 * p.e[i] / (E_0 * eta * eta)) / (pow(p.e[i] / (E_0 * eta * eta) + 1.0, 2))
-                                        + A * exp(-beta_till * (rho_0 / (p.rho[i] * p.alpha_jutzi[i]) - 1.0))
-                                        * (1.0 / rho_0 + beta_till / (p.rho[i] * p.alpha_jutzi[i])
-                                        - beta_till * rho_0 / (p.rho[i] * p.rho[i] * p.alpha_jutzi[i] * p.alpha_jutzi[i])));
+                                        + A * exp(-beta_till * (rho_0 / (rho * p.alpha_jutzi[i]) - 1.0))
+                                        * (1.0 / rho_0 + beta_till / (rho * p.alpha_jutzi[i])
+                                        - beta_till * rho_0 / (rho * p.rho[i] * p.alpha_jutzi[i] * p.alpha_jutzi[i])));
                     } else if (p.e[i] > E_iv && eta < 1.0) {
                         /* for intermediate states:
                          * weighted average of pressures calculated by expanded
                          * and compressed versions of Tillotson (both evaluated at e)
                          */
                         p1 = (a + b / (p.e[i] / (eta * eta * E_0) + 1.0))
-                           * p.rho[i] * p.alpha_jutzi[i] * p.e[i] + A * mu + B * mu * mu;
-                        p2 = a * p.rho[i] * p.alpha_jutzi[i] * p.e[i]
-                           + (b * p.rho[i] * p.alpha_jutzi[i] * p.e[i] / (p.e[i] / (eta * eta * E_0) + 1.0)
-                           + A * mu * exp(-beta_till * (rho_0 / (p.rho[i] * p.alpha_jutzi[i]) - 1.0)))
-                           * exp(-alpha_till * (pow(rho_0 / (p.rho[i] * p.alpha_jutzi[i]) - 1.0, 2)));
+                           * rho * p.alpha_jutzi[i] * p.e[i] + A * mu + B * mu * mu;
+                        p2 = a * rho * p.alpha_jutzi[i] * p.e[i]
+                           + (b * rho * p.alpha_jutzi[i] * p.e[i] / (p.e[i] / (eta * eta * E_0) + 1.0)
+                           + A * mu * exp(-beta_till * (rho_0 / (rho * p.alpha_jutzi[i]) - 1.0)))
+                           * exp(-alpha_till * (pow(rho_0 / (rho * p.alpha_jutzi[i]) - 1.0, 2)));
                         pressure_solid = ((p.e[i] - E_iv) * p2 + (E_cv - p.e[i]) * p1) / (E_cv - E_iv);
-                        p.delpdele[i] = ((p2 - p1) + (p.e[i] - E_iv) * a * p.rho[i] * p.alpha_jutzi[i]
-                                      + p.rho[i] * p.alpha_jutzi[i] * b / (pow(p.e[i]/(E_0 * eta * eta) + 1.0, 2))
-                                      * exp(-alpha_till * (pow(rho_0 / (p.rho[i] * p.alpha_jutzi[i]) - 1.0, 2)))
-                                      + (E_cv - p.e[i]) * a * p.rho[i] * p.alpha_jutzi[i] + p.rho[i] * p.alpha_jutzi[i]
+                        p.delpdele[i] = ((p2 - p1) + (p.e[i] - E_iv) * a * rho * p.alpha_jutzi[i]
+                                      + rho * p.alpha_jutzi[i] * b / (pow(p.e[i]/(E_0 * eta * eta) + 1.0, 2))
+                                      * exp(-alpha_till * (pow(rho_0 / (rho * p.alpha_jutzi[i]) - 1.0, 2)))
+                                      + (E_cv - p.e[i]) * a * rho * p.alpha_jutzi[i] + p.rho[i] * p.alpha_jutzi[i]
                                       * b / (pow(p.e[i] / (E_0 * eta * eta) + 1.0, 2))) / (E_cv - E_iv);
-                        p.delpdelrho[i] = ((a * p.e[i] + exp(-alpha_till * (pow(rho_0 / (p.rho[i] * p.alpha_jutzi[i]) - 1.0, 2)))
-                                        * (2.0 * alpha_till * rho_0 / (p.rho[i] * p.rho[i] * p.alpha_jutzi[i]
-                                        * p.alpha_jutzi[i]) * (rho_0 / (p.rho[i] * p.alpha_jutzi[i]) - 1.0)
-                                        * (b * p.rho[i] * p.alpha_jutzi[i] * p.e[i] / (p.e[i] / (E_0 * eta * eta) + 1.0)
-                                        + A * mu * exp(-beta_till * (rho_0 / (p.rho[i] * p.alpha_jutzi[i]) - 1.0)))
+                        p.delpdelrho[i] = ((a * p.e[i] + exp(-alpha_till * (pow(rho_0 / (rho * p.alpha_jutzi[i]) - 1.0, 2)))
+                                        * (2.0 * alpha_till * rho_0 / (rho * p.rho[i] * p.alpha_jutzi[i]
+                                        * p.alpha_jutzi[i]) * (rho_0 / (rho * p.alpha_jutzi[i]) - 1.0)
+                                        * (b * rho * p.alpha_jutzi[i] * p.e[i] / (p.e[i] / (E_0 * eta * eta) + 1.0)
+                                        + A * mu * exp(-beta_till * (rho_0 / (rho * p.alpha_jutzi[i]) - 1.0)))
                                         + b * p.e[i] * (1.0 + 3.0 * p.e[i] / (E_0 * eta * eta)) / (pow(p.e[i] / (E_0 * eta * eta) + 1.0, 2))
-                                        + A * exp(-beta_till * (rho_0 / (p.rho[i] * p.alpha_jutzi[i]) - 1.0))
-                                        * (1.0 / rho_0 + beta_till / (p.rho[i] * p.alpha_jutzi[i]) - beta_till * rho_0
-                                        / (p.rho[i] * p.rho[i] * p.alpha_jutzi[i] * p.alpha_jutzi[i])))) * (p.e[i] - E_iv)
+                                        + A * exp(-beta_till * (rho_0 / (rho * p.alpha_jutzi[i]) - 1.0))
+                                        * (1.0 / rho_0 + beta_till / (rho * p.alpha_jutzi[i]) - beta_till * rho_0
+                                        / (rho * p.rho[i] * p.alpha_jutzi[i] * p.alpha_jutzi[i])))) * (p.e[i] - E_iv)
                                         + (a * p.e[i] + p.e[i] * b * (1.0 + 3.0 * p.e[i]  / (E_0 * eta * eta))
                                         / (pow(p.e[i] / (E_0 * eta * eta) + 1.0, 2))
                                         + A / rho_0 + 2.0 * B / rho_0 * (eta - 1.0))
@@ -263,16 +269,16 @@ __global__ void calculatePressure() {
                 double rho_0 = matRho0[matId];
                 double n = matN[matId];
                 double K_0 = matBulkmodulus[matId];
-                double eta = p.rho[i] * p.alpha_jutzi[i] / rho_0;
+                double eta = rho * p.alpha_jutzi[i] / rho_0;
                 pressure_solid = K_0 / n * (pow(eta, n) - 1.0);
                 p.delpdele[i] = 0.0;
                 p.delpdelrho[i] = K_0 / rho_0 * (pow(eta, n - 1.0));
             } else if (matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
                 /* find array-indices just below the actual values of rho and e */
-                i_rho = array_index(p.alpha_jutzi[i] * p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
+                i_rho = array_index(p.alpha_jutzi[i] * rho, aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
                 i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
                 /* interpolate (bi)linearly to obtain the pressure and dp/drho and dp/de */
-                bilinear_interpolation_from_linearized_plus_derivatives(p.alpha_jutzi[i] * p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], &pressure_solid, &(p.delpdelrho[i]), &(p.delpdele[i]) );
+                bilinear_interpolation_from_linearized_plus_derivatives(p.alpha_jutzi[i] * rho, p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], &pressure_solid, &(p.delpdelrho[i]), &(p.delpdele[i]) );
             }
 
             pressure = pressure_solid / p.alpha_jutzi[i]; /* from the P-alpha model */
@@ -305,9 +311,9 @@ __global__ void calculatePressure() {
 //                    p.alpha_jutzi[i] = 1.0;
                 }
             }
-            p.dalphadrho[i] = ((pressure / (p.rho[i] * p.rho[i]) * p.delpdele[i] + p.alpha_jutzi[i] * p.delpdelrho[i]) * p.dalphadp[i])
-                            / (p.alpha_jutzi[i] + p.dalphadp[i] * (pressure - p.rho[i] * p.delpdelrho[i]));
-            p.f[i] = 1.0 + p.dalphadrho[i] * p.rho[i] / p.alpha_jutzi[i];
+            p.dalphadrho[i] = ((pressure / (rho * p.rho[i]) * p.delpdele[i] + p.alpha_jutzi[i] * p.delpdelrho[i]) * p.dalphadp[i])
+                            / (p.alpha_jutzi[i] + p.dalphadp[i] * (pressure - rho * p.delpdelrho[i]));
+            p.f[i] = 1.0 + p.dalphadrho[i] * rho / p.alpha_jutzi[i];
             if (p.alpha_jutzi[i] <= 1.0) {
                 p.f[i] = 1.0;
                 p.alpha_jutzi[i] = 1.0;
@@ -319,7 +325,7 @@ __global__ void calculatePressure() {
         } else if (EOS_TYPE_EPSILON == matEOS[matId]) {
             double pressure_solid = 0.0;
             double rho_0 = matTillRho0[matId];      /* parameters for Tillotson EOS -> calc pressure solid */
-            double eta = p.rho[i] * p.alpha_epspor[i] / rho_0;
+            double eta = rho * p.alpha_epspor[i] / rho_0;
             double alpha_till = matTillAlpha[matId];
             double beta_till = matTillBeta[matId];
             double a = matTilla[matId];
@@ -335,12 +341,12 @@ __global__ void calculatePressure() {
                 mu = eta - 1.0;
                 if (p.e[i] <= E_iv || eta  >= 1.0) {
                     pressure_solid = (a + b / (p.e[i] / (eta * eta * E_0) + 1.0))
-                                   * p.rho[i] * p.alpha_epspor[i] * p.e[i] + A * mu + B * mu * mu;
+                                   * rho * p.alpha_epspor[i] * p.e[i] + A * mu + B * mu * mu;
                 } else if (p.e[i] >= E_cv && eta >= 0.0) {
-                    pressure_solid = a * p.rho[i] * p.alpha_epspor[i] * p.e[i]
-                                   + (b * p.rho[i] * p.alpha_epspor[i] * p.e[i] / (p.e[i] / (eta * eta * E_0) + 1.0)
-                                   + A * mu * exp(-beta_till * (rho_0 / (p.rho[i] * p.alpha_epspor[i]) - 1.0)))
-                                   * exp(-alpha_till * (pow(rho_0 / (p.rho[i]
+                    pressure_solid = a * rho * p.alpha_epspor[i] * p.e[i]
+                                   + (b * rho * p.alpha_epspor[i] * p.e[i] / (p.e[i] / (eta * eta * E_0) + 1.0)
+                                   + A * mu * exp(-beta_till * (rho_0 / (rho * p.alpha_epspor[i]) - 1.0)))
+                                   * exp(-alpha_till * (pow(rho_0 / (rho
                                    * p.alpha_epspor[i]) - 1.0, 2)));
                 } else if (p.e[i] > E_iv && p.e[i] < E_cv) {
                     /* for intermediate states:
@@ -348,11 +354,11 @@ __global__ void calculatePressure() {
                     * and compressed versions of Tillotson (both evaluated at e)
                     */
                     p1 = (a + b / (p.e[i] / (eta * eta * E_0) + 1.0))
-                       * p.rho[i] * p.alpha_epspor[i] * p.e[i] + A * mu + B * mu * mu;
-                    p2 = a * p.rho[i] * p.alpha_epspor[i] * p.e[i]
-                       + (b * p.rho[i] * p.alpha_epspor[i] * p.e[i] / (p.e[i] / (eta * eta * E_0) + 1.0)
-                       + A * mu * exp(-beta_till * (rho_0 / (p.rho[i] * p.alpha_epspor[i]) - 1.0)))
-                       * exp(-alpha_till * (pow(rho_0 / (p.rho[i] * p.alpha_epspor[i]) - 1.0, 2)));
+                       * rho * p.alpha_epspor[i] * p.e[i] + A * mu + B * mu * mu;
+                    p2 = a * rho * p.alpha_epspor[i] * p.e[i]
+                       + (b * rho * p.alpha_epspor[i] * p.e[i] / (p.e[i] / (eta * eta * E_0) + 1.0)
+                       + A * mu * exp(-beta_till * (rho_0 / (rho * p.alpha_epspor[i]) - 1.0)))
+                       * exp(-alpha_till * (pow(rho_0 / (rho * p.alpha_epspor[i]) - 1.0, 2)));
                     pressure_solid = ((p.e[i] - E_iv) * p2 + (E_cv - p.e[i]) * p1) / (E_cv - E_iv);
                 } else {
                     printf("Deep trouble in pressure.\n");
@@ -363,7 +369,7 @@ __global__ void calculatePressure() {
             }
             pressure = pressure_solid / p.alpha_epspor[i]; /* from the P-alpha model which is also used here */
             p.p[i] = pressure;
-            //            printf("Particle: %d \t P: %e \t Alpha: %e \t Rho: %e \t E: %e \t Mu: %e\n", i, pressure, p.alpha_epspor[i], p.rho[i], p.e[i], mu);
+            //            printf("Particle: %d \t P: %e \t Alpha: %e \t Rho: %e \t E: %e \t Mu: %e\n", i, pressure, p.alpha_epspor[i], rho, p.e[i], mu);
 #endif
         } else if (EOS_TYPE_REGOLITH == matEOS[matId]) {
 #if SOLID

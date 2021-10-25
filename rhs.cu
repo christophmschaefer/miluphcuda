@@ -41,7 +41,7 @@
 #include "artificial_stress.h"
 #include "stress.h"
 #include "damage.h"
-#include "DISPH_pressure.h"
+#include "DISPH_yY.h"
 
 extern int flag_force_gravity_calc;
 extern int gravity_index;
@@ -50,9 +50,9 @@ extern __device__ int reset_movingparticles;
 
 extern __device__ volatile int maxNodeIndex;
 
-#if DISPH
-__device__ double max_dp;
-#endif
+//#if DISPH
+//__device__ double max_dp;
+//#endif
 
 // tree computational domain
 extern double *minxPerBlock, *maxxPerBlock;
@@ -466,22 +466,38 @@ void rightHandSide()
     cudaEventRecord(start, 0);
 # endif
 
-
-
     double max_dp_host;
     
     int cnt = 0;
     max_dp_host = 1.0;
-
-// start iteration procedure to solve implicit p-Y-relation
+    int i;
+cudaVerifyKernel((calculate_DISPH_y_DISPH_rho<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>( interactions)));
+cudaVerify(cudaDeviceSynchronize());
+// start iteration procedure to solve implicit y-Y-relation
 do {
 
-cudaVerifyKernel((calculate_pressure_and_DISPH_Y<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>( interactions)));
-cudaVerify(cudaDeviceSynchronize());
-cudaVerify(cudaMemcpyFromSymbol(&max_dp_host, max_dp, sizeof(double)));
-cnt += 1;
+    cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
+    cudaVerify(cudaDeviceSynchronize());
 
+    cudaVerifyKernel((calculate_DISPH_dp<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
+    cudaVerify(cudaDeviceSynchronize());
+
+    max_dp_host = 0.0;
+for (i=0; i<numParticles; i+=1){
+	if(p.DISPH_dp[i]>max_dp_host){
+		max_dp_host = p.DISPH_dp[i];
+	}
+}
+
+    cudaVerifyKernel((calculate_DISPH_Y<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
+    cudaVerify(cudaDeviceSynchronize());
+
+    cudaVerifyKernel((calculate_DISPH_y_DISPH_rho<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>( interactions)));
+    cudaVerify(cudaDeviceSynchronize());
+//cudaVerify(cudaMemcpyFromSymbol(&max_dp_host, max_dp, sizeof(double)));
+cnt += 1;
 } while (max_dp_host > 1e-3 && cnt < 50);
+
 
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
@@ -491,7 +507,7 @@ cnt += 1;
     totalTime += time[timerCounter++];
 # endif
 
-printf("\n\n max_dp is \n %e \n", max_dp);
+printf("\n\n max_dp_host is \n %e \n", max_dp_host);
 
 #else
 

@@ -45,7 +45,7 @@
 
 // integrate the energy equation
 // when setting up a SOLID simulation with Tillotson or ANEOS, it must be set to 1
-#define INTEGRATE_ENERGY 1
+#define INTEGRATE_ENERGY 0
 
 // integrate the continuity equation
 // if set to 0, the density will be calculated using the standard SPH sum \sum_i m_j W_ij
@@ -191,7 +191,7 @@
 #define XSPH 0
 
 // different formulation of SPH for handling contact discontinuities
-#define DISPH 1
+#define DISPH 0
 
 // boundaries EXPERIMENTAL, please do not use this....
 #define BOUNDARY_PARTICLE_ID 2

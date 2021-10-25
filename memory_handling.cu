@@ -207,6 +207,7 @@ int allocate_particles_memory(struct Particle *a, int allocate_immutables)
 	cudaVerify(cudaMalloc((void**)&a->DISPH_rho, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&a->DISPH_Y, memorySizeForParticles));	
 	cudaVerify(cudaMalloc((void**)&a->DISPH_y, memorySizeForParticles));
+	cudaVerify(cudaMalloc((void**)&a->DISPH_dp, memorySizeForParticles));
 #endif
 	cudaVerify(cudaMalloc((void**)&a->p, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&a->e, memorySizeForParticles));
@@ -454,7 +455,8 @@ int copy_particles_variables_device_to_device(struct Particle *dst, struct Parti
 #if DISPH
     cudaVerify(cudaMemcpy(dst->DISPH_rho, src->DISPH_rho, memorySizeForParticles, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy(dst->DISPH_Y, src->DISPH_Y, memorySizeForParticles, cudaMemcpyDeviceToDevice));
-    cudaVerify(cudaMemcpy(dst->DISPH_Y, src->DISPH_y, memorySizeForParticles, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->DISPH_y, src->DISPH_y, memorySizeForParticles, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->DISPH_dp, src->DISPH_dp, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
 
     cudaVerify(cudaMemcpy(dst->h, src->h, memorySizeForParticles, cudaMemcpyDeviceToDevice));
@@ -614,6 +616,7 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 	cudaVerify(cudaFree(a->DISPH_rho));
     	cudaVerify(cudaFree(a->DISPH_Y));
     	cudaVerify(cudaFree(a->DISPH_y));
+    	cudaVerify(cudaFree(a->DISPH_dp));
 #endif
 
 #if MORE_OUTPUT
@@ -813,6 +816,7 @@ int init_allocate_memory(void)
     cudaVerify(cudaMallocHost((void**)&p_host.DISPH_rho, memorySizeForParticles));
     cudaVerify(cudaMallocHost((void**)&p_host.DISPH_Y, memorySizeForParticles));
     cudaVerify(cudaMallocHost((void**)&p_host.DISPH_y, memorySizeForParticles));
+    cudaVerify(cudaMallocHost((void**)&p_host.DISPH_dp, memorySizeForParticles));
 #endif
 
 #if GRAVITATING_POINT_MASSES
@@ -900,8 +904,7 @@ int init_allocate_memory(void)
 
 #if DISPH
     cudaVerify(cudaMallocHost((void**)&p_host.dDISPH_Ydt, memorySizeForParticles));
-    cudaVerify(cudaMalloc((void**)&p_device.dDISPH_Ydt, memorySizeForParticles));
-    cudaVerify(cudaMalloc((void**)&p_device.p_stored, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&p_device.dDISPH_Ydt, memorySizeForParticles)); 
 #endif
 
 	cudaVerify(cudaMallocHost((void**)&p_host.drhodt, memorySizeForParticles));
@@ -1077,6 +1080,7 @@ int init_allocate_memory(void)
     cudaVerify(cudaMalloc((void**)&p_device.DISPH_rho, memorySizeForParticles));
     cudaVerify(cudaMalloc((void**)&p_device.DISPH_Y, memorySizeForParticles));
     cudaVerify(cudaMalloc((void**)&p_device.DISPH_y, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&p_device.DISPH_dp, memorySizeForParticles));
 #endif
 
 #if MORE_OUTPUT
@@ -1170,6 +1174,7 @@ int copy_particle_data_to_device()
 	cudaVerify(cudaMemcpy(p_device.DISPH_rho, p_host.DISPH_rho, memorySizeForParticles, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.DISPH_Y, p_host.DISPH_Y, memorySizeForParticles, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.DISPH_y, p_host.DISPH_y, memorySizeForParticles, cudaMemcpyHostToDevice));
+	cudaVerify(cudaMemcpy(p_device.DISPH_dp, p_host.DISPH_dp, memorySizeForParticles, cudaMemcpyHostToDevice));
 #endif
 
 #if SOLID
@@ -1330,7 +1335,7 @@ int free_memory()
 	cudaVerify(cudaFree(p_device.noi));
 #if DISPH
 	cudaVerify(cudaFree(p_device.DISPH_rho));
-	cudaVerify(cudaFree(p_device.p_stored));
+	cudaVerify(cudaFree(p_device.DISPH_dp));
     	cudaVerify(cudaFree(p_device.DISPH_Y));
     	cudaVerify(cudaFree(p_device.DISPH_y));
 #endif
@@ -1506,9 +1511,10 @@ int free_memory()
 	cudaVerify(cudaFreeHost(p_host.materialId));
 	cudaVerify(cudaFreeHost(childList_host));
 #if DISPH
-	cudaVerify(cudaFreeHost(p_host.DISPH_rho));
-    cudaVerify(cudaFreeHost(p_host.DISPH_Y));
-    cudaVerify(cudaFreeHost(p_host.DISPH_y));
+    	cudaVerify(cudaFreeHost(p_host.DISPH_rho));
+    	cudaVerify(cudaFreeHost(p_host.DISPH_Y));
+    	cudaVerify(cudaFreeHost(p_host.DISPH_y));
+    	cudaVerify(cudaFreeHost(p_host.DISPH_dp));
 #endif
 
 #if MORE_OUTPUT

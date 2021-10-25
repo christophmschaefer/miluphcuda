@@ -41,7 +41,7 @@
 #include "extrema.h"
 #include "sinking.h"
 #include "config_parameter.h"
-
+#include "DISPH_yY.h"
 
 pthread_t fileIOthread;
 
@@ -164,6 +164,17 @@ double calculate_angular_momentum(void)
 
 void initIntegration()
 {
+// We need initial values for DISPH_Y to start the simulation
+#if DISPH
+	cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>( interactions)));
+	cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
+	cudaVerify(cudaDeviceSynchronize());
+	cudaVerifyKernel((calculate_DISPH_Y_initial<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
+	cudaVerify(cudaDeviceSynchronize());
+#endif
+
+
+
     L_ini = calculate_angular_momentum();
     if (param.verbose) {
         fprintf(stdout, "Initial angular momentum is: %.17e\n", L_ini);
