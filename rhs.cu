@@ -366,6 +366,105 @@ void rightHandSide()
     printf("maximum number of interactions: %d\n", maxNumInteractions);
 #endif
 
+
+
+
+
+
+#if DISPH
+
+# if DEBUG_RHS_RUNTIMES
+    cudaEventRecord(start, 0);
+# endif
+
+    double max_dp_host = 1.0;
+    double DISPH_alpha = 0.1;
+    
+    int cnt = 0;
+    int i;
+    int test_index = 10;
+cudaVerifyKernel((calculate_DISPH_y_DISPH_rho<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>( interactions)));
+cudaVerify(cudaDeviceSynchronize());
+
+cudaVerify(cudaMemcpy(p_host.DISPH_rho, p_device.DISPH_rho, memorySizeForParticles, cudaMemcpyDeviceToHost));
+cudaVerify(cudaMemcpy(p_host.DISPH_y, p_device.DISPH_y, memorySizeForParticles, cudaMemcpyDeviceToHost));
+
+printf("\n\n DISPH_p: \n %e \n", pow(p_host.DISPH_y[test_index], 1/DISPH_alpha));
+printf("\n\n DISPH_rho: \n %e \n", p_host.DISPH_rho[test_index]);
+
+// start iteration procedure to solve implicit y-Y-relation
+do {
+// step 1: calc p_i = peos(DISPH_rho_i) 
+    cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
+    cudaVerify(cudaDeviceSynchronize());
+    
+    cudaVerify(cudaMemcpy(p_host.p, p_device.p, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    printf("\n\n p: \n %e \n", p_host.p[test_index]);
+
+// calculate relative deviations dp = abs((y^(1/alpha) - p_i)/p_i)
+    cudaVerifyKernel((calculate_DISPH_dp<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
+    cudaVerify(cudaDeviceSynchronize());
+
+    cudaVerify(cudaMemcpy(p_host.DISPH_dp, p_device.DISPH_dp, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    printf("\n\n DISPH_dp: \n %e \n", p_host.DISPH_dp[test_index]);
+
+// determine maximum of the deviations
+    max_dp_host = 0.0;
+    printf("\n\n numParticles: \n %e \n", numParticles);
+	for (i=0; i<numParticles; i+=1){
+		if(p_host.DISPH_dp[i]>max_dp_host){
+			max_dp_host = p_host.DISPH_dp[i];
+		}
+	}
+// step 3: calc Y_i = m_i*p^(alpha)_i/rho_i
+    cudaVerifyKernel((calculate_DISPH_Y<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
+    cudaVerify(cudaDeviceSynchronize());
+
+    cudaVerify(cudaMemcpy(p_host.DISPH_Y, p_device.DISPH_Y, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    printf("\n\n DISPH_Y: \n %e \n", p_host.DISPH_Y[test_index]);
+
+// step 4: calc y_i = sum_j Y_j W_ij and rho_i = m_i*y_i/Y_i
+    cudaVerifyKernel((calculate_DISPH_y_DISPH_rho<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>( interactions)));
+    cudaVerify(cudaDeviceSynchronize());
+
+    cudaVerify(cudaMemcpy(p_host.DISPH_y, p_device.DISPH_y, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.DISPH_rho, p_device.DISPH_rho, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    printf("\n\n DISPH_p: \n %e \n", pow(p_host.DISPH_y[test_index], 1/DISPH_alpha));
+    printf("\n\n DISPH_rho: \n %e \n", p_host.DISPH_rho[test_index]);
+//cudaVerify(cudaMemcpyFromSymbol(&max_dp_host, max_dp, sizeof(double)));
+cnt += 1;
+printf("\n\n max_dp_host is \n %e \n", max_dp_host);
+} while (max_dp_host > 1e-3 && cnt < 50);
+
+
+# if DEBUG_RHS_RUNTIMES
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time[timerCounter], start, stop);
+    if (param.verbose) printf("duration DISPH_pressure: %.7f ms\n", time[timerCounter]);
+    totalTime += time[timerCounter++];
+# endif
+
+# endif //DISPH
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #if !INTEGRATE_DENSITY
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
@@ -459,58 +558,7 @@ void rightHandSide()
 
 
 
-
-#if DISPH
-
-# if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(start, 0);
-# endif
-
-    double max_dp_host;
-    
-    int cnt = 0;
-    max_dp_host = 1.0;
-    int i;
-cudaVerifyKernel((calculate_DISPH_y_DISPH_rho<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>( interactions)));
-cudaVerify(cudaDeviceSynchronize());
-// start iteration procedure to solve implicit y-Y-relation
-do {
-
-    cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
-    cudaVerify(cudaDeviceSynchronize());
-
-    cudaVerifyKernel((calculate_DISPH_dp<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
-    cudaVerify(cudaDeviceSynchronize());
-
-    max_dp_host = 0.0;
-for (i=0; i<numParticles; i+=1){
-	if(p.DISPH_dp[i]>max_dp_host){
-		max_dp_host = p.DISPH_dp[i];
-	}
-}
-
-    cudaVerifyKernel((calculate_DISPH_Y<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
-    cudaVerify(cudaDeviceSynchronize());
-
-    cudaVerifyKernel((calculate_DISPH_y_DISPH_rho<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>( interactions)));
-    cudaVerify(cudaDeviceSynchronize());
-//cudaVerify(cudaMemcpyFromSymbol(&max_dp_host, max_dp, sizeof(double)));
-cnt += 1;
-} while (max_dp_host > 1e-3 && cnt < 50);
-
-
-# if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&time[timerCounter], start, stop);
-    if (param.verbose) printf("duration DISPH_pressure: %.7f ms\n", time[timerCounter]);
-    totalTime += time[timerCounter++];
-# endif
-
-printf("\n\n max_dp_host is \n %e \n", max_dp_host);
-
-#else
-
+#if !DISPH
 #if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
 #endif
@@ -523,7 +571,7 @@ printf("\n\n max_dp_host is \n %e \n", max_dp_host);
     printf("duration pressure: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
 #endif
-#endif //DISPH
+#endif //!DISPH
 
 /*  function is not in porosity.cu anymore but in timeintecration.cu internal forces
 #if PALPHA_POROSITY

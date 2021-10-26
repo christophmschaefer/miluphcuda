@@ -40,7 +40,8 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
 
     register int i, inc, matId;
     int j;
-
+    int test_index = 1;
+    double DISPH_alpha = 0.1;
     int ip;
     int d;
     double W;
@@ -70,7 +71,9 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
             // sph sum for particle i over neighbour particles
             for (j = 0; j < p.noi[i]; j++) {
                 ip = interactions[i * MAX_NUM_INTERACTIONS + j];
-
+		if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[ip]] || p_rhs.materialId[ip] == EOS_TYPE_IGNORE) {
+                    continue;
+                }
 
 
                                 dx[0] = p.x[i] - p.x[ip];
@@ -89,13 +92,13 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
 
             p.DISPH_rho[i] = p.m[i]*p.DISPH_y[i]/p.DISPH_Y[i];
 
-            } // end loop over all particles 
-
+            } // end loop over all particles
 }
 
 
 __global__ void calculate_DISPH_Y() {
     register int i, inc;
+    int test_index = 1;
             inc = blockDim.x * gridDim.x;
             for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
                 p.DISPH_Y[i] = p.m[i]*p.DISPH_y[i]/p.DISPH_rho[i];
@@ -107,6 +110,7 @@ __global__ void calculate_DISPH_Y() {
 
 __global__ void calculate_DISPH_dp() {
     double DISPH_alpha = 0.1;
+    int test_index = 1;
 	register int i, inc;
             inc = blockDim.x * gridDim.x;
             for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
@@ -117,6 +121,7 @@ __global__ void calculate_DISPH_dp() {
 
 __global__ void calculate_DISPH_Y_initial() {
     double DISPH_alpha = 0.1;
+    int test_index = 1;
 	register int i, inc;
             inc = blockDim.x * gridDim.x;
             for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {

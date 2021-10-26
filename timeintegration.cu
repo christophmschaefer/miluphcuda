@@ -164,16 +164,6 @@ double calculate_angular_momentum(void)
 
 void initIntegration()
 {
-// We need initial values for DISPH_Y to start the simulation
-#if DISPH
-	cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>( interactions)));
-	cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
-	cudaVerify(cudaDeviceSynchronize());
-	cudaVerifyKernel((calculate_DISPH_Y_initial<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
-	cudaVerify(cudaDeviceSynchronize());
-#endif
-
-
 
     L_ini = calculate_angular_momentum();
     if (param.verbose) {
@@ -215,6 +205,21 @@ void initIntegration()
     cudaVerify(cudaMemcpyToSymbol(pointmass_rhs, &pointmass_device, sizeof(struct Pointmass)));
 
     cudaVerifyKernel((initializeSoundspeed<<<numberOfMultiprocessors*4, NUM_THREADS_512>>>()));
+// We need initial values for DISPH_Y to start the simulation
+//#if DISPH
+//	int test_index = 1;
+//	cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>( interactions)));
+//	cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
+//	cudaVerify(cudaDeviceSynchronize());
+//	cudaVerifyKernel((calculate_DISPH_Y_initial<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
+//	cudaVerify(cudaDeviceSynchronize());
+		
+//        fprintf(stdout, "Initial Values for y and Y calculated!, p_host.rho = %e\n", p_host.rho[test_index]);
+       // fprintf(stdout, "p_device.rho =%e\n", p_device.rho[test_index]);
+      	//fprintf(stdout, "p.rho =%e\n", p.rho[test_index]);
+//#endif
+
+
 }
 
 
