@@ -23,6 +23,7 @@
 
 #include "miluph.h"
 #include "pressure.h"
+#include "DISPH_yY.h"
 #include "memory_handling.h"
 #include "device_tools.h"
 #include "kernel.h"
@@ -461,8 +462,14 @@ static void format_information(char *name)
     noc++;  /* m */
     fprintf(stdout, "%d:mass ", noc);
     noc++;   /* rho */
+#if DISPH
+    fprintf(stdout, "%d:DISPH_density ", noc);
+    noc++;   /* e */
+#else
     fprintf(stdout, "%d:density ", noc);
     noc++;   /* e */
+#endif
+
 #if INTEGRATE_ENERGY
     fprintf(stdout, "%d:energy ", noc);
     noc++; /* sml */
@@ -489,6 +496,10 @@ static void format_information(char *name)
 #if (!PALPHA_POROSITY && !DISPH)
     noc++; /* pressure */
     fprintf(stdout, "%d:pressure ", noc);
+#endif
+#if DISPH
+    noc++; /* DISPH_pressure */
+    fprintf(stdout, "%d:DISPH_pressure ", noc);
 #endif
 #if SOLID
     noc++; /* local_strain  */

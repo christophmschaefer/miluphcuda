@@ -32,7 +32,7 @@
 #define SOLID 0
 #define HYDRO 1
 // set additionally p to 0 if p < 0
-#define REAL_HYDRO 0
+#define REAL_HYDRO 1
 
 // add additional point masses to the simulation, read from file <filename>.mass
 // format is location velocities mass r_min r_max, where location and velocities are vectors with size DIM and
@@ -73,7 +73,7 @@
 //                                     HYDRO dv_a/dt ~ - (p_a+p_b)/(rho_a*rho_b)  \nabla_a W_ab
 //                                     SOLID dv_a/dt ~ (sigma_a+sigma_b)/(rho_a*rho_b)  \nabla_a W_ab
 // If you do not know what to do, choose SPH_EQU_VERSION 1.
-#define SPH_EQU_VERSION 0
+#define SPH_EQU_VERSION 1
 
 // for the tensile instability fix
 // you do not need this
@@ -191,7 +191,7 @@
 #define XSPH 0
 
 // different formulation of SPH for handling contact discontinuities
-#define DISPH 0
+#define DISPH 1
 
 // boundaries EXPERIMENTAL, please do not use this....
 #define BOUNDARY_PARTICLE_ID 2

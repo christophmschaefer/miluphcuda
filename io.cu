@@ -1591,16 +1591,16 @@ void write_particles_to_file(File file) {
 #if INTEGRATE_ENERGY
             fprintf(file.data, "%e\t", p_host.e[i]);
 #endif
-
-#if DISPH
-            fprintf(file.data, "%e\t", p_host.DISPH_Y[i]);
-            fprintf(file.data, "%e\t", p_host.DISPH_y[i]);
-            fprintf(file.data, "%e\t", p_host.DISPH_dp[i]);
-#endif
-
             fprintf(file.data, "%.6le\t", p_host.h[i]);
             fprintf(file.data, "%d\t", p_host.noi[i]);
             fprintf(file.data, "%d\t", p_host.materialId[i]);
+
+#if DISPH
+	    double DISPH_alpha = 0.1;
+            fprintf(file.data, "%e\t", pow(p_host.DISPH_y[i], 1/DISPH_alpha));
+#endif
+
+
 #if JC_PLASTICITY
             fprintf(file.data, "%+.6le\t", p_host.ep[i]);
             fprintf(file.data, "%+.6le\t", p_host.T[i]);

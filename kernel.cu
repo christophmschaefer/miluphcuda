@@ -29,6 +29,7 @@
 #include "miluph.h"
 #include "linalg.h"
 #include "pressure.h"
+#include "DISPH_yY.h"
 
 // for interaction partners less than this value, the tensorial correction matrix
 // will be set to the identity matrix (-> disabling the correction factors)

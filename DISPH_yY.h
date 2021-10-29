@@ -21,8 +21,8 @@
  *
  */
 
-#ifndef _DISPH_PRESSURE_H
-#define _DISPH_PRESSURE_H
+#ifndef _DISPH_yY_H
+#define _DISPH_yY_H
 
 
 #include "timeintegration.h"

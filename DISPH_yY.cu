@@ -30,6 +30,7 @@
 #include "pressure.h"
 
 #if DISPH
+
 extern __device__ SPH_kernel kernel;
 extern __device__ SPH_kernel wendlandc2_p;
 
@@ -38,7 +39,7 @@ extern __device__ SPH_kernel wendlandc2_p;
 __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
 
 
-    register int i, inc, matId;
+    int i, inc, matId;
     int j;
     int test_index = 1;
     double DISPH_alpha = 0.1;
@@ -51,6 +52,7 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
     double dWdr;
     double sml;
     int cnt = 0;
+    double y;
 
 
             // Start loop over all particles
@@ -65,7 +67,7 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
             }
             kernel(&W, dWdx, &dWdr, dx, sml);
 
-            p.DISPH_y[i] = p.DISPH_Y[i] * W;
+            y = p.DISPH_Y[i] * W;
 
 
             // sph sum for particle i over neighbour particles
@@ -84,15 +86,19 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
                 #endif
                 #endif  
                 kernel(&W, dWdx, &dWdr, dx, sml);
-                p.DISPH_y[i] += p.DISPH_Y[ip] * W;
+                y += p.DISPH_Y[ip] * W;
 
 
             }
+	    // write to global memory
+	    p.DISPH_y[i] = 0.2;//y;
 
-
+		//printf("i = %e  p.DISPH_y[i] = %e \n", i, p.DISPH_y[i]);
             p.DISPH_rho[i] = p.m[i]*p.DISPH_y[i]/p.DISPH_Y[i];
+		//printf("i = %e  p.DISPH_rho[i] = %e \n", i, p.DISPH_rho[i]);
 
             } // end loop over all particles
+	    
 }
 
 
@@ -128,7 +134,6 @@ __global__ void calculate_DISPH_Y_initial() {
                 p.DISPH_Y[i] = p.m[i]*pow(p.p[i], DISPH_alpha)/p.rho[i];
 	    }
 }
-
 
 #endif
 
