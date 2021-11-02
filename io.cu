@@ -27,6 +27,7 @@
 #include "timeintegration.h"
 #include "config_parameter.h"
 #include "pressure.h"
+#include "DISPH_yY.h"
 #include <libconfig.h>
 #include <float.h>
 #include "aneos.h"
@@ -1471,7 +1472,9 @@ void write_particles_to_file(File file) {
     strcat(massfilename, ".mass");
     strcpy(h5massfilename, massfilename);
     strcat(h5massfilename, ".h5");
-
+#if DISPH
+	double DISPH_alpha = 0.1;
+#endif
 #if HDF5IO
     /* hdf5 related stuff */
     hid_t file_id;
@@ -1480,7 +1483,7 @@ void write_particles_to_file(File file) {
     hid_t g_a_id;
 
 #if DISPH
-    hid_t DISPH_Y_id, DISPH_rho_id, DISPH_y_id, DISPH_dp_id;
+    hid_t DISPH_Y_id, DISPH_rho_id, DISPH_y_id;
 #endif
 
 #if MORE_ANEOS_OUTPUT
@@ -1596,8 +1599,8 @@ void write_particles_to_file(File file) {
             fprintf(file.data, "%d\t", p_host.materialId[i]);
 
 #if DISPH
-	    double DISPH_alpha = 0.1;
             fprintf(file.data, "%e\t", pow(p_host.DISPH_y[i], 1/DISPH_alpha));
+            fprintf(file.data, "%e\t", p_host.DISPH_Y[i]); 
 #endif
 
 
@@ -1610,7 +1613,7 @@ void write_particles_to_file(File file) {
             fprintf(file.data, "%d\t", p_host.numActiveFlaws[i]);
             fprintf(file.data, "%.6le\t", p_host.d[i]);
 #endif
-#if !PALPHA_POROSITY
+#if (!PALPHA_POROSITY && !DISPH)
             fprintf(file.data, "%e\t", p_host.p[i]);
 #endif
 #if SOLID
@@ -2163,34 +2166,6 @@ void write_particles_to_file(File file) {
 
         status = H5Dwrite(e_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(e_id);
-
-#if DISPH
-
-            /* DISPH_Y */
-            DISPH_Y_id = H5Dcreate2(file_id, "/DISPH_Y", H5T_NATIVE_DOUBLE, dataspace_id,
-                    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-            for (i = 0; i < numberOfParticles; i++)
-                x[i] = p_host.DISPH_Y[i];
-            status = H5Dwrite(DISPH_Y_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
-            status = H5Dclose(DISPH_Y_id);
-
-            /* DISPH_y */
-            DISPH_y_id = H5Dcreate2(file_id, "/DISPH_y", H5T_NATIVE_DOUBLE, dataspace_id,
-                    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-            for (i = 0; i < numberOfParticles; i++)
-                x[i] = p_host.DISPH_y[i];
-            status = H5Dwrite(DISPH_y_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
-            status = H5Dclose(DISPH_y_id);
-
-            /* DISPH_dp */
-            DISPH_dp_id = H5Dcreate2(file_id, "/DISPH_dp", H5T_NATIVE_DOUBLE, dataspace_id,
-                    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-            for (i = 0; i < numberOfParticles; i++)
-                x[i] = p_host.DISPH_dp[i];
-            status = H5Dwrite(DISPH_dp_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
-            status = H5Dclose(DISPH_dp_id);
-#endif
-
 #if MORE_ANEOS_OUTPUT
         // compute ANEOS quantities
         int aneos_i_rho, aneos_i_e;
@@ -2380,6 +2355,23 @@ void write_particles_to_file(File file) {
         status = H5Dwrite(mtype_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, ix);
         status = H5Dclose(mtype_id);
 
+#if DISPH
+            /* DISPH_pressure */
+            DISPH_y_id = H5Dcreate2(file_id, "/DISPH_pressure", H5T_NATIVE_DOUBLE, dataspace_id,
+                    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+            for (i = 0; i < numberOfParticles; i++)
+                x[i] = pow(p_host.DISPH_y[i], 1/DISPH_alpha);
+            status = H5Dwrite(DISPH_y_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+            status = H5Dclose(DISPH_y_id);
+
+            /* DISPH_Y */
+            DISPH_Y_id = H5Dcreate2(file_id, "/DISPH_Y", H5T_NATIVE_DOUBLE, dataspace_id,
+                    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+            for (i = 0; i < numberOfParticles; i++)
+                x[i] = p_host.DISPH_Y[i];
+            status = H5Dwrite(DISPH_Y_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+            status = H5Dclose(DISPH_Y_id);
+#else
 
         /* pressure */
         p_id = H5Dcreate2(file_id, "/p", H5T_NATIVE_DOUBLE, dataspace_id,
@@ -2389,7 +2381,7 @@ void write_particles_to_file(File file) {
 
         status = H5Dwrite(p_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(p_id);
-
+#endif
 
 #if PALPHA_POROSITY
         /* alpha_jutzi */
@@ -3031,7 +3023,7 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     fprintf(stdout, "calling pressure for i/o\n");
 #endif
     cudaVerify(cudaDeviceSynchronize());
-	cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
+    cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
 
 
     /* copy particle data back to host */

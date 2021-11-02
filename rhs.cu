@@ -381,20 +381,21 @@ void rightHandSide()
     double DISPH_alpha = 0.1;
     
     int cnt = 0;
-    int test_index = 0;
+    int test_index = 1654;
     int i;
-printf("\n\n DISPH_Y: \n %e \n", p_host.DISPH_Y[test_index]);
-printf("\n\n DISPH_y: \n %e \n", p_host.DISPH_y[test_index]);
+//printf("\n\n DISPH_Y: \n %e \n", p_host.DISPH_Y[test_index]);
+//printf("\n\n DISPH_y: \n %e \n", p_host.DISPH_y[test_index]);
 cudaVerifyKernel((calculate_DISPH_y_DISPH_rho<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>( interactions)));
-//cudaVerify(cudaDeviceSynchronize());
+cudaVerify(cudaDeviceSynchronize());
 
-cudaMemcpy(p_host.DISPH_rho, p_device.DISPH_rho, memorySizeForParticles, cudaMemcpyDeviceToHost);
-cudaMemcpy(p_host.DISPH_y, p_device.DISPH_y, memorySizeForParticles, cudaMemcpyDeviceToHost);
+//cudaMemcpy(p_host.DISPH_rho, p_device.DISPH_rho, memorySizeForParticles, cudaMemcpyDeviceToHost);
+//cudaMemcpy(p_host.DISPH_y, p_device.DISPH_y, memorySizeForParticles, cudaMemcpyDeviceToHost);
 
-printf("\n\n DISPH_p: \n %e \n \e \n", pow(p_host.DISPH_y[test_index], 1/DISPH_alpha));
-printf("\n\n DISPH_rho: \n %e \n", p_host.DISPH_rho[test_index]);
+//printf("\n\n DISPH_y danach: \n %e \n \e \n", pow(p_host.DISPH_y[test_index], 1/DISPH_alpha));
+//printf("\n\n DISPH_rho: \n %e \n", p_host.DISPH_rho[test_index]);
 
 // start iteration procedure to solve implicit y-Y-relation
+printf("\n \n start iteration procedure to solve implicit y-Y-relation \n\n");
 do {
 // step 1: calc p_i = peos(DISPH_rho_i) 
     cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
@@ -436,7 +437,7 @@ do {
 //cudaVerify(cudaMemcpyFromSymbol(&max_dp_host, max_dp, sizeof(double)));
 cnt += 1;
 //printf("\n\n max_dp_host is \n %e \n", max_dp_host);
-} while (max_dp_host > 1e-3 && cnt < 20);
+} while (max_dp_host > 1e-3 && cnt < 40);
 
 
 # if DEBUG_RHS_RUNTIMES

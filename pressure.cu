@@ -63,7 +63,11 @@ __global__ void calculatePressure() {
         } else if (EOS_TYPE_MURNAGHAN == matEOS[matId] || EOS_TYPE_VISCOUS_REGOLITH == matEOS[matId]) {
             eta = rho / matRho0[matId];
             if (eta < matRhoLimit[matId]) {
-                p.p[i] = 0.0;
+		# if DISPH
+			p.p[i] = 0.01;
+		# else
+                	p.p[i] = 0.0;
+		# endif
             } else {
                 p.p[i] = (matBulkmodulus[matId]/matN[matId])*(pow(eta, matN[matId]) - 1.0);
             }
@@ -404,9 +408,17 @@ __global__ void calculatePressure() {
             p.p[i] = p_limit;
 #endif
 
+       // if (matId == BOUNDARY_PARTICLE_ID) {
+	//	p.p[i] = 0.8878976;
+	//}
 #if REAL_HYDRO
         if (p.p[i] < 0.0)
+#if DISPH
+	printf("\n\n\n Warning: negative pressures in DISPH \n\n\n");
+	p.p[i] = 0.001;
+# else:
             p.p[i] = 0.0;
+#endif
 #endif
     }
 }

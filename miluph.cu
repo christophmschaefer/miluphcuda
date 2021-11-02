@@ -498,8 +498,10 @@ static void format_information(char *name)
     fprintf(stdout, "%d:pressure ", noc);
 #endif
 #if DISPH
-    noc++; /* DISPH_pressure */
-    fprintf(stdout, "%d:DISPH_pressure ", noc);
+    noc++; /* DISPH_p */
+    fprintf(stdout, "%d:pressure from before ", noc);
+     noc++; /* DISPH_Y */
+    fprintf(stdout, "%d:DISPH_Y_guess ", noc); 
 #endif
 #if SOLID
     noc++; /* local_strain  */

@@ -39,7 +39,7 @@ extern __device__ SPH_kernel wendlandc2_p;
 __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
 
 
-    int i, inc, matId;
+    int i, inc;
     int j;
     int test_index = 1;
     double DISPH_alpha = 0.1;
@@ -52,13 +52,21 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
     double dWdr;
     double sml;
     int cnt = 0;
-    double y;
+    register double y;
+    register double rho;
+  //  int matId;
 
 
             // Start loop over all particles
             inc = blockDim.x * gridDim.x;
             for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
             
+//    	matId = p_rhs.materialId[i];
+//        if (matId == BOUNDARY_PARTICLE_ID) {
+//		p.DISPH_y[i] = 0.98818;
+//		p.DISPH_rho[i] = 1.2;
+//		continue;
+//	}
             sml = p.h[i];
             
             // self-contribution of particle i
@@ -66,7 +74,6 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
                 dx[d] = 0;
             }
             kernel(&W, dWdx, &dWdr, dx, sml);
-
             y = p.DISPH_Y[i] * W;
 
 
@@ -86,28 +93,49 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
                 #endif
                 #endif  
                 kernel(&W, dWdx, &dWdr, dx, sml);
+	    	//printf("y is %f W: %e \n", y, W);
                 y += p.DISPH_Y[ip] * W;
 
+	    if (p.DISPH_Y[ip] < 0.00001) {
+               	printf("In calc_y_and_rho: Y =  %f W: %e \n", p.DISPH_Y[ip], W);
+            }
 
             }
+	    if (y < 0.0001) {
+                printf("In calc_y_and_rho: y is %f W: %e \n", y, W);
+            }
 	    // write to global memory
-	    p.DISPH_y[i] = 0.2;//y;
+	    p.DISPH_y[i] = y;
 
 		//printf("i = %e  p.DISPH_y[i] = %e \n", i, p.DISPH_y[i]);
-            p.DISPH_rho[i] = p.m[i]*p.DISPH_y[i]/p.DISPH_Y[i];
+            rho = p.m[i]*p.DISPH_y[i]/p.DISPH_Y[i];
+            if (rho < 1.0) {
+               printf("rho is %f W: %e \n", rho, W);
+            }
 		//printf("i = %e  p.DISPH_rho[i] = %e \n", i, p.DISPH_rho[i]);
-
+	    p.DISPH_rho[i] = rho;
             } // end loop over all particles
+	  //  printf("i = %i \n p.DISPH_y[i] = %e \n  p.DISPH_rho[i] = %e \n", i, y, rho);
 	    
 }
 
 
 __global__ void calculate_DISPH_Y() {
     register int i, inc;
-    int test_index = 1;
+    // int matId;
+int test_index = 1;
             inc = blockDim.x * gridDim.x;
             for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+  //  matId = p_rhs.materialId[i];
+//	if (matId == BOUNDARY_PARTICLE_ID) {
+//		p.DISPH_Y[i] = 0.000617613;
+//		continue;
+//	}
                 p.DISPH_Y[i] = p.m[i]*p.DISPH_y[i]/p.DISPH_rho[i];
+
+	    if (p.DISPH_y[i] < 0.001) {
+                printf("In calc_Y: y =: %e \n", p.DISPH_y[i]);
+            }
             }
 
 }

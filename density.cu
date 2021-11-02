@@ -91,7 +91,7 @@ __global__ void calculateDensity(int *interactions) {
             if (rho == 0.0) {
                 printf("rho is %f W: %e \n", rho, W);
             }
-            // sph sum for particle i
+	    // sph sum for particle i
             for (j = 0; j < p.noi[i]; j++) {
                 ip = interactions[i * MAX_NUM_INTERACTIONS + j];
                 if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[ip]] || p_rhs.materialId[ip] == EOS_TYPE_IGNORE) {

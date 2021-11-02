@@ -29,6 +29,7 @@
 #include "tree.h"
 #include "porosity.h"
 #include "pressure.h"
+#include "DISPH_yY.h"
 #include "plasticity.h"
 #include "soundspeed.h"
 #include "parameter.h"

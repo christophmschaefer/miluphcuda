@@ -29,6 +29,7 @@
 #include "memory_handling.h"
 #include "rhs.h"
 #include "pressure.h"
+#include "DISPH_yY.h"
 #include "boundary.h"
 #include "damage.h"
 #include <float.h>
@@ -213,6 +214,7 @@ void rk2Adaptive()
 #if GRAVITATING_POINT_MASSES
             cudaVerify(cudaMemcpyToSymbol(pointmass, &rk_pointmass_device[RKFIRST], sizeof(struct Pointmass)));
 #endif
+	    printf("Now first rightHandSide()");
             rightHandSide();
             cudaVerify(cudaDeviceSynchronize());
 
@@ -939,6 +941,10 @@ __global__ void integrateThirdStep(void)
 #else
         p.rho[i] = rk[RKSECOND].rho[i];
 #endif
+#if DISPH 
+	p.DISPH_rho[i] = rk[RKSECOND].DISPH_rho[i];
+	p.DISPH_y[i] = rk[RKSECOND].DISPH_y[i];
+#endif 
 
 #if INTEGRATE_SML
         p.h[i] = rk[RKSTART].h[i] + dt/6.0 *
@@ -967,7 +973,7 @@ __global__ void integrateThirdStep(void)
             (  C1 * rk[RKSTART].dDISPH_Ydt[i]
                + C2 * rk[RKFIRST].dDISPH_Ydt[i]
                + C3 * rk[RKSECOND].dDISPH_Ydt[i]);
-        p.DISPH_Y[i] = 1./6.* (C1 * rk[RKSTART].dDISPH_Ydt[i]
+        p.dDISPH_Ydt[i] = 1./6.* (C1 * rk[RKSTART].dDISPH_Ydt[i]
                + C2 * rk[RKFIRST].dDISPH_Ydt[i]
                + C3 * rk[RKSECOND].dDISPH_Ydt[i]);
 #endif

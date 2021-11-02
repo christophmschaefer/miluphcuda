@@ -24,6 +24,7 @@
 #include "boundary.h"
 #include "miluph.h"
 #include "pressure.h"
+#include "DISPH_yY.h"
 #include "config_parameter.h"
 
 
