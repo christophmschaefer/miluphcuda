@@ -50,9 +50,10 @@ extern __device__ int reset_movingparticles;
 
 extern __device__ volatile int maxNodeIndex;
 
-//#if DISPH
+#if DISPH
+extern __device__ double maxDISPH_PressureAbsError;
 //__device__ double max_dp;
-//#endif
+#endif
 
 // tree computational domain
 extern double *minxPerBlock, *maxxPerBlock;
@@ -71,76 +72,76 @@ extern volatile int terminate_flag;
 // zero all derivatives
 __global__ void zero_all_derivatives(int *interactions)
 {
-    register int i, inc, dd;
+register int i, inc, dd;
 #if SOLID
-    register int ddd;
+register int ddd;
 #endif
-    inc = blockDim.x * gridDim.x;
-    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        p.ax[i] = 0.0;
+inc = blockDim.x * gridDim.x;
+for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+p.ax[i] = 0.0;
 #if DIM > 1
-        p.ay[i] = 0.0;
+p.ay[i] = 0.0;
 #if DIM > 2
-        p.az[i] = 0.0;
+p.az[i] = 0.0;
 #endif
 #endif
 #if INTEGRATE_SML
-        p.dhdt[i] = 0.0;
+p.dhdt[i] = 0.0;
 #endif
-        p.drhodt[i] = 0.0;
+p.drhodt[i] = 0.0;
 #if INTEGRATE_ENERGY
-        p.dedt[i] = 0.0;
+p.dedt[i] = 0.0;
 #endif
 
 #if DISPH
-        p.dDISPH_Ydt[i] = 0.0;
+p.dDISPH_Ydt[i] = 0.0;
 #endif
 
 #if SHEPARD_CORRECTION
-        p_rhs.shepard_correction[i] = 1.0;
+p_rhs.shepard_correction[i] = 1.0;
 #endif
 #if SML_CORRECTION
-        p.sml_omega[i] = 1.0;
+p.sml_omega[i] = 1.0;
 #endif
 #if SOLID
-        for (dd = 0; dd < DIM*DIM; dd++) {
-            p.dSdt[i*DIM*DIM+dd] = 0.0;
-            p_rhs.sigma[i*DIM*DIM+dd] = 0.0;
-        }
+for (dd = 0; dd < DIM*DIM; dd++) {
+    p.dSdt[i*DIM*DIM+dd] = 0.0;
+    p_rhs.sigma[i*DIM*DIM+dd] = 0.0;
+}
 #if TENSORIAL_CORRECTION
-        for (dd = 0; dd < DIM; dd++) {
-            for (ddd = 0; ddd < DIM; ddd++) {
-                p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+dd*DIM+ddd] = 0.0;
-                if (dd == ddd) {
-                    p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+dd*DIM+ddd] = 1.0;
-                }
-            }
-        }
+for (dd = 0; dd < DIM; dd++) {
+    for (ddd = 0; ddd < DIM; ddd++) {
+	p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+dd*DIM+ddd] = 0.0;
+	if (dd == ddd) {
+	    p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+dd*DIM+ddd] = 1.0;
+	}
+    }
+}
 #endif
 #endif
-        // reset all interactions
-        for (dd = 0; dd < MAX_NUM_INTERACTIONS; dd++) {
-            interactions[i*MAX_NUM_INTERACTIONS + dd] = -1;
-        }
+// reset all interactions
+for (dd = 0; dd < MAX_NUM_INTERACTIONS; dd++) {
+    interactions[i*MAX_NUM_INTERACTIONS + dd] = -1;
+}
 
 #if FRAGMENTATION
-        p.dddt[i] = 0.0;
+p.dddt[i] = 0.0;
 #endif
 
-    }
+}
 #if GRAVITATING_POINT_MASSES
-    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i += inc) {
-        pointmass.ax[i] = 0.0;
-        pointmass.feedback_ax[i] = 0.0;
+for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i += inc) {
+pointmass.ax[i] = 0.0;
+pointmass.feedback_ax[i] = 0.0;
 #if DIM > 1
-        pointmass.ay[i] = 0.0;
-        pointmass.feedback_ay[i] = 0.0;
+pointmass.ay[i] = 0.0;
+pointmass.feedback_ay[i] = 0.0;
 #if DIM > 2
-        pointmass.az[i] = 0.0;
-        pointmass.feedback_az[i] = 0.0;
+pointmass.az[i] = 0.0;
+pointmass.feedback_az[i] = 0.0;
 #endif
 #endif
-    }
+}
 #endif // GRAVITATING_POINT_MASSES
 }
 
@@ -149,221 +150,221 @@ __global__ void zero_all_derivatives(int *interactions)
 void rightHandSide()
 {
 #if DEBUG_RHS_RUNTIMES
-    cudaEvent_t start, stop;
-    float time[MAX_NUMBER_PROFILED_KERNELS];
-    float totalTime = 0.0;
-    int timerCounter = 0;
+cudaEvent_t start, stop;
+float time[MAX_NUMBER_PROFILED_KERNELS];
+float totalTime = 0.0;
+int timerCounter = 0;
 #endif
 #if DEBUG_TREE
-    double xmin, xmax, ymin, ymax, zmin, zmax;
-    double radiusmax, radiusmin;
-    int *treeDepthPerBlock;
-    int maxtreedepth_host = 0;
-    int maxNodeIndex_host;
+double xmin, xmax, ymin, ymax, zmin, zmax;
+double radiusmax, radiusmin;
+int *treeDepthPerBlock;
+int maxtreedepth_host = 0;
+int maxNodeIndex_host;
 #endif
-    int *movingparticlesPerBlock;
-    int movingparticles_host = 0;
-    int calculate_nbody = 0;
+int *movingparticlesPerBlock;
+int movingparticles_host = 0;
+int calculate_nbody = 0;
 
 #if GRAVITATING_POINT_MASSES
-    if (param.integrator_type == HEUN_RK4) {
-        calculate_nbody = 0;
-    } else {
-        calculate_nbody = 1;
-    }
+if (param.integrator_type == HEUN_RK4) {
+calculate_nbody = 0;
+} else {
+calculate_nbody = 1;
+}
 #endif
 
 #if USE_SIGNAL_HANDLER
-    if (terminate_flag) {
-        copyToHostAndWriteToFile(-2, -2);
-    }
+if (terminate_flag) {
+copyToHostAndWriteToFile(-2, -2);
+}
 #endif
 
 #if DEBUG_RHS_RUNTIMES
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
+cudaEventCreate(&start);
+cudaEventCreate(&stop);
 #endif
 
-    cudaVerify(cudaMemset(childListd, EMPTY, memorySizeForChildren));
-    cudaVerify(cudaDeviceSynchronize());
+cudaVerify(cudaMemset(childListd, EMPTY, memorySizeForChildren));
+cudaVerify(cudaDeviceSynchronize());
 
 #if DEBUG_RHS || DEBUG_TIMESTEP
-    fprintf(stdout, "rhs call\n");
+fprintf(stdout, "rhs call\n");
 #endif
 
-    // zero all accelerations
+// zero all accelerations
 #if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(start, 0);
+cudaEventRecord(start, 0);
 #endif
-    cudaVerifyKernel((zero_all_derivatives<<<numberOfMultiprocessors, NUM_THREADS_256>>>(interactions)));
+cudaVerifyKernel((zero_all_derivatives<<<numberOfMultiprocessors, NUM_THREADS_256>>>(interactions)));
 #if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration zeroing all: %.7f ms\n", time[timerCounter]);
-    totalTime += time[timerCounter++];
+cudaEventRecord(stop, 0);
+cudaEventSynchronize(stop);
+cudaEventElapsedTime(&time[timerCounter], start, stop);
+printf("duration zeroing all: %.7f ms\n", time[timerCounter]);
+totalTime += time[timerCounter++];
 #endif
 
-    // check if boundary conditions are violated
-    cudaVerifyKernel((BoundaryConditionsBeforeRHS<<<16 * numberOfMultiprocessors, NUM_THREADS_BOUNDARY_CONDITIONS>>>(interactions)));
+// check if boundary conditions are violated
+cudaVerifyKernel((BoundaryConditionsBeforeRHS<<<16 * numberOfMultiprocessors, NUM_THREADS_BOUNDARY_CONDITIONS>>>(interactions)));
 
-    cudaVerify(cudaDeviceSynchronize());
+cudaVerify(cudaDeviceSynchronize());
 
 #if GHOST_BOUNDARIES
-    /*
-       the location of the ghost boundary particles are set. The quantities for the ghost particles will
-       be set later on as soon as we know the quantities for the real particles (density, pressure...)
-     */
+/*
+the location of the ghost boundary particles are set. The quantities for the ghost particles will
+be set later on as soon as we know the quantities for the real particles (density, pressure...)
+*/
 # if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(start, 0);
+cudaEventRecord(start, 0);
 # endif
-    cudaVerifyKernel((insertGhostParticles<<<4 * numberOfMultiprocessors, NUM_THREADS_BOUNDARY_CONDITIONS>>>()));
-    //cudaVerifyKernel((insertGhostParticles<<<1, 1>>>()));
+cudaVerifyKernel((insertGhostParticles<<<4 * numberOfMultiprocessors, NUM_THREADS_BOUNDARY_CONDITIONS>>>()));
+//cudaVerifyKernel((insertGhostParticles<<<1, 1>>>()));
 # if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration inserting ghost particles: %.7f ms\n", time[timerCounter]);
-    totalTime += time[timerCounter++];
+cudaEventRecord(stop, 0);
+cudaEventSynchronize(stop);
+cudaEventElapsedTime(&time[timerCounter], start, stop);
+printf("duration inserting ghost particles: %.7f ms\n", time[timerCounter]);
+totalTime += time[timerCounter++];
 # endif
 #endif
 
-    cudaVerify(cudaDeviceSynchronize());
+cudaVerify(cudaDeviceSynchronize());
 
 #if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(start, 0);
+cudaEventRecord(start, 0);
 #endif
-    cudaVerifyKernel((computationalDomain<<<numberOfMultiprocessors, NUM_THREADS_COMPUTATIONAL_DOMAIN>>>(
-                    minxPerBlock, maxxPerBlock
+cudaVerifyKernel((computationalDomain<<<numberOfMultiprocessors, NUM_THREADS_COMPUTATIONAL_DOMAIN>>>(
+	    minxPerBlock, maxxPerBlock
 #if DIM > 1
-                    , minyPerBlock, maxyPerBlock
+	    , minyPerBlock, maxyPerBlock
 #endif
 #if DIM == 3
-                    , minzPerBlock, maxzPerBlock
+	    , minzPerBlock, maxzPerBlock
 #endif
-                    )));
+	    )));
 #if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration comp domain: %.7f ms\n", time[timerCounter]);
-    totalTime += time[timerCounter++];
+cudaEventRecord(stop, 0);
+cudaEventSynchronize(stop);
+cudaEventElapsedTime(&time[timerCounter], start, stop);
+printf("duration comp domain: %.7f ms\n", time[timerCounter]);
+totalTime += time[timerCounter++];
 #endif
 
-    cudaVerify(cudaDeviceSynchronize());
+cudaVerify(cudaDeviceSynchronize());
 
 #if DEBUG_TREE
-    cudaMemcpyFromSymbol(&xmin, minx, sizeof(double));
-    cudaMemcpyFromSymbol(&xmax, maxx, sizeof(double));
-    radiusmax = xmax - xmin;
+cudaMemcpyFromSymbol(&xmin, minx, sizeof(double));
+cudaMemcpyFromSymbol(&xmax, maxx, sizeof(double));
+radiusmax = xmax - xmin;
 # if DIM > 1
-    cudaMemcpyFromSymbol(&ymin, miny, sizeof(double));
-    cudaMemcpyFromSymbol(&ymax, maxy, sizeof(double));
-    radiusmax = max(radiusmax, ymax-ymin);
+cudaMemcpyFromSymbol(&ymin, miny, sizeof(double));
+cudaMemcpyFromSymbol(&ymax, maxy, sizeof(double));
+radiusmax = max(radiusmax, ymax-ymin);
 # endif
 # if DIM == 3
-    cudaMemcpyFromSymbol(&zmin, minz, sizeof(double));
-    cudaMemcpyFromSymbol(&zmax, maxz, sizeof(double));
-    radiusmax = max(radiusmax, zmax-zmin);
+cudaMemcpyFromSymbol(&zmin, minz, sizeof(double));
+cudaMemcpyFromSymbol(&zmax, maxz, sizeof(double));
+radiusmax = max(radiusmax, zmax-zmin);
 # endif
-    printf("computational domain: x [%e, %e]", xmin, xmax);
+printf("computational domain: x [%e, %e]", xmin, xmax);
 # if DIM > 1
-    printf(", y [%e, %e]", ymin, ymax);
+printf(", y [%e, %e]", ymin, ymax);
 # endif
 # if DIM == 3
-    printf(", z [%e, %e]", zmin, zmax);
+printf(", z [%e, %e]", zmin, zmax);
 # endif
-    printf("\n");
+printf("\n");
 #endif  // DEBUG_TREE
 
 #if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(start, 0);
+cudaEventRecord(start, 0);
 #endif
-    cudaVerifyKernel((buildTree<<<numberOfMultiprocessors, NUM_THREADS_BUILD_TREE>>>()));
-    cudaVerify(cudaDeviceSynchronize());
+cudaVerifyKernel((buildTree<<<numberOfMultiprocessors, NUM_THREADS_BUILD_TREE>>>()));
+cudaVerify(cudaDeviceSynchronize());
 #if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration build tree: %.7f ms\n", time[timerCounter]);
-    totalTime += time[timerCounter++];
+cudaEventRecord(stop, 0);
+cudaEventSynchronize(stop);
+cudaEventElapsedTime(&time[timerCounter], start, stop);
+printf("duration build tree: %.7f ms\n", time[timerCounter]);
+totalTime += time[timerCounter++];
 #endif
 
 #if DEBUG_TREE
-    cudaMemcpyFromSymbol(&maxNodeIndex_host, maxNodeIndex, sizeof(int));
-    fprintf(stdout, "number of inner nodes: %d\n", (numberOfNodes - maxNodeIndex_host));
-    fprintf(stdout, "number of used inner nodes / number of allocated nodes: %.7f %%\n",
-            100.0 * (float)(numberOfNodes - maxNodeIndex_host) / (float)(numberOfNodes - numberOfParticles));
-    // get maximum depth of tree
-    cudaVerify(cudaMalloc((void**)&treeDepthPerBlock, sizeof(int)*numberOfMultiprocessors));
-    cudaVerifyKernel((getTreeDepth<<<numberOfMultiprocessors, NUM_THREADS_TREEDEPTH>>>(treeDepthPerBlock)));
-    cudaMemcpyFromSymbol(&maxtreedepth_host, treeMaxDepth, sizeof(int));
-    fprintf(stdout, "max depth of tree: %d\n", maxtreedepth_host);
-    radiusmin = radiusmax * pow(0.5, maxtreedepth_host-1);
-    fprintf(stdout, "largest node length: %g \t smallest node length: %g\n", radiusmax, radiusmin);
-    cudaVerify(cudaFree(treeDepthPerBlock));
+cudaMemcpyFromSymbol(&maxNodeIndex_host, maxNodeIndex, sizeof(int));
+fprintf(stdout, "number of inner nodes: %d\n", (numberOfNodes - maxNodeIndex_host));
+fprintf(stdout, "number of used inner nodes / number of allocated nodes: %.7f %%\n",
+    100.0 * (float)(numberOfNodes - maxNodeIndex_host) / (float)(numberOfNodes - numberOfParticles));
+// get maximum depth of tree
+cudaVerify(cudaMalloc((void**)&treeDepthPerBlock, sizeof(int)*numberOfMultiprocessors));
+cudaVerifyKernel((getTreeDepth<<<numberOfMultiprocessors, NUM_THREADS_TREEDEPTH>>>(treeDepthPerBlock)));
+cudaMemcpyFromSymbol(&maxtreedepth_host, treeMaxDepth, sizeof(int));
+fprintf(stdout, "max depth of tree: %d\n", maxtreedepth_host);
+radiusmin = radiusmax * pow(0.5, maxtreedepth_host-1);
+fprintf(stdout, "largest node length: %g \t smallest node length: %g\n", radiusmax, radiusmin);
+cudaVerify(cudaFree(treeDepthPerBlock));
 #endif
 
-    cudaVerify(cudaDeviceSynchronize());
+cudaVerify(cudaDeviceSynchronize());
 
 #if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(start, 0);
+cudaEventRecord(start, 0);
 #endif
 #if VARIABLE_SML
-    // boundary conditions for sml
+// boundary conditions for sml
 # if DEBUG_RHS
-    printf("calling check_sml_boundary\n");
+printf("calling check_sml_boundary\n");
 # endif
-    cudaVerifyKernel((check_sml_boundary<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>()));
-    cudaVerify(cudaDeviceSynchronize());
+cudaVerifyKernel((check_sml_boundary<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>()));
+cudaVerify(cudaDeviceSynchronize());
 #endif
 #if VARIABLE_SML && FIXED_NOI
-    // call only for the fixed number of interactions case
-    // if INTEGRATE_SML, the sml is integrated and we only need to symmetrize the interactions later on
+// call only for the fixed number of interactions case
+// if INTEGRATE_SML, the sml is integrated and we only need to symmetrize the interactions later on
 # if DEBUG_RHS
-    printf("calling knnNeighbourSearch\n");
+printf("calling knnNeighbourSearch\n");
 # endif
-    cudaVerifyKernel((knnNeighbourSearch<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>(
-                    interactions)));
-    cudaVerify(cudaDeviceSynchronize());
+cudaVerifyKernel((knnNeighbourSearch<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>(
+	    interactions)));
+cudaVerify(cudaDeviceSynchronize());
 #endif
 #if DEAL_WITH_TOO_MANY_INTERACTIONS // make sure that a particle does not get more than MAX_NUM_INTERACTIONS
 # if DEBUG_RHS
-    printf("calling nearNeighbourSearch_modify_sml\n");
+printf("calling nearNeighbourSearch_modify_sml\n");
 # endif
-    cudaVerifyKernel((nearNeighbourSearch_modify_sml<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>(
-                    interactions)));
+cudaVerifyKernel((nearNeighbourSearch_modify_sml<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>(
+	    interactions)));
 #else // risk a termination if MAX_NUM_INTERACTIONS is reached for one particle
 # if DEBUG_RHS
-    printf("calling nearNeighbourSearch\n");
+printf("calling nearNeighbourSearch\n");
 # endif
-    cudaVerifyKernel((nearNeighbourSearch<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>(
-                    interactions)));
+cudaVerifyKernel((nearNeighbourSearch<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>(
+	    interactions)));
 #endif
-    cudaVerify(cudaDeviceSynchronize());
+cudaVerify(cudaDeviceSynchronize());
 #if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration neighboursearch: %.7f ms\n", time[timerCounter]);
-    totalTime += time[timerCounter++];
+cudaEventRecord(stop, 0);
+cudaEventSynchronize(stop);
+cudaEventElapsedTime(&time[timerCounter], start, stop);
+printf("duration neighboursearch: %.7f ms\n", time[timerCounter]);
+totalTime += time[timerCounter++];
 #endif
-    cudaVerifyKernel((setEmptyMassForInnerNodes<<<numberOfMultiprocessors * 4, NUM_THREADS_512>>>()));
-    cudaVerify(cudaDeviceSynchronize());
-    // TODO: only if debug
+cudaVerifyKernel((setEmptyMassForInnerNodes<<<numberOfMultiprocessors * 4, NUM_THREADS_512>>>()));
+cudaVerify(cudaDeviceSynchronize());
+// TODO: only if debug
 #if 0
-    cudaMemcpy(p_host.noi, p_device.noi, memorySizeForInteractions, cudaMemcpyDeviceToHost);
-    cudaVerify(cudaDeviceSynchronize());
-    int i;
-    int maxNumInteractions = 0;
-    for (i = 0; i < numberOfParticles; i++) {
-        maxNumInteractions = max(maxNumInteractions, p_host.noi[i]);
-        if (maxNumInteractions > MAX_NUM_INTERACTIONS) {
-            fprintf(stderr, "max num interactions exceeded by particle %d\n", i);
-            exit(1);
-        }
-    }
-    printf("maximum number of interactions: %d\n", maxNumInteractions);
+cudaMemcpy(p_host.noi, p_device.noi, memorySizeForInteractions, cudaMemcpyDeviceToHost);
+cudaVerify(cudaDeviceSynchronize());
+int i;
+int maxNumInteractions = 0;
+for (i = 0; i < numberOfParticles; i++) {
+maxNumInteractions = max(maxNumInteractions, p_host.noi[i]);
+if (maxNumInteractions > MAX_NUM_INTERACTIONS) {
+    fprintf(stderr, "max num interactions exceeded by particle %d\n", i);
+    exit(1);
+}
+}
+printf("maximum number of interactions: %d\n", maxNumInteractions);
 #endif
 
 
@@ -372,59 +373,39 @@ void rightHandSide()
 
 
 #if DISPH
-
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
 # endif
 
-    double max_dp_host = 1.0;
+    double max_dp=0.0;
     double DISPH_alpha = 0.1;
+    double *maxDISPH_PressureAbsErrorPerBlock;
     
+    cudaVerify(cudaMalloc((void**)&maxDISPH_PressureAbsErrorPerBlock , sizeof(double)*numberOfMultiprocessors));
     int cnt = 0;
-    int test_index = 1654;
     int i;
-//printf("\n\n DISPH_Y: \n %e \n", p_host.DISPH_Y[test_index]);
-//printf("\n\n DISPH_y: \n %e \n", p_host.DISPH_y[test_index]);
 cudaVerifyKernel((calculate_DISPH_y_DISPH_rho<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>( interactions)));
 cudaVerify(cudaDeviceSynchronize());
 
-//cudaMemcpy(p_host.DISPH_rho, p_device.DISPH_rho, memorySizeForParticles, cudaMemcpyDeviceToHost);
-//cudaMemcpy(p_host.DISPH_y, p_device.DISPH_y, memorySizeForParticles, cudaMemcpyDeviceToHost);
-
-//printf("\n\n DISPH_y danach: \n %e \n \e \n", pow(p_host.DISPH_y[test_index], 1/DISPH_alpha));
-//printf("\n\n DISPH_rho: \n %e \n", p_host.DISPH_rho[test_index]);
-
 // start iteration procedure to solve implicit y-Y-relation
-printf("\n \n start iteration procedure to solve implicit y-Y-relation \n\n");
+printf(" start iteration procedure to solve implicit y-Y-relation \n");
 do {
 // step 1: calc p_i = peos(DISPH_rho_i) 
     cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
     cudaVerify(cudaDeviceSynchronize());
     
-    //cudaVerify(cudaMemcpy(p_host.p, p_device.p, memorySizeForParticles, cudaMemcpyDeviceToHost));
-    //printf("\n\n p: \n %e \n", p_host.p[test_index]);
+// determine maximum of the pressure deviations
 
-// calculate relative deviations dp = abs((y^(1/alpha) - p_i)/p_i)
-    //cudaVerifyKernel((calculate_DISPH_dp<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
-    //cudaVerify(cudaDeviceSynchronize());
+    //double max_dp = 10.0;
+    //double *maxDISPH_PressureAbsErrorPerBlock;
+    cudaVerifyKernel((determine_max_dp<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(maxDISPH_PressureAbsErrorPerBlock)));
+    cudaVerify(cudaDeviceSynchronize());
+    cudaVerify(cudaMemcpyFromSymbol(&max_dp, maxDISPH_PressureAbsError, sizeof(double)));
 
-    //cudaVerify(cudaMemcpy(p_host.DISPH_dp, p_device.DISPH_dp, memorySizeForParticles, cudaMemcpyDeviceToHost));
-    //printf("\n\n DISPH_dp: \n %e \n", p_host.DISPH_dp[test_index]);
-
-// determine maximum of the deviations
-//    max_dp_host = 0.0;
-//    printf("\n\n numParticles: \n %e \n", numParticles);
-//	for (i=0; i<numParticles; i+=1){
-//		if(p_host.DISPH_dp[i]>max_dp_host){
-//			max_dp_host = p_host.DISPH_dp[i];
-//		}
-//	}
 // step 3: calc Y_i = m_i*p^(alpha)_i/rho_i
     cudaVerifyKernel((calculate_DISPH_Y<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
     cudaVerify(cudaDeviceSynchronize());
 
-    //cudaVerify(cudaMemcpy(p_host.DISPH_Y, p_device.DISPH_Y, memorySizeForParticles, cudaMemcpyDeviceToHost));
-    //printf("\n\n DISPH_Y: \n %e \n", p_host.DISPH_Y[test_index]);
 
 // step 4: calc y_i = sum_j Y_j W_ij and rho_i = m_i*y_i/Y_i
     cudaVerifyKernel((calculate_DISPH_y_DISPH_rho<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>( interactions)));
@@ -432,13 +413,15 @@ do {
 
   //  cudaVerify(cudaMemcpy(p_host.DISPH_y, p_device.DISPH_y, memorySizeForParticles, cudaMemcpyDeviceToHost));
   //  cudaVerify(cudaMemcpy(p_host.DISPH_rho, p_device.DISPH_rho, memorySizeForParticles, cudaMemcpyDeviceToHost));
-  //  printf("\n\n DISPH_p: \n %e \n", pow(p_host.DISPH_y[test_index], 1/DISPH_alpha));
-  //  printf("\n\n DISPH_rho: \n %e \n", p_host.DISPH_rho[test_index]);
 //cudaVerify(cudaMemcpyFromSymbol(&max_dp_host, max_dp, sizeof(double)));
 cnt += 1;
-//printf("\n\n max_dp_host is \n %e \n", max_dp_host);
-} while (max_dp_host > 1e-3 && cnt < 40);
+//printf(" %i:  max_dp is %e \n", cnt, max_dp);
+} while (max_dp > 1e-2 && cnt < 20);
 
+printf(" %i  max_dp is \n %e \n", cnt, max_dp);
+
+
+cudaVerify(cudaFree(maxDISPH_PressureAbsErrorPerBlock));
 
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);

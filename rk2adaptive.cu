@@ -214,7 +214,7 @@ void rk2Adaptive()
 #if GRAVITATING_POINT_MASSES
             cudaVerify(cudaMemcpyToSymbol(pointmass, &rk_pointmass_device[RKFIRST], sizeof(struct Pointmass)));
 #endif
-	    printf("Now first rightHandSide()");
+	    printf("\n first rightHandSide()\n");
             rightHandSide();
             cudaVerify(cudaDeviceSynchronize());
 
@@ -285,6 +285,7 @@ void rk2Adaptive()
 #if GRAVITATING_POINT_MASSES
                 cudaVerify(cudaMemcpyToSymbol(pointmass, &rk_pointmass_device[RKFIRST], sizeof(struct Pointmass)));
 #endif
+	    printf("\n second rightHandSide()\n");
                 rightHandSide();
                 cudaVerify(cudaDeviceSynchronize());
 
@@ -306,6 +307,7 @@ void rk2Adaptive()
 #endif
                 substep_currentTime = currentTime + dt_host;
                 cudaVerify(cudaMemcpyToSymbol(substep_currentTimeD, &substep_currentTime, sizeof(double)));
+	    printf("\n third rightHandSide()\n");
                 rightHandSide();
                 cudaVerify(cudaDeviceSynchronize());
 

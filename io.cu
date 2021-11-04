@@ -3130,7 +3130,7 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     cudaVerify(cudaMemcpy(p_host.DISPH_rho, p_device.DISPH_rho, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.DISPH_Y, p_device.DISPH_Y, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.DISPH_y, p_device.DISPH_y, memorySizeForParticles, cudaMemcpyDeviceToHost));
-    cudaVerify(cudaMemcpy(p_host.DISPH_dp, p_device.DISPH_dp, memorySizeForParticles, cudaMemcpyDeviceToHost));
+   // cudaVerify(cudaMemcpy(p_host.DISPH_dp, p_device.DISPH_dp, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.dDISPH_Ydt, p_device.dDISPH_Ydt, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #endif
 

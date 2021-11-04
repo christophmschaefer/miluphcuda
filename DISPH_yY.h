@@ -32,7 +32,8 @@
  */
 __global__ void calculate_DISPH_y_DISPH_rho(int *interactions);
 __global__ void calculate_DISPH_Y();
-__global__ void calculate_DISPH_dp();
+//__global__ void calculate_DISPH_dp();
+__global__ void determine_max_dp(double *maxDISPH_PressureErrorPerBlock);
 __global__ void calculate_DISPH_Y_initial();
 
 

@@ -56,6 +56,9 @@ __device__ double dtNewErrorCheck = 0.0;
 #if INTEGRATE_DENSITY
 __device__ double maxDensityAbsError;
 #endif
+#if DISPH
+__device__ double maxDISPH_PressureAbsError;
+#endif
 #if INTEGRATE_ENERGY
 __device__ double maxEnergyAbsError;
 #endif

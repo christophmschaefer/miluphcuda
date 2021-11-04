@@ -166,6 +166,28 @@ __global__ void BoundaryConditionsAfterIntegratorStep(int *interactions)
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         matId = p_rhs.materialId[i];
+
+// for Marius problem with the two fluids ...
+#if DISPH
+	if(p.y[i]>2.0){
+		p.y[i] = 4.0 - p.y[i];
+		p.vy[i] = - p.vy[i];
+	}
+	if(p.y[i]<0.0){
+		p.y[i] = - p.y[i];
+		p.vy[i] = - p.vy[i];
+	}
+	if(p.x[i]<0.0){
+		p.x[i] = - p.x[i];
+		p.vx[i] = - p.vx[i];
+	}
+	if(p.x[i]>1.0){
+		p.x[i] = 2.0 - p.x[i];
+		p.vx[i] = - p.vx[i];
+	}
+#endif
+
+
     }
 }
 
