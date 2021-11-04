@@ -269,27 +269,25 @@ static void print_compile_information(void)
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "XSPH velocity smoothing:\t  %s\n", yesno);
-#if VARIABLE_SML
-    fprintf(stdout, "Using variable smoothing:\t yes\n");
-#if FIXED_NOI
-    fprintf(stdout, "    with fixed number of interaction partners.\n");
-#elif INTEGRATE_SML
-    fprintf(stdout, "    with integration of the smoothing length.\n");
+#if READ_INITIAL_SML_FROM_PARTICLE_FILE
+    fprintf(stdout, "Initial smoothing lengths: read from input file for each particle.\n");
 #else
-#error no such scheme for VARIABLE_SML
+    fprintf(stdout, "Initial smoothing lengths: use a single one per material.\n");
 #endif
-    fprintf(stdout, "Using fixed smoothing lengths: \t no\n");
+#if VARIABLE_SML
+    fprintf(stdout, "Using (time) variable smoothing lengths:\t yes\n");
+# if FIXED_NOI
+    fprintf(stdout, "    with fixed number of interaction partners\n");
+# elif INTEGRATE_SML
+    fprintf(stdout, "    with integration of the smoothing length\n");
+# endif
 #else
-    fprintf(stdout, "Using variable smoothing:\t no\n");
-    fprintf(stdout, "Using fixed smoothing lengths: \t yes\n");
+    fprintf(stdout, "Using (time) variable smoothing lengths:\t no\n");
 #endif
 #if AVERAGE_KERNELS
     fprintf(stdout, "Kernel for interaction is calculated by averaging kernels for each particle: \t W_ij = 0.5 ( W(h_i) + W(h_j) )\n");
 #else
     fprintf(stdout, "Kernel for interaction is calculated using averaged smooting length: \t W_ij = W(0.5 (h_i + h_j))\n");
-#endif
-#if READ_INITIAL_SML_FROM_PARTICLE_FILE
-    fprintf(stdout, "Reading initial smoothing length for each particle.\n");
 #endif
 #if GHOST_BOUNDARIES
     strcpy(yesno, "yes");

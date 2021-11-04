@@ -35,6 +35,7 @@
 # error Choose either SOLID or HYDRO in parameter.h.
 #endif
 
+
 // checks for plasticity models
 #if VON_MISES_PLASTICITY && COLLINS_PLASTICITY
 # error You cannot choose VON_MISES_PLASTICITY and COLLINS_PLASTICITY at the same time.
@@ -107,6 +108,17 @@
 #endif
 
 
+// checks for variable sml
+#if VARIABLE_SML
+# if FIXED_NOI && INTEGRATE_SML
+#  error use VARIABLE_SML only with FIXED_NOI or INTEGRATE_SML, not both
+# endif
+# if !(FIXED_NOI || INTEGRATE_SML)
+#  error choose either one of FIXED_NOI or INTEGRATE_SML in combination with VARIABLE_SML
+# endif
+#endif
+
+
 // misc checks
 #if SYMMETRIC_STRESSTENSOR && !SOLID
 # error turn SOLID on when using SYMMETRIC_STRESSTENSOR
@@ -132,12 +144,6 @@
 
 #if ARTIFICIAL_STRESS && !SOLID
 # error turn off ARTIFICIAL_STRESS when running hydro sims
-#endif
-
-#if VARIABLE_SML
-# if FIXED_NOI && INTEGRATE_SML
-#  error use VARIABLE_SML only with FIXED_NOI or INTEGRATE_SML
-# endif
 #endif
 
 #if STRESS_PALPHA_POROSITY && !PALPHA_POROSITY
