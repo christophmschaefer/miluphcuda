@@ -106,7 +106,7 @@
 //   (3) Mohr-Coulomb (MC) yield criterion
 //       -> yield strength is given by yield_stress = tan(friction_angle) \times pressure + cohesion 
 #define MOHR_COULOMB_PLASTICITY 0
-//       Note: DP and MC are intended for granular-like materials, therefore the yield strength simply decreases (linearly) to zero for p<0.
+//       Note: DP and MC are intended for granular-like materials, therefore the yield strength simply decreases (linearly) to zero for p < 0.
 //       Note: For DP and MC you can additionally choose (1) to impose an upper limit for the yield stress.
 //   (4) Pressure dependent yield strength following Collins et al. (2004) and the implementation in Jutzi (2015)
 //       -> yield strength is different for damaged (Y_d) and intact material (Y_i), and averaged mean (Y) in between:
@@ -125,9 +125,9 @@
 #define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 0
 //   (5) Simplified version of the Collins et al. (2004) model, which uses only the
 //       strength representation for intact material (Y_i), irrespective of damage.
-//       Unlike in (4), Y decreases to zero (following a linear yield strength curve) for p<0.
-//       In addition, negative pressures are limited to the pressure corresponding to
-//       yield strength = 0 (i.e., are set to this value when they get more negative).
+//       Unlike in (4), Y decreases to zero for p < 0 with slope = 1 (i.e., zero at -cohesion).
+//       In addition, negative pressures are limited to the zero of the yield strength
+//       curve at -cohesion (i.e., are set to this value when they get more negative).
 #define COLLINS_PLASTICITY_SIMPLE 0
 // Note: The deviator stress tensor is additionally reduced by FRAGMENTATION (i.e., damage) only if
 //       DAMAGE_ACTS_ON_S is set. For most plasticity models it depends on the use case whether this

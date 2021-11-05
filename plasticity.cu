@@ -114,14 +114,12 @@ __global__ void plasticity()
 
 #if PLASTICITY
 __global__ void plasticityModel(void) {
-    // introduce plastic behaviour by limiting the deviatoric stress
     register int i, inc, d, e;
     register double mises_f, tmp;
     register double I1, J2, sqrt_J2;
     register double y, y_i, y_d, y_M, y_0, y_0_d, damage, e_melt;
-    /* drucker prager constants */
-    register double A, B;
-    double mu_i, mu_d; // coefficients of internal friction
+    register double A, B;   // Drucker-Prager constants
+    double mu_i, mu_d;  // coefficients of internal friction
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
@@ -191,7 +189,7 @@ __global__ void plasticityModel(void) {
         y_M = matYieldStress[p_rhs.materialId[i]];
         mu_i = matInternalFriction[p_rhs.materialId[i]];
 
-        // yield strength of intact material, with constant cohesion for p<0
+        // yield strength of intact material, with constant cohesion for p < 0
         y_i = y_0;
         if (p.p[i] > 0.0) {
             y_i += mu_i * p.p[i]
@@ -199,7 +197,7 @@ __global__ void plasticityModel(void) {
         }
 # if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
         e_melt = matMeltEnergy[p_rhs.materialId[i]];
-        
+
         if (p.e[i] >= e_melt) {
             y_i = 0.0;
         } else if (p.e[i] > 0.0) {
@@ -212,16 +210,16 @@ __global__ void plasticityModel(void) {
         damage = p.damage_total[i];
         if (damage > 1.0) damage = 1.0;
         if (damage < 0.0) damage = 0.0;
-        
-        // yield strength of damaged material, with the cohesion going (linearly) to zero for p<0
+
+        // yield strength of damaged material, with the cohesion going (linearly) to zero for p < 0
         y_d = y_0_d + mu_d * p.p[i];
         if (y_d < 0.0)
             y_d = 0.0;
-        
+
         // the actual yield strength Y is a weighted mean of Y_i and Y_d
         // note: therefore potential melt-energy effects are also included in Y
         y = (1.0-damage) * y_i + damage * y_d;
-        
+
         // always limit the yield strength to the intact value
         if (y > y_i)
             y = y_i;
@@ -237,18 +235,18 @@ __global__ void plasticityModel(void) {
         y_M = matYieldStress[p_rhs.materialId[i]];
         mu_i = matInternalFriction[p_rhs.materialId[i]];
 
-        // unlike for the regular Collins model, here we let the yield strength decrease to zero for p<0,
-        // following a linear decline for p<0, where the slope is mu_i, and the zero at -y_0/mu_i
+        // unlike the regular Collins model, the yield strength decreases to zero for p < 0,
+        // following a linear decline with slope = 1, i.e., the zero is always at -Y_0
         if( p.p[i] > 0.0 ) {
             y = y_0 + mu_i * p.p[i]
                 / (1.0 + mu_i * p.p[i]  / (y_M - y_0) );
-        } else if( p.p[i] > -y_0 / mu_i ) {
-            y = y_0 + p.p[i] * mu_i;
+        } else if( p.p[i] > -y_0 ) {
+            y = y_0 + p.p[i];
         } else {
             y = 0.0;
         }
 
-        // let the yield strength decrease to zero for p<0 following the regular Y_i curve,
+        // let the yield strength decrease to zero for p < 0 following the regular Y_i curve,
         // where the zero is at p_0 = -Y_0 (Y_M-Y_0) / (mu_i Y_M)
 //        if ( p.p[i] > y_0*(y_0-y_M)/(mu_i*y_M) ) {
 //            y = y_0 + mu_i * p.p[i]
@@ -257,10 +255,9 @@ __global__ void plasticityModel(void) {
 //            y = 0.0;
 //        }
 
-        // also limit negative pressures to value at zero of yield strength curve
-        // (zero is at -y_0/mu_i if assumed linear for p<0)
-        if( p.p[i] < -y_0 / mu_i)
-            p.p[i] = -y_0 / mu_i;
+        // also limit negative pressures to value at zero of yield strength curve (at -Y_0)
+        if( p.p[i] < -y_0 )
+            p.p[i] = -y_0;
 
         // Drucker-Prager-like -> compare to sqrt(J2)
         if (J2 > 0.0) {
