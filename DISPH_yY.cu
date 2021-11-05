@@ -28,6 +28,7 @@
 #include "parameter.h"
 #include "tree.h"
 #include "pressure.h"
+#include "aneos.h"
 
 #if DISPH
 
@@ -35,23 +36,18 @@ extern __device__ SPH_kernel kernel;
 extern __device__ SPH_kernel wendlandc2_p;
 
 
-// Calculates p_i = sum_j Y_j W_ij
 __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
 
 
     int i, inc;
     int j;
-    int test_index = 1;
-    double DISPH_alpha = 0.1;
     int ip;
     int d;
     double W;
-    double Wj;
     double dx[DIM];
     double dWdx[DIM];
     double dWdr;
     double sml;
-    int cnt = 0;
     register double y;
     register double rho;
     int matId;
@@ -62,11 +58,6 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
             for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
             
     	matId = p_rhs.materialId[i];
-//        if (matId == BOUNDARY_PARTICLE_ID) {
-//		p.DISPH_y[i] = 0.98818;
-//		p.DISPH_rho[i] = 1.2;
-//		continue;
-//	}
             sml = p.h[i];
             
             // self-contribution of particle i
@@ -93,88 +84,88 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
                 #endif
                 #endif  
                 kernel(&W, dWdx, &dWdr, dx, sml);
-	    	//printf("y is %f W: %e \n", y, W);
                 y += p.DISPH_Y[ip] * W;
-
-	    if (p.DISPH_Y[ip] < 0.00001) {
-   //            	printf("In calc_y_and_rho: Y =  %f W: %e \n", p.DISPH_Y[ip], W);
-            }
-
-            }
-	    if (y < 0.0001) {
-     //           printf("In calc_y_and_rho: y is %f W: %e \n", y, W);
-            }
+	    }
 	    // write to global memory
 	    p.DISPH_y[i] = y;
 
-		//printf("i = %e  p.DISPH_y[i] = %e \n", i, p.DISPH_y[i]);
             rho = p.m[i]*p.DISPH_y[i]/p.DISPH_Y[i];
-            if (rho < matRho0[matId]*1.1) {
-		    rho = matRho0[matId]*1.1;
-            //   printf("rho is %f W: %e \n", rho, W);
-            }
-		//printf("i = %e  p.DISPH_rho[i] = %e \n", i, p.DISPH_rho[i]);
+            if (rho <  matRho0[matId]*matRhoLimit[matId]) {
+		    rho =matRho0[matId]*matRhoLimit[matId];
+	    }
 	    p.DISPH_rho[i] = rho;
             } // end loop over all particles
-	  //  printf("i = %i \n p.DISPH_y[i] = %e \n  p.DISPH_rho[i] = %e \n", i, y, rho);
 	    
 }
 
 
 __global__ void calculate_DISPH_Y() {
     register int i, inc;
-    // int matId;
     double DISPH_alpha = 0.1;
             inc = blockDim.x * gridDim.x;
             for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-  //  matId = p_rhs.materialId[i];
-//	if (matId == BOUNDARY_PARTICLE_ID) {
-//		p.DISPH_Y[i] = 0.000617613;
-//		continue;
-//	}
                 p.DISPH_Y[i] = (p.m[i]*pow(p.p[i], DISPH_alpha))/p.DISPH_rho[i];
+            }
 
-	    if (p.DISPH_y[i] < 0.0001) {
- //               printf("In calc_Y: y =: %e \n", p.DISPH_y[i]);
-            }
-            }
+}
+__global__ void DISPH_Y_to_zero() {
+    register int i, inc;
+            inc = blockDim.x * gridDim.x;
+            for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+                p.DISPH_Y[i] =0.0;
+ 	    }
+
+}
+
+__global__ void set_initial_DISPH_Y_if_its_zero() {
+
+    double eta, e, rho, mu, p1, p2, pressure;
+    int i, inc;
+    double DISPH_alpha = 0.1;
+    int matId;
+    extern __device__ int DISPH_initial_Y;
+
+            // Start loop over all particles
+            inc = blockDim.x * gridDim.x;
+            for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+		    if (p.DISPH_Y[i] == 0.0){
+            for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+        	matId = p_rhs.materialId[i];
+		if (p.rho[i] < matRho0[matId]*matRhoLimit[matId]){ //matRho0[matId]*1.05) {
+		    p.DISPH_rho[i] =  matRho0[matId]*matRhoLimit[matId]; //matRho0[matId]*1.05;
+		}
+		else{
+		    p.DISPH_rho[i] = p.rho[i];
+		}
+	    }
+DISPH_initial_Y = 1;
+	break;
+	    }else{
+		    DISPH_initial_Y = 0;
+	    }
+	    }
 
 }
 
 
 
-//__global__ void calculate_DISPH_dp() {
-//    double DISPH_alpha = 0.1;
-//    int test_index = 1;
-//	register int i, inc;
-//            inc = blockDim.x * gridDim.x;
-//            for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-//                p.DISPH_dp[i] = fabs((pow(p.DISPH_y[i], 1/DISPH_alpha)-p.p[i])/p.p[i]);
-//	    }
-//}
-
-
 __global__ void determine_max_dp(double *maxDISPH_PressureAbsErrorPerBlock)
 {
-    __shared__ double sharedMaxDISPH_PressureAbsError[NUM_THREADS_ERRORCHECK];
-    double localMaxDISPH_PressureAbsError = 0.0;
-extern __device__ double maxDISPH_PressureAbsError;
-extern __device__ int blockCount;
-    double DISPH_alpha = 0.1;
+	__shared__ double sharedMaxDISPH_PressureAbsError[NUM_THREADS_ERRORCHECK];
+	double localMaxDISPH_PressureAbsError = 0.0;
+	extern __device__ double maxDISPH_PressureAbsError;
+	extern __device__ int blockCount;
     int i, j, k, m;
 
     double tmp = 0.0;
 
 
-	   // printf("number Particles: %i \n", numParticles);
     // loop for particles
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
         if (p_rhs.materialId[i] == EOS_TYPE_IGNORE) continue;
 
         tmp =  pow(p.DISPH_y[i], 10)/p.p[i] - 1;
-	//printf("in determine_max_dp: tmp = %e , p = %e \n", tmp, p.p[i]);
 	localMaxDISPH_PressureAbsError = max(localMaxDISPH_PressureAbsError, tmp);
-	//printf("localMaxDISPH_PressureAbsError = %e \n", localMaxDISPH_PressureAbsError); 
 
     }   // loop for particles
 
@@ -182,7 +173,6 @@ extern __device__ int blockCount;
     // reduce shared thread results to one per block
     i = threadIdx.x;
     sharedMaxDISPH_PressureAbsError[i] = localMaxDISPH_PressureAbsError;
-	//printf("i = %i, shared ...= %e \n", i, sharedMaxDISPH_PressureAbsError[i]);
 
     for (j = NUM_THREADS_ERRORCHECK / 2; j > 0; j /= 2) {
         __syncthreads();

@@ -238,10 +238,6 @@ void read_particles_from_file(File inputFile)
     hid_t e_id;
 # endif
 
-#if DISPH
-    hid_t DISPH_Y_id;
-#endif
-
     hid_t time_id;
 # if VARIABLE_SML || READ_INITIAL_SML_FROM_PARTICLE_FILE
     hid_t sml_id;
@@ -722,24 +718,6 @@ void read_particles_from_file(File inputFile)
         }
         free(x);
 # endif
-
-# if DISPH
-        /* read DISPH_Y */
-        DISPH_Y_id = H5Dopen(file_id, "/e", H5P_DEFAULT);
-        if (DISPH_Y_id < 0) {
-            fprintf(stderr, "Could not find DISPH_Y information in hdf5 file. Exiting...\n");
-            exit(1);
-        }
-        x = (double * ) malloc(sizeof(double) * my_anop);
-        status = H5Dread(DISPH_Y_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
-        status = H5Dclose(DISPH_Y_id);
-
-        for (i = 0; i < my_anop; i++) {
-            p_host.DISPH_Y[i] = x[i];
-        }
-        free(x);
-# endif
-
         /* read material types */
         mtype_id = H5Dopen(file_id, "/material_type", H5P_DEFAULT);
         if (mtype_id < 0) {
@@ -1100,13 +1078,13 @@ void read_particles_from_file(File inputFile)
             columns++;
 #endif
 
-#if DISPH 
-            // read in DISPH_Y
-            if (!fscanf(inputFile.data, "%s", &iotmp))
-                fprintf(stderr, "could not read energy from input file\n");
-            p_host.DISPH_Y[i] = atof(iotmp);
-            columns++;
-#endif
+//#if DISPH 
+//            // read in DISPH_Y
+//            if (!fscanf(inputFile.data, "%s", &iotmp))
+//                fprintf(stderr, "could not read energy from input file\n");
+//            p_host.DISPH_Y[i] = atof(iotmp);
+//            columns++;
+//#endif
 
 #if READ_INITIAL_SML_FROM_PARTICLE_FILE
             // read in smoothing length
@@ -1483,7 +1461,7 @@ void write_particles_to_file(File file) {
     hid_t g_a_id;
 
 #if DISPH
-    hid_t DISPH_Y_id, DISPH_rho_id, DISPH_y_id;
+    hid_t DISPH_rho_id, DISPH_y_id;
 #endif
 
 #if MORE_ANEOS_OUTPUT
@@ -1600,7 +1578,6 @@ void write_particles_to_file(File file) {
 
 #if DISPH
             fprintf(file.data, "%e\t", pow(p_host.DISPH_y[i], 1/DISPH_alpha));
-            fprintf(file.data, "%e\t", p_host.DISPH_Y[i]); 
 #endif
 
 
@@ -2363,14 +2340,6 @@ void write_particles_to_file(File file) {
                 x[i] = pow(p_host.DISPH_y[i], 1/DISPH_alpha);
             status = H5Dwrite(DISPH_y_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
             status = H5Dclose(DISPH_y_id);
-
-            /* DISPH_Y */
-            DISPH_Y_id = H5Dcreate2(file_id, "/DISPH_Y", H5T_NATIVE_DOUBLE, dataspace_id,
-                    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-            for (i = 0; i < numberOfParticles; i++)
-                x[i] = p_host.DISPH_Y[i];
-            status = H5Dwrite(DISPH_Y_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
-            status = H5Dclose(DISPH_Y_id);
 #else
 
         /* pressure */
@@ -3130,7 +3099,6 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     cudaVerify(cudaMemcpy(p_host.DISPH_rho, p_device.DISPH_rho, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.DISPH_Y, p_device.DISPH_Y, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.DISPH_y, p_device.DISPH_y, memorySizeForParticles, cudaMemcpyDeviceToHost));
-   // cudaVerify(cudaMemcpy(p_host.DISPH_dp, p_device.DISPH_dp, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.dDISPH_Ydt, p_device.dDISPH_Ydt, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #endif
 

@@ -378,10 +378,6 @@ static void format_information(char *name)
     noc++;   /* e */
     fprintf(stdout, "%d:energy ", noc);
 #endif
-#if DISPH
-    fprintf(stdout, "%d:DISPH_Y ", noc);
-    noc++;   /* DISPH_Y */
-#endif
 #if READ_INITIAL_SML_FROM_PARTICLE_FILE
     noc++; /* smoothing length */
     fprintf(stdout, "%d:smoothing length ", noc);
@@ -500,8 +496,6 @@ static void format_information(char *name)
 #if DISPH
     noc++; /* DISPH_p */
     fprintf(stdout, "%d:pressure from before ", noc);
-     noc++; /* DISPH_Y */
-    fprintf(stdout, "%d:DISPH_Y_guess ", noc); 
 #endif
 #if SOLID
     noc++; /* local_strain  */
