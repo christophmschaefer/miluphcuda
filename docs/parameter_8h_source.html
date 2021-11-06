@@ -158,7 +158,7 @@ $(function() {
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;<span class="comment">//   (3) Mohr-Coulomb (MC) yield criterion</span></div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="comment">//       -&gt; yield strength is given by yield_stress = tan(friction_angle) \times pressure + cohesion </span></div>
 <div class="line"><a name="l00108"></a><span class="lineno"><a class="line" href="parameter_8h.html#a1cf153a78b1176130030d1cfec239dff">  108</a></span>&#160;<span class="preprocessor">#define MOHR_COULOMB_PLASTICITY 0</span></div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="comment">//       Note: DP and MC are intended for granular-like materials, therefore the yield strength simply decreases (linearly) to zero for p&lt;0.</span></div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="comment">//       Note: DP and MC are intended for granular-like materials, therefore the yield strength simply decreases (linearly) to zero for p &lt; 0.</span></div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;<span class="comment">//       Note: For DP and MC you can additionally choose (1) to impose an upper limit for the yield stress.</span></div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;<span class="comment">//   (4) Pressure dependent yield strength following Collins et al. (2004) and the implementation in Jutzi (2015)</span></div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;<span class="comment">//       -&gt; yield strength is different for damaged (Y_d) and intact material (Y_i), and averaged mean (Y) in between:</span></div>
@@ -177,9 +177,9 @@ $(function() {
 <div class="line"><a name="l00125"></a><span class="lineno"><a class="line" href="parameter_8h.html#a5976cb8182b12f750d7475ae91ace1e6">  125</a></span>&#160;<span class="preprocessor">#define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 0</span></div>
 <div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;<span class="comment">//   (5) Simplified version of the Collins et al. (2004) model, which uses only the</span></div>
 <div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="comment">//       strength representation for intact material (Y_i), irrespective of damage.</span></div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;<span class="comment">//       Unlike in (4), Y decreases to zero (following a linear yield strength curve) for p&lt;0.</span></div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;<span class="comment">//       In addition, negative pressures are limited to the pressure corresponding to</span></div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<span class="comment">//       yield strength = 0 (i.e., are set to this value when they get more negative).</span></div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;<span class="comment">//       Unlike in (4), Y decreases to zero for p &lt; 0 with slope = 1 (i.e., zero at -cohesion).</span></div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;<span class="comment">//       In addition, negative pressures are limited to the zero of the yield strength</span></div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<span class="comment">//       curve at -cohesion (i.e., are set to this value when they get more negative).</span></div>
 <div class="line"><a name="l00131"></a><span class="lineno"><a class="line" href="parameter_8h.html#a28a2854d8e552c074b21a36e2e3fbb39">  131</a></span>&#160;<span class="preprocessor">#define COLLINS_PLASTICITY_SIMPLE 0</span></div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;<span class="comment">// Note: The deviator stress tensor is additionally reduced by FRAGMENTATION (i.e., damage) only if</span></div>
 <div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;<span class="comment">//       DAMAGE_ACTS_ON_S is set. For most plasticity models it depends on the use case whether this</span></div>
@@ -204,62 +204,61 @@ $(function() {
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;<span class="comment">// max number of activation thresholds per particle, only required for FRAGMENTATION, otherwise set to 1</span></div>
 <div class="line"><a name="l00153"></a><span class="lineno"><a class="line" href="parameter_8h.html#a4703518bece6a70e282b08a89b690e4c">  153</a></span>&#160;<span class="preprocessor">#define MAX_NUM_FLAWS 1</span></div>
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;<span class="comment">// maximum number of interactions per particle -&gt; fixed array size</span></div>
-<div class="line"><a name="l00155"></a><span class="lineno"><a class="line" href="parameter_8h.html#a173e5a522f62a96b7508f1f4139b2479">  155</a></span>&#160;<span class="preprocessor">#define MAX_NUM_INTERACTIONS 128</span></div>
+<div class="line"><a name="l00155"></a><span class="lineno"><a class="line" href="parameter_8h.html#a173e5a522f62a96b7508f1f4139b2479">  155</a></span>&#160;<span class="preprocessor">#define MAX_NUM_INTERACTIONS 256</span></div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160; </div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;<span class="comment">// if set to 1, the smoothing length is not fixed for each material type</span></div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;<span class="comment">// choose either FIXED_NOI for a fixed number of interaction partners following</span></div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;<span class="comment">// the ansatz by Hernquist and Katz</span></div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;<span class="comment">// or choose INTEGRATE_SML if you want to additionally integrate an ODE for</span></div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;<span class="comment">// the sml following the ansatz by Benz and integrate the ODE for the smoothing length</span></div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;<span class="comment">// d sml / dt  = sml/DIM * 1/rho  \nabla velocity</span></div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;<span class="comment">// if you want to specify an individual initial smoothing length for each particle (instead of the material</span></div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;<span class="comment">// specific one in material.cfg) in the initial particle file, set READ_INITIAL_SML_FROM_PARTICLE_FILE to 1</span></div>
-<div class="line"><a name="l00165"></a><span class="lineno"><a class="line" href="parameter_8h.html#a908e2164c823365528caa4263006a2dc">  165</a></span>&#160;<span class="preprocessor">#define VARIABLE_SML 0</span></div>
-<div class="line"><a name="l00166"></a><span class="lineno"><a class="line" href="parameter_8h.html#a6f9e81363781dfb7b93cb8026db39996">  166</a></span>&#160;<span class="preprocessor">#define FIXED_NOI 0</span></div>
-<div class="line"><a name="l00167"></a><span class="lineno"><a class="line" href="parameter_8h.html#ad2c4751f0383439ba8403f9b6735dd16">  167</a></span>&#160;<span class="preprocessor">#define INTEGRATE_SML 0</span></div>
-<div class="line"><a name="l00168"></a><span class="lineno"><a class="line" href="parameter_8h.html#a7ada6d2d9c0e654a324ebd36db1db789">  168</a></span>&#160;<span class="preprocessor">#define READ_INITIAL_SML_FROM_PARTICLE_FILE 0</span></div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160; </div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;<span class="comment">// correction terms for sml calculation: adds gradient of the smoothing length to continuity equation, equation of motion, internal energy equation</span></div>
-<div class="line"><a name="l00171"></a><span class="lineno"><a class="line" href="parameter_8h.html#a6aa17c07e431d51128212d435abe8fa7">  171</a></span>&#160;<span class="preprocessor">#define SML_CORRECTION 0</span></div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160; </div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;<span class="comment">// if set to 0, h = (h_i + h_j)/2  is used to calculate W_ij</span></div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;<span class="comment">// if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2</span></div>
-<div class="line"><a name="l00175"></a><span class="lineno"><a class="line" href="parameter_8h.html#a14f0c1706287bea4992f1cc4624daafe">  175</a></span>&#160;<span class="preprocessor">#define AVERAGE_KERNELS 1</span></div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;<span class="comment">// if VARIABLE_SML is set, the smoothing length (sml) is not fixed in time - choose either:</span></div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;<span class="comment">//   FIXED_NOI for a fixed number of interaction partners, following the ansatz by Hernquist and Katz</span></div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;<span class="comment">//   or</span></div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;<span class="comment">//   INTEGRATE_SML if you want to additionally integrate an ODE for the sml, following the ansatz by Benz:</span></div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;<span class="comment">//                 d sml / dt  = sml/DIM * 1/rho  \nabla velocity</span></div>
+<div class="line"><a name="l00162"></a><span class="lineno"><a class="line" href="parameter_8h.html#a908e2164c823365528caa4263006a2dc">  162</a></span>&#160;<span class="preprocessor">#define VARIABLE_SML 0</span></div>
+<div class="line"><a name="l00163"></a><span class="lineno"><a class="line" href="parameter_8h.html#a6f9e81363781dfb7b93cb8026db39996">  163</a></span>&#160;<span class="preprocessor">#define FIXED_NOI 0</span></div>
+<div class="line"><a name="l00164"></a><span class="lineno"><a class="line" href="parameter_8h.html#ad2c4751f0383439ba8403f9b6735dd16">  164</a></span>&#160;<span class="preprocessor">#define INTEGRATE_SML 0</span></div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;<span class="comment">// read sml for each particle from input file (instead of using a single, material-specific one from material.cfg)</span></div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;<span class="comment">// (if VARIABLE_SML is not set the individual smls remain constant)</span></div>
+<div class="line"><a name="l00167"></a><span class="lineno"><a class="line" href="parameter_8h.html#a7ada6d2d9c0e654a324ebd36db1db789">  167</a></span>&#160;<span class="preprocessor">#define READ_INITIAL_SML_FROM_PARTICLE_FILE 0</span></div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160; </div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;<span class="comment">// correction terms for sml calculation: adds gradient of the smoothing length to continuity equation, equation of motion, internal energy equation</span></div>
+<div class="line"><a name="l00170"></a><span class="lineno"><a class="line" href="parameter_8h.html#a6aa17c07e431d51128212d435abe8fa7">  170</a></span>&#160;<span class="preprocessor">#define SML_CORRECTION 0</span></div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160; </div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;<span class="comment">// if set to 0, h = (h_i + h_j)/2  is used to calculate W_ij</span></div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;<span class="comment">// if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2</span></div>
+<div class="line"><a name="l00174"></a><span class="lineno"><a class="line" href="parameter_8h.html#a14f0c1706287bea4992f1cc4624daafe">  174</a></span>&#160;<span class="preprocessor">#define AVERAGE_KERNELS 1</span></div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160; </div>
 <div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160; </div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160; </div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;<span class="comment">// important switch: if the simulations yields at some point too many interactions for</span></div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;<span class="comment">// one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be set to 0</span></div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;<span class="comment">// and the simulation continues. It will be announced on *stdout* when this happens</span></div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;<span class="comment">// if set to 0, the simulation stops in such a case unless DEAL_WITH_TOO_MANY_INTERACTIONS is used</span></div>
-<div class="line"><a name="l00182"></a><span class="lineno"><a class="line" href="parameter_8h.html#a734992b85ae6346446130e6222e7bcf0">  182</a></span>&#160;<span class="preprocessor">#define TOO_MANY_INTERACTIONS_KILL_PARTICLE 0</span></div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;<span class="comment">// important switch: if the simulations yields at some point too many interactions for</span></div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;<span class="comment">// one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be lowered until</span></div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;<span class="comment">// the interactions are lower than MAX_NUM_INTERACTIONS</span></div>
-<div class="line"><a name="l00186"></a><span class="lineno"><a class="line" href="parameter_8h.html#ae04c60518447e20dc504bed2b41bc6b8">  186</a></span>&#160;<span class="preprocessor">#define DEAL_WITH_TOO_MANY_INTERACTIONS 0</span></div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160; </div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="comment">// additional smoothing of the velocity field</span></div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="comment">// hinders particle penetration</span></div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;<span class="comment">// see Morris and Monaghan 1984</span></div>
-<div class="line"><a name="l00191"></a><span class="lineno"><a class="line" href="parameter_8h.html#af07f1752d895f5c82c7e916848b68af0">  191</a></span>&#160;<span class="preprocessor">#define XSPH 0</span></div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160; </div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;<span class="comment">// boundaries EXPERIMENTAL, please do not use this....</span></div>
-<div class="line"><a name="l00194"></a><span class="lineno"><a class="line" href="parameter_8h.html#a64dd6f503f7c5956e5fa96dc00bb29ed">  194</a></span>&#160;<span class="preprocessor">#define BOUNDARY_PARTICLE_ID -1</span></div>
-<div class="line"><a name="l00195"></a><span class="lineno"><a class="line" href="parameter_8h.html#a30232eebf26e43e871b0ee500134242f">  195</a></span>&#160;<span class="preprocessor">#define GHOST_BOUNDARIES 0</span></div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;<span class="comment">// note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions</span></div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160; </div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;<span class="comment">// IO options</span></div>
-<div class="line"><a name="l00199"></a><span class="lineno"><a class="line" href="parameter_8h.html#a4e95c50e252d3f996e2dd241d4f050a0">  199</a></span>&#160;<span class="preprocessor">#define HDF5IO 1    </span><span class="comment">// use HDF5 (needs libhdf5-dev and libhdf5)</span></div>
-<div class="line"><a name="l00200"></a><span class="lineno"><a class="line" href="parameter_8h.html#a0e783813bde9201067719f06251ce561">  200</a></span>&#160;<span class="preprocessor">#define MORE_OUTPUT 0   </span><span class="comment">//produce additional output to HDF5 files (p_max, p_min, rho_max, rho_min); only ueful when HDF5IO is set</span></div>
-<div class="line"><a name="l00201"></a><span class="lineno"><a class="line" href="parameter_8h.html#ad35544770f4c3d3d2e8d3b3ba1ad5661">  201</a></span>&#160;<span class="preprocessor">#define MORE_ANEOS_OUTPUT 0 </span><span class="comment">// produce additional output to HDF5 files (T, cs, entropy, phase-flag); only useful when HDF5IO is set; set only if you use the ANEOS eos, but currently not supported for porosity+ANEOS</span></div>
-<div class="line"><a name="l00202"></a><span class="lineno"><a class="line" href="parameter_8h.html#a831327901a9046ad3f2b35bba8f483ae">  202</a></span>&#160;<span class="preprocessor">#define OUTPUT_GRAV_ENERGY 0    </span><span class="comment">// compute and output gravitational energy (at times when output files are written); of all SPH particles (and also w.r.t. gravitating point masses and between them); direct particle-particle summation, not tree; option exists to control costly computation for high particle numbers</span></div>
-<div class="line"><a name="l00203"></a><span class="lineno"><a class="line" href="parameter_8h.html#ae88bad0981cf027a5e66d8233701a448">  203</a></span>&#160;<span class="preprocessor">#define BINARY_INFO 0   </span><span class="comment">// generates additional output file (binary_system.log) with info regarding binary system: semi-major axis, eccentricity if GRAVITATING_POINT_MASSES == 1</span></div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160; </div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;<span class="comment">// important switch: if the simulations yields at some point too many interactions for</span></div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;<span class="comment">// one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be set to 0</span></div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;<span class="comment">// and the simulation continues. It will be announced on *stdout* when this happens</span></div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;<span class="comment">// if set to 0, the simulation stops in such a case unless DEAL_WITH_TOO_MANY_INTERACTIONS is used</span></div>
+<div class="line"><a name="l00181"></a><span class="lineno"><a class="line" href="parameter_8h.html#a734992b85ae6346446130e6222e7bcf0">  181</a></span>&#160;<span class="preprocessor">#define TOO_MANY_INTERACTIONS_KILL_PARTICLE 0</span></div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;<span class="comment">// important switch: if the simulations yields at some point too many interactions for</span></div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;<span class="comment">// one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be lowered until</span></div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;<span class="comment">// the interactions are lower than MAX_NUM_INTERACTIONS</span></div>
+<div class="line"><a name="l00185"></a><span class="lineno"><a class="line" href="parameter_8h.html#ae04c60518447e20dc504bed2b41bc6b8">  185</a></span>&#160;<span class="preprocessor">#define DEAL_WITH_TOO_MANY_INTERACTIONS 0</span></div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160; </div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;<span class="comment">// additional smoothing of the velocity field</span></div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="comment">// hinders particle penetration</span></div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="comment">// see Morris and Monaghan 1984</span></div>
+<div class="line"><a name="l00190"></a><span class="lineno"><a class="line" href="parameter_8h.html#af07f1752d895f5c82c7e916848b68af0">  190</a></span>&#160;<span class="preprocessor">#define XSPH 0</span></div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160; </div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;<span class="comment">// boundaries EXPERIMENTAL, please do not use this....</span></div>
+<div class="line"><a name="l00193"></a><span class="lineno"><a class="line" href="parameter_8h.html#a64dd6f503f7c5956e5fa96dc00bb29ed">  193</a></span>&#160;<span class="preprocessor">#define BOUNDARY_PARTICLE_ID -1</span></div>
+<div class="line"><a name="l00194"></a><span class="lineno"><a class="line" href="parameter_8h.html#a30232eebf26e43e871b0ee500134242f">  194</a></span>&#160;<span class="preprocessor">#define GHOST_BOUNDARIES 0</span></div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;<span class="comment">// note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions</span></div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160; </div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;<span class="comment">// IO options</span></div>
+<div class="line"><a name="l00198"></a><span class="lineno"><a class="line" href="parameter_8h.html#a4e95c50e252d3f996e2dd241d4f050a0">  198</a></span>&#160;<span class="preprocessor">#define HDF5IO 1    </span><span class="comment">// use HDF5 (needs libhdf5-dev and libhdf5)</span></div>
+<div class="line"><a name="l00199"></a><span class="lineno"><a class="line" href="parameter_8h.html#a0e783813bde9201067719f06251ce561">  199</a></span>&#160;<span class="preprocessor">#define MORE_OUTPUT 0   </span><span class="comment">//produce additional output to HDF5 files (p_max, p_min, rho_max, rho_min); only ueful when HDF5IO is set</span></div>
+<div class="line"><a name="l00200"></a><span class="lineno"><a class="line" href="parameter_8h.html#ad35544770f4c3d3d2e8d3b3ba1ad5661">  200</a></span>&#160;<span class="preprocessor">#define MORE_ANEOS_OUTPUT 0 </span><span class="comment">// produce additional output to HDF5 files (T, cs, entropy, phase-flag); only useful when HDF5IO is set; set only if you use the ANEOS eos, but currently not supported for porosity+ANEOS</span></div>
+<div class="line"><a name="l00201"></a><span class="lineno"><a class="line" href="parameter_8h.html#a831327901a9046ad3f2b35bba8f483ae">  201</a></span>&#160;<span class="preprocessor">#define OUTPUT_GRAV_ENERGY 0    </span><span class="comment">// compute and output gravitational energy (at times when output files are written); of all SPH particles (and also w.r.t. gravitating point masses and between them); direct particle-particle summation, not tree; option exists to control costly computation for high particle numbers</span></div>
+<div class="line"><a name="l00202"></a><span class="lineno"><a class="line" href="parameter_8h.html#ae88bad0981cf027a5e66d8233701a448">  202</a></span>&#160;<span class="preprocessor">#define BINARY_INFO 0   </span><span class="comment">// generates additional output file (binary_system.log) with info regarding binary system: semi-major axis, eccentricity if GRAVITATING_POINT_MASSES == 1</span></div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160; </div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;<span class="preprocessor">#endif</span></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_main/parameter.h Source File<br />
-    Generated on Fri Nov 5 2021 07:05:14 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
+    Generated on Sat Nov 6 2021 07:05:13 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
   </small></address>
 </body>
 </html>
