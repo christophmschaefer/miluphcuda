@@ -495,7 +495,7 @@ static void format_information(char *name)
 #endif
 #if DISPH
     noc++; /* DISPH_p */
-    fprintf(stdout, "%d:pressure from before ", noc);
+    fprintf(stdout, "%d:pressure ", noc);
 #endif
 #if SOLID
     noc++; /* local_strain  */

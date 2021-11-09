@@ -169,6 +169,7 @@ __global__ void BoundaryConditionsAfterIntegratorStep(int *interactions)
 
 // for Marius problem with the two fluids ...
 #if DISPH
+#if 1
 	if(p.y[i]>2.0){
 		p.y[i] = 4.0 - p.y[i];
 		p.vy[i] = - p.vy[i];
@@ -185,6 +186,7 @@ __global__ void BoundaryConditionsAfterIntegratorStep(int *interactions)
 		p.x[i] = 2.0 - p.x[i];
 		p.vx[i] = - p.vx[i];
 	}
+#endif
 #endif
 
 

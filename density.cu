@@ -196,4 +196,5 @@ __global__ void calculateDensity(int *interactions) {
         // write to global memory
         p.rho[i] = rho;
     }
+
 }

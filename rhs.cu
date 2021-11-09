@@ -438,6 +438,10 @@ printf(" %i  max_dp is %e \n", cnt, max_dp);
 
 cudaVerify(cudaFree(maxDISPH_PressureAbsErrorPerBlock));
 
+#if SML_CORRECTION
+    cudaVerifyKernel((calculate_DISPH_f_grad<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>( interactions)));
+    cudaVerify(cudaDeviceSynchronize());
+#endif
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);

@@ -629,10 +629,19 @@ __global__ void internalForces(int *interactions) {
 
 
 #if DISPH // has different eq. of motion
+#  if SML_CORRECTION
+    //kernel(&W, dWdx, &dWdr, dr, p.h[i]);
+    kernel(&Wj, dWdxj, &dWdrj, dr, p.h[j]);
+    for (d = 0; d < DIM; d++) {
+        accelsj[d] =  -1/p.m[i] * p.DISPH_Y[i]*p.DISPH_Y[j]*(p.DISPH_f_grad[i]*pow(p.DISPH_y[i],1/DISPH_alpha-2)*dWdx[d] + p.DISPH_f_grad[j]*pow(p.DISPH_y[j],1/DISPH_alpha-2)*dWdxj[d]);
+        accels[d] += accelsj[d];
+    }
+#  else
     for (d = 0; d < DIM; d++) {
         accelsj[d] =  -1/p.m[i] * p.DISPH_Y[i]*p.DISPH_Y[j]*(pow(p.DISPH_y[i],1/DISPH_alpha-2) + pow(p.DISPH_y[j],1/DISPH_alpha-2))  * dWdx[d];
         accels[d] += accelsj[d];
     }
+#  endif // SML_CORRECTION
 #else
 
 # if (SPH_EQU_VERSION == 1)
@@ -763,7 +772,7 @@ __global__ void internalForces(int *interactions) {
 # else // dedt for non-solid
 
 # if DISPH // different eq. of energy
-            dedt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.m[i]*pow(p.DISPH_y[i], 1/DISPH_alpha - 2) * dWdx[0] * dvx;
+	dedt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.m[i]*pow(p.DISPH_y[i], 1/DISPH_alpha - 2) * dWdx[0] * dvx;
     #  if DIM > 1
                 dedt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.m[i]*pow(p.DISPH_y[i], 1/DISPH_alpha - 2)*  dWdx[1] * dvy;
     #  endif
@@ -785,10 +794,6 @@ __global__ void internalForces(int *interactions) {
 #endif // INTEGRATE ENERGY
 
 # if DISPH // Equation for the quantity Y in DISPH
-//	    matId = p_rhs.materialId[i];
-//	    if (matId == BOUNDARY_PARTICLE_ID){
-//		    continue;
-//	    }
             dDISPH_Ydt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.DISPH_y[i] * dWdx[0] * dvx;
     #  if DIM > 1
                 dDISPH_Ydt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.DISPH_y[i]*  dWdx[1] * dvy;
@@ -816,7 +821,7 @@ __global__ void internalForces(int *interactions) {
         p.az[i] = az;
 #endif
 
-#if SML_CORRECTION
+#if (SML_CORRECTION && !DISPH)
         p.drhodt[i] = 1 / p.sml_omega[i] * drhodt;
         p.dhdt[i] = - p.h[i] / (DIM * p.rho[i]) * p.drhodt[i];
 #else
@@ -857,7 +862,12 @@ __global__ void internalForces(int *interactions) {
         }
 # endif // SOLID
 # if SML_CORRECTION
+# if DISPH
+	p.dedt[i] = p.DISPH_f_grad[i]*dedt;
+	dDISPH_Ydt *= p.DISPH_f_grad[i];
+#else
         p.dedt[i] = p.p[i]/(p.rho[i]*p.rho[i] * p.sml_omega[i]) * dedt;
+#endif
 # else
         p.dedt[i] = dedt;
 # endif // SML_CORRECTION
@@ -949,7 +959,7 @@ __global__ void internalForces(int *interactions) {
 
 
                 } else {
-                    printf("\n\nDeep trouble in pressure.\nenergy[%d] = %e\nE_iv = %e, E_cv = %e\n\n", i, e, matTillEiv[matId], matTillEcv[matId]);
+                    printf("\n\nIn internal_forces.cu: Deep trouble in pressure.\nenergy[%d] = %e\nE_iv = %e, E_cv = %e\n\n", i, p.e[i], matTillEiv[matId], matTillEcv[matId]);
                     dDISPH_Ydt = 0.0;
                 }
             }  else if (EOS_TYPE_ANEOS == matEOS[matId]) {

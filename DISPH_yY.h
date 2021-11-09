@@ -35,5 +35,7 @@ __global__ void calculate_DISPH_Y();
 __global__ void determine_max_dp(double *maxDISPH_PressureErrorPerBlock);
 __global__ void set_initial_DISPH_Y_if_its_zero();
 __global__ void DISPH_Y_to_zero();
+__global__ void calculate_DISPH_f_grad(int *interactions);
+__global__ void calc_DISPH_sml();
 
 #endif

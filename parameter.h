@@ -45,11 +45,11 @@
 
 // integrate the energy equation
 // when setting up a SOLID simulation with Tillotson or ANEOS, it must be set to 1
-#define INTEGRATE_ENERGY 0
+#define INTEGRATE_ENERGY 1
 
 // integrate the continuity equation
 // if set to 0, the density will be calculated using the standard SPH sum \sum_i m_j W_ij
-#define INTEGRATE_DENSITY 0
+#define INTEGRATE_DENSITY 1
 
 // adds viscosity to the Euler equation
 #define NAVIER_STOKES 0

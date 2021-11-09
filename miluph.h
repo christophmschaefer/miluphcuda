@@ -264,7 +264,10 @@ struct Particle {
     double *tensorialCorrectiondWdrr; ///< correction factors for linear consistency
 #endif
 #if SML_CORRECTION
-    double *sml_omega; 
+    double *sml_omega;
+#if DISPH
+    double *DISPH_f_grad;
+#endif 
 #endif
     double *cs; ///< sound speed of sph particle
     int *noi; ///< number of interaction partners of sph particle

@@ -106,6 +106,7 @@ __global__ void calculate_DISPH_Y() {
             for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
                 p.DISPH_Y[i] = (p.m[i]*pow(p.p[i], DISPH_alpha))/p.DISPH_rho[i];
             }
+		//printf("energy, e[i] = %e \n", p.e[i]);
 
 }
 __global__ void DISPH_Y_to_zero() {
@@ -114,39 +115,42 @@ __global__ void DISPH_Y_to_zero() {
             for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
                 p.DISPH_Y[i] =0.0;
  	    }
+//		printf("energy, e[i] = %e \n", p.e[i]);
 
 }
 
 __global__ void set_initial_DISPH_Y_if_its_zero() {
 
     double eta, e, rho, mu, p1, p2, pressure;
-    int i, inc;
+    int i, j, inc;
     double DISPH_alpha = 0.1;
     int matId;
     extern __device__ int DISPH_initial_Y;
+DISPH_initial_Y = 0;
 
             // Start loop over all particles
             inc = blockDim.x * gridDim.x;
             for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+			//printf("energy, e[i] = %e \n", p.e[i]);
 		    if (p.DISPH_Y[i] == 0.0){
-            for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        	matId = p_rhs.materialId[i];
-		if (p.rho[i] < matRho0[matId]*matRhoLimit[matId]){ //matRho0[matId]*1.05) {
-		    p.DISPH_rho[i] =  matRho0[matId]*matRhoLimit[matId]; //matRho0[matId]*1.05;
+            for (j = threadIdx.x + blockIdx.x * blockDim.x; j < numParticles; j += inc) {
+        	matId = p_rhs.materialId[j];
+		//printf("rho_0 = %e rho_limit = %e \n", matRho0[matId], matRhoLimit[matId]);
+		if (p.rho[j] < matRho0[matId]*matRhoLimit[matId]){
+		//	printf("hello1, rho[i] = %e \n", p.rho[i]);
+		    p.DISPH_rho[j] =  matRho0[matId]*matRhoLimit[matId];
+
 		}
 		else{
-		    p.DISPH_rho[i] = p.rho[i];
+		    p.DISPH_rho[j] = p.rho[j];
 		}
 	    }
 DISPH_initial_Y = 1;
 	break;
-	    }else{
-		    DISPH_initial_Y = 0;
-	    }
 	    }
 
 }
-
+}
 
 
 __global__ void determine_max_dp(double *maxDISPH_PressureAbsErrorPerBlock)
@@ -204,7 +208,77 @@ __global__ void determine_max_dp(double *maxDISPH_PressureAbsErrorPerBlock)
         }
     }
 }
+#if VARIABLE_SML
+__global__ void calc_DISPH_sml() {
+    register int i, inc;
+            inc = blockDim.x * gridDim.x;
+            for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+                p.h[i] =1.2* pow(p.m[i]/p.rho[i], 1/DIM);
+ 	    }
 
+}
+#endif
+#if SML_CORRECTION
+__global__ void calculate_DISPH_f_grad(int *interactions) {
+
+    int i, inc;
+    int j;
+    int ip;
+    int d;
+    double r;
+    double W;
+    double dx[DIM];
+    double dWdx[DIM];
+    double dWdr;
+    double sml;
+    double dDISPH_y_dh;
+
+
+            // Start loop over all particles
+            inc = blockDim.x * gridDim.x;
+            for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+		dDISPH_y_dh = 0.0;
+
+            sml = p.h[i];
+           // self-contribution of particle i
+            for (d = 0; d < DIM; d++) {
+                dx[d] = 0;
+            }
+            kernel(&W, dWdx, &dWdr, dx, sml);
+ 	    dDISPH_y_dh = -DIM/sml * W;
+            // sph sum for particle i over neighbour particles
+            for (j = 0; j < p.noi[i]; j++) {
+                ip = interactions[i * MAX_NUM_INTERACTIONS + j];
+		if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[ip]] || p_rhs.materialId[ip] == EOS_TYPE_IGNORE) {
+                    continue;
+                }
+
+
+                                dx[0] = p.x[i] - p.x[ip];
+                #if DIM > 1
+                                dx[1] = p.y[i] - p.y[ip];
+                #if DIM > 2
+                                dx[2] = p.z[i] - p.z[ip];
+                #endif
+                #endif  
+                kernel(&W, dWdx, &dWdr, dx, sml);
+		r = 0;
+                for (d = 0; d < DIM; d++) {
+                    r += dx[d]*dx[d];
+                }
+                r = sqrt(r);
+
+
+                dDISPH_y_dh += p.DISPH_Y[ip] * (-1) * (DIM * W/sml + (r / sml) * dWdr);
+
+	    }
+	    // write to global memory
+	    p.DISPH_f_grad[i] = 1/(1 + 1/DIM * sml/p.DISPH_y[i] * dDISPH_y_dh);
+
+            } // end loop over all particles
+	    
+}
+#endif
 
 #endif
 
