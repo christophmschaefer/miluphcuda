@@ -24,7 +24,7 @@
 #define _PARAMETER_H
 
 // Dimension of the problem
-#define DIM 2
+#define DIM 3
 
 // Basic physical model, choose one of the following:
 // SOLID solves continuum mechanics with material strength, and stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
@@ -32,7 +32,7 @@
 #define SOLID 0
 #define HYDRO 1
 // set additionally p to 0 if p < 0
-#define REAL_HYDRO 1
+#define REAL_HYDRO 0
 
 // add additional point masses to the simulation, read from file <filename>.mass
 // format is location velocities mass r_min r_max, where location and velocities are vectors with size DIM and
@@ -56,13 +56,9 @@
 // choose between two different viscosity models
 #define SHAKURA_SUNYAEV_ALPHA 0
 #define CONSTANT_KINEMATIC_VISCOSITY 0
-// artificial bulk viscosity according to Schaefer et al. (2004)
-#define KLEY_VISCOSITY 0
 
-// This is the damage model following Benz & Asphaug (1995). Set FRAGMENTATION to activate it.
-// The damage acts always on pressure, but only on deviator stresses if DAMAGE_ACTS_ON_S is
-// activated too, which is an important switch depending on the plasticity model (see comments there).
-// Note: The damage model needs distribution of activation thresholds in the input file.
+// damage model following Benz & Asphaug (1995)
+// this needs some preprocessing of the initial particle distribution since activation thresholds have to be distributed among the particles
 #define FRAGMENTATION 0
 #define DAMAGE_ACTS_ON_S 0
 
@@ -82,7 +78,7 @@
 // standard SPH alpha/beta viscosity
 #define ARTIFICIAL_VISCOSITY 1
 // Balsara switch: lowers the artificial viscosity in regions without shocks
-#define BALSARA_SWITCH 1
+#define BALSARA_SWITCH 0
 
 // INVISCID SPH (see Cullen & Dehnen paper)
 #define INVISCID_SPH 0
@@ -96,15 +92,22 @@
 
 // Available plastic flow conditions:
 // (if you do not know what this is, choose (1) or nothing)
-//   (1) Simple von Mises plasticity with a constant yield strength:
+//   (1) Simple von Mises plasticity with a constant yield strength, where you need in material.cfg:
+//          yield_stress =
 #define VON_MISES_PLASTICITY 0
 //   (2) Drucker-Prager (DP) yield criterion -> yield strength is given by the condition \sqrt(J_2) + A * I_1 + B = 0
 //       with I_1: first invariant of stress tensor
 //          J_2: second invariant of stress tensor
 //          A, B: DP constants, which are calculated from angle of internal friction and cohesion
+//       in material.cfg you need:
+//          friction_angle =
+//          cohesion =
 #define DRUCKER_PRAGER_PLASTICITY 0
 //   (3) Mohr-Coulomb (MC) yield criterion
-//       -> yield strength is given by yield_stress = tan(friction_angle) \times pressure + cohesion 
+//       -> yield strength is given by yield_stress = tan(friction_angle) \times pressure + cohesion
+//       in material.cfg you need:
+//          friction_angle =
+//          cohesion =
 #define MOHR_COULOMB_PLASTICITY 0
 //       Note: DP and MC are intended for granular-like materials, therefore the yield strength simply decreases (linearly) to zero for p<0.
 //       Note: For DP and MC you can additionally choose (1) to impose an upper limit for the yield stress.
@@ -118,20 +121,29 @@
 //              Y = (1-damage)*Y_i + damage*Y_d
 //              Y is limited to <= Y_i
 //       Note: If FRAGMENTATION is not activated only Y_i is used.
-//             DAMAGE_ACTS_ON_S is not allowed for this model, since the limiting of S already depends on damage.
-//       If you want to additionally model the influence of some (single) melt energy on the yield strength, then activate
-//       COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY, which adds a factor (1-e/e_melt) to the yield strength.
+//       For this model, you need the following parameters in material.cfg:
+//          yield_stress =
+//          cohesion =
+//          friction_angle =
+//          cohesion_damaged =
+//          friction_angle_damaged =
+//       If you want to additionally model the influence of some (single) melt energy on the yield
+//       strength, then activate COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY, which adds a factor
+//       (1-e/e_melt) to the yield strength, and include the following in material.cfg:
+//          melt_energy =
 #define COLLINS_PLASTICITY 0
 #define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 0
 //   (5) Simplified version of the Collins et al. (2004) model, which uses only the
 //       strength representation for intact material (Y_i), irrespective of damage.
-//       Unlike in (4), Y decreases to zero (following a linear yield strength curve) for p<0.
-//       In addition, negative pressures are limited to the pressure corresponding to
-//       yield strength = 0 (i.e., are set to this value when they get more negative).
+//       Unlike in (4), Y decreases to zero (following the Y_i function) for p<0.
+//       For this you need in material.cfg:
+//          yield_stress =
+//          cohesion =
+//          friction_angle =
 #define COLLINS_PLASTICITY_SIMPLE 0
-// Note: The deviator stress tensor is additionally reduced by FRAGMENTATION (i.e., damage) only if
-//       DAMAGE_ACTS_ON_S is set. For most plasticity models it depends on the use case whether this
-//       is desired, only for COLLINS_PLASTICITY it is not reasonable (and therefore not allowed).
+// Note: For (1,2,3) the stress tensor is additionally reduced if FRAGMENTATION is used, for (4,5) not.
+// Note: Units are: [friction angle] = [rad]
+//                  [cohesion] = [Pascal]
 
 // model regolith as viscous fluid -> experimental setup, only for powerusers
 #define VISCOUS_REGOLITH 0
@@ -142,17 +154,17 @@
 
 // Porosity models:
 // p-alpha model implemented following Jutzi (200x)
-#define PALPHA_POROSITY 0         // pressure depends on distention
-#define STRESS_PALPHA_POROSITY 0  // deviatoric stress is also affected by distention
+#define PALPHA_POROSITY 0          // pressure depends on distention
+#define STRESS_PALPHA_POROSITY 0 // deviatoric stress is also affected by distention
 // Sirono model modified by Geretshauser (2009/10)
 #define SIRONO_POROSITY 0
-// eps-alpha model implemented following Wuennemann
+// Epsilon-Alpha model implemented following Wuennemann
 #define EPSALPHA_POROSITY 0
 
 // max number of activation thresholds per particle, only required for FRAGMENTATION, otherwise set to 1
 #define MAX_NUM_FLAWS 1
 // maximum number of interactions per particle -> fixed array size
-#define MAX_NUM_INTERACTIONS 128
+#define MAX_NUM_INTERACTIONS 800
 
 // if set to 1, the smoothing length is not fixed for each material type
 // choose either FIXED_NOI for a fixed number of interaction partners following
@@ -190,19 +202,17 @@
 // see Morris and Monaghan 1984
 #define XSPH 0
 
-// different formulation of SPH for handling contact discontinuities
 #define DISPH 1
 
 // boundaries EXPERIMENTAL, please do not use this....
-#define BOUNDARY_PARTICLE_ID 2
+#define BOUNDARY_PARTICLE_ID -1
 #define GHOST_BOUNDARIES 0
-// note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions
 
 // IO options
 #define HDF5IO 1    // use HDF5 (needs libhdf5-dev and libhdf5)
 #define MORE_OUTPUT 0   //produce additional output to HDF5 files (p_max, p_min, rho_max, rho_min); only ueful when HDF5IO is set
 #define MORE_ANEOS_OUTPUT 0 // produce additional output to HDF5 files (T, cs, entropy, phase-flag); only useful when HDF5IO is set; set only if you use the ANEOS eos, but currently not supported for porosity+ANEOS
-#define OUTPUT_GRAV_ENERGY 0    // compute and output gravitational energy (at times when output files are written); of all SPH particles (and also w.r.t. gravitating point masses and between them); direct particle-particle summation, not tree; option exists to control costly computation for high particle numbers
+#define OUTPUT_GRAV_ENERGY 1    // compute and output gravitational energy (at times when output files are written); of all SPH particles (and also w.r.t. gravitating point masses and between them); direct particle-particle summation, not tree; option exists to control costly computation for high particle numbers
 #define BINARY_INFO 0   // generates additional output file (binary_system.log) with info regarding binary system: semi-major axis, eccentricity if GRAVITATING_POINT_MASSES == 1
 
 #endif

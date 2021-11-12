@@ -407,14 +407,18 @@ __global__ void calculatePressure() {
        // if (matId == BOUNDARY_PARTICLE_ID) {
 	//	p.p[i] = 0.8878976;
 	//}
-#if REAL_HYDRO
+#if (REAL_HYDRO || DISPH)
         if (p.p[i] <= 0.0){
-#if DISPH
-	printf("\n\n\n Error: only positive pressures are allowed in DISPH!!!\n\n\n");
-# else:
             p.p[i] = 0.0;
-#endif
 	}
+#endif
+#if DISPH
+double DISPH_pmin = 1.0e3;
+if (p.p[i]<DISPH_pmin){
+	p.p[i] = 0.0;
+}else{
+//printf("in pressure.cu: p = %e, rho = %e, u = %e \n", p.p[i], p.DISPH_rho[i], p.e[i]);
+}
 #endif
     }
 }

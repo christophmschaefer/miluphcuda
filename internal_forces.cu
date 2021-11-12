@@ -267,7 +267,7 @@ __global__ void internalForces(int *interactions) {
             curli += p_rhs.curlv[i*DIM+d]*p_rhs.curlv[i*DIM+d];
         }
         curli = sqrt(curli);
-        fi = fabs(p_rhs.divv[i]) / (fabs(p_rhs.divv[i]) + curli + eps_balsara*p.cs[i]/p.h[i]);
+	fi = fabs(p_rhs.divv[i]) / (fabs(p_rhs.divv[i]) + curli + eps_balsara*p.cs[i]/p.h[i]);
 #endif
 
         // THE MAIN SPH LOOP FOR ALL INTERNAL FORCES
@@ -520,7 +520,9 @@ __global__ void internalForces(int *interactions) {
                 fj = fabs(p_rhs.divv[j]) / (fabs(p_rhs.divv[j]) + curlj + eps_balsara*p.cs[j]/p.h[j]);
                 mu *= (fi+fj)/2.;
 # endif
-                pij = (beta*mu - alpha*csbar) * mu/rhobar;
+                pij =  (beta*mu - alpha*csbar) * mu/rhobar;
+//printf("pij = %e , mu = %e, csbar = %e, rhobar = %e \n", pij, mu, csbar, rhobar);
+
 # if INVISCID_SPH
                 pij =  ((2 * mu - csbar) * p.beta[i] * mu) / rhobar;
 # endif
@@ -794,18 +796,21 @@ __global__ void internalForces(int *interactions) {
 #endif // INTEGRATE ENERGY
 
 # if DISPH // Equation for the quantity Y in DISPH
-            dDISPH_Ydt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.DISPH_y[i] * dWdx[0] * dvx;
+            dDISPH_Ydt += p.DISPH_Y[j]*p.m[i]/p.DISPH_rho[i] * dWdx[0] * dvx;
     #  if DIM > 1
-                dDISPH_Ydt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.DISPH_y[i]*  dWdx[1] * dvy;
+                dDISPH_Ydt += p.DISPH_Y[j]*p.m[i]/p.DISPH_rho[i]  * dWdx[1] * dvy;
     #  endif
     #  if DIM > 2
-                dDISPH_Ydt += p.DISPH_Y[i]*p.DISPH_Y[j]/p.DISPH_y[i]*   dWdx[2] * dvz;
+                dDISPH_Ydt += p.DISPH_Y[j]*p.m[i]/p.DISPH_rho[i]   * dWdx[2] * dvz;
     #  endif
 # endif
 
 
         } // neighbors loop end
 
+//		if (dDISPH_Ydt>0.0){
+//			printf("dDISPH_Ydt 1.part = %e \n", dDISPH_Ydt);
+//		}	
         ax = accels[0];
 #if DIM > 1
         ay = accels[1];
@@ -901,13 +906,14 @@ __global__ void internalForces(int *interactions) {
             dDISPH_Ydt = 0.0;
 
         } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
+		if (p.DISPH_Y[i] > 0.0){
 	    register double eta, mu, k;
             eta = p.DISPH_rho[i] / matTillRho0[matId];
             mu = eta - 1.0;
             k = p.e[i]*pow(matTillRho0[matId], 2)/matTillE0[matId];
 
             if (eta < matRhoLimit[matId] && e < matTillEcv[matId]) {
-                p.p[i] = 0.0;
+                dDISPH_Ydt = 0.0;
             // condensed state (co)
             } else if (p.e[i] <= matTillEiv[matId] || eta >= 1.0) {
                     register double dp_co_drho, dp_co_de, gamma_co;
@@ -962,11 +968,16 @@ __global__ void internalForces(int *interactions) {
                     printf("\n\nIn internal_forces.cu: Deep trouble in pressure.\nenergy[%d] = %e\nE_iv = %e, E_cv = %e\n\n", i, p.e[i], matTillEiv[matId], matTillEcv[matId]);
                     dDISPH_Ydt = 0.0;
                 }
+		}else{
+			dDISPH_Ydt = 0.0;
+		}
             }  else if (EOS_TYPE_ANEOS == matEOS[matId]) {
             printf("ANEOS not implemented with DISPH");
                 dDISPH_Ydt = 0.0;
                     }
-
+//if (dDISPH_Ydt>0.0){
+//	printf("dDISPH_Ydt full = %e \n", dDISPH_Ydt);
+//}
     p.dDISPH_Ydt[i] = dDISPH_Ydt;
 #endif // DISPH eq. for Y
 

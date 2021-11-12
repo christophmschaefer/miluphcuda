@@ -34,8 +34,6 @@
 
 extern __device__ SPH_kernel kernel;
 extern __device__ SPH_kernel wendlandc2_p;
-
-
 __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
 
 
@@ -52,12 +50,18 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
     register double rho;
     int matId;
 
+double DISPH_pmin = 1.0e3;
+double DISPH_alpha = 0.1;
+
+
 
             // Start loop over all particles
             inc = blockDim.x * gridDim.x;
             for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-            
+
+
     	matId = p_rhs.materialId[i];
+
             sml = p.h[i];
             
             // self-contribution of particle i
@@ -65,9 +69,8 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
                 dx[d] = 0;
             }
             kernel(&W, dWdx, &dWdr, dx, sml);
+	    
             y = p.DISPH_Y[i] * W;
-
-
             // sph sum for particle i over neighbour particles
             for (j = 0; j < p.noi[i]; j++) {
                 ip = interactions[i * MAX_NUM_INTERACTIONS + j];
@@ -86,13 +89,26 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
                 kernel(&W, dWdx, &dWdr, dx, sml);
                 y += p.DISPH_Y[ip] * W;
 	    }
+
+
 	    // write to global memory
+	    if (y >= pow(DISPH_pmin, DISPH_alpha) || p.e[i]>0.0){
 	    p.DISPH_y[i] = y;
+	    }else{
+		    p.DISPH_y[i] = 0.0;
+	    }
+		if (p.DISPH_Y[i] > 0.0){
 
             rho = p.m[i]*p.DISPH_y[i]/p.DISPH_Y[i];
+
             if (rho <  matRho0[matId]*matRhoLimit[matId]) {
 		    rho =matRho0[matId]*matRhoLimit[matId];
 	    }
+	   
+
+		}else{
+			rho = matRho0[matId]*matRhoLimit[matId];
+		}
 	    p.DISPH_rho[i] = rho;
             } // end loop over all particles
 	    
@@ -102,11 +118,11 @@ __global__ void calculate_DISPH_y_DISPH_rho(int *interactions) {
 __global__ void calculate_DISPH_Y() {
     register int i, inc;
     double DISPH_alpha = 0.1;
+    double DISPH_pmin = 1.0e3;
             inc = blockDim.x * gridDim.x;
             for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
                 p.DISPH_Y[i] = (p.m[i]*pow(p.p[i], DISPH_alpha))/p.DISPH_rho[i];
             }
-		//printf("energy, e[i] = %e \n", p.e[i]);
 
 }
 __global__ void DISPH_Y_to_zero() {
@@ -119,39 +135,82 @@ __global__ void DISPH_Y_to_zero() {
 
 }
 
-__global__ void set_initial_DISPH_Y_if_its_zero() {
+__global__ void set_initial_DISPH_Y_if_its_zero(int *DISPH_initial_YPerBlock) {
 
-    double eta, e, rho, mu, p1, p2, pressure;
-    int i, j, inc;
-    double DISPH_alpha = 0.1;
-    int matId;
+    int i, j, k, m;
+    int localDISPH_initial_Y = 1;
+    int tmp = 0;
     extern __device__ int DISPH_initial_Y;
-DISPH_initial_Y = 0;
+    __shared__ int sharedDISPH_initial_Y[NUM_THREADS_ERRORCHECK];
+    extern __device__ int blockCount;
+            
+	// Start loop over all particles
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
+        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE) continue;
+		    if(p.DISPH_Y[i] != 0.0){
+		    tmp = 0;
+		    } else{
+			    tmp = 1;
+		    }
+		localDISPH_initial_Y = min(localDISPH_initial_Y, tmp);
+		}
+    // reduce shared thread results to one per block
+    i = threadIdx.x;
+    sharedDISPH_initial_Y[i] = localDISPH_initial_Y;
 
-            // Start loop over all particles
+    for (j = NUM_THREADS_ERRORCHECK / 2; j > 0; j /= 2) {
+        __syncthreads();
+        if (i < j) {
+            k = i + j;
+
+        sharedDISPH_initial_Y[i] = localDISPH_initial_Y = min(localDISPH_initial_Y, sharedDISPH_initial_Y[k]);
+        }
+    }
+    // write block result to global memory
+    if (i == 0) {
+        k = blockIdx.x;
+        DISPH_initial_YPerBlock[k] = localDISPH_initial_Y;
+
+        m = gridDim.x - 1;
+        if (m == atomicInc((unsigned int *)&blockCount, m)) {
+            // last block, so combine all block results
+            for (j = 0; j <= m; j++) {
+                localDISPH_initial_Y = min(localDISPH_initial_Y, DISPH_initial_YPerBlock[j]);
+
+            }
+            // (single) max relative error
+            DISPH_initial_Y = localDISPH_initial_Y;
+
+            blockCount = 0;   // reset block count
+        }
+    }
+}
+
+
+
+
+
+
+__global__ void SPH_rho_to_DISPH_rho() {
+register int i, inc;
+int matId;
             inc = blockDim.x * gridDim.x;
             for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-			//printf("energy, e[i] = %e \n", p.e[i]);
-		    if (p.DISPH_Y[i] == 0.0){
-            for (j = threadIdx.x + blockIdx.x * blockDim.x; j < numParticles; j += inc) {
-        	matId = p_rhs.materialId[j];
+        	matId = p_rhs.materialId[i];
 		//printf("rho_0 = %e rho_limit = %e \n", matRho0[matId], matRhoLimit[matId]);
-		if (p.rho[j] < matRho0[matId]*matRhoLimit[matId]){
+		if (p.rho[i] < matRho0[matId]*matRhoLimit[matId]){
 		//	printf("hello1, rho[i] = %e \n", p.rho[i]);
-		    p.DISPH_rho[j] =  matRho0[matId]*matRhoLimit[matId];
+		    p.DISPH_rho[i] =  matRho0[matId]*matRhoLimit[matId];
 
 		}
-		else{
-		    p.DISPH_rho[j] = p.rho[j];
+		else{	
+			if (p.rho[i]>matRho0[matId]*matRhoLimit[matId]){
+//			printf("rho = %e \n", p.rho[i]);
+			}
+		    p.DISPH_rho[i] = p.rho[i];
 		}
 	    }
-DISPH_initial_Y = 1;
-	break;
-	    }
-
 }
-}
-
 
 __global__ void determine_max_dp(double *maxDISPH_PressureAbsErrorPerBlock)
 {
@@ -162,13 +221,21 @@ __global__ void determine_max_dp(double *maxDISPH_PressureAbsErrorPerBlock)
     int i, j, k, m;
 
     double tmp = 0.0;
-
+    double DISPH_alpha = 0.1;
 
     // loop for particles
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
         if (p_rhs.materialId[i] == EOS_TYPE_IGNORE) continue;
-
-        tmp =  pow(p.DISPH_y[i], 10)/p.p[i] - 1;
+	if (p.p[i]>0.0){
+//	printf("yeos = %e, y = %e, rho = %e, u = %e \n", pow(p.p[i], DISPH_alpha), p.DISPH_y[i], p.DISPH_rho[i], p.e[i]);
+	}
+	if (p.p[i] == 0.0 || p.DISPH_y[i] = 0.0){
+        tmp = 1.0;
+	}else if (pow(p.p[i], DISPH_alpha) == 0.0 && p.DISPH_y[i] == 0.0){
+	tmp = 0.0;
+	}else{
+        tmp = pow(p.DISPH_y[i], 1/DISPH_alpha)/p.p[i]-1;
+	}
 	localMaxDISPH_PressureAbsError = max(localMaxDISPH_PressureAbsError, tmp);
 
     }   // loop for particles

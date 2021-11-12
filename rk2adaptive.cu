@@ -214,6 +214,7 @@ void rk2Adaptive()
 #if GRAVITATING_POINT_MASSES
             cudaVerify(cudaMemcpyToSymbol(pointmass, &rk_pointmass_device[RKFIRST], sizeof(struct Pointmass)));
 #endif
+	    printf("First rhs() \n");
             rightHandSide();
             cudaVerify(cudaDeviceSynchronize());
 
@@ -284,6 +285,7 @@ void rk2Adaptive()
 #if GRAVITATING_POINT_MASSES
                 cudaVerify(cudaMemcpyToSymbol(pointmass, &rk_pointmass_device[RKFIRST], sizeof(struct Pointmass)));
 #endif
+	    	printf("Second rhs() \n");
                 rightHandSide();
                 cudaVerify(cudaDeviceSynchronize());
 
@@ -305,6 +307,7 @@ void rk2Adaptive()
 #endif
                 substep_currentTime = currentTime + dt_host;
                 cudaVerify(cudaMemcpyToSymbol(substep_currentTimeD, &substep_currentTime, sizeof(double)));
+	    	printf("Third rhs() \n");
                 rightHandSide();
                 cudaVerify(cudaDeviceSynchronize());
 
@@ -717,6 +720,7 @@ __global__ void integrateFirstStep(void)
         //printf("START: vx: %g \t %g :dxdt \t\t\t vy: %g \t %g :dydt\n", velxStart[i], dxdtStart[i], velyStart[i], dydtStart[i]);
 #if INTEGRATE_DENSITY
         rk[RKFIRST].rho[i] = rk[RKSTART].rho[i] + dt * B21 * rk[RKSTART].drhodt[i];
+	//printf("rho = %e \n", rk[RKFIRST].rho[i]);
 #endif
 #if INTEGRATE_SML
         rk[RKFIRST].h[i] = rk[RKSTART].h[i] + dt * B21 * rk[RKSTART].dhdt[i];
@@ -823,6 +827,9 @@ __global__ void integrateSecondStep(void)
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
 #if INTEGRATE_DENSITY
         rk[RKSECOND].rho[i] = rk[RKSTART].rho[i] + dt * (B31 * rk[RKSTART].drhodt[i] + B32 * rk[RKFIRST].drhodt[i]);
+//	if (rk[RKSECOND].rho[i] != 7800.0){
+//	printf("rho_second = %e \n", rk[RKSECOND].rho[i]);
+//	}
 #endif
 #if INTEGRATE_SML
         rk[RKSECOND].h[i] = rk[RKSTART].h[i] + dt * (B31 * rk[RKSTART].dhdt[i] + B32 * rk[RKFIRST].dhdt[i]);
@@ -831,10 +838,16 @@ __global__ void integrateSecondStep(void)
 #endif
 #if INTEGRATE_ENERGY
         rk[RKSECOND].e[i] = rk[RKSTART].e[i] + dt * (B31 * rk[RKSTART].dedt[i] + B32 * rk[RKFIRST].dedt[i]);
+//	if (rk[RKSECOND].e[i] != 0.0){
+//		printf("e_second = %e \n", rk[RKSECOND].e[i]);
+//	}
 #endif
 
 #if DISPH
         rk[RKSECOND].DISPH_Y[i] = rk[RKSTART].DISPH_Y[i] + dt * (B31 * rk[RKSTART].dDISPH_Ydt[i] + B32 * rk[RKFIRST].dDISPH_Ydt[i]);
+//	if (rk[RKSECOND].DISPH_Y[i] != 0.0){
+//		printf("Y_second = %e \n", rk[RKSECOND].DISPH_Y[i]);
+//	}
 #endif
 
 #if FRAGMENTATION

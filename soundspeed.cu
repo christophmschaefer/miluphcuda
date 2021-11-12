@@ -63,10 +63,18 @@ __global__ void calculateSoundSpeed()
         } else if (EOS_TYPE_IDEAL_GAS == matEOS[matId]) {
             p.cs[i] = sqrt(matPolytropicGamma[matId] * p.p[i] / p.rho[i]);
         } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
+#if DISPH
+		double DISPH_alpha = 0.1;
+		rho = p.DISPH_rho[i];
+		pressure = pow(p.DISPH_y[i], 1/DISPH_alpha);
+#else
+            rho = p.rho[i];
+            pressure = p.p[i];
+#endif
             rho = p.rho[i];
             eta = rho / matTillRho0[matId];
             omega0 = p.e[i]/(matTillE0[matId]*eta*eta) + 1.0;
-            pressure = p.p[i];
+
             mu = eta - 1.0;
             z = (1.0 - eta)/eta;
             //condensed and expanded cold states
@@ -74,7 +82,7 @@ __global__ void calculateSoundSpeed()
                 if (pressure < 0.0 || eta < matRhoLimit[matId]) pressure = 0.0;
                 cs_sq = matTilla[matId]*p.e[i]+(matTillb[matId]*p.e[i])/(omega0*omega0)*(3.0*omega0-2.0) +
                     (matTillA[matId]+2.0*matTillB[matId]*mu)/rho + pressure/(rho*rho)*(matTilla[matId]*rho+matTillb[matId]*rho/(omega0*omega0));
-            }
+	    }
             //expanded hot states
             else if (p.e[i] > matTillEcv[matId]) {
                 Gamma_e = matTilla[matId] + matTillb[matId]/omega0*exp(-matTillBeta[matId]*z*z);
