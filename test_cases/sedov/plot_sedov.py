@@ -5,6 +5,13 @@ import numpy as np
 import sys
 import h5py
 
+try:
+    import sedovAnalytical
+    analytical = True
+except:
+    print ("Cannot import module sedovAnalytical, disabling analytical solution in plot.")
+    analytical = False
+
 if len(sys.argv) != 2:
     print("Usage: %s <hdf5 output file>" % sys.argv[0])
     sys.exit(1)
@@ -23,11 +30,19 @@ z = coordinates[:,2]
 r = np.sqrt(x**2 + y**2 + z**2)
 time = float(h5f['time'][0])
 
+
+# get the analytical solution at time t=time and max radius = 1.0
+if analytical:
+    sedov = sedovAnalytical.Sedov(time, 1.0)
+
+
 fig, ax = plt.subplots()
 ax.scatter(r, rho, c='r', s=0.1, alpha=0.3)
 ax.set_title("Density at time t = %.2e" % time)
 ax.set_xlabel(r'$r$')
 ax.set_ylabel(r'$\varrho$')
+if analytical:
+    ax.plot(*sedov.compute('rho'), label="analytical")
 ax.set_xlim(0,0.5)
 ax.set_ylim(0,4.0)
 
