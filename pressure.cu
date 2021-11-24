@@ -407,17 +407,15 @@ __global__ void calculatePressure() {
        // if (matId == BOUNDARY_PARTICLE_ID) {
 	//	p.p[i] = 0.8878976;
 	//}
-#if (REAL_HYDRO || DISPH)
+#if REAL_HYDRO
         if (p.p[i] <= 0.0){
             p.p[i] = 0.0;
 	}
 #endif
 #if DISPH
-double DISPH_pmin = 1.0e3;
+double DISPH_pmin = 1.0e6;
 if (p.p[i]<DISPH_pmin){
-	p.p[i] = 0.0;
-}else{
-//printf("in pressure.cu: p = %e, rho = %e, u = %e \n", p.p[i], p.DISPH_rho[i], p.e[i]);
+	p.p[i] = DISPH_pmin;
 }
 #endif
     }
