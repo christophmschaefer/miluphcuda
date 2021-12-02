@@ -225,11 +225,20 @@ __global__ void BoundaryConditionsAfterRHS(int *interactions)
         p.ax[i] -= 1.327474512e+20 * p.x[i] / distance;
         p.ay[i] -= 1.327474512e+20 * p.y[i] / distance;
 #endif
-            
-//        p.az[i] -= 9.81;
+
+        // feel the Earth!
+#if 0
+        if (p.y[i] < 0.0) {
+            p.vy[i] = 0.0;
+            p.ay[i] = 0.0;
+        } else {
+            p.ay[i] -= 9.81;
+        }
+#endif
+
+        // do not fall below y = 0.0
 
         /* let's stick to the ground */
-
 #if 0
         if (p.z[i] <= 1e-3) {
             p.ax[i] = 0;

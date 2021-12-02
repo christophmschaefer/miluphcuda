@@ -190,7 +190,7 @@
 #define XSPH 0
 
 // boundaries EXPERIMENTAL, please do not use this....
-#define BOUNDARY_PARTICLE_ID -1
+#define BOUNDARY_PARTICLE_ID 1
 #define GHOST_BOUNDARIES 0
 // note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions
 

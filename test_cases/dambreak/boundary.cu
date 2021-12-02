@@ -228,7 +228,6 @@ __global__ void BoundaryConditionsAfterRHS(int *interactions)
 
         // feel the Earth!
         if (p.y[i] < 0.0) {
-            p.y[i] = 0.0;
             p.vy[i] = 0.0;
             p.ay[i] = 0.0;
         } else {

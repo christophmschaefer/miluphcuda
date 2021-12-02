@@ -24,15 +24,15 @@
 #define _PARAMETER_H
 
 // Dimension of the problem
-#define DIM 3
+#define DIM 2
 
 // Basic physical model, choose one of the following:
 // SOLID solves continuum mechanics with material strength, and stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
 // HYDRO solves only the Euler equation, and there is only (scalar) pressure
-#define SOLID 1
-#define HYDRO 0
+#define SOLID 0
+#define HYDRO 1
 // set additionally p to 0 if p < 0
-#define REAL_HYDRO 0
+#define REAL_HYDRO 1
 
 // add additional point masses to the simulation, read from file <filename>.mass
 // format is location velocities mass r_min r_max, where location and velocities are vectors with size DIM and
@@ -92,7 +92,7 @@
 #define SHEPARD_CORRECTION 0
 // for linear consistency
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
-#define TENSORIAL_CORRECTION 1
+#define TENSORIAL_CORRECTION 0
 
 // Available plastic flow conditions:
 // (if you do not know what this is, choose (1) or nothing)
