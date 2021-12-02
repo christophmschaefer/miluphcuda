@@ -37,7 +37,7 @@ max = 0.5
 explosion_energy = 1.0
 efloor = 1e-6
 
-N = 65
+N = 61
 cond = N//2
 
 x, dx = np.linspace(min, max, N, retstep=True)
