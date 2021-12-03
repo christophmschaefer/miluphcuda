@@ -72,20 +72,20 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><hr  />
-<h1><a class="anchor" id="autotoc_md40"></a>
+<h1><a class="anchor" id="autotoc_md41"></a>
 fast_identify_fragments</h1>
 <p>and</p>
-<h1><a class="anchor" id="autotoc_md41"></a>
+<h1><a class="anchor" id="autotoc_md42"></a>
 calc_aggregates</h1>
 <hr  />
 <p>last updated: 19/Feb/2021</p>
 <p>Christoph Burger <br  />
  <a href="#" onclick="location.href='mai'+'lto:'+'chr'+'is'+'top'+'h.'+'bur'+'ge'+'r@u'+'ni'+'-tu'+'eb'+'ing'+'en'+'.de'; return false;">chris<span style="display: none;">.nosp@m.</span>toph<span style="display: none;">.nosp@m.</span>.burg<span style="display: none;">.nosp@m.</span>er@u<span style="display: none;">.nosp@m.</span>ni-tu<span style="display: none;">.nosp@m.</span>ebin<span style="display: none;">.nosp@m.</span>gen.d<span style="display: none;">.nosp@m.</span>e</a></p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md43"></a>
+<h1><a class="anchor" id="autotoc_md44"></a>
 Purpose</h1>
 <p>The toolchain consisting of <code>fast_identify_fragments</code> and <code>calc_aggregates</code> is intended for postprocessing miluphcuda` SPH simulations. It allows to identify spatially connected clumps of SPH particles (<em>fragments</em>), and subsequently find gravitationally bound collections of those fragments (<em>aggregates</em>).</p>
-<h1><a class="anchor" id="autotoc_md44"></a>
+<h1><a class="anchor" id="autotoc_md45"></a>
 Compilation and dependencies</h1>
 <p>Use the Makefile to build the executables. Type simply </p><pre class="fragment">    make
 </pre><p> to build both tools, or use </p><pre class="fragment">    make fast_identify_fragments
@@ -93,7 +93,7 @@ Compilation and dependencies</h1>
 </pre><p> to build either of them individually.</p>
 <p><b>HDF5 libraries</b> <br  />
  For building <code>fast_identify_fragments</code> (not for <code>calc_aggregates</code>) the HDF5 dev libraries are required.</p>
-<h1><a class="anchor" id="autotoc_md45"></a>
+<h1><a class="anchor" id="autotoc_md46"></a>
 fast_identify_fragments</h1>
 <p>This tool identifies <em>fragments</em> in a miluphcuda output file. Fragments are defined as clumps of particles separated by up to a smoothing length (sml).</p>
 <ul>
@@ -104,7 +104,7 @@ fast_identify_fragments</h1>
 <p>Check </p><pre class="fragment">    ./fast_identify_fragments -?
 </pre><p> for details on usage options.</p>
 <p>The output is written to a text file, with one line per fragment. Check the file header for the exact format.</p>
-<h1><a class="anchor" id="autotoc_md46"></a>
+<h1><a class="anchor" id="autotoc_md47"></a>
 calc_aggregates</h1>
 <p>Based on the output of <code>fast_identify_fragments</code>, this tool computes gravitationally bound collections of fragments, referred to as <em>aggregates</em>. The data on fragments is parsed as a text file containing one fragment per line, which is just the output file format of <code>fast_identify_fragments</code> (typically a .frag file).</p>
 <p>It computes the final mass, composition and kinetics of the largest, and optionally also the second-largest aggregate(s). Fragments can be only part of one aggregate. The procedure is based on an iterative solver, which tests whether fragments are gravitationally bound to some aggregate and adds or removes them until convergence for the whole aggregate.</p>
@@ -116,7 +116,7 @@ calc_aggregates</h1>
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - Quick Start Guide<br />
-    Generated on Thu Dec 2 2021 07:05:18 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
+    Generated on Fri Dec 3 2021 07:05:18 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
   </small></address>
 </body>
 </html>

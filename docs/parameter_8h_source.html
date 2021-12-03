@@ -76,15 +76,15 @@ $(function() {
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#define _PARAMETER_H</span></div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="comment">// Dimension of the problem</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">   27</a></span>&#160;<span class="preprocessor">#define DIM 3</span></div>
+<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">   27</a></span>&#160;<span class="preprocessor">#define DIM 2</span></div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="comment">// Basic physical model, choose one of the following:</span></div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="comment">// SOLID solves continuum mechanics with material strength, and stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}</span></div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="comment">// HYDRO solves only the Euler equation, and there is only (scalar) pressure</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="parameter_8h.html#aa8abfd58ea514228abd69d8f6330e91d">   32</a></span>&#160;<span class="preprocessor">#define SOLID 1</span></div>
-<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="parameter_8h.html#af1850805984fe5f20591259a19db6ffd">   33</a></span>&#160;<span class="preprocessor">#define HYDRO 0</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="parameter_8h.html#aa8abfd58ea514228abd69d8f6330e91d">   32</a></span>&#160;<span class="preprocessor">#define SOLID 0</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="parameter_8h.html#af1850805984fe5f20591259a19db6ffd">   33</a></span>&#160;<span class="preprocessor">#define HYDRO 1</span></div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="comment">// set additionally p to 0 if p &lt; 0</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="parameter_8h.html#a928ab6961f94cefea5293da063126534">   35</a></span>&#160;<span class="preprocessor">#define REAL_HYDRO 0</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="parameter_8h.html#a928ab6961f94cefea5293da063126534">   35</a></span>&#160;<span class="preprocessor">#define REAL_HYDRO 1</span></div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="comment">// add additional point masses to the simulation, read from file &lt;filename&gt;.mass</span></div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="comment">// format is location velocities mass r_min r_max, where location and velocities are vectors with size DIM and</span></div>
@@ -144,7 +144,7 @@ $(function() {
 <div class="line"><a name="l00092"></a><span class="lineno"><a class="line" href="parameter_8h.html#a9ccf4fc298f663e26a4113cba801d309">   92</a></span>&#160;<span class="preprocessor">#define SHEPARD_CORRECTION 0</span></div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="comment">// for linear consistency</span></div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="comment">// add tensorial correction tensor to dSdt calculation -&gt; better conservation of angular momentum</span></div>
-<div class="line"><a name="l00095"></a><span class="lineno"><a class="line" href="parameter_8h.html#aefa39926e3f9f78471156e42624844bd">   95</a></span>&#160;<span class="preprocessor">#define TENSORIAL_CORRECTION 1</span></div>
+<div class="line"><a name="l00095"></a><span class="lineno"><a class="line" href="parameter_8h.html#aefa39926e3f9f78471156e42624844bd">   95</a></span>&#160;<span class="preprocessor">#define TENSORIAL_CORRECTION 0</span></div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160; </div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="comment">// Available plastic flow conditions:</span></div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="comment">// (if you do not know what this is, choose (1) or nothing)</span></div>
@@ -258,7 +258,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_main/parameter.h Source File<br />
-    Generated on Thu Dec 2 2021 07:05:13 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
+    Generated on Fri Dec 3 2021 07:05:13 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
   </small></address>
 </body>
 </html>

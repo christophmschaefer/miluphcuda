@@ -231,13 +231,13 @@ Variables</h2></td></tr>
 <div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i] = 0;</div>
 <div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#abe980f3f598d6ba0982094a3884276b1">az</a>[i] = 0;</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a051c0efdd7e746f942bee567ae19aa51">dzdt</a>[i] = 0;</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a4a6a61c6fc9c337d8a17b3e0498a5417">vz</a>[i] = 0;</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.az[i] = 0;</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.dzdt[i] = 0;</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.vz[i] = 0;</div>
 <div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;<span class="preprocessor">#if SOLID</span></div>
 <div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;            <span class="keywordflow">for</span> (d = 0; d &lt; <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; d++) {</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#aa7da1ac50f504edc248e1b746ae466c1">dSdt</a>[i*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + d] = 0;</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.dSdt[i*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + d] = 0;</div>
 <div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;            }</div>
 <div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;<span class="preprocessor">#if INTEGRATE_DENSITY</span></div>
@@ -256,86 +256,90 @@ Variables</h2></td></tr>
 <div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;        <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2465448cf3d831f7b3f3dbb751c13070">ax</a>[i] -= 1.327474512e+20 * <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[i] / distance;</div>
 <div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;        <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a7250d3b078aa2b8fb64b377fbc4f393d">ay</a>[i] -= 1.327474512e+20 * <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[i] / distance;</div>
 <div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;            </div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;<span class="comment">//        p.az[i] -= 9.81;</span></div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160; </div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;        <span class="comment">/* let&#39;s stick to the ground */</span></div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160; </div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;<span class="preprocessor">#if 0</span></div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;        <span class="keywordflow">if</span> (<a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">z</a>[i] &lt;= 1e-3) {</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2465448cf3d831f7b3f3dbb751c13070">ax</a>[i] = 0;</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a7250d3b078aa2b8fb64b377fbc4f393d">ay</a>[i] = 0;</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a43d5144a8cdd77c139e1e83d67a9df4e">dxdt</a>[i] = 0;</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#afdb0141f115bf57a530ad057ca8a3a5e">dydt</a>[i] = 0;</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">vx</a>[i] = 0;</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i] = 0;</div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;<span class="preprocessor">#if DIM == 3</span></div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#abe980f3f598d6ba0982094a3884276b1">az</a>[i] = 0;</div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a051c0efdd7e746f942bee567ae19aa51">dzdt</a>[i] = 0;</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a4a6a61c6fc9c337d8a17b3e0498a5417">vz</a>[i] = 0;</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;        }</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160; </div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;        <span class="keywordflow">if</span> (matId == <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#a64dd6f503f7c5956e5fa96dc00bb29ed">BOUNDARY_PARTICLE_ID</a>) {</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2465448cf3d831f7b3f3dbb751c13070">ax</a>[i] = 0;</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">vx</a>[i] = 0;</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a43d5144a8cdd77c139e1e83d67a9df4e">dxdt</a>[i] = 0;</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;<span class="preprocessor">#if DIM &gt; 1</span></div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#afdb0141f115bf57a530ad057ca8a3a5e">dydt</a>[i] = 0;</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a7250d3b078aa2b8fb64b377fbc4f393d">ay</a>[i] = 0;</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i] = 0;</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#abe980f3f598d6ba0982094a3884276b1">az</a>[i] = 0;</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a051c0efdd7e746f942bee567ae19aa51">dzdt</a>[i] = 0;</div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a4a6a61c6fc9c337d8a17b3e0498a5417">vz</a>[i] = 0;</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;<span class="preprocessor">#if SOLID</span></div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;            <span class="keywordflow">for</span> (d = 0; d &lt; <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; d++) {</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#aa7da1ac50f504edc248e1b746ae466c1">dSdt</a>[i*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + d] = 0;</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;            }</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;<span class="preprocessor">#if INTEGRATE_DENSITY</span></div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a80398b24fb1c3d04d13d150e6612fa8a">drhodt</a>[i] = 0;</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;            <span class="keywordflow">if</span>( <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a679c91d88b1ce54aec008ff070516add">rho</a>[i] &lt; <a class="code" href="config__parameter_8cu.html#a8f1bb58c378211ba595c7a0c9b8726b5">matDensityFloor</a>[matId] ) {</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a679c91d88b1ce54aec008ff070516add">rho</a>[i] = <a class="code" href="config__parameter_8cu.html#a8f1bb58c378211ba595c7a0c9b8726b5">matDensityFloor</a>[matId];</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;<span class="preprocessor">#if INTEGRATE_DENSITY</span></div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a80398b24fb1c3d04d13d150e6612fa8a">drhodt</a>[i] = 0.0;</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160; </div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;        <span class="comment">// feel the Earth!</span></div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;<span class="preprocessor">#if 0</span></div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;        <span class="keywordflow">if</span> (<a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[i] &lt; 0.0) {</div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i] = 0.0;</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a7250d3b078aa2b8fb64b377fbc4f393d">ay</a>[i] = 0.0;</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a7250d3b078aa2b8fb64b377fbc4f393d">ay</a>[i] -= 9.81;</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;        }</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160; </div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;        <span class="comment">// do not fall below y = 0.0</span></div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160; </div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;        <span class="comment">/* let&#39;s stick to the ground */</span></div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;<span class="preprocessor">#if 0</span></div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;        <span class="keywordflow">if</span> (<a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.z[i] &lt;= 1e-3) {</div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2465448cf3d831f7b3f3dbb751c13070">ax</a>[i] = 0;</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a7250d3b078aa2b8fb64b377fbc4f393d">ay</a>[i] = 0;</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a43d5144a8cdd77c139e1e83d67a9df4e">dxdt</a>[i] = 0;</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#afdb0141f115bf57a530ad057ca8a3a5e">dydt</a>[i] = 0;</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">vx</a>[i] = 0;</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i] = 0;</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;<span class="preprocessor">#if DIM == 3</span></div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.az[i] = 0;</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.dzdt[i] = 0;</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.vz[i] = 0;</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;        }</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160; </div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;        <span class="keywordflow">if</span> (matId == <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#a64dd6f503f7c5956e5fa96dc00bb29ed">BOUNDARY_PARTICLE_ID</a>) {</div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2465448cf3d831f7b3f3dbb751c13070">ax</a>[i] = 0;</div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">vx</a>[i] = 0;</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a43d5144a8cdd77c139e1e83d67a9df4e">dxdt</a>[i] = 0;</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="preprocessor">#if DIM &gt; 1</span></div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#afdb0141f115bf57a530ad057ca8a3a5e">dydt</a>[i] = 0;</div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a7250d3b078aa2b8fb64b377fbc4f393d">ay</a>[i] = 0;</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i] = 0;</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.az[i] = 0;</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.dzdt[i] = 0;</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.vz[i] = 0;</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;<span class="preprocessor">#if SOLID</span></div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;            <span class="keywordflow">for</span> (d = 0; d &lt; <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; d++) {</div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.dSdt[i*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + d] = 0;</div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;            }</div>
 <div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;            }</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;            <span class="keywordflow">if</span>( <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a82a7d9530235b490387323de00382a53">e</a>[i] &lt; <a class="code" href="config__parameter_8cu.html#a63fc5bb58628de7169efe2f98cdc71a0">matEnergyFloor</a>[matId] ) {</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a82a7d9530235b490387323de00382a53">e</a>[i] = <a class="code" href="config__parameter_8cu.html#a63fc5bb58628de7169efe2f98cdc71a0">matEnergyFloor</a>[matId];</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;<span class="preprocessor">#if INTEGRATE_ENERGY</span></div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.dedt[i] = 0.0;</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;            }</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;        }</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    }</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;}</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;<span class="preprocessor">#if INTEGRATE_DENSITY</span></div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a80398b24fb1c3d04d13d150e6612fa8a">drhodt</a>[i] = 0;</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;            <span class="keywordflow">if</span>( <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a679c91d88b1ce54aec008ff070516add">rho</a>[i] &lt; <a class="code" href="config__parameter_8cu.html#a8f1bb58c378211ba595c7a0c9b8726b5">matDensityFloor</a>[matId] ) {</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a679c91d88b1ce54aec008ff070516add">rho</a>[i] = <a class="code" href="config__parameter_8cu.html#a8f1bb58c378211ba595c7a0c9b8726b5">matDensityFloor</a>[matId];</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;<span class="preprocessor">#if INTEGRATE_DENSITY</span></div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a80398b24fb1c3d04d13d150e6612fa8a">drhodt</a>[i] = 0.0;</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;            }</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;            <span class="keywordflow">if</span>( <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a82a7d9530235b490387323de00382a53">e</a>[i] &lt; <a class="code" href="config__parameter_8cu.html#a63fc5bb58628de7169efe2f98cdc71a0">matEnergyFloor</a>[matId] ) {</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a82a7d9530235b490387323de00382a53">e</a>[i] = <a class="code" href="config__parameter_8cu.html#a63fc5bb58628de7169efe2f98cdc71a0">matEnergyFloor</a>[matId];</div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;<span class="preprocessor">#if INTEGRATE_ENERGY</span></div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.dedt[i] = 0.0;</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;            }</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;        }</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;    }</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;}</div>
 <div class="ttc" id="aconfig__parameter_8cu_html_a63fc5bb58628de7169efe2f98cdc71a0"><div class="ttname"><a href="config__parameter_8cu.html#a63fc5bb58628de7169efe2f98cdc71a0">matEnergyFloor</a></div><div class="ttdeci">__constant__ double * matEnergyFloor</div><div class="ttdef"><b>Definition:</b> <a href="config__parameter_8cu_source.html#l00273">config_parameter.cu:273</a></div></div>
 <div class="ttc" id="aconfig__parameter_8cu_html_a8f1bb58c378211ba595c7a0c9b8726b5"><div class="ttname"><a href="config__parameter_8cu.html#a8f1bb58c378211ba595c7a0c9b8726b5">matDensityFloor</a></div><div class="ttdeci">__constant__ double * matDensityFloor</div><div class="ttdef"><b>Definition:</b> <a href="config__parameter_8cu_source.html#l00272">config_parameter.cu:272</a></div></div>
 <div class="ttc" id="aexamples_2giant__collisions_2hydro_2parameter_8h_html_a64dd6f503f7c5956e5fa96dc00bb29ed"><div class="ttname"><a href="examples_2giant__collisions_2hydro_2parameter_8h.html#a64dd6f503f7c5956e5fa96dc00bb29ed">BOUNDARY_PARTICLE_ID</a></div><div class="ttdeci">#define BOUNDARY_PARTICLE_ID</div><div class="ttdef"><b>Definition:</b> <a href="examples_2giant__collisions_2hydro_2parameter_8h_source.html#l00206">parameter.h:206</a></div></div>
 <div class="ttc" id="aexamples_2giant__collisions_2hydro_2parameter_8h_html_ac25189db92959bff3c6c2adf4c34b50a"><div class="ttname"><a href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a></div><div class="ttdeci">#define DIM</div><div class="ttdef"><b>Definition:</b> <a href="examples_2giant__collisions_2hydro_2parameter_8h_source.html#l00027">parameter.h:27</a></div></div>
 <div class="ttc" id="amiluph_8cu_html_a9c416f8a5261389ba7b66c159c03d53d"><div class="ttname"><a href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a></div><div class="ttdeci">__constant__ struct Particle p</div><div class="ttdoc">the pointers to the arrays on the device in constant memory</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8cu_source.html#l00052">miluph.cu:52</a></div></div>
 <div class="ttc" id="apressure_8h_html_a5a8162808ef47c46eaf46274eab03e6ca44f285863d20ce9aac5e81298e497ff1"><div class="ttname"><a href="pressure_8h.html#a5a8162808ef47c46eaf46274eab03e6ca44f285863d20ce9aac5e81298e497ff1">EOS_TYPE_IGNORE</a></div><div class="ttdeci">@ EOS_TYPE_IGNORE</div><div class="ttdoc">special flag for particles that got accreted by a gravitating point mass</div><div class="ttdef"><b>Definition:</b> <a href="pressure_8h_source.html#l00033">pressure.h:33</a></div></div>
-<div class="ttc" id="astruct_particle_html_a051c0efdd7e746f942bee567ae19aa51"><div class="ttname"><a href="struct_particle.html#a051c0efdd7e746f942bee567ae19aa51">Particle::dzdt</a></div><div class="ttdeci">double * dzdt</div><div class="ttdoc">the time derivative of the z-location</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00087">miluph.h:87</a></div></div>
 <div class="ttc" id="astruct_particle_html_a244b8b92b755b1be6beaee16efd0cfc7"><div class="ttname"><a href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">Particle::vx</a></div><div class="ttdeci">double * vx</div><div class="ttdoc">the velocity in x-direction. if XSPH is 0, dx/dt \equiv vx</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00090">miluph.h:90</a></div></div>
 <div class="ttc" id="astruct_particle_html_a2465448cf3d831f7b3f3dbb751c13070"><div class="ttname"><a href="struct_particle.html#a2465448cf3d831f7b3f3dbb751c13070">Particle::ax</a></div><div class="ttdeci">double * ax</div><div class="ttdoc">the acceleration in x-direction</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00097">miluph.h:97</a></div></div>
 <div class="ttc" id="astruct_particle_html_a43d5144a8cdd77c139e1e83d67a9df4e"><div class="ttname"><a href="struct_particle.html#a43d5144a8cdd77c139e1e83d67a9df4e">Particle::dxdt</a></div><div class="ttdeci">double * dxdt</div><div class="ttdoc">the time derivative of the x-location. note that in sph, dx/dt != vx if XSPH is used</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00083">miluph.h:83</a></div></div>
-<div class="ttc" id="astruct_particle_html_a4a6a61c6fc9c337d8a17b3e0498a5417"><div class="ttname"><a href="struct_particle.html#a4a6a61c6fc9c337d8a17b3e0498a5417">Particle::vz</a></div><div class="ttdeci">double * vz</div><div class="ttdoc">the velocity in z-direction</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00094">miluph.h:94</a></div></div>
 <div class="ttc" id="astruct_particle_html_a512aa631bf082567c98c8c26cf48950a"><div class="ttname"><a href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">Particle::y</a></div><div class="ttdeci">double * y</div><div class="ttdoc">the y-coordinate of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00071">miluph.h:71</a></div></div>
 <div class="ttc" id="astruct_particle_html_a679c91d88b1ce54aec008ff070516add"><div class="ttname"><a href="struct_particle.html#a679c91d88b1ce54aec008ff070516add">Particle::rho</a></div><div class="ttdeci">double * rho</div><div class="ttdoc">the density of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00128">miluph.h:128</a></div></div>
 <div class="ttc" id="astruct_particle_html_a7250d3b078aa2b8fb64b377fbc4f393d"><div class="ttname"><a href="struct_particle.html#a7250d3b078aa2b8fb64b377fbc4f393d">Particle::ay</a></div><div class="ttdeci">double * ay</div><div class="ttdoc">the acceleration in y-direction</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00099">miluph.h:99</a></div></div>
 <div class="ttc" id="astruct_particle_html_a80398b24fb1c3d04d13d150e6612fa8a"><div class="ttname"><a href="struct_particle.html#a80398b24fb1c3d04d13d150e6612fa8a">Particle::drhodt</a></div><div class="ttdeci">double * drhodt</div><div class="ttdoc">the time derivative of the density of the particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00129">miluph.h:129</a></div></div>
 <div class="ttc" id="astruct_particle_html_a82a7d9530235b490387323de00382a53"><div class="ttname"><a href="struct_particle.html#a82a7d9530235b490387323de00382a53">Particle::e</a></div><div class="ttdeci">double * e</div><div class="ttdoc">the specific internal energy of the particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00131">miluph.h:131</a></div></div>
 <div class="ttc" id="astruct_particle_html_a899efd3815bd01d50e37c84926b462d2"><div class="ttname"><a href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">Particle::vy</a></div><div class="ttdeci">double * vy</div><div class="ttdoc">the velocity in y-direction</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00092">miluph.h:92</a></div></div>
-<div class="ttc" id="astruct_particle_html_a96f5e735f5b0192526b7a319bbaeccaa"><div class="ttname"><a href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">Particle::z</a></div><div class="ttdeci">double * z</div><div class="ttdoc">the z-coordinate of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00073">miluph.h:73</a></div></div>
-<div class="ttc" id="astruct_particle_html_aa7da1ac50f504edc248e1b746ae466c1"><div class="ttname"><a href="struct_particle.html#aa7da1ac50f504edc248e1b746ae466c1">Particle::dSdt</a></div><div class="ttdeci">double * dSdt</div><div class="ttdoc">the time derivative of the deviatoric stress tensor</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00154">miluph.h:154</a></div></div>
-<div class="ttc" id="astruct_particle_html_abe980f3f598d6ba0982094a3884276b1"><div class="ttname"><a href="struct_particle.html#abe980f3f598d6ba0982094a3884276b1">Particle::az</a></div><div class="ttdeci">double * az</div><div class="ttdoc">the acceleration in z-direction</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00101">miluph.h:101</a></div></div>
 <div class="ttc" id="astruct_particle_html_ad93c572bcbd802033fa462017b104952"><div class="ttname"><a href="struct_particle.html#ad93c572bcbd802033fa462017b104952">Particle::x</a></div><div class="ttdeci">double * x</div><div class="ttdoc">the x-coordinate of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00069">miluph.h:69</a></div></div>
 <div class="ttc" id="astruct_particle_html_afdb0141f115bf57a530ad057ca8a3a5e"><div class="ttname"><a href="struct_particle.html#afdb0141f115bf57a530ad057ca8a3a5e">Particle::dydt</a></div><div class="ttdeci">double * dydt</div><div class="ttdoc">the time derivative of the y-location</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00085">miluph.h:85</a></div></div>
 </div><!-- fragment -->
@@ -384,13 +388,13 @@ LICENSE</h1>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a43d5144a8cdd77c139e1e83d67a9df4e">dxdt</a>[i] = 0;</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">vx</a>[i] = 0;</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#abe980f3f598d6ba0982094a3884276b1">az</a>[i] = 0;</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a051c0efdd7e746f942bee567ae19aa51">dzdt</a>[i] = 0;</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a4a6a61c6fc9c337d8a17b3e0498a5417">vz</a>[i] = 0;</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.az[i] = 0;</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.dzdt[i] = 0;</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.vz[i] = 0;</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;<span class="preprocessor">#if SOLID</span></div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;            <span class="keywordflow">for</span> (d = 0; d &lt; <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; d++) {</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#aa7da1ac50f504edc248e1b746ae466c1">dSdt</a>[i*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + d] = 0;</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.dSdt[i*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + d] = 0;</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;            }</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="preprocessor">#if INTEGRATE_DENSITY</span></div>
@@ -408,13 +412,13 @@ LICENSE</h1>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i] = 0;</div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#abe980f3f598d6ba0982094a3884276b1">az</a>[i] = 0;</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a051c0efdd7e746f942bee567ae19aa51">dzdt</a>[i] = 0;</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a4a6a61c6fc9c337d8a17b3e0498a5417">vz</a>[i] = 0;</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.az[i] = 0;</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.dzdt[i] = 0;</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.vz[i] = 0;</div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;<span class="preprocessor">#if SOLID</span></div>
 <div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;            <span class="keywordflow">for</span> (d = 0; d &lt; <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; d++) {</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#aa7da1ac50f504edc248e1b746ae466c1">dSdt</a>[i*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + d] = 0;</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.dSdt[i*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + d] = 0;</div>
 <div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;            }</div>
 <div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;<span class="preprocessor">#if INTEGRATE_DENSITY</span></div>
@@ -456,31 +460,31 @@ LICENSE</h1>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="boundary_8cu_source.html#l00594">594</a> of file <a class="el" href="boundary_8cu_source.html">boundary.cu</a>.</p>
-<div class="fragment"><div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;{</div>
-<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;<span class="preprocessor">#if 0</span></div>
-<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;<span class="preprocessor">#warning: brushes on</span></div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    <span class="keyword">register</span> <span class="keywordtype">int</span> i, inc;</div>
-<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;    <span class="keywordtype">int</span> matId, d, e;</div>
-<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    inc = blockDim.x * gridDim.x;</div>
-<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;    <span class="keywordflow">for</span> (i = threadIdx.x + blockIdx.x * blockDim.x; i &lt; <a class="code" href="config__parameter_8cu.html#a40d97ea849bd3c92d6762a2c2e55f21f">numParticles</a>; i += inc) {</div>
-<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;            matId = <a class="code" href="miluph_8cu.html#aa7123d849e86157036f10deaa6be2558">p_rhs</a>.<a class="code" href="struct_particle.html#af78f015011d80da80f065aee6ac19898">materialId</a>[i];</div>
-<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;            <span class="keywordflow">if</span> (matId &gt; 0) {</div>
-<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2465448cf3d831f7b3f3dbb751c13070">ax</a>[i] = 0;</div>
-<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a7250d3b078aa2b8fb64b377fbc4f393d">ay</a>[i] = 0;</div>
-<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a43d5144a8cdd77c139e1e83d67a9df4e">dxdt</a>[i] = 0;</div>
-<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#afdb0141f115bf57a530ad057ca8a3a5e">dydt</a>[i] = 0;</div>
-<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">vx</a>[i] = 0;</div>
-<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i] = 0;</div>
-<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;                <span class="keywordflow">for</span> (d = 0; d &lt; <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; d++) {</div>
-<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#aa7da1ac50f504edc248e1b746ae466c1">dSdt</a>[i*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + d] = 0;</div>
-<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;                }</div>
-<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a80398b24fb1c3d04d13d150e6612fa8a">drhodt</a>[i] = 0;</div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;            } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;            }</div>
-<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;    }</div>
-<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;}</div>
+<p class="definition">Definition at line <a class="el" href="boundary_8cu_source.html#l00603">603</a> of file <a class="el" href="boundary_8cu_source.html">boundary.cu</a>.</p>
+<div class="fragment"><div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;{</div>
+<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;<span class="preprocessor">#if 0</span></div>
+<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;<span class="preprocessor">#warning: brushes on</span></div>
+<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;    <span class="keyword">register</span> <span class="keywordtype">int</span> i, inc;</div>
+<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;    <span class="keywordtype">int</span> matId, d, e;</div>
+<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;    inc = blockDim.x * gridDim.x;</div>
+<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;    <span class="keywordflow">for</span> (i = threadIdx.x + blockIdx.x * blockDim.x; i &lt; <a class="code" href="config__parameter_8cu.html#a40d97ea849bd3c92d6762a2c2e55f21f">numParticles</a>; i += inc) {</div>
+<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;            matId = <a class="code" href="miluph_8cu.html#aa7123d849e86157036f10deaa6be2558">p_rhs</a>.<a class="code" href="struct_particle.html#af78f015011d80da80f065aee6ac19898">materialId</a>[i];</div>
+<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;            <span class="keywordflow">if</span> (matId &gt; 0) {</div>
+<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2465448cf3d831f7b3f3dbb751c13070">ax</a>[i] = 0;</div>
+<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a7250d3b078aa2b8fb64b377fbc4f393d">ay</a>[i] = 0;</div>
+<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a43d5144a8cdd77c139e1e83d67a9df4e">dxdt</a>[i] = 0;</div>
+<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#afdb0141f115bf57a530ad057ca8a3a5e">dydt</a>[i] = 0;</div>
+<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">vx</a>[i] = 0;</div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i] = 0;</div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;                <span class="keywordflow">for</span> (d = 0; d &lt; <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; d++) {</div>
+<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.dSdt[i*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a> + d] = 0;</div>
+<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;                }</div>
+<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a80398b24fb1c3d04d13d150e6612fa8a">drhodt</a>[i] = 0;</div>
+<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;            } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;            }</div>
+<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;    }</div>
+<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -500,87 +504,86 @@ LICENSE</h1>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="boundary_8cu_source.html#l00514">514</a> of file <a class="el" href="boundary_8cu_source.html">boundary.cu</a>.</p>
-<div class="fragment"><div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;{</div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;<span class="preprocessor">#if 0</span></div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;<span class="preprocessor">#warning: brushes on</span></div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;    <span class="keyword">register</span> <span class="keywordtype">int</span> i, inc;</div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;    <span class="keywordtype">int</span> matId, d, e;</div>
-<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;    inc = blockDim.x * gridDim.x;</div>
-<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160; </div>
-<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;    <span class="comment">// revolutions per minute</span></div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> rpm = 100;</div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> omega = rpm * 2 * M_PI / 60;</div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160; </div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;    <span class="comment">// the offset, this is printed out by brush3D.py</span></div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> yoff = 0.0523512;</div>
-<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160; </div>
-<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;    <span class="keywordtype">double</span> phi0 = 0;</div>
-<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;    <span class="keywordtype">double</span> phi = 0;</div>
-<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;    <span class="keywordtype">double</span> phit = 0; <span class="comment">// no, it&#39;s really a p</span></div>
-<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;    <span class="keywordtype">double</span> r = 0;</div>
-<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;    <span class="keywordtype">double</span> y = 0;</div>
-<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;    <span class="keywordtype">double</span> vz = -1e-2; <span class="comment">// speed of the brushes in z direction </span></div>
-<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;    <span class="keywordtype">double</span> zoff = 0;</div>
-<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;    <span class="keywordtype">double</span> zoffangle = 0.170125; <span class="comment">// the z-offset, this is printed out by brush3D.py</span></div>
-<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;    <span class="keywordtype">double</span> zmax = -0.02; ; <span class="comment">// = 1/6 brushdiameter from brush3D.py</span></div>
-<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;    <span class="keywordtype">double</span> myz = 0.0;</div>
-<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160; </div>
-<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;    zoff = <a class="code" href="boundary_8cu.html#a08750623d8fdc6bc3a0c6c94c8ec6ba5">substep_currentTimeD</a> * vz;</div>
-<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;    <span class="keywordflow">if</span> (zoff &lt; zmax) </div>
-<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;        zoff = zmax;</div>
-<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160; </div>
-<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;    <span class="keywordflow">for</span> (i = threadIdx.x + blockIdx.x * blockDim.x; i &lt; <a class="code" href="config__parameter_8cu.html#a40d97ea849bd3c92d6762a2c2e55f21f">numParticles</a>; i += inc) {</div>
-<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;            matId = <a class="code" href="miluph_8cu.html#aa7123d849e86157036f10deaa6be2558">p_rhs</a>.<a class="code" href="struct_particle.html#af78f015011d80da80f065aee6ac19898">materialId</a>[i];</div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;            <span class="keywordflow">if</span> (matId &gt; 1) {</div>
-<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;            <span class="comment">// new rotating angle</span></div>
-<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;                phi = omega*<a class="code" href="boundary_8cu.html#a08750623d8fdc6bc3a0c6c94c8ec6ba5">substep_currentTimeD</a>;</div>
-<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;                <span class="comment">// original angle</span></div>
-<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;                <span class="comment">// new angle</span></div>
-<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;<span class="comment">// brush left (y&lt;0) is matId = 1 and rotates counterclockwise</span></div>
-<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;<span class="comment">// brush right (y&gt;0) is matId = 2 and rotates clockwise</span></div>
-<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;<span class="comment">// rotation is around x axis</span></div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;                myz = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#aef890f19294f6bc2ab49d2a9873c26e6">z0</a>[i] - zoffangle;</div>
-<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;                <span class="keywordflow">if</span> (matId == 2) {</div>
-<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;                    y = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2939e60dc3d4c5f57c28fd57b8b6f067">y0</a>[i] + yoff;</div>
-<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;                    phi0 = atan2(myz,y);</div>
-<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;                    phit = phi + phi0;</div>
-<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;                    r = myz * myz + y*y; </div>
-<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;                    r = sqrt(r);</div>
-<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[i] = r * cos(phit) - yoff;</div>
-<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;                    <span class="comment">// coordinates </span></div>
-<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">z</a>[i] = r * sin(phit) + zoff + zoffangle;</div>
-<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[i] = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#abde6722464c0b3bc87650dc99e5b3714">x0</a>[i];</div>
-<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160; </div>
-<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;                    <span class="comment">// velocity</span></div>
-<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">vx</a>[i] = 0.0;</div>
-<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i] = -omega * r * sin(phit);</div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a4a6a61c6fc9c337d8a17b3e0498a5417">vz</a>[i] = omega * r * cos(phit);</div>
-<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160; </div>
-<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;                } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (matId == 3) {</div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;                    y = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2939e60dc3d4c5f57c28fd57b8b6f067">y0</a>[i] - yoff;</div>
-<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;                    phi0 = atan2(myz,y);</div>
-<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;                    phit = phi0 - phi;</div>
-<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;                    r = myz * myz + y*y; </div>
-<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;                    r = sqrt(r);</div>
-<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[i] = r * cos(phit) + yoff;</div>
-<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;                    <span class="comment">// coordinates </span></div>
-<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">z</a>[i] = r * sin(phit) + zoff + zoffangle;</div>
-<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[i] = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#abde6722464c0b3bc87650dc99e5b3714">x0</a>[i];</div>
-<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160; </div>
-<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;                    <span class="comment">// velocity</span></div>
-<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">vx</a>[i] = 0.0;</div>
-<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i] = omega * r * sin(phit);</div>
-<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a4a6a61c6fc9c337d8a17b3e0498a5417">vz</a>[i] = -omega * r * cos(phit);</div>
-<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;                } </div>
-<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;            }</div>
-<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;    }</div>
-<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;}</div>
+<p class="definition">Definition at line <a class="el" href="boundary_8cu_source.html#l00523">523</a> of file <a class="el" href="boundary_8cu_source.html">boundary.cu</a>.</p>
+<div class="fragment"><div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;{</div>
+<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;<span class="preprocessor">#if 0</span></div>
+<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;<span class="preprocessor">#warning: brushes on</span></div>
+<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;    <span class="keyword">register</span> <span class="keywordtype">int</span> i, inc;</div>
+<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;    <span class="keywordtype">int</span> matId, d, e;</div>
+<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;    inc = blockDim.x * gridDim.x;</div>
+<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160; </div>
+<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;    <span class="comment">// revolutions per minute</span></div>
+<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> rpm = 100;</div>
+<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> omega = rpm * 2 * M_PI / 60;</div>
+<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160; </div>
+<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;    <span class="comment">// the offset, this is printed out by brush3D.py</span></div>
+<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> yoff = 0.0523512;</div>
+<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160; </div>
+<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;    <span class="keywordtype">double</span> phi0 = 0;</div>
+<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;    <span class="keywordtype">double</span> phi = 0;</div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;    <span class="keywordtype">double</span> phit = 0; <span class="comment">// no, it&#39;s really a p</span></div>
+<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;    <span class="keywordtype">double</span> r = 0;</div>
+<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;    <span class="keywordtype">double</span> y = 0;</div>
+<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;    <span class="keywordtype">double</span> vz = -1e-2; <span class="comment">// speed of the brushes in z direction </span></div>
+<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;    <span class="keywordtype">double</span> zoff = 0;</div>
+<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;    <span class="keywordtype">double</span> zoffangle = 0.170125; <span class="comment">// the z-offset, this is printed out by brush3D.py</span></div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;    <span class="keywordtype">double</span> zmax = -0.02; ; <span class="comment">// = 1/6 brushdiameter from brush3D.py</span></div>
+<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;    <span class="keywordtype">double</span> myz = 0.0;</div>
+<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160; </div>
+<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;    zoff = <a class="code" href="boundary_8cu.html#a08750623d8fdc6bc3a0c6c94c8ec6ba5">substep_currentTimeD</a> * vz;</div>
+<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;    <span class="keywordflow">if</span> (zoff &lt; zmax) </div>
+<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;        zoff = zmax;</div>
+<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160; </div>
+<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;    <span class="keywordflow">for</span> (i = threadIdx.x + blockIdx.x * blockDim.x; i &lt; <a class="code" href="config__parameter_8cu.html#a40d97ea849bd3c92d6762a2c2e55f21f">numParticles</a>; i += inc) {</div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;            matId = <a class="code" href="miluph_8cu.html#aa7123d849e86157036f10deaa6be2558">p_rhs</a>.<a class="code" href="struct_particle.html#af78f015011d80da80f065aee6ac19898">materialId</a>[i];</div>
+<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;            <span class="keywordflow">if</span> (matId &gt; 1) {</div>
+<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;            <span class="comment">// new rotating angle</span></div>
+<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;                phi = omega*<a class="code" href="boundary_8cu.html#a08750623d8fdc6bc3a0c6c94c8ec6ba5">substep_currentTimeD</a>;</div>
+<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;                <span class="comment">// original angle</span></div>
+<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;                <span class="comment">// new angle</span></div>
+<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;<span class="comment">// brush left (y&lt;0) is matId = 1 and rotates counterclockwise</span></div>
+<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;<span class="comment">// brush right (y&gt;0) is matId = 2 and rotates clockwise</span></div>
+<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;<span class="comment">// rotation is around x axis</span></div>
+<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;                myz = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.z0[i] - zoffangle;</div>
+<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;                <span class="keywordflow">if</span> (matId == 2) {</div>
+<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;                    y = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2939e60dc3d4c5f57c28fd57b8b6f067">y0</a>[i] + yoff;</div>
+<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;                    phi0 = atan2(myz,y);</div>
+<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;                    phit = phi + phi0;</div>
+<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;                    r = myz * myz + y*y; </div>
+<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;                    r = sqrt(r);</div>
+<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[i] = r * cos(phit) - yoff;</div>
+<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;                    <span class="comment">// coordinates </span></div>
+<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.z[i] = r * sin(phit) + zoff + zoffangle;</div>
+<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[i] = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#abde6722464c0b3bc87650dc99e5b3714">x0</a>[i];</div>
+<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160; </div>
+<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;                    <span class="comment">// velocity</span></div>
+<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">vx</a>[i] = 0.0;</div>
+<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i] = -omega * r * sin(phit);</div>
+<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.vz[i] = omega * r * cos(phit);</div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160; </div>
+<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;                } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (matId == 3) {</div>
+<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;                    y = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2939e60dc3d4c5f57c28fd57b8b6f067">y0</a>[i] - yoff;</div>
+<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;                    phi0 = atan2(myz,y);</div>
+<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;                    phit = phi0 - phi;</div>
+<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;                    r = myz * myz + y*y; </div>
+<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;                    r = sqrt(r);</div>
+<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[i] = r * cos(phit) + yoff;</div>
+<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;                    <span class="comment">// coordinates </span></div>
+<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.z[i] = r * sin(phit) + zoff + zoffangle;</div>
+<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[i] = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#abde6722464c0b3bc87650dc99e5b3714">x0</a>[i];</div>
+<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160; </div>
+<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;                    <span class="comment">// velocity</span></div>
+<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">vx</a>[i] = 0.0;</div>
+<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i] = omega * r * sin(phit);</div>
+<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;                    <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.vz[i] = -omega * r * cos(phit);</div>
+<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;                } </div>
+<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;            }</div>
+<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;    }</div>
+<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;}</div>
 <div class="ttc" id="aboundary_8cu_html_a08750623d8fdc6bc3a0c6c94c8ec6ba5"><div class="ttname"><a href="boundary_8cu.html#a08750623d8fdc6bc3a0c6c94c8ec6ba5">substep_currentTimeD</a></div><div class="ttdeci">__device__ double substep_currentTimeD</div><div class="ttdef"><b>Definition:</b> <a href="timeintegration_8cu_source.html#l00088">timeintegration.cu:88</a></div></div>
 <div class="ttc" id="astruct_particle_html_a2939e60dc3d4c5f57c28fd57b8b6f067"><div class="ttname"><a href="struct_particle.html#a2939e60dc3d4c5f57c28fd57b8b6f067">Particle::y0</a></div><div class="ttdeci">double * y0</div><div class="ttdoc">the initial y-coordinate at the start of the simulation</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00064">miluph.h:64</a></div></div>
 <div class="ttc" id="astruct_particle_html_abde6722464c0b3bc87650dc99e5b3714"><div class="ttname"><a href="struct_particle.html#abde6722464c0b3bc87650dc99e5b3714">Particle::x0</a></div><div class="ttdeci">double * x0</div><div class="ttdoc">the initial x-coordinate at the start of the simulation</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00062">miluph.h:62</a></div></div>
-<div class="ttc" id="astruct_particle_html_aef890f19294f6bc2ab49d2a9873c26e6"><div class="ttname"><a href="struct_particle.html#aef890f19294f6bc2ab49d2a9873c26e6">Particle::z0</a></div><div class="ttdeci">double * z0</div><div class="ttdoc">the initial z-coordinate at the start of the simulation</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00066">miluph.h:66</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -600,77 +603,77 @@ LICENSE</h1>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="boundary_8cu_source.html#l00622">622</a> of file <a class="el" href="boundary_8cu_source.html">boundary.cu</a>.</p>
-<div class="fragment"><div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;{</div>
-<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;<span class="preprocessor">#if 0</span></div>
-<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;<span class="preprocessor">#warning: brushes on</span></div>
-<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;    <span class="keyword">register</span> <span class="keywordtype">int</span> i, inc;</div>
-<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;    <span class="keywordtype">int</span> matId, d, e, matIdj;</div>
-<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;    <span class="keywordtype">int</span> k, j, numInteractions;</div>
-<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;    <span class="keywordtype">double</span> distance;</div>
-<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;    <span class="keywordtype">double</span> ljf = 0;</div>
-<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;    <span class="comment">// D is somehow related to the largest velocity</span></div>
-<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;    <span class="keywordtype">double</span> D = 10.0;</div>
-<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> tiny = 1e-6;</div>
-<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> r0 = 0.022574999999999998;</div>
-<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;    <span class="keywordtype">double</span> dx, dy, dz;</div>
-<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;    inc = blockDim.x * gridDim.x;</div>
-<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;    <span class="keywordflow">for</span> (i = threadIdx.x + blockIdx.x * blockDim.x; i &lt; <a class="code" href="config__parameter_8cu.html#a40d97ea849bd3c92d6762a2c2e55f21f">numParticles</a>; i += inc) {</div>
-<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;            matId = <a class="code" href="miluph_8cu.html#aa7123d849e86157036f10deaa6be2558">p_rhs</a>.<a class="code" href="struct_particle.html#af78f015011d80da80f065aee6ac19898">materialId</a>[i];</div>
-<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;            <span class="comment">// only for regolith with matId == 0</span></div>
-<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;            <span class="keywordflow">if</span> (matId &gt; 0)</div>
-<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;                <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;            numInteractions = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a54d63482d07d98baa2e436c0ad4095af">noi</a>[i];</div>
-<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;            <span class="keywordflow">for</span> (k = 0; k &lt; numInteractions; k++) {</div>
-<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;            <span class="comment">// the interaction partner</span></div>
-<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;                j = <a class="code" href="miluph_8cu.html#a6452a9acca23effecb6f5a6e0cd332ec">interactions</a>[i * <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#a173e5a522f62a96b7508f1f4139b2479">MAX_NUM_INTERACTIONS</a> + k];</div>
-<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160; </div>
-<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;                <span class="comment">// check if interaction partner is boundary_particle and if not, continue</span></div>
-<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;                matIdj = <a class="code" href="miluph_8cu.html#aa7123d849e86157036f10deaa6be2558">p_rhs</a>.<a class="code" href="struct_particle.html#af78f015011d80da80f065aee6ac19898">materialId</a>[j];</div>
-<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;                <span class="keywordflow">if</span> (matIdj == <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#a64dd6f503f7c5956e5fa96dc00bb29ed">BOUNDARY_PARTICLE_ID</a>) {</div>
-<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;                <span class="comment">// calculate lennard jones force</span></div>
-<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;                    dx = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[j];</div>
-<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;                    dy = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[j];</div>
-<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;                    dz = 0.0;</div>
-<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
-<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;                    dz = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">z</a>[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">z</a>[j];</div>
-<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;                    distance = dx*dx + dy*dy + dz*dz;</div>
-<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;                    distance += tiny;</div>
-<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;                    distance = sqrt(distance);</div>
-<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;                    <span class="keywordflow">if</span> (r0/distance &lt; 1) {</div>
-<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;                        ljf =  D * (pow(r0/distance, 12) - pow(r0/distance, 6)) * pow(distance, -2);</div>
-<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;                        <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2465448cf3d831f7b3f3dbb751c13070">ax</a>[i] -= ljf*dx;</div>
-<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;                        <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a7250d3b078aa2b8fb64b377fbc4f393d">ay</a>[i] -= ljf*dy;</div>
-<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
-<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;                        <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#abe980f3f598d6ba0982094a3884276b1">az</a>[i] -= ljf*dz;</div>
-<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;                    } </div>
-<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;                } </div>
-<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160; </div>
-<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;<span class="preprocessor">#if 0            </span></div>
-<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;                <span class="comment">// check if interaction partner is brush and if not, continue</span></div>
-<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;                matIdj = <a class="code" href="miluph_8cu.html#aa7123d849e86157036f10deaa6be2558">p_rhs</a>.<a class="code" href="struct_particle.html#af78f015011d80da80f065aee6ac19898">materialId</a>[j];</div>
-<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;                <span class="keywordflow">if</span> (matIdj == 1 || matIdj == 2) {</div>
-<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;                <span class="comment">// calculate lennard jones force</span></div>
-<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;                    dx = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[j];</div>
-<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;                    dy = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[j];</div>
-<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;                    dz = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">z</a>[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">z</a>[j];</div>
-<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;                    distance = dx*dx + dy*dy + dz*dz;</div>
-<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;                    distance += tiny;</div>
-<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;                    distance = sqrt(distance);</div>
-<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;                    <span class="keywordflow">if</span> (r0/distance &lt; 1) {</div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;                        ljf = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a4c6a2f933fed2fb9355a55ae17ab11a4">m</a>[i] *  D * (pow(r0/distance, 12) - pow(r0/distance, 4)) * pow(distance, -2);</div>
-<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;                        <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2465448cf3d831f7b3f3dbb751c13070">ax</a>[i] += ljf*dx;</div>
-<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;                        <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a7250d3b078aa2b8fb64b377fbc4f393d">ay</a>[i] += ljf*dy;</div>
-<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;                        <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#abe980f3f598d6ba0982094a3884276b1">az</a>[i] += ljf*dz;</div>
-<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;                    } </div>
-<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;                } </div>
-<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;            }</div>
-<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;    }</div>
-<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;}</div>
+<p class="definition">Definition at line <a class="el" href="boundary_8cu_source.html#l00631">631</a> of file <a class="el" href="boundary_8cu_source.html">boundary.cu</a>.</p>
+<div class="fragment"><div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;{</div>
+<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;<span class="preprocessor">#if 0</span></div>
+<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;<span class="preprocessor">#warning: brushes on</span></div>
+<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;    <span class="keyword">register</span> <span class="keywordtype">int</span> i, inc;</div>
+<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;    <span class="keywordtype">int</span> matId, d, e, matIdj;</div>
+<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;    <span class="keywordtype">int</span> k, j, numInteractions;</div>
+<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;    <span class="keywordtype">double</span> distance;</div>
+<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;    <span class="keywordtype">double</span> ljf = 0;</div>
+<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;    <span class="comment">// D is somehow related to the largest velocity</span></div>
+<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;    <span class="keywordtype">double</span> D = 10.0;</div>
+<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> tiny = 1e-6;</div>
+<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> r0 = 0.022574999999999998;</div>
+<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;    <span class="keywordtype">double</span> dx, dy, dz;</div>
+<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;    inc = blockDim.x * gridDim.x;</div>
+<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;    <span class="keywordflow">for</span> (i = threadIdx.x + blockIdx.x * blockDim.x; i &lt; <a class="code" href="config__parameter_8cu.html#a40d97ea849bd3c92d6762a2c2e55f21f">numParticles</a>; i += inc) {</div>
+<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;            matId = <a class="code" href="miluph_8cu.html#aa7123d849e86157036f10deaa6be2558">p_rhs</a>.<a class="code" href="struct_particle.html#af78f015011d80da80f065aee6ac19898">materialId</a>[i];</div>
+<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;            <span class="comment">// only for regolith with matId == 0</span></div>
+<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;            <span class="keywordflow">if</span> (matId &gt; 0)</div>
+<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;                <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;            numInteractions = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a54d63482d07d98baa2e436c0ad4095af">noi</a>[i];</div>
+<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;            <span class="keywordflow">for</span> (k = 0; k &lt; numInteractions; k++) {</div>
+<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;            <span class="comment">// the interaction partner</span></div>
+<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;                j = <a class="code" href="miluph_8cu.html#a6452a9acca23effecb6f5a6e0cd332ec">interactions</a>[i * <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#a173e5a522f62a96b7508f1f4139b2479">MAX_NUM_INTERACTIONS</a> + k];</div>
+<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160; </div>
+<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;                <span class="comment">// check if interaction partner is boundary_particle and if not, continue</span></div>
+<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;                matIdj = <a class="code" href="miluph_8cu.html#aa7123d849e86157036f10deaa6be2558">p_rhs</a>.<a class="code" href="struct_particle.html#af78f015011d80da80f065aee6ac19898">materialId</a>[j];</div>
+<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;                <span class="keywordflow">if</span> (matIdj == <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#a64dd6f503f7c5956e5fa96dc00bb29ed">BOUNDARY_PARTICLE_ID</a>) {</div>
+<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;                <span class="comment">// calculate lennard jones force</span></div>
+<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;                    dx = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[j];</div>
+<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;                    dy = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[j];</div>
+<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;                    dz = 0.0;</div>
+<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
+<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;                    dz = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.z[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.z[j];</div>
+<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;                    distance = dx*dx + dy*dy + dz*dz;</div>
+<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;                    distance += tiny;</div>
+<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;                    distance = sqrt(distance);</div>
+<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;                    <span class="keywordflow">if</span> (r0/distance &lt; 1) {</div>
+<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;                        ljf =  D * (pow(r0/distance, 12) - pow(r0/distance, 6)) * pow(distance, -2);</div>
+<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;                        <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2465448cf3d831f7b3f3dbb751c13070">ax</a>[i] -= ljf*dx;</div>
+<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;                        <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a7250d3b078aa2b8fb64b377fbc4f393d">ay</a>[i] -= ljf*dy;</div>
+<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
+<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;                        <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.az[i] -= ljf*dz;</div>
+<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;                    } </div>
+<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;                } </div>
+<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160; </div>
+<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;<span class="preprocessor">#if 0            </span></div>
+<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;                <span class="comment">// check if interaction partner is brush and if not, continue</span></div>
+<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;                matIdj = <a class="code" href="miluph_8cu.html#aa7123d849e86157036f10deaa6be2558">p_rhs</a>.<a class="code" href="struct_particle.html#af78f015011d80da80f065aee6ac19898">materialId</a>[j];</div>
+<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;                <span class="keywordflow">if</span> (matIdj == 1 || matIdj == 2) {</div>
+<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;                <span class="comment">// calculate lennard jones force</span></div>
+<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;                    dx = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[j];</div>
+<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;                    dy = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[j];</div>
+<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;                    dz = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.z[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.z[j];</div>
+<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;                    distance = dx*dx + dy*dy + dz*dz;</div>
+<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;                    distance += tiny;</div>
+<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;                    distance = sqrt(distance);</div>
+<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;                    <span class="keywordflow">if</span> (r0/distance &lt; 1) {</div>
+<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;                        ljf = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a4c6a2f933fed2fb9355a55ae17ab11a4">m</a>[i] *  D * (pow(r0/distance, 12) - pow(r0/distance, 4)) * pow(distance, -2);</div>
+<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;                        <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a2465448cf3d831f7b3f3dbb751c13070">ax</a>[i] += ljf*dx;</div>
+<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;                        <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a7250d3b078aa2b8fb64b377fbc4f393d">ay</a>[i] += ljf*dy;</div>
+<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;                        <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.az[i] += ljf*dz;</div>
+<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;                    } </div>
+<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;                } </div>
+<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;            }</div>
+<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;    }</div>
+<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;}</div>
 <div class="ttc" id="aexamples_2giant__collisions_2hydro_2parameter_8h_html_a173e5a522f62a96b7508f1f4139b2479"><div class="ttname"><a href="examples_2giant__collisions_2hydro_2parameter_8h.html#a173e5a522f62a96b7508f1f4139b2479">MAX_NUM_INTERACTIONS</a></div><div class="ttdeci">#define MAX_NUM_INTERACTIONS</div><div class="ttdef"><b>Definition:</b> <a href="examples_2giant__collisions_2hydro_2parameter_8h_source.html#l00167">parameter.h:167</a></div></div>
 <div class="ttc" id="amiluph_8cu_html_a6452a9acca23effecb6f5a6e0cd332ec"><div class="ttname"><a href="miluph_8cu.html#a6452a9acca23effecb6f5a6e0cd332ec">interactions</a></div><div class="ttdeci">int * interactions</div><div class="ttdoc">the array that keeps track and stores all interactions between the particles at a certain timestep</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8cu_source.html#l00088">miluph.cu:88</a></div></div>
 <div class="ttc" id="astruct_particle_html_a4c6a2f933fed2fb9355a55ae17ab11a4"><div class="ttname"><a href="struct_particle.html#a4c6a2f933fed2fb9355a55ae17ab11a4">Particle::m</a></div><div class="ttdeci">double * m</div><div class="ttdoc">mass of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00122">miluph.h:122</a></div></div>
@@ -752,8 +755,8 @@ LICENSE</h1>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="comment">/* test values only for plane at z=0 */</span></div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    dI = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">z</a>[i];</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    dJ = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">z</a>[j];</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    dI = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.z[i];</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    dJ = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.z[j];</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    beta = min(<a class="code" href="boundary_8cu.html#a5805c5a1c961dd86013b9d2a33988b98">BETA_MAX</a>, 1.0 + dJ/dI);</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    oneminusbeta = 1-beta;</div>
@@ -763,12 +766,12 @@ LICENSE</h1>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="preprocessor">#if DIM &gt; 1</span></div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    *vyj = oneminusbeta*<a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i];</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    *vzj = oneminusbeta*<a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a4a6a61c6fc9c337d8a17b3e0498a5417">vz</a>[i];</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    *vzj = oneminusbeta*<a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.vz[i];</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="preprocessor">#if SOLID</span></div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keywordflow">for</span> (e = 0; e &lt; <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; e++) {</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        Sj[e] = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a06dcf6021acf16eae05f211ba5898855">S</a>[i*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+e];</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        Sj[e] = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.S[i*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>*<a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>+e];</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    }</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160; </div>
@@ -776,7 +779,6 @@ LICENSE</h1>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    *densityj = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a679c91d88b1ce54aec008ff070516add">rho</a>[i];</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;}</div>
 <div class="ttc" id="aboundary_8cu_html_a5805c5a1c961dd86013b9d2a33988b98"><div class="ttname"><a href="boundary_8cu.html#a5805c5a1c961dd86013b9d2a33988b98">BETA_MAX</a></div><div class="ttdeci">#define BETA_MAX</div></div>
-<div class="ttc" id="astruct_particle_html_a06dcf6021acf16eae05f211ba5898855"><div class="ttname"><a href="struct_particle.html#a06dcf6021acf16eae05f211ba5898855">Particle::S</a></div><div class="ttdeci">double * S</div><div class="ttdoc">the deviatoric stress tensor</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00153">miluph.h:153</a></div></div>
 <div class="ttc" id="astruct_particle_html_af43ccd2d4b0d70c48acbcddedbfa8fe0"><div class="ttname"><a href="struct_particle.html#af43ccd2d4b0d70c48acbcddedbfa8fe0">Particle::p</a></div><div class="ttdeci">double * p</div><div class="ttdoc">the pressure of the particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00130">miluph.h:130</a></div></div>
 </div><!-- fragment -->
 </div>
@@ -866,7 +868,7 @@ LICENSE</h1>
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_main/boundary.cu File Reference<br />
-    Generated on Thu Dec 2 2021 07:05:14 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
+    Generated on Fri Dec 3 2021 07:05:14 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
   </small></address>
 </body>
 </html>

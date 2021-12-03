@@ -143,8 +143,6 @@ Include dependency graph for timeintegration.cu:</div>
 Functions</h2></td></tr>
 <tr class="memitem:a8d397f459c27d904e86e97572c3de07a"><td class="memItemLeft" align="right" valign="top">__device__ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a> (int particleIndex, int row, int col)</td></tr>
 <tr class="separator:a8d397f459c27d904e86e97572c3de07a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac975fd6d71ce6df7f03d462d5394248f"><td class="memItemLeft" align="right" valign="top">__global__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="timeintegration_8cu.html#ac975fd6d71ce6df7f03d462d5394248f">symmetrizeStress</a> (void)</td></tr>
-<tr class="separator:ac975fd6d71ce6df7f03d462d5394248f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aacee04f8bf23d8594794f6952451678c"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="timeintegration_8cu.html#aacee04f8bf23d8594794f6952451678c">calculate_angular_momentum</a> (void)</td></tr>
 <tr class="separator:aacee04f8bf23d8594794f6952451678c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a23bfad3595bb82a5587de5b4d033b9ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="timeintegration_8cu.html#a23bfad3595bb82a5587de5b4d033b9ff">initIntegration</a> ()</td></tr>
@@ -236,14 +234,6 @@ Variables</h2></td></tr>
 <tr class="separator:a68841ba64b9a331033c501e5f83070a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade08d86ef755c008c4e19ce043ad266d"><td class="memItemLeft" align="right" valign="top">__device__ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="timeintegration_8cu.html#ade08d86ef755c008c4e19ce043ad266d">maxy</a></td></tr>
 <tr class="separator:ade08d86ef755c008c4e19ce043ad266d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38bc4ba33ab07eeec311ca018d43af89"><td class="memItemLeft" align="right" valign="top">double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="timeintegration_8cu.html#a38bc4ba33ab07eeec311ca018d43af89">minzPerBlock</a></td></tr>
-<tr class="separator:a38bc4ba33ab07eeec311ca018d43af89"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f0565f9be397bc7029e0b821d53fb4e"><td class="memItemLeft" align="right" valign="top">double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="timeintegration_8cu.html#a6f0565f9be397bc7029e0b821d53fb4e">maxzPerBlock</a></td></tr>
-<tr class="separator:a6f0565f9be397bc7029e0b821d53fb4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8617dac9529153218513f00f0adf77fa"><td class="memItemLeft" align="right" valign="top">__device__ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="timeintegration_8cu.html#a8617dac9529153218513f00f0adf77fa">minz</a></td></tr>
-<tr class="separator:a8617dac9529153218513f00f0adf77fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4860073b7ec9e82e90f772b2c337d820"><td class="memItemLeft" align="right" valign="top">__device__ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="timeintegration_8cu.html#a4860073b7ec9e82e90f772b2c337d820">maxz</a></td></tr>
-<tr class="separator:a4860073b7ec9e82e90f772b2c337d820"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="a78edde5c20a29ae558ad63db1c2749b5"></a>
@@ -319,9 +309,9 @@ Here is the call graph for this function:</div>
 <div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;    <span class="keywordflow">for</span> (i = 0; i &lt; <a class="code" href="miluph_8cu.html#a0991032076bf439261a04c42163df141">numberOfParticles</a>; i++) {</div>
 <div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;        l_i = 0;</div>
 <div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;        l_i = <a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a4c6a2f933fed2fb9355a55ae17ab11a4">m</a>[i]*(<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[i]*<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a4a6a61c6fc9c337d8a17b3e0498a5417">vz</a>[i] - <a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">z</a>[i]*<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i]);</div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;        l_i = <a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a4c6a2f933fed2fb9355a55ae17ab11a4">m</a>[i]*(<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[i]*<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.vz[i] - <a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.z[i]*<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i]);</div>
 <div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;        Lx += l_i;</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;        l_i = <a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a4c6a2f933fed2fb9355a55ae17ab11a4">m</a>[i]*(<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">z</a>[i]*<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">vx</a>[i] - <a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[i]*<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a4a6a61c6fc9c337d8a17b3e0498a5417">vz</a>[i]);</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;        l_i = <a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a4c6a2f933fed2fb9355a55ae17ab11a4">m</a>[i]*(<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.z[i]*<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">vx</a>[i] - <a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[i]*<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.vz[i]);</div>
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;        Ly += l_i;</div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;        l_i = <a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a4c6a2f933fed2fb9355a55ae17ab11a4">m</a>[i]*(<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#ad93c572bcbd802033fa462017b104952">x</a>[i]*<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">vy</a>[i] - <a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[i]*<a class="code" href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a>.<a class="code" href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">vx</a>[i]);</div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;        Lz += l_i;</div>
@@ -338,11 +328,9 @@ Here is the call graph for this function:</div>
 <div class="ttc" id="amiluph_8cu_html_a0991032076bf439261a04c42163df141"><div class="ttname"><a href="miluph_8cu.html#a0991032076bf439261a04c42163df141">numberOfParticles</a></div><div class="ttdeci">int numberOfParticles</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8cu_source.html#l00093">miluph.cu:93</a></div></div>
 <div class="ttc" id="amiluph_8cu_html_a43f583b42078aa24dd8da16315918b4d"><div class="ttname"><a href="miluph_8cu.html#a43f583b42078aa24dd8da16315918b4d">p_host</a></div><div class="ttdeci">struct Particle p_host</div><div class="ttdoc">the pointers to the arrays on the host</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8cu_source.html#l00047">miluph.cu:50</a></div></div>
 <div class="ttc" id="astruct_particle_html_a244b8b92b755b1be6beaee16efd0cfc7"><div class="ttname"><a href="struct_particle.html#a244b8b92b755b1be6beaee16efd0cfc7">Particle::vx</a></div><div class="ttdeci">double * vx</div><div class="ttdoc">the velocity in x-direction. if XSPH is 0, dx/dt \equiv vx</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00090">miluph.h:90</a></div></div>
-<div class="ttc" id="astruct_particle_html_a4a6a61c6fc9c337d8a17b3e0498a5417"><div class="ttname"><a href="struct_particle.html#a4a6a61c6fc9c337d8a17b3e0498a5417">Particle::vz</a></div><div class="ttdeci">double * vz</div><div class="ttdoc">the velocity in z-direction</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00094">miluph.h:94</a></div></div>
 <div class="ttc" id="astruct_particle_html_a4c6a2f933fed2fb9355a55ae17ab11a4"><div class="ttname"><a href="struct_particle.html#a4c6a2f933fed2fb9355a55ae17ab11a4">Particle::m</a></div><div class="ttdeci">double * m</div><div class="ttdoc">mass of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00122">miluph.h:122</a></div></div>
 <div class="ttc" id="astruct_particle_html_a512aa631bf082567c98c8c26cf48950a"><div class="ttname"><a href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">Particle::y</a></div><div class="ttdeci">double * y</div><div class="ttdoc">the y-coordinate of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00071">miluph.h:71</a></div></div>
 <div class="ttc" id="astruct_particle_html_a899efd3815bd01d50e37c84926b462d2"><div class="ttname"><a href="struct_particle.html#a899efd3815bd01d50e37c84926b462d2">Particle::vy</a></div><div class="ttdeci">double * vy</div><div class="ttdoc">the velocity in y-direction</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00092">miluph.h:92</a></div></div>
-<div class="ttc" id="astruct_particle_html_a96f5e735f5b0192526b7a319bbaeccaa"><div class="ttname"><a href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">Particle::z</a></div><div class="ttdeci">double * z</div><div class="ttdoc">the z-coordinate of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00073">miluph.h:73</a></div></div>
 <div class="ttc" id="astruct_particle_html_ad93c572bcbd802033fa462017b104952"><div class="ttname"><a href="struct_particle.html#ad93c572bcbd802033fa462017b104952">Particle::x</a></div><div class="ttdeci">double * x</div><div class="ttdoc">the x-coordinate of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00069">miluph.h:69</a></div></div>
 </div><!-- fragment -->
 </div>
@@ -376,18 +364,16 @@ Here is the call graph for this function:</div>
 <div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;    <a class="code" href="cuda__utils_8h.html#afc8f2a9d6ad281c6deb90fb0fc85f551">cudaVerify</a>(cudaFree(<a class="code" href="timeintegration_8cu.html#a410bb2804b542c9c4e77139105dc069f">maxyPerBlock</a>));</div>
 <div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;<span class="preprocessor">#if DIM == 3</span></div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;    <a class="code" href="cuda__utils_8h.html#afc8f2a9d6ad281c6deb90fb0fc85f551">cudaVerify</a>(cudaFree(<a class="code" href="timeintegration_8cu.html#a38bc4ba33ab07eeec311ca018d43af89">minzPerBlock</a>));</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    <a class="code" href="cuda__utils_8h.html#afc8f2a9d6ad281c6deb90fb0fc85f551">cudaVerify</a>(cudaFree(<a class="code" href="timeintegration_8cu.html#a6f0565f9be397bc7029e0b821d53fb4e">maxzPerBlock</a>));</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;    <a class="code" href="cuda__utils_8h.html#afc8f2a9d6ad281c6deb90fb0fc85f551">cudaVerify</a>(cudaFree(minzPerBlock));</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    <a class="code" href="cuda__utils_8h.html#afc8f2a9d6ad281c6deb90fb0fc85f551">cudaVerify</a>(cudaFree(maxzPerBlock));</div>
 <div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160; </div>
 <div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    <a class="code" href="config__parameter_8cu.html#aab020a5d4f9d820ea42272a4813e85e7">cleanupMaterials</a>();</div>
 <div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;}</div>
 <div class="ttc" id="aconfig__parameter_8cu_html_aab020a5d4f9d820ea42272a4813e85e7"><div class="ttname"><a href="config__parameter_8cu.html#aab020a5d4f9d820ea42272a4813e85e7">cleanupMaterials</a></div><div class="ttdeci">void cleanupMaterials()</div><div class="ttdef"><b>Definition:</b> <a href="config__parameter_8cu_source.html#l01429">config_parameter.cu:1429</a></div></div>
 <div class="ttc" id="acuda__utils_8h_html_afc8f2a9d6ad281c6deb90fb0fc85f551"><div class="ttname"><a href="cuda__utils_8h.html#afc8f2a9d6ad281c6deb90fb0fc85f551">cudaVerify</a></div><div class="ttdeci">#define cudaVerify(x)</div><div class="ttdef"><b>Definition:</b> <a href="cuda__utils_8h_source.html#l00030">cuda_utils.h:30</a></div></div>
-<div class="ttc" id="atimeintegration_8cu_html_a38bc4ba33ab07eeec311ca018d43af89"><div class="ttname"><a href="timeintegration_8cu.html#a38bc4ba33ab07eeec311ca018d43af89">minzPerBlock</a></div><div class="ttdeci">double * minzPerBlock</div><div class="ttdef"><b>Definition:</b> <a href="timeintegration_8cu_source.html#l00102">timeintegration.cu:102</a></div></div>
 <div class="ttc" id="atimeintegration_8cu_html_a410bb2804b542c9c4e77139105dc069f"><div class="ttname"><a href="timeintegration_8cu.html#a410bb2804b542c9c4e77139105dc069f">maxyPerBlock</a></div><div class="ttdeci">double * maxyPerBlock</div><div class="ttdef"><b>Definition:</b> <a href="timeintegration_8cu_source.html#l00098">timeintegration.cu:98</a></div></div>
 <div class="ttc" id="atimeintegration_8cu_html_a4d9ec4074cd7c3eb5a0fa1b18d7fdbd3"><div class="ttname"><a href="timeintegration_8cu.html#a4d9ec4074cd7c3eb5a0fa1b18d7fdbd3">fileIOthread</a></div><div class="ttdeci">pthread_t fileIOthread</div><div class="ttdef"><b>Definition:</b> <a href="timeintegration_8cu_source.html#l00046">timeintegration.cu:46</a></div></div>
-<div class="ttc" id="atimeintegration_8cu_html_a6f0565f9be397bc7029e0b821d53fb4e"><div class="ttname"><a href="timeintegration_8cu.html#a6f0565f9be397bc7029e0b821d53fb4e">maxzPerBlock</a></div><div class="ttdeci">double * maxzPerBlock</div><div class="ttdef"><b>Definition:</b> <a href="timeintegration_8cu_source.html#l00102">timeintegration.cu:102</a></div></div>
 <div class="ttc" id="atimeintegration_8cu_html_a74b8cf50be8e0df0c37e29c99ad9c550"><div class="ttname"><a href="timeintegration_8cu.html#a74b8cf50be8e0df0c37e29c99ad9c550">minxPerBlock</a></div><div class="ttdeci">double * minxPerBlock</div><div class="ttdef"><b>Definition:</b> <a href="timeintegration_8cu_source.html#l00095">timeintegration.cu:95</a></div></div>
 <div class="ttc" id="atimeintegration_8cu_html_a80ba018d3d7ce578fc282e2b8ce37fd8"><div class="ttname"><a href="timeintegration_8cu.html#a80ba018d3d7ce578fc282e2b8ce37fd8">maxxPerBlock</a></div><div class="ttdeci">double * maxxPerBlock</div><div class="ttdef"><b>Definition:</b> <a href="timeintegration_8cu_source.html#l00095">timeintegration.cu:95</a></div></div>
 <div class="ttc" id="atimeintegration_8cu_html_af7c607a9bdae42739c3076f60fa00d6e"><div class="ttname"><a href="timeintegration_8cu.html#af7c607a9bdae42739c3076f60fa00d6e">minyPerBlock</a></div><div class="ttdeci">double * minyPerBlock</div><div class="ttdef"><b>Definition:</b> <a href="timeintegration_8cu_source.html#l00098">timeintegration.cu:98</a></div></div>
@@ -448,8 +434,8 @@ Here is the call graph for this function:</div>
 <div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;    <a class="code" href="cuda__utils_8h.html#afc8f2a9d6ad281c6deb90fb0fc85f551">cudaVerify</a>(cudaMalloc((<span class="keywordtype">void</span>**)&amp;<a class="code" href="timeintegration_8cu.html#a410bb2804b542c9c4e77139105dc069f">maxyPerBlock</a>, <span class="keyword">sizeof</span>(<span class="keywordtype">double</span>)*<a class="code" href="miluph_8cu.html#ad8a83283303f020de0d8ed12f3478bfa">numberOfMultiprocessors</a>));</div>
 <div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;<span class="preprocessor">#if DIM == 3</span></div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    <a class="code" href="cuda__utils_8h.html#afc8f2a9d6ad281c6deb90fb0fc85f551">cudaVerify</a>(cudaMalloc((<span class="keywordtype">void</span>**)&amp;<a class="code" href="timeintegration_8cu.html#a38bc4ba33ab07eeec311ca018d43af89">minzPerBlock</a>, <span class="keyword">sizeof</span>(<span class="keywordtype">double</span>)*<a class="code" href="miluph_8cu.html#ad8a83283303f020de0d8ed12f3478bfa">numberOfMultiprocessors</a>));</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    <a class="code" href="cuda__utils_8h.html#afc8f2a9d6ad281c6deb90fb0fc85f551">cudaVerify</a>(cudaMalloc((<span class="keywordtype">void</span>**)&amp;<a class="code" href="timeintegration_8cu.html#a6f0565f9be397bc7029e0b821d53fb4e">maxzPerBlock</a>, <span class="keyword">sizeof</span>(<span class="keywordtype">double</span>)*<a class="code" href="miluph_8cu.html#ad8a83283303f020de0d8ed12f3478bfa">numberOfMultiprocessors</a>));</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    <a class="code" href="cuda__utils_8h.html#afc8f2a9d6ad281c6deb90fb0fc85f551">cudaVerify</a>(cudaMalloc((<span class="keywordtype">void</span>**)&amp;minzPerBlock, <span class="keyword">sizeof</span>(<span class="keywordtype">double</span>)*<a class="code" href="miluph_8cu.html#ad8a83283303f020de0d8ed12f3478bfa">numberOfMultiprocessors</a>));</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    <a class="code" href="cuda__utils_8h.html#afc8f2a9d6ad281c6deb90fb0fc85f551">cudaVerify</a>(cudaMalloc((<span class="keywordtype">void</span>**)&amp;maxzPerBlock, <span class="keyword">sizeof</span>(<span class="keywordtype">double</span>)*<a class="code" href="miluph_8cu.html#ad8a83283303f020de0d8ed12f3478bfa">numberOfMultiprocessors</a>));</div>
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160; </div>
 <div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    <span class="comment">// set the pointer on the gpu to p_device</span></div>
@@ -546,51 +532,6 @@ Here is the call graph for this function:</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;}</div>
 <div class="ttc" id="aexamples_2giant__collisions_2hydro_2parameter_8h_html_ac25189db92959bff3c6c2adf4c34b50a"><div class="ttname"><a href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a></div><div class="ttdeci">#define DIM</div><div class="ttdef"><b>Definition:</b> <a href="examples_2giant__collisions_2hydro_2parameter_8h_source.html#l00027">parameter.h:27</a></div></div>
 </div><!-- fragment -->
-</div>
-</div>
-<a id="ac975fd6d71ce6df7f03d462d5394248f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac975fd6d71ce6df7f03d462d5394248f">&#9670;&nbsp;</a></span>symmetrizeStress()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">__global__ void symmetrizeStress </td>
-          <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="timeintegration_8cu_source.html#l00116">116</a> of file <a class="el" href="timeintegration_8cu_source.html">timeintegration.cu</a>.</p>
-<div class="fragment"><div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;{</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="keyword">register</span> <span class="keywordtype">int</span> i, j, k, inc;</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <span class="keyword">register</span> <span class="keywordtype">double</span> val;</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    inc = blockDim.x * gridDim.x;</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="keywordflow">for</span> (i = threadIdx.x + blockIdx.x * blockDim.x; i &lt; <a class="code" href="config__parameter_8cu.html#a40d97ea849bd3c92d6762a2c2e55f21f">numParticles</a>; i += inc) {</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;        <span class="keywordflow">for</span> (j = 0; j &lt; <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; j ++) {</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;            <span class="keywordflow">for</span> (k = 0; k &lt; j; k++) {</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;                val = 0.5 * (<a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a06dcf6021acf16eae05f211ba5898855">S</a>[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i,j,k)] + <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a06dcf6021acf16eae05f211ba5898855">S</a>[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i,k,j)]);</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a06dcf6021acf16eae05f211ba5898855">S</a>[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i,j,k)] = val;</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;                <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a06dcf6021acf16eae05f211ba5898855">S</a>[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i,k,j)] = val;</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;            }</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;        }</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;    }</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;}</div>
-<div class="ttc" id="astruct_particle_html_a06dcf6021acf16eae05f211ba5898855"><div class="ttname"><a href="struct_particle.html#a06dcf6021acf16eae05f211ba5898855">Particle::S</a></div><div class="ttdeci">double * S</div><div class="ttdoc">the deviatoric stress tensor</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00153">miluph.h:153</a></div></div>
-<div class="ttc" id="atimeintegration_8cu_html_a8d397f459c27d904e86e97572c3de07a"><div class="ttname"><a href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a></div><div class="ttdeci">__device__ int stressIndex(int particleIndex, int row, int col)</div><div class="ttdef"><b>Definition:</b> <a href="timeintegration_8cu_source.html#l00109">timeintegration.cu:109</a></div></div>
-</div><!-- fragment --><div class="dynheader">
-Here is the call graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><img src="timeintegration_8cu_ac975fd6d71ce6df7f03d462d5394248f_cgraph.png" border="0" usemap="#atimeintegration_8cu_ac975fd6d71ce6df7f03d462d5394248f_cgraph" alt=""/></div>
-<map name="atimeintegration_8cu_ac975fd6d71ce6df7f03d462d5394248f_cgraph" id="atimeintegration_8cu_ac975fd6d71ce6df7f03d462d5394248f_cgraph">
-<area shape="rect" title=" " alt="" coords="5,5,145,32"/>
-<area shape="rect" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a" title=" " alt="" coords="193,5,291,32"/>
-</map>
-</div>
-
 </div>
 </div>
 <a id="a85829c92f580c4ba75418f706a9b867f"></a>
@@ -1110,38 +1051,6 @@ LICENSE</h1>
 
 </div>
 </div>
-<a id="a4860073b7ec9e82e90f772b2c337d820"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4860073b7ec9e82e90f772b2c337d820">&#9670;&nbsp;</a></span>maxz</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">__device__ double maxz</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="timeintegration_8cu_source.html#l00103">103</a> of file <a class="el" href="timeintegration_8cu_source.html">timeintegration.cu</a>.</p>
-
-</div>
-</div>
-<a id="a6f0565f9be397bc7029e0b821d53fb4e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6f0565f9be397bc7029e0b821d53fb4e">&#9670;&nbsp;</a></span>maxzPerBlock</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">double * maxzPerBlock</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="timeintegration_8cu_source.html#l00102">102</a> of file <a class="el" href="timeintegration_8cu_source.html">timeintegration.cu</a>.</p>
-
-</div>
-</div>
 <a id="a0a2582208a998deeac0c07cea4886ca6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0a2582208a998deeac0c07cea4886ca6">&#9670;&nbsp;</a></span>minx</h2>
 
@@ -1203,38 +1112,6 @@ LICENSE</h1>
 </div><div class="memdoc">
 
 <p class="definition">Definition at line <a class="el" href="timeintegration_8cu_source.html#l00098">98</a> of file <a class="el" href="timeintegration_8cu_source.html">timeintegration.cu</a>.</p>
-
-</div>
-</div>
-<a id="a8617dac9529153218513f00f0adf77fa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8617dac9529153218513f00f0adf77fa">&#9670;&nbsp;</a></span>minz</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">__device__ double minz</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="timeintegration_8cu_source.html#l00103">103</a> of file <a class="el" href="timeintegration_8cu_source.html">timeintegration.cu</a>.</p>
-
-</div>
-</div>
-<a id="a38bc4ba33ab07eeec311ca018d43af89"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a38bc4ba33ab07eeec311ca018d43af89">&#9670;&nbsp;</a></span>minzPerBlock</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">double* minzPerBlock</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="timeintegration_8cu_source.html#l00102">102</a> of file <a class="el" href="timeintegration_8cu_source.html">timeintegration.cu</a>.</p>
 
 </div>
 </div>
@@ -1386,7 +1263,7 @@ LICENSE</h1>
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_main/timeintegration.cu File Reference<br />
-    Generated on Thu Dec 2 2021 07:05:17 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
+    Generated on Fri Dec 3 2021 07:05:17 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
   </small></address>
 </body>
 </html>

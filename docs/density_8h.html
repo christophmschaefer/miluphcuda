@@ -193,7 +193,7 @@ LICENSE</h1>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;<span class="preprocessor">#if DIM &gt; 1</span></div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;                dx[1] = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">y</a>[ip];</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;                dx[2] = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">z</a>[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">z</a>[ip];</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;                dx[2] = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.z[i] - <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.z[ip];</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160; </div>
@@ -300,7 +300,6 @@ LICENSE</h1>
 <div class="ttc" id="astruct_particle_html_a512aa631bf082567c98c8c26cf48950a"><div class="ttname"><a href="struct_particle.html#a512aa631bf082567c98c8c26cf48950a">Particle::y</a></div><div class="ttdeci">double * y</div><div class="ttdoc">the y-coordinate of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00071">miluph.h:71</a></div></div>
 <div class="ttc" id="astruct_particle_html_a54d63482d07d98baa2e436c0ad4095af"><div class="ttname"><a href="struct_particle.html#a54d63482d07d98baa2e436c0ad4095af">Particle::noi</a></div><div class="ttdeci">int * noi</div><div class="ttdoc">number of interaction partners of sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00259">miluph.h:259</a></div></div>
 <div class="ttc" id="astruct_particle_html_a679c91d88b1ce54aec008ff070516add"><div class="ttname"><a href="struct_particle.html#a679c91d88b1ce54aec008ff070516add">Particle::rho</a></div><div class="ttdeci">double * rho</div><div class="ttdoc">the density of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00128">miluph.h:128</a></div></div>
-<div class="ttc" id="astruct_particle_html_a96f5e735f5b0192526b7a319bbaeccaa"><div class="ttname"><a href="struct_particle.html#a96f5e735f5b0192526b7a319bbaeccaa">Particle::z</a></div><div class="ttdeci">double * z</div><div class="ttdoc">the z-coordinate of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00073">miluph.h:73</a></div></div>
 <div class="ttc" id="astruct_particle_html_ad93c572bcbd802033fa462017b104952"><div class="ttname"><a href="struct_particle.html#ad93c572bcbd802033fa462017b104952">Particle::x</a></div><div class="ttdeci">double * x</div><div class="ttdoc">the x-coordinate of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00069">miluph.h:69</a></div></div>
 <div class="ttc" id="astruct_particle_html_af78f015011d80da80f065aee6ac19898"><div class="ttname"><a href="struct_particle.html#af78f015011d80da80f065aee6ac19898">Particle::materialId</a></div><div class="ttdeci">int * materialId</div><div class="ttdoc">the current materialID of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00260">miluph.h:260</a></div></div>
 <div class="ttc" id="atree_8h_html_a9662d454a3cbb46229e8120225ce24d8"><div class="ttname"><a href="tree_8h.html#a9662d454a3cbb46229e8120225ce24d8">redo_NeighbourSearch</a></div><div class="ttdeci">__device__ void redo_NeighbourSearch(int particle_id, int *interactions)</div></div>
@@ -320,7 +319,7 @@ Here is the call graph for this function:</div>
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_main/density.h File Reference<br />
-    Generated on Thu Dec 2 2021 07:05:15 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
+    Generated on Fri Dec 3 2021 07:05:15 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
   </small></address>
 </body>
 </html>

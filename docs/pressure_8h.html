@@ -108,7 +108,7 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="pressure_8h__dep__incl.png" border="0" usemap="#a_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__main_2pressure_8hdep" alt=""/></div>
 <map name="a_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__main_2pressure_8hdep" id="a_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__main_2pressure_8hdep">
-<area shape="rect" title=" " alt="" coords="2953,5,3167,61"/>
+<area shape="rect" title=" " alt="" coords="3069,5,3283,61"/>
 <area shape="rect" href="boundary_8cu.html" title=" " alt="" coords="5,117,229,173"/>
 <area shape="rect" href="config__parameter_8cu.html" title=" " alt="" coords="254,109,461,180"/>
 <area shape="rect" href="coupled__heun__rk4__sph__nbody_8cu.html" title=" " alt="" coords="485,109,691,180"/>
@@ -129,12 +129,13 @@ This graph shows which files directly or indirectly include this file:</div>
 <area shape="rect" href="rk4__pointmass_8cu.html" title=" " alt="" coords="4048,117,4309,173"/>
 <area shape="rect" href="sinking_8cu.html" title=" " alt="" coords="4333,117,4545,173"/>
 <area shape="rect" href="soundspeed_8cu.html" title=" " alt="" coords="4569,117,4812,173"/>
-<area shape="rect" href="test__cases_2tensile__rod_2src_2boundary_8cu.html" title=" " alt="" coords="4837,109,5051,180"/>
-<area shape="rect" href="test__cases_2viscously__spreading__ring_2boundary_8cu.html" title=" " alt="" coords="5076,109,5348,180"/>
-<area shape="rect" href="timeintegration_8cu.html" title=" " alt="" coords="5372,117,5639,173"/>
-<area shape="rect" href="tree_8cu.html" title=" " alt="" coords="5663,117,5870,173"/>
-<area shape="rect" href="velocity_8cu.html" title=" " alt="" coords="5894,117,6109,173"/>
-<area shape="rect" href="xsph_8cu.html" title=" " alt="" coords="6133,117,6339,173"/>
+<area shape="rect" href="test__cases_2dambreak_2boundary_8cu.html" title=" " alt="" coords="4837,109,5051,180"/>
+<area shape="rect" href="test__cases_2tensile__rod_2src_2boundary_8cu.html" title=" " alt="" coords="5075,109,5290,180"/>
+<area shape="rect" href="test__cases_2viscously__spreading__ring_2boundary_8cu.html" title=" " alt="" coords="5315,109,5587,180"/>
+<area shape="rect" href="timeintegration_8cu.html" title=" " alt="" coords="5611,117,5877,173"/>
+<area shape="rect" href="tree_8cu.html" title=" " alt="" coords="5902,117,6109,173"/>
+<area shape="rect" href="velocity_8cu.html" title=" " alt="" coords="6133,117,6347,173"/>
+<area shape="rect" href="xsph_8cu.html" title=" " alt="" coords="6371,117,6578,173"/>
 </map>
 </div>
 </div>
@@ -639,9 +640,9 @@ LICENSE</h1>
 <div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;            <span class="keywordtype">double</span> shear = <a class="code" href="config__parameter_8cu.html#af007f82768b7c88e51fdc6177687da7c">matShearmodulus</a>[matId];</div>
 <div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;            <span class="keywordtype">double</span> bulk = <a class="code" href="config__parameter_8cu.html#a5bd3c83e31ac80158e75c665a0feaa56">matBulkmodulus</a>[matId];</div>
 <div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;            <span class="keywordtype">double</span> poissons_ratio = (3.0*bulk - 2.0*shear) / (2.0*(3.0*bulk + shear));</div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;            I1 = (1 + poissons_ratio) * (<a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a06dcf6021acf16eae05f211ba5898855">S</a>[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i, 0, 0)] + <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a06dcf6021acf16eae05f211ba5898855">S</a>[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i, 1, 1)]);</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;            I1 = (1 + poissons_ratio) * (<a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.S[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i, 0, 0)] + <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.S[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i, 1, 1)]);</div>
 <div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;            I1 = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a06dcf6021acf16eae05f211ba5898855">S</a>[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i,0,0)] + <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a06dcf6021acf16eae05f211ba5898855">S</a>[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i,1,1)] + <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#a06dcf6021acf16eae05f211ba5898855">S</a>[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i,2,2)];</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;            I1 = <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.S[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i,0,0)] + <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.S[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i,1,1)] + <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.S[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i,2,2)];</div>
 <div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;            <a class="code" href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a>.<a class="code" href="struct_particle.html#af43ccd2d4b0d70c48acbcddedbfa8fe0">p</a>[i] = -I1/3.0;</div>
 <div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;<span class="preprocessor">#endif</span></div>
@@ -713,7 +714,6 @@ LICENSE</h1>
 <div class="ttc" id="aconfig__parameter_8cu_html_afed7260a105483775f439f3c9a7403bd"><div class="ttname"><a href="config__parameter_8cu.html#afed7260a105483775f439f3c9a7403bd">matRhoLimit</a></div><div class="ttdeci">__constant__ double * matRhoLimit</div><div class="ttdef"><b>Definition:</b> <a href="config__parameter_8cu_source.html#l00263">config_parameter.cu:263</a></div></div>
 <div class="ttc" id="amiluph_8cu_html_a9c416f8a5261389ba7b66c159c03d53d"><div class="ttname"><a href="miluph_8cu.html#a9c416f8a5261389ba7b66c159c03d53d">p</a></div><div class="ttdeci">__constant__ struct Particle p</div><div class="ttdoc">the pointers to the arrays on the device in constant memory</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8cu_source.html#l00052">miluph.cu:52</a></div></div>
 <div class="ttc" id="amiluph_8cu_html_aa7123d849e86157036f10deaa6be2558"><div class="ttname"><a href="miluph_8cu.html#aa7123d849e86157036f10deaa6be2558">p_rhs</a></div><div class="ttdeci">__constant__ struct Particle p_rhs</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8cu_source.html#l00054">miluph.cu:54</a></div></div>
-<div class="ttc" id="astruct_particle_html_a06dcf6021acf16eae05f211ba5898855"><div class="ttname"><a href="struct_particle.html#a06dcf6021acf16eae05f211ba5898855">Particle::S</a></div><div class="ttdeci">double * S</div><div class="ttdoc">the deviatoric stress tensor</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00153">miluph.h:153</a></div></div>
 <div class="ttc" id="astruct_particle_html_a679c91d88b1ce54aec008ff070516add"><div class="ttname"><a href="struct_particle.html#a679c91d88b1ce54aec008ff070516add">Particle::rho</a></div><div class="ttdeci">double * rho</div><div class="ttdoc">the density of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00128">miluph.h:128</a></div></div>
 <div class="ttc" id="astruct_particle_html_a82a7d9530235b490387323de00382a53"><div class="ttname"><a href="struct_particle.html#a82a7d9530235b490387323de00382a53">Particle::e</a></div><div class="ttdeci">double * e</div><div class="ttdoc">the specific internal energy of the particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00131">miluph.h:131</a></div></div>
 <div class="ttc" id="astruct_particle_html_abfd4c69742e558917bc06e3941b2fe02"><div class="ttname"><a href="struct_particle.html#abfd4c69742e558917bc06e3941b2fe02">Particle::cs</a></div><div class="ttdeci">double * cs</div><div class="ttdoc">sound speed of sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00258">miluph.h:258</a></div></div>
@@ -739,7 +739,7 @@ Here is the call graph for this function:</div>
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_main/pressure.h File Reference<br />
-    Generated on Thu Dec 2 2021 07:05:17 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
+    Generated on Fri Dec 3 2021 07:05:17 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
   </small></address>
 </body>
 </html>

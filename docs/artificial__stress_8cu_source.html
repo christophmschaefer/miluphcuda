@@ -105,7 +105,7 @@ $(function() {
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        <span class="comment">// build stress tensor from deviatoric stress and pressure</span></div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;        <span class="keywordflow">for</span> (d = 0; d &lt; <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; d++) { </div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;            <span class="keywordflow">for</span> (e = 0; e &lt; <a class="code" href="examples_2giant__collisions_2hydro_2parameter_8h.html#ac25189db92959bff3c6c2adf4c34b50a">DIM</a>; e++) {</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;                sigma[d][e] = <a class="code" href="miluph_8cu.html#aa7123d849e86157036f10deaa6be2558">p_rhs</a>.<a class="code" href="struct_particle.html#a7492d53cea5f3254f278fd3907f19206">sigma</a>[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i,d,e)];</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;                sigma[d][e] = <a class="code" href="miluph_8cu.html#aa7123d849e86157036f10deaa6be2558">p_rhs</a>.sigma[<a class="code" href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a>(i,d,e)];</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;            }</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        }</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor">#if PRINCIPAL_AXES_ARTIFICIAL_STRESS</span></div>
@@ -170,7 +170,6 @@ $(function() {
 <div class="ttc" id="amiluph_8cu_html_a6452a9acca23effecb6f5a6e0cd332ec"><div class="ttname"><a href="miluph_8cu.html#a6452a9acca23effecb6f5a6e0cd332ec">interactions</a></div><div class="ttdeci">int * interactions</div><div class="ttdoc">the array that keeps track and stores all interactions between the particles at a certain timestep</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8cu_source.html#l00088">miluph.cu:88</a></div></div>
 <div class="ttc" id="amiluph_8cu_html_aa7123d849e86157036f10deaa6be2558"><div class="ttname"><a href="miluph_8cu.html#aa7123d849e86157036f10deaa6be2558">p_rhs</a></div><div class="ttdeci">__constant__ struct Particle p_rhs</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8cu_source.html#l00054">miluph.cu:54</a></div></div>
 <div class="ttc" id="amiluph_8h_html"><div class="ttname"><a href="miluph_8h.html">miluph.h</a></div></div>
-<div class="ttc" id="astruct_particle_html_a7492d53cea5f3254f278fd3907f19206"><div class="ttname"><a href="struct_particle.html#a7492d53cea5f3254f278fd3907f19206">Particle::sigma</a></div><div class="ttdeci">double * sigma</div><div class="ttdoc">the stress tensor, \sigma^{\alpha \beta} = -p\delta^{\alpha \beta} + S^{\alpha \beta}</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00157">miluph.h:157</a></div></div>
 <div class="ttc" id="astruct_particle_html_af78f015011d80da80f065aee6ac19898"><div class="ttname"><a href="struct_particle.html#af78f015011d80da80f065aee6ac19898">Particle::materialId</a></div><div class="ttdeci">int * materialId</div><div class="ttdoc">the current materialID of the sph particle</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00260">miluph.h:260</a></div></div>
 <div class="ttc" id="atest__cases_2viscously__spreading__ring_2parameter_8h_html"><div class="ttname"><a href="test__cases_2viscously__spreading__ring_2parameter_8h.html">parameter.h</a></div></div>
 <div class="ttc" id="atimeintegration_8cu_html_a8d397f459c27d904e86e97572c3de07a"><div class="ttname"><a href="timeintegration_8cu.html#a8d397f459c27d904e86e97572c3de07a">stressIndex</a></div><div class="ttdeci">__device__ int stressIndex(int particleIndex, int row, int col)</div><div class="ttdef"><b>Definition:</b> <a href="timeintegration_8cu_source.html#l00109">timeintegration.cu:109</a></div></div>
@@ -178,7 +177,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_main/artificial_stress.cu Source File<br />
-    Generated on Thu Dec 2 2021 07:05:12 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
+    Generated on Fri Dec 3 2021 07:05:13 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
   </small></address>
 </body>
 </html>

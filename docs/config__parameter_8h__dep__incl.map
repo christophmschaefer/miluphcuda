@@ -1,5 +1,5 @@
 <map id="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/config_parameter.h" name="/home/schaefer/src/miluphcuda_documentation/miluphcuda_main/config_parameter.h">
-<area shape="rect" id="node1" title=" " alt="" coords="2939,5,3145,76"/>
+<area shape="rect" id="node1" title=" " alt="" coords="3059,5,3265,76"/>
 <area shape="rect" id="node2" href="$aneos_8cu.html" title=" " alt="" coords="5,131,212,187"/>
 <area shape="rect" id="node3" href="$artificial__stress_8cu.html" title=" " alt="" coords="236,124,443,195"/>
 <area shape="rect" id="node4" href="$boundary_8cu.html" title=" " alt="" coords="467,131,691,187"/>
@@ -20,10 +20,11 @@
 <area shape="rect" id="node19" href="$rk4__pointmass_8cu.html" title=" " alt="" coords="4033,131,4294,187"/>
 <area shape="rect" id="node20" href="$sinking_8cu.html" title=" " alt="" coords="4317,131,4529,187"/>
 <area shape="rect" id="node21" href="$soundspeed_8cu.html" title=" " alt="" coords="4554,131,4797,187"/>
-<area shape="rect" id="node22" href="$test__cases_2tensile__rod_2src_2boundary_8cu.html" title=" " alt="" coords="4821,124,5036,195"/>
-<area shape="rect" id="node23" href="$timeintegration_8cu.html" title=" " alt="" coords="5061,131,5327,187"/>
-<area shape="rect" id="node24" href="$tree_8cu.html" title=" " alt="" coords="5352,131,5559,187"/>
-<area shape="rect" id="node25" href="$velocity_8cu.html" title=" " alt="" coords="5583,131,5797,187"/>
-<area shape="rect" id="node26" href="$viscosity_8cu.html" title=" " alt="" coords="5822,131,6043,187"/>
-<area shape="rect" id="node27" href="$xsph_8cu.html" title=" " alt="" coords="6068,131,6275,187"/>
+<area shape="rect" id="node22" href="$test__cases_2dambreak_2boundary_8cu.html" title=" " alt="" coords="4821,124,5036,195"/>
+<area shape="rect" id="node23" href="$test__cases_2tensile__rod_2src_2boundary_8cu.html" title=" " alt="" coords="5060,124,5275,195"/>
+<area shape="rect" id="node24" href="$timeintegration_8cu.html" title=" " alt="" coords="5299,131,5566,187"/>
+<area shape="rect" id="node25" href="$tree_8cu.html" title=" " alt="" coords="5591,131,5797,187"/>
+<area shape="rect" id="node26" href="$velocity_8cu.html" title=" " alt="" coords="5821,131,6036,187"/>
+<area shape="rect" id="node27" href="$viscosity_8cu.html" title=" " alt="" coords="6061,131,6282,187"/>
+<area shape="rect" id="node28" href="$xsph_8cu.html" title=" " alt="" coords="6307,131,6513,187"/>
 </map>

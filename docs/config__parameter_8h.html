@@ -118,7 +118,7 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="config__parameter_8h__dep__incl.png" border="0" usemap="#a_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__main_2config__parameter_8hdep" alt=""/></div>
 <map name="a_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__main_2config__parameter_8hdep" id="a_2home_2schaefer_2src_2miluphcuda__documentation_2miluphcuda__main_2config__parameter_8hdep">
-<area shape="rect" title=" " alt="" coords="2939,5,3145,76"/>
+<area shape="rect" title=" " alt="" coords="3059,5,3265,76"/>
 <area shape="rect" href="aneos_8cu.html" title=" " alt="" coords="5,131,212,187"/>
 <area shape="rect" href="artificial__stress_8cu.html" title=" " alt="" coords="236,124,443,195"/>
 <area shape="rect" href="boundary_8cu.html" title=" " alt="" coords="467,131,691,187"/>
@@ -139,12 +139,13 @@ This graph shows which files directly or indirectly include this file:</div>
 <area shape="rect" href="rk4__pointmass_8cu.html" title=" " alt="" coords="4033,131,4294,187"/>
 <area shape="rect" href="sinking_8cu.html" title=" " alt="" coords="4317,131,4529,187"/>
 <area shape="rect" href="soundspeed_8cu.html" title=" " alt="" coords="4554,131,4797,187"/>
-<area shape="rect" href="test__cases_2tensile__rod_2src_2boundary_8cu.html" title=" " alt="" coords="4821,124,5036,195"/>
-<area shape="rect" href="timeintegration_8cu.html" title=" " alt="" coords="5061,131,5327,187"/>
-<area shape="rect" href="tree_8cu.html" title=" " alt="" coords="5352,131,5559,187"/>
-<area shape="rect" href="velocity_8cu.html" title=" " alt="" coords="5583,131,5797,187"/>
-<area shape="rect" href="viscosity_8cu.html" title=" " alt="" coords="5822,131,6043,187"/>
-<area shape="rect" href="xsph_8cu.html" title=" " alt="" coords="6068,131,6275,187"/>
+<area shape="rect" href="test__cases_2dambreak_2boundary_8cu.html" title=" " alt="" coords="4821,124,5036,195"/>
+<area shape="rect" href="test__cases_2tensile__rod_2src_2boundary_8cu.html" title=" " alt="" coords="5060,124,5275,195"/>
+<area shape="rect" href="timeintegration_8cu.html" title=" " alt="" coords="5299,131,5566,187"/>
+<area shape="rect" href="tree_8cu.html" title=" " alt="" coords="5591,131,5797,187"/>
+<area shape="rect" href="velocity_8cu.html" title=" " alt="" coords="5821,131,6036,187"/>
+<area shape="rect" href="viscosity_8cu.html" title=" " alt="" coords="6061,131,6282,187"/>
+<area shape="rect" href="xsph_8cu.html" title=" " alt="" coords="6307,131,6513,187"/>
 </map>
 </div>
 </div>
@@ -339,10 +340,6 @@ Variables</h2></td></tr>
 <tr class="separator:a7558c25b1028b567f1101e4ad2dadd62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a452139aec0ede802389161b56a6594b8"><td class="memItemLeft" align="right" valign="top">__constant__ int *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config__parameter_8h.html#a452139aec0ede802389161b56a6594b8">aneos_matrix_id_c</a></td></tr>
 <tr class="separator:a452139aec0ede802389161b56a6594b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac0762c05eb2742959089a76d990ae3cf"><td class="memItemLeft" align="right" valign="top">double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config__parameter_8h.html#ac0762c05eb2742959089a76d990ae3cf">matYoungModulus_d</a></td></tr>
-<tr class="separator:ac0762c05eb2742959089a76d990ae3cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae4f34a52048368f2c8eab168183b9191"><td class="memItemLeft" align="right" valign="top">__constant__ double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config__parameter_8h.html#ae4f34a52048368f2c8eab168183b9191">matYoungModulus</a></td></tr>
-<tr class="separator:ae4f34a52048368f2c8eab168183b9191"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad2952da9a52b88fdb208c6926b546914"><td class="memItemLeft" align="right" valign="top">__constant__ double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config__parameter_8h.html#ad2952da9a52b88fdb208c6926b546914">matSml</a></td></tr>
 <tr class="separator:ad2952da9a52b88fdb208c6926b546914"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac61e25b7a183ba32f5a5e7a034e56189"><td class="memItemLeft" align="right" valign="top">__constant__ double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="config__parameter_8h.html#ac61e25b7a183ba32f5a5e7a034e56189">mat_f_sml_min</a></td></tr>
@@ -1720,14 +1717,14 @@ Variables</h2></td></tr>
 <div class="line"><a name="l01303"></a><span class="lineno"> 1303</span>&#160;<span class="preprocessor">#if DIM &gt; 1</span></div>
 <div class="line"><a name="l01304"></a><span class="lineno"> 1304</span>&#160;            fprintf(stdout, <span class="stringliteral">&quot;  y: %e&quot;</span>, <a class="code" href="miluph_8cu.html#ae8a81884fe1ed60eefa06f22a2ec2f1b">pointmass_host</a>.<a class="code" href="struct_pointmass.html#a529f44eeb434351945ab40b7f39cf5cc">y</a>[i]);</div>
 <div class="line"><a name="l01305"></a><span class="lineno"> 1305</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
-<div class="line"><a name="l01306"></a><span class="lineno"> 1306</span>&#160;            fprintf(stdout, <span class="stringliteral">&quot;  z: %e&quot;</span>, <a class="code" href="miluph_8cu.html#ae8a81884fe1ed60eefa06f22a2ec2f1b">pointmass_host</a>.<a class="code" href="struct_pointmass.html#a74f56f36996385a1cf8f6046936099d9">z</a>[i]);</div>
+<div class="line"><a name="l01306"></a><span class="lineno"> 1306</span>&#160;            fprintf(stdout, <span class="stringliteral">&quot;  z: %e&quot;</span>, <a class="code" href="miluph_8cu.html#ae8a81884fe1ed60eefa06f22a2ec2f1b">pointmass_host</a>.z[i]);</div>
 <div class="line"><a name="l01307"></a><span class="lineno"> 1307</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l01308"></a><span class="lineno"> 1308</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l01309"></a><span class="lineno"> 1309</span>&#160;            fprintf(stdout, <span class="stringliteral">&quot;    vx: %e&quot;</span>, <a class="code" href="miluph_8cu.html#ae8a81884fe1ed60eefa06f22a2ec2f1b">pointmass_host</a>.<a class="code" href="struct_pointmass.html#abed92c37b890d737e368acd354efb4aa">vx</a>[i]);</div>
 <div class="line"><a name="l01310"></a><span class="lineno"> 1310</span>&#160;<span class="preprocessor">#if DIM &gt; 1</span></div>
 <div class="line"><a name="l01311"></a><span class="lineno"> 1311</span>&#160;            fprintf(stdout, <span class="stringliteral">&quot;  vy: %e&quot;</span>, <a class="code" href="miluph_8cu.html#ae8a81884fe1ed60eefa06f22a2ec2f1b">pointmass_host</a>.<a class="code" href="struct_pointmass.html#a1e2a138cc7697a8f665f8d66622b8739">vy</a>[i]);</div>
 <div class="line"><a name="l01312"></a><span class="lineno"> 1312</span>&#160;<span class="preprocessor">#if DIM &gt; 2</span></div>
-<div class="line"><a name="l01313"></a><span class="lineno"> 1313</span>&#160;            fprintf(stdout, <span class="stringliteral">&quot;  vz: %e&quot;</span>, <a class="code" href="miluph_8cu.html#ae8a81884fe1ed60eefa06f22a2ec2f1b">pointmass_host</a>.<a class="code" href="struct_pointmass.html#ad354bfcce4f5223fc5dda341828be458">vz</a>[i]);</div>
+<div class="line"><a name="l01313"></a><span class="lineno"> 1313</span>&#160;            fprintf(stdout, <span class="stringliteral">&quot;  vz: %e&quot;</span>, <a class="code" href="miluph_8cu.html#ae8a81884fe1ed60eefa06f22a2ec2f1b">pointmass_host</a>.vz[i]);</div>
 <div class="line"><a name="l01314"></a><span class="lineno"> 1314</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l01315"></a><span class="lineno"> 1315</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l01316"></a><span class="lineno"> 1316</span>&#160;            fprintf(stdout, <span class="stringliteral">&quot;    mass: %e&quot;</span>, <a class="code" href="miluph_8cu.html#ae8a81884fe1ed60eefa06f22a2ec2f1b">pointmass_host</a>.<a class="code" href="struct_pointmass.html#aab9fff20d20369762e79a0f13f544c0b">m</a>[i]);</div>
@@ -1987,10 +1984,8 @@ Variables</h2></td></tr>
 <div class="ttc" id="astruct_pointmass_html_a1e2a138cc7697a8f665f8d66622b8739"><div class="ttname"><a href="struct_pointmass.html#a1e2a138cc7697a8f665f8d66622b8739">Pointmass::vy</a></div><div class="ttdeci">double * vy</div><div class="ttdoc">y-component of velocity of pointmass</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00276">miluph.h:276</a></div></div>
 <div class="ttc" id="astruct_pointmass_html_a529f44eeb434351945ab40b7f39cf5cc"><div class="ttname"><a href="struct_pointmass.html#a529f44eeb434351945ab40b7f39cf5cc">Pointmass::y</a></div><div class="ttdeci">double * y</div><div class="ttdoc">y-coordinate of pointmass</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00269">miluph.h:269</a></div></div>
 <div class="ttc" id="astruct_pointmass_html_a66b7cf77e93a25037dfd1db0a873774f"><div class="ttname"><a href="struct_pointmass.html#a66b7cf77e93a25037dfd1db0a873774f">Pointmass::rmax</a></div><div class="ttdeci">double * rmax</div><div class="ttdoc">maximum distance to pointmass before particle gets deactivated</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00293">miluph.h:293</a></div></div>
-<div class="ttc" id="astruct_pointmass_html_a74f56f36996385a1cf8f6046936099d9"><div class="ttname"><a href="struct_pointmass.html#a74f56f36996385a1cf8f6046936099d9">Pointmass::z</a></div><div class="ttdeci">double * z</div><div class="ttdoc">z-coordinate of pointmass</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00271">miluph.h:271</a></div></div>
 <div class="ttc" id="astruct_pointmass_html_aab9fff20d20369762e79a0f13f544c0b"><div class="ttname"><a href="struct_pointmass.html#aab9fff20d20369762e79a0f13f544c0b">Pointmass::m</a></div><div class="ttdeci">double * m</div><div class="ttdoc">mass of pointmass</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00291">miluph.h:291</a></div></div>
 <div class="ttc" id="astruct_pointmass_html_abed92c37b890d737e368acd354efb4aa"><div class="ttname"><a href="struct_pointmass.html#abed92c37b890d737e368acd354efb4aa">Pointmass::vx</a></div><div class="ttdeci">double * vx</div><div class="ttdoc">x-component of velocity of pointmass</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00274">miluph.h:274</a></div></div>
-<div class="ttc" id="astruct_pointmass_html_ad354bfcce4f5223fc5dda341828be458"><div class="ttname"><a href="struct_pointmass.html#ad354bfcce4f5223fc5dda341828be458">Pointmass::vz</a></div><div class="ttdeci">double * vz</div><div class="ttdoc">z-component of velocity of pointmass</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00278">miluph.h:278</a></div></div>
 <div class="ttc" id="astruct_run_parameter_html_a731418d0a081d9538e3303dc4bbe9691"><div class="ttname"><a href="struct_run_parameter.html#a731418d0a081d9538e3303dc4bbe9691">RunParameter::config</a></div><div class="ttdeci">config_t config</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00406">miluph.h:406</a></div></div>
 <div class="ttc" id="astruct_run_parameter_html_adab1684f873e6568ba0603d3d17b6611"><div class="ttname"><a href="struct_run_parameter.html#adab1684f873e6568ba0603d3d17b6611">RunParameter::verbose</a></div><div class="ttdeci">int verbose</div><div class="ttdoc">flag if the user wants to be flooded with information</div><div class="ttdef"><b>Definition:</b> <a href="miluph_8h_source.html#l00389">miluph.h:389</a></div></div>
 </div><!-- fragment --><div class="dynheader">
@@ -5637,54 +5632,6 @@ LICENSE</h1>
 
 </div>
 </div>
-<a id="ae4f34a52048368f2c8eab168183b9191"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae4f34a52048368f2c8eab168183b9191">&#9670;&nbsp;</a></span>matYoungModulus</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">__constant__ double* matYoungModulus</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">extern</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="config__parameter_8cu_source.html#l00194">194</a> of file <a class="el" href="config__parameter_8cu_source.html">config_parameter.cu</a>.</p>
-
-</div>
-</div>
-<a id="ac0762c05eb2742959089a76d990ae3cf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac0762c05eb2742959089a76d990ae3cf">&#9670;&nbsp;</a></span>matYoungModulus_d</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">double* matYoungModulus_d</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">extern</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="config__parameter_8cu_source.html#l00193">193</a> of file <a class="el" href="config__parameter_8cu_source.html">config_parameter.cu</a>.</p>
-
-</div>
-</div>
 <a id="a23ffa4e4fb85e585927c399d704b8a81"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a23ffa4e4fb85e585927c399d704b8a81">&#9670;&nbsp;</a></span>matzeta</h2>
 
@@ -6057,7 +6004,7 @@ LICENSE</h1>
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_main/config_parameter.h File Reference<br />
-    Generated on Thu Dec 2 2021 07:05:15 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
+    Generated on Fri Dec 3 2021 07:05:15 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
   </small></address>
 </body>
 </html>
