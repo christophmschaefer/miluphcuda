@@ -16,8 +16,8 @@ x, y, rho = np.loadtxt(sys.argv[1], usecols=(0,1,5), unpack=True)
 fig, ax = plt.subplots()
 
 ax.scatter(x, y, c=rho, s=1.0)
-ax.set_xlim(0, 2.0)
-ax.set_ylim(0, 0.3)
+ax.set_xlim(-0.3, 2.0)
+ax.set_ylim(-0.3, 0.3)
 #ax.set_aspect('equal')
 
 fig.savefig(sys.argv[1]+".png")

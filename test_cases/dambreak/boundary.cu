@@ -33,12 +33,12 @@ extern __device__ double dt;
 
 #if GHOST_BOUNDARIES
 /* these are the locations and the properties of the boundary walls */
-const __device__ int numWalls = 1;
-__device__ double d[numWalls] = {-0.007};
-__device__ double nx[numWalls] = {0};
-__device__ double ny[numWalls] = {0};
+const __device__ int numWalls = 2;
+__device__ double d[numWalls] = {0.0, 0.0};
+__device__ double nx[numWalls] = {1,0};
+__device__ double ny[numWalls] = {0,1};
 #if DIM == 3
-__device__ double nz[numWalls] = {1};
+__device__ double nz[numWalls] = {0};
 #endif
     //boundary type: 0 = no slip, 1 = free slip
 #define NO_SLIP_BOUNDARY_TYPE 0
@@ -225,16 +225,18 @@ __global__ void BoundaryConditionsAfterRHS(int *interactions)
         p.ax[i] -= 1.327474512e+20 * p.x[i] / distance;
         p.ay[i] -= 1.327474512e+20 * p.y[i] / distance;
 #endif
-
-        // feel the Earth!
-        if (p.y[i] < 0.0) {
-            p.vy[i] = 0.0;
-            p.ay[i] = 0.0;
-        } else {
+        if (matId > 0) {
             p.ay[i] -= 9.81;
+        } else {
+            p.ax[i] = 0;
+            p.dxdt[i] = 0;
+            p.vx[i] = 0;
+#if DIM > 1
+            p.dydt[i] = 0;
+            p.ay[i] = 0;
+            p.vy[i] = 0;
+#endif
         }
-
-        // do not fall below y = 0.0
 
         /* let's stick to the ground */
 #if 0
@@ -686,7 +688,7 @@ __global__ void BoundaryForce(int *interactions)
                     distance += tiny;
                     distance = sqrt(distance);
                     if (r0/distance < 1) {
-                        ljf = p.m[i] *  D * (pow(r0/distance, 12) - pow(r0/distance, 4)) * pow(distance, -2);
+                        jf = p.m[i] *  D * (pow(r0/distance, 12) - pow(r0/distance, 4)) * pow(distance, -2);
                         p.ax[i] += ljf*dx;
                         p.ay[i] += ljf*dy;
                         p.az[i] += ljf*dz;

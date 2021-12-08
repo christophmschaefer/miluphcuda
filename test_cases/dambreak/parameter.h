@@ -32,7 +32,7 @@
 #define SOLID 0
 #define HYDRO 1
 // set additionally p to 0 if p < 0
-#define REAL_HYDRO 1
+#define REAL_HYDRO 0
 
 // add additional point masses to the simulation, read from file <filename>.mass
 // format is location velocities mass r_min r_max, where location and velocities are vectors with size DIM and
@@ -187,10 +187,10 @@
 // additional smoothing of the velocity field
 // hinders particle penetration
 // see Morris and Monaghan 1984
-#define XSPH 0
+#define XSPH 1
 
 // boundaries EXPERIMENTAL, please do not use this....
-#define BOUNDARY_PARTICLE_ID 1
+#define BOUNDARY_PARTICLE_ID -1
 #define GHOST_BOUNDARIES 0
 // note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions
 
