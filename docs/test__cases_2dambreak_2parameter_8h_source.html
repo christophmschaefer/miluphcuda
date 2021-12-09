@@ -88,7 +88,7 @@ $(function() {
 <div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="test__cases_2dambreak_2parameter_8h.html#aa8abfd58ea514228abd69d8f6330e91d">   32</a></span>&#160;<span class="preprocessor">#define SOLID 0</span></div>
 <div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="test__cases_2dambreak_2parameter_8h.html#af1850805984fe5f20591259a19db6ffd">   33</a></span>&#160;<span class="preprocessor">#define HYDRO 1</span></div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="comment">// set additionally p to 0 if p &lt; 0</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="test__cases_2dambreak_2parameter_8h.html#a928ab6961f94cefea5293da063126534">   35</a></span>&#160;<span class="preprocessor">#define REAL_HYDRO 1</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="test__cases_2dambreak_2parameter_8h.html#a928ab6961f94cefea5293da063126534">   35</a></span>&#160;<span class="preprocessor">#define REAL_HYDRO 0</span></div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="comment">// add additional point masses to the simulation, read from file &lt;filename&gt;.mass</span></div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="comment">// format is location velocities mass r_min r_max, where location and velocities are vectors with size DIM and</span></div>
@@ -243,10 +243,10 @@ $(function() {
 <div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;<span class="comment">// additional smoothing of the velocity field</span></div>
 <div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="comment">// hinders particle penetration</span></div>
 <div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="comment">// see Morris and Monaghan 1984</span></div>
-<div class="line"><a name="l00190"></a><span class="lineno"><a class="line" href="test__cases_2dambreak_2parameter_8h.html#af07f1752d895f5c82c7e916848b68af0">  190</a></span>&#160;<span class="preprocessor">#define XSPH 0</span></div>
+<div class="line"><a name="l00190"></a><span class="lineno"><a class="line" href="test__cases_2dambreak_2parameter_8h.html#af07f1752d895f5c82c7e916848b68af0">  190</a></span>&#160;<span class="preprocessor">#define XSPH 1</span></div>
 <div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160; </div>
 <div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;<span class="comment">// boundaries EXPERIMENTAL, please do not use this....</span></div>
-<div class="line"><a name="l00193"></a><span class="lineno"><a class="line" href="test__cases_2dambreak_2parameter_8h.html#a64dd6f503f7c5956e5fa96dc00bb29ed">  193</a></span>&#160;<span class="preprocessor">#define BOUNDARY_PARTICLE_ID 1</span></div>
+<div class="line"><a name="l00193"></a><span class="lineno"><a class="line" href="test__cases_2dambreak_2parameter_8h.html#a64dd6f503f7c5956e5fa96dc00bb29ed">  193</a></span>&#160;<span class="preprocessor">#define BOUNDARY_PARTICLE_ID -1</span></div>
 <div class="line"><a name="l00194"></a><span class="lineno"><a class="line" href="test__cases_2dambreak_2parameter_8h.html#a30232eebf26e43e871b0ee500134242f">  194</a></span>&#160;<span class="preprocessor">#define GHOST_BOUNDARIES 0</span></div>
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;<span class="comment">// note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions</span></div>
 <div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160; </div>
@@ -262,7 +262,7 @@ $(function() {
 <!-- start footer part -->
   <hr class="footer"/><address class="footer"><small>
     Miluphcuda  - /home/schaefer/src/miluphcuda_documentation/miluphcuda_main/test_cases/dambreak/parameter.h Source File<br />
-    Generated on Wed Dec 8 2021 07:05:13 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
+    Generated on Thu Dec 9 2021 07:05:12 by <a href="http://www.doxygen.org/index.html">Doxygen</a> 1.9.1
   </small></address>
 </body>
 </html>
