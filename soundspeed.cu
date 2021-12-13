@@ -62,6 +62,8 @@ __global__ void calculateSoundSpeed()
             p.cs[i] = vkep * scale_height;
         } else if (EOS_TYPE_IDEAL_GAS == matEOS[matId]) {
             p.cs[i] = sqrt(matPolytropicGamma[matId] * p.p[i] / p.rho[i]);
+        } else if (EOS_TYPE_ISOTHERMAL_GAS == matEOS[matId]) {
+            p.cs[i] = matIsothermalSoundSpeed[matId];
         } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
             rho = p.rho[i];
             eta = rho / matTillRho0[matId];

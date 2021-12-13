@@ -80,6 +80,7 @@ double *matCohesionCoefficient_d;
 double *matMeltEnergy_d;
 double *matDensityFloor_d;
 double *matEnergyFloor_d;
+double *matIsothermalSoundSpeed_d;
 // viscosity coefficients for Navier-Stokes
 double *matnu_d;
 double *matalpha_shakura_d;
@@ -261,6 +262,7 @@ __constant__ double *matTillBeta;
 __constant__ double *matcsLimit;
 __constant__ int *materialId;
 __constant__ double *matRhoLimit;
+__constant__ double *matIsothermalSoundSpeed;
 __constant__ double *matN;
 __constant__ double *matCohesion;
 __constant__ double *matCohesionDamaged;
@@ -381,6 +383,7 @@ void transferMaterialsToGPU()
         double *till_alpha = (double*)calloc(numberOfElements, sizeof(double));
         double *till_beta = (double*)calloc(numberOfElements, sizeof(double));
         double *csLimit = (double*)calloc(numberOfElements, sizeof(double));
+        double *isothermal_cs = (double*)calloc(numberOfElements, sizeof(double));
         // begin of ANEOS allocations in host memory (global variables, defined in 'aneos.cu')
         g_eos_is_aneos = (int*)calloc(numberOfElements, sizeof(int));
         g_aneos_tab_file = (const char**)calloc(numberOfElements, sizeof(const char*));     // not necessary to allocate (and free) mem for individual strings - this should be managed by libconfig
@@ -528,6 +531,7 @@ void transferMaterialsToGPU()
             }
             config_setting_lookup_float(subset, "polytropic_K", &polytropic_K[ID]);
             config_setting_lookup_float(subset, "polytropic_gamma", &polytropic_gamma[ID]);
+            config_setting_lookup_float(subset, "isothermal_soundspeed", &isothermal_cs[ID]);
             config_setting_lookup_float(subset, "bulk_modulus", &bulk_modulus[ID]);
             config_setting_lookup_float(subset, "shear_modulus", &shear_modulus[ID]);
             config_setting_lookup_float(subset, "yield_stress", &yield_stress[ID]);
@@ -818,6 +822,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matInternalFriction_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matInternalFrictionDamaged_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matRho0_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matIsothermalSoundSpeed_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matTillRho0_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matTillE0_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matTillEiv_d, numberOfElements*sizeof(double)));
@@ -916,6 +921,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpy(matInternalFriction_d, internal_friction, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matInternalFrictionDamaged_d, internal_friction_damaged, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matRho0_d, rho_0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matIsothermalSoundSpeed_d, isothermal_cs, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matTillRho0_d, till_rho_0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matTillE0_d, till_E_0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matTillEcv_d, till_E_cv, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
@@ -1070,6 +1076,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(matInternalFriction, &matInternalFriction_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matInternalFrictionDamaged, &matInternalFrictionDamaged_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matRho0, &matRho0_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matIsothermalSoundSpeed, &matIsothermalSoundSpeed_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matTillRho0, &matTillRho0_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matTillE0, &matTillE0_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matTillEiv, &matTillEiv_d, sizeof(void*)));
@@ -1257,6 +1264,7 @@ void transferMaterialsToGPU()
                 case (EOS_TYPE_ISOTHERMAL_GAS):
                     strcpy(eos_type, "     Isothermal gas");
                     fprintf(stdout, "%s\n", eos_type);
+                    fprintf(stdout, "\t\t isothermal sound speed \t %e \n", isothermal_cs[i]);
                     break;
                 case (EOS_TYPE_LOCALLY_ISOTHERMAL_GAS):
                     strcpy(eos_type, "Locally isothermal gas");
@@ -1356,6 +1364,7 @@ void transferMaterialsToGPU()
         free(polytropic_gamma);
         free(n);
         free(rho_0);
+        free(isothermal_cs);
         free(rho_limit);
         free(till_A);
         free(till_B);

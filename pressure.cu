@@ -49,7 +49,8 @@ __global__ void calculatePressure() {
             p.p[i] = p.cs[i]*p.cs[i] * p.rho[i];
         } else if (EOS_TYPE_ISOTHERMAL_GAS == matEOS[matId]) {
             /* this is pure molecular hydrogen at 10 K */
-            p.p[i] = 41255.407 * p.rho[i];
+//            p.p[i] = 41255.407 * p.rho[i];
+            p.p[i] = p.cs[i]*p.cs[i] * p.rho[i];
         } else if (EOS_TYPE_MURNAGHAN == matEOS[matId] || EOS_TYPE_VISCOUS_REGOLITH == matEOS[matId]) {
             eta = p.rho[i] / matRho0[matId];
             if (eta < matRhoLimit[matId]) {

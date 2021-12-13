@@ -52,6 +52,7 @@ extern double *matporjutzi_n1_d;
 extern double *matporjutzi_n2_d;
 extern double *matcs_porous_d;
 extern double *matcs_solid_d;
+extern double *matisothermal_cs_d;
 extern int *crushcurve_style_d;
 
 extern double *matzeta_d;
@@ -112,6 +113,7 @@ extern double *matCohesionCoefficient_d;
 extern double *matMeltEnergy_d;
 extern double *matDensityFloor_d;
 extern double *matEnergyFloor_d;
+extern double *matIsothermalSoundSpeed_d;
 // ANEOS device variables
 extern int *aneos_n_rho_d;
 extern int *aneos_n_e_d;
@@ -159,6 +161,7 @@ extern __constant__ int *matnoi;
 extern __constant__ int *matEOS;
 extern __constant__ double *matPolytropicK;
 extern __constant__ double *matPolytropicGamma;
+extern __constant__ double *matIsothermalSoundSpeed;
 extern __constant__ double *matBeta;
 extern __constant__ double *matAlpha;
 extern __constant__ double *matBulkmodulus;
