@@ -39,6 +39,7 @@ __global__ void plasticity()
     register double shear, bulk, poissons_ratio, sz;
 #endif
     register double S_i[DIM][DIM];
+
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         matId = p_rhs.materialId[i];
@@ -119,7 +120,9 @@ __global__ void plasticityModel(void) {
     register double I1, J2, sqrt_J2;
     register double y, y_i, y_d, y_M, y_0, y_0_d, damage, e_melt;
     register double A, B;   // Drucker-Prager constants
-    double mu_i, mu_d;  // coefficients of internal friction
+    register double mu_i, mu_d;  // coefficients of internal friction
+    register int matId;
+    register double rho0, eta, ds_f;
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
@@ -216,8 +219,8 @@ __global__ void plasticityModel(void) {
         if (y_d < 0.0)
             y_d = 0.0;
 
-        // the actual yield strength Y is a weighted mean of Y_i and Y_d
-        // note: therefore potential melt-energy effects are also included in Y
+        // the actual yield strength y is a weighted mean of y_i and y_d
+        // note: therefore potential melt-energy effects are also included in y
         y = (1.0-damage) * y_i + damage * y_d;
 
         // always limit the yield strength to the intact value
@@ -235,8 +238,40 @@ __global__ void plasticityModel(void) {
         y_M = matYieldStress[p_rhs.materialId[i]];
         mu_i = matInternalFriction[p_rhs.materialId[i]];
 
+# if DENSITY_SOFTENING
+        // reduce strength by reducing the cohesion for low densities
+        matId = p_rhs.materialId[i];
+        if( matEOS[matId] == EOS_TYPE_MURNAGHAN ) {
+            rho0 = matRho0[matId];
+            eta = p.rho[i] / rho0;
+        } else if( matEOS[matId] == EOS_TYPE_JUTZI ) {
+            // work only with matrix densities for porous media
+            rho0 = matTillRho0[matId];
+            eta = p.rho[i] * p.alpha_jutzi[i] / rho0;
+        } else if( matEOS[matId] == EOS_TYPE_TILLOTSON ) {
+            rho0 = matTillRho0[matId];
+            eta = p.rho[i] / rho0;
+        } else {
+            printf("ERROR, this EOS_TYPE is not yet implemented with DENSITY_SOFTENING...\n");
+        }
+        // compute factor for density softening
+        if( eta >= 1.0 ) {
+            ds_f = 1.0;
+        } else if( eta > DS_RHO_LIMIT ) {
+            ds_f = pow( (eta-DS_RHO_LIMIT)/(1.0-DS_RHO_LIMIT), DS_ALPHA ) * (1.0-DS_GAMMA) + DS_GAMMA;
+        } else {
+            ds_f = pow( eta/DS_RHO_LIMIT, DS_BETA ) * DS_GAMMA;
+        }
+        // finally reduce cohesion
+        if( ds_f <= 1.0  &&  ds_f >= 0.0 ) {
+            y_0 *= ds_f;
+        } else {
+            printf("ERROR. Found density softening factor outside [0,1], with ds_f = %e...\n", ds_f);
+        }
+# endif
+
         // unlike the regular Collins model, the yield strength decreases to zero for p < 0,
-        // following a linear decline with slope = 1, i.e., the zero is always at -Y_0
+        // following a linear decline with slope = 1, i.e., the zero is always at -y_0
         if( p.p[i] > 0.0 ) {
             y = y_0 + mu_i * p.p[i]
                 / (1.0 + mu_i * p.p[i]  / (y_M - y_0) );
@@ -246,8 +281,8 @@ __global__ void plasticityModel(void) {
             y = 0.0;
         }
 
-        // let the yield strength decrease to zero for p < 0 following the regular Y_i curve,
-        // where the zero is at p_0 = -Y_0 (Y_M-Y_0) / (mu_i Y_M)
+        // let the yield strength decrease to zero for p < 0 following the regular y_i curve,
+        // where the zero is at p_0 = -y_0 (y_M-y_0) / (mu_i y_M)
 //        if ( p.p[i] > y_0*(y_0-y_M)/(mu_i*y_M) ) {
 //            y = y_0 + mu_i * p.p[i]
 //                / (1.0 + mu_i * p.p[i]  / (y_M - y_0) );
@@ -255,7 +290,7 @@ __global__ void plasticityModel(void) {
 //            y = 0.0;
 //        }
 
-        // also limit negative pressures to value at zero of yield strength curve (at -Y_0)
+        // also limit negative pressures to value at zero of yield strength curve (at -cohesion)
         if( p.p[i] < -y_0 )
             p.p[i] = -y_0;
 

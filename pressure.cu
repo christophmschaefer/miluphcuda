@@ -176,7 +176,7 @@ __global__ void calculatePressure() {
             double dp; 			/* pressure change for the calculation of dalphadp */
             double rho_0 = matTillRho0[matId];      /* parameters for Tillotson EOS -> calc pressure solid */
             double eta = p.rho[i] * p.alpha_jutzi[i] / rho_0;
-			int crushcurve_style = matcrushcurve_style[matId]; /* crushcurve_style from material.cfg -> 0 is the quadratic crush curve, 1 is the real/steep crush curve by jutzi */
+            int crushcurve_style = matcrushcurve_style[matId]; /* crushcurve_style from material.cfg -> 0 is the quadratic crush curve, 1 is the real/steep crush curve by jutzi */
             if (matEOS[matId] == EOS_TYPE_JUTZI) {
                 double alpha_till = matTillAlpha[matId];
                 double beta_till = matTillBeta[matId];
@@ -388,10 +388,42 @@ __global__ void calculatePressure() {
 #endif
 
 #if COLLINS_PLASTICITY_SIMPLE
-        // limit negative pressures to value at zero of yield strength curve (at -Y_0)
-        if( p.p[i] < -matCohesion[matId])
-            p.p[i] = -matCohesion[matId];
-#endif
+        double y_0 = matCohesion[matId];
+# if DENSITY_SOFTENING
+        // reduce strength by reducing the cohesion for low densities
+        double rho0, ds_f;
+        if( matEOS[matId] == EOS_TYPE_MURNAGHAN ) {
+            rho0 = matRho0[matId];
+            eta = p.rho[i] / rho0;
+        } else if( matEOS[matId] == EOS_TYPE_JUTZI ) {
+            // work only with matrix densities for porous media
+            rho0 = matTillRho0[matId];
+            eta = p.rho[i] * p.alpha_jutzi[i] / rho0;
+        } else if( matEOS[matId] == EOS_TYPE_TILLOTSON ) {
+            rho0 = matTillRho0[matId];
+            eta = p.rho[i] / rho0;
+        } else {
+            printf("ERROR, this EOS_TYPE is not yet implemented with DENSITY_SOFTENING...\n");
+        }
+        // compute factor for density softening
+        if( eta >= 1.0 ) {
+            ds_f = 1.0;
+        } else if( eta > DS_RHO_LIMIT ) {
+            ds_f = pow( (eta-DS_RHO_LIMIT)/(1.0-DS_RHO_LIMIT), DS_ALPHA ) * (1.0-DS_GAMMA) + DS_GAMMA;
+        } else {
+            ds_f = pow( eta/DS_RHO_LIMIT, DS_BETA ) * DS_GAMMA;
+        }
+        // finally reduce cohesion
+        if( ds_f <= 1.0  &&  ds_f >= 0.0 ) {
+            y_0 *= ds_f;
+        } else {
+            printf("ERROR. Found density softening factor outside [0,1], with ds_f = %e...\n", ds_f);
+        }
+# endif
+        // limit negative pressures to value at zero of yield strength curve (at -cohesion)
+        if( p.p[i] < -y_0)
+            p.p[i] = -y_0;
+#endif  // COLLINS_PLASTICITY_SIMPLE
 
 #if REAL_HYDRO
         if (p.p[i] < 0.0)
