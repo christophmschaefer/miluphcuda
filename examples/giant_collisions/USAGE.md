@@ -4,7 +4,7 @@ Giant Collision examples for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 22/Oct/2021
+last updated: 15/Nov/2021
 
 ----------------------------------------------------------------------------------
 
@@ -54,6 +54,8 @@ and 2h for *solid* on most current GPUs (benchmarked on a GTX 970).
     * directly open the created xdmf file and choose settings yourself
     * load the prepared Paraview state in `analyze-results/paraview.pvsm` (*File -> Load State*),
       and select the created `paraview.xdmf` file under *Choose File Names*
+        (note: if your Paraview version is not compatible with the state file version (check the first
+        few lines of paraview.pvsm), either try a closer Paraview version, or load paraview.xdmf directly)
 
 * Compare your results (e.g., visualized with Paraview) to the animations in `expected-results/`,
   which show the interior structure of the colliding bodies (cut views) for various quantities.
