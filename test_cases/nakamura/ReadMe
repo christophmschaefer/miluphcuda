@@ -8,15 +8,22 @@ How to run it:
 
 (i)   execute create_input.sh in directory test_cases/nakamura/input
 (ii)  compile miluphcuda with the parameter.h file from the test_cases/nakamura directory
-(iii) copy input/impact.0000 to test_cases/nakamura and run run.sh
-(iv)  wait
-(v)   create a paraview.xdmf file with utils/postprocessing/create_xdmf.py (run without arguments)
-(vi)  visualise the data with Paraview: load the state file nakamura.pvsm, and from there paraview.xdmf
+(iii) copy input/impact.0000 to test_cases/nakamura and execute run.sh
+(iv)  get a large coffee and wait
 
 The simulation typically runs for several hours and produces 250 output files (500 MB each).
+
+
+How to visualize results with Paraview:
+
+(i)  create a paraview.xdmf file with utils/postprocessing/create_xdmf.py (run without arguments)
+(ii) start Paraview, load the state file nakamura.pvsm, and from there paraview.xdmf
+     (note: if your Paraview version is not compatible with the state file version (check the first few lines
+     of nakamura.pvsm), either try a closer Paraview version, or load paraview.xdmf directly from Paraview)
 
 
 Christoph Schaefer, Christoph Burger
 ch.schaefer@uni-tuebingen.de
 
-last updated: 2021-05-16
+last updated: 15/Nov/2021
+

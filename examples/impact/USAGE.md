@@ -4,7 +4,7 @@ Impact example for miluphcuda
 Christoph Burger  
 christoph.burger@uni-tuebingen.de
 
-last updated: 22/Oct/2021
+last updated: 15/Nov/2021
 
 ----------------------------------------------------------------------------------
 
@@ -57,7 +57,9 @@ The scenario uses ~60k SPH particles, with a runtime on the order of one hour on
     * directly open the created xdmf file and choose settings yourself
     * load the prepared Paraview state in `analyze-results/paraview.pvsm` (*File -> Load State*),
       and select the created paraview.xdmf file under *Choose File Names*
-      (note that this shows you a slice of the target by default, for better visibility of the cratering process)
+      note that this shows you a slice of the target by default, for better visibility of the cratering process
+        (note: if your Paraview version is not compatible with the state file version (check the first
+        few lines of paraview.pvsm), either try a closer Paraview version, or load paraview.xdmf directly)
 
 * Compare your results (e.g., visualized with Paraview) to the animations in `expected-results/animations/`,
   which show the cratering process (a sclice of the target) for various quantities.
