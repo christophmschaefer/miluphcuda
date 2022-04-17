@@ -518,15 +518,20 @@ void transferMaterialsToGPU()
             }
 #endif
 #if ARTIFICIAL_STRESS
-            subset = config_setting_get_member(material, "artificial_stress");
+            if( !(subset = config_setting_get_member(material, "artificial_stress")) ) {
+                fprintf(stderr, "Error reading material config file. Subgroup 'artificial_stress' is missing for material with ID %d.\n", ID);
+                exit(EXIT_FAILURE);
+            }
             config_setting_lookup_float(subset, "exponent_tensor", &exponent_tensor[ID]);
             config_setting_lookup_float(subset, "epsilon_stress", &epsilon_stress[ID]);
             config_setting_lookup_float(subset, "mean_particle_distance", &mean_particle_distance[ID]);
 #endif
 #if NAVIER_STOKES
-            subset = config_setting_get_member(material, "physical_viscosity");
-            // note nu and eta depend via density
-            // nu = eta/rho
+            if( !(subset = config_setting_get_member(material, "physical_viscosity")) ) {
+                fprintf(stderr, "Error reading material config file. Subgroup 'physical_viscosity' is missing for material with ID %d.\n", ID);
+                exit(EXIT_FAILURE);
+            }
+            // note nu and eta depend via density: nu = eta/rho
             config_setting_lookup_float(subset, "eta", &eta[ID]);
             config_setting_lookup_float(subset, "zeta", &zeta[ID]);
   	        config_setting_lookup_float(subset, "alpha_shakura", &alpha_shakura[ID]);
@@ -542,10 +547,13 @@ void transferMaterialsToGPU()
             }
 #endif
 
-            // read group eos
-            subset = config_setting_get_member(material, "eos");
+            // read group 'eos'
+            if( !(subset = config_setting_get_member(material, "eos")) ) {
+                fprintf(stderr, "Error reading material config file. Subgroup 'eos' is missing for material with ID %d.\n", ID);
+                exit(EXIT_FAILURE);
+            }
             if( !config_setting_lookup_int(subset, "type", &eos[ID]) ) {
-                fprintf(stderr, "ERROR. Each material needs an eos.type in the material config file.\n");
+                fprintf(stderr, "Error. Each material needs an eos.type in the material config file.\n");
                 exit(EXIT_FAILURE);
             }
             config_setting_lookup_float(subset, "polytropic_K", &polytropic_K[ID]);
