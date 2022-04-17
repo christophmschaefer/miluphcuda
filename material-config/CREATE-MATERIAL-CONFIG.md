@@ -1,7 +1,7 @@
 How to set up the material config file for miluphcuda
 =====================================================
 
-last updated: 16/Aug/2021
+last updated: 17/Apr/2022
 
 Christoph Burger, Christoph Schäfer  
 christoph.burger@uni-tuebingen.de
@@ -196,13 +196,27 @@ Which elastic constants are required depends on the used material model and equa
 The shear modulus is always required for solid simulations (`SOLID` is set in parameter.h).
 The bulk modulus may be required for sound speed estimates, the Grady-Kipp fragmentation model, etc.
 
-        Key                 Type    Default
-        ___________________________________
+        Key                 Type      Default
+        _____________________________________
 
-        eos.bulk_modulus    float   0.
-        eos.shear_modulus   float   0.
+        eos.bulk_modulus    float     0.
+        eos.shear_modulus   float     0.
 
 Note: The other two elastic constants (Young's modulus and Poisson's ratio) are computed from them as needed.
+
+--------------------------------
+
+**Artificial viscosity**
+
+This is the standard artificial viscosity.
+
+You need to set `ARTIFICIAL_VISCOSITY` in parameter.h (at compile time), and in the material config file:
+
+        Key                             Type      Default
+        _________________________________________________
+
+        artificial_viscosity.alpha      float     1.
+        artificial_viscosity.beta       float     2.
 
 --------------------------------
 

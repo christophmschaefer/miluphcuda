@@ -510,9 +510,12 @@ void transferMaterialsToGPU()
             config_setting_lookup_float(material, "factor_sml_max", &f_sml_max[ID]);
 #endif
 #if ARTIFICIAL_VISCOSITY
-            subset = config_setting_get_member(material, "artificial_viscosity");
-            config_setting_lookup_float(subset, "alpha", &alpha[ID]);
-            config_setting_lookup_float(subset, "beta", &beta[ID]);
+            alpha[ID] = 1.0;   // set defaults
+            beta[ID] = 2.0;
+            if( subset = config_setting_get_member(material, "artificial_viscosity") ) {
+                config_setting_lookup_float(subset, "alpha", &alpha[ID]);
+                config_setting_lookup_float(subset, "beta", &beta[ID]);
+            }
 #endif
 #if ARTIFICIAL_STRESS
             subset = config_setting_get_member(material, "artificial_stress");
@@ -1139,10 +1142,10 @@ void transferMaterialsToGPU()
         fprintf(stdout, "\nUsing grav. constant: %e\n", grav_const);
 
         fprintf(stdout, "\nUsing following values for general parameters:\n");
-        fprintf(stdout, "    material no.    smoothing length or number of interactions    density floor    energy floor        alpha        beta\n");
-        fprintf(stdout, "    ------------    ------------------------------------------    -------------    ------------    ---------    --------\n");
+        fprintf(stdout, "    material no.    smoothing length or number of interactions    density floor    energy floor\n");
+        fprintf(stdout, "    ------------    ------------------------------------------    -------------    ------------\n");
         for (i = 0; i < numberOfMaterials; i++) {
-            fprintf(stdout, "    %12d    %28e  or  %8d    %13g    %12g    %9g    %8g\n", i, sml[i], noi[i], density_floor[i], energy_floor[i], alpha[i], beta[i]);
+            fprintf(stdout, "    %12d    %28e  or  %8d    %13g    %12g\n", i, sml[i], noi[i], density_floor[i], energy_floor[i]);
         }
 #if VARIABLE_SML
         fprintf(stdout, "    material no.    factor for min and max smoothing length and corresponding smoothing lengths\n");
@@ -1150,6 +1153,14 @@ void transferMaterialsToGPU()
         for (i = 0; i < numberOfMaterials; i++) {
             fprintf(stdout, "    %12d    factor_min: %e -> minimum sml: %e    factor_max: %e -> maximun sml: %e\n",
                     i, f_sml_min[i], f_sml_min[i]*sml[i], f_sml_max[i], f_sml_max[i]*sml[i]);
+        }
+#endif
+#if ARTIFICIAL_VISCOSITY
+        fprintf(stdout, "\nUsing following values for artificial viscosity:\n");
+        fprintf(stdout, "    material no.           alpha            beta\n");
+        fprintf(stdout, "    ------------    ------------    ------------\n");
+        for (i = 0; i < numberOfMaterials; i++) {
+            fprintf(stdout, "    %12d    %12g    %12g\n", i, alpha[i], beta[i]);
         }
 #endif
 #if PLASTICITY
@@ -1375,6 +1386,7 @@ void transferMaterialsToGPU()
         free(mean_particle_distance);
 #endif
         free(alpha);
+        free(beta);
         free(nu);
         free(eta);
         free(zeta);
@@ -1390,7 +1402,6 @@ void transferMaterialsToGPU()
         free(noi);
         free(eos);
         free(alpha_shakura);
-        free(beta);
         free(polytropic_K);
         free(polytropic_gamma);
         free(n);
