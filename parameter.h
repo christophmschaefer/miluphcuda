@@ -129,15 +129,15 @@
 //       In addition, negative pressures are limited to the zero of the yield strength
 //       curve at -cohesion (i.e., are set to this value when they get more negative).
 #define COLLINS_PLASTICITY_SIMPLE 0
-#define DENSITY_SOFTENING 0
-#define DS_ALPHA 0.25
-#define DS_BETA 10.0
-#define DS_GAMMA 0.5
-#define DS_RHO_LIMIT 0.85   // in units of rho0
-
 // Note: The deviator stress tensor is additionally reduced by FRAGMENTATION (i.e., damage) only if
 //       DAMAGE_ACTS_ON_S is set. For most plasticity models it depends on the use case whether this
 //       is desired, only for COLLINS_PLASTICITY it is not reasonable (and therefore not allowed).
+
+// Additional strength reduction for low-density states (below the reference density),
+// by reducing the cohesion, and by that the whole yield envelope.
+// Cohesion is increasingly reduced for decreasing density, where the shape of the curve that defines
+// the reducing factor is set by several parameters in the material config file (see there).
+#define LOW_DENSITY_WEAKENING 0
 
 // model regolith as viscous fluid (warning: experimental option)
 #define VISCOUS_REGOLITH 0

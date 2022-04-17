@@ -237,6 +237,13 @@ static void print_compile_information(void)
 #endif
     fprintf(stdout, "Plasticity model from Johnson - Cook:\t   %s\n", yesno);
 
+#if LOW_DENSITY_WEAKENING
+    strcpy(yesno, "yes");
+#else
+    strcpy(yesno, "no");
+#endif
+    fprintf(stdout, "Low-density weakening model:\t   %s\n", yesno);
+
     fprintf(stdout, "Consistency switches for the SPH algorithm:\n");
 #if SHEPARD_CORRECTION
     strcpy(yesno, "yes");

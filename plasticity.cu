@@ -122,7 +122,7 @@ __global__ void plasticityModel(void) {
     register double A, B;   // Drucker-Prager constants
     register double mu_i, mu_d;  // coefficients of internal friction
     register int matId;
-    register double rho0, eta, ds_f;
+    register double rho0, eta, ldw_f, ldw_eta_limit, ldw_alpha, ldw_beta, ldw_gamma;
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
@@ -238,7 +238,7 @@ __global__ void plasticityModel(void) {
         y_M = matYieldStress[p_rhs.materialId[i]];
         mu_i = matInternalFriction[p_rhs.materialId[i]];
 
-# if DENSITY_SOFTENING
+# if LOW_DENSITY_WEAKENING
         // reduce strength by reducing the cohesion for low densities
         matId = p_rhs.materialId[i];
         if( matEOS[matId] == EOS_TYPE_MURNAGHAN ) {
@@ -252,21 +252,27 @@ __global__ void plasticityModel(void) {
             rho0 = matTillRho0[matId];
             eta = p.rho[i] / rho0;
         } else {
-            printf("ERROR, this EOS_TYPE is not yet implemented with DENSITY_SOFTENING...\n");
+            printf("ERROR, this EOS_TYPE is not yet implemented with LOW_DENSITY_WEAKENING...\n");
         }
-        // compute factor for density softening
+        // compute factor for low-density weakening
         if( eta >= 1.0 ) {
-            ds_f = 1.0;
-        } else if( eta > DS_RHO_LIMIT ) {
-            ds_f = pow( (eta-DS_RHO_LIMIT)/(1.0-DS_RHO_LIMIT), DS_ALPHA ) * (1.0-DS_GAMMA) + DS_GAMMA;
+            ldw_f = 1.0;
         } else {
-            ds_f = pow( eta/DS_RHO_LIMIT, DS_BETA ) * DS_GAMMA;
+            ldw_eta_limit = matLdwEtaLimit[matId];
+            ldw_gamma = matLdwGamma[matId];
+            if( eta > ldw_eta_limit  ||  ldw_eta_limit <= 0.0 ) {
+                ldw_alpha = matLdwAlpha[matId];
+                ldw_f = pow( (eta-ldw_eta_limit)/(1.0-ldw_eta_limit), ldw_alpha ) * (1.0-ldw_gamma) + ldw_gamma;
+            } else {
+                ldw_beta = matLdwBeta[matId];
+                ldw_f = pow( eta/ldw_eta_limit, ldw_beta ) * ldw_gamma;
+            }
         }
         // finally reduce cohesion
-        if( ds_f <= 1.0  &&  ds_f >= 0.0 ) {
-            y_0 *= ds_f;
+        if( ldw_f <= 1.0  &&  ldw_f >= 0.0 ) {
+            y_0 *= ldw_f;
         } else {
-            printf("ERROR. Found density softening factor outside [0,1], with ds_f = %e...\n", ds_f);
+            printf("ERROR. Found low-density weakening factor outside [0,1], with ldw_f = %e...\n", ldw_f);
         }
 # endif
 

@@ -367,6 +367,33 @@ The following parameters are currently only needed for some pre-processing tools
 
 --------------------------------
 
+**Low-density weakening model**
+
+Additional strength reduction for low-density states (below the reference density), by reducing the cohesion,
+and by that the whole yield envelope. Cohesion is increasingly reduced for decreasing density, where the shape
+of the curve that defines the reducing factor is set by the parameters below.  
+It drops from 1 to gamma between rho0 and eta_limit, with slope alpha, then it drops further from gamma to zero
+between eta_limit and rho=0, with slope beta.  
+When combined with porosity, all densities are matrix densities.
+
+You need to set `LOW_DENSITY_WEAKENING` in parameter.h (at compile time), and in the material config file:
+
+        Key                                 Type    Default   Details
+        _______________________________________________________________
+
+        low_density_weakening.eta_limit     float   0.        defines transition density rho between
+                                                              power law regimes, with eta = rho/rho0,
+                                                              where rho0 is the reference density
+                                                              (i.e., eta_limit in [0,1])
+        low_density_weakening.alpha         float   0.        power-law exponent above eta_limit
+        low_density_weakening.beta          float   0.        power-law exponent below eta_limit
+        low_density_weakening.gamma         float   1.        sets cohesion-reducing factor at eta_limit
+                                                              (i.e., gamma in [0,1])
+
+Note: The defaults simply disable all low-density weakening for the respective material.
+
+--------------------------------
+
 **Porosity model: P-alpha**
 
 The P-alpha porosity model can be used together with several EoS, which all have a distinct *eos.type*
