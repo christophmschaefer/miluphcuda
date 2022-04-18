@@ -133,10 +133,12 @@
 //       DAMAGE_ACTS_ON_S is set. For most plasticity models it depends on the use case whether this
 //       is desired, only for COLLINS_PLASTICITY it is not reasonable (and therefore not allowed).
 
-// Additional strength reduction for low-density states (below the reference density),
-// by reducing the cohesion, and by that the whole yield envelope.
-// Cohesion is increasingly reduced for decreasing density, where the shape of the curve that defines
+// Additional strength reduction for low-density states (below the reference density).
+// For most models, strength is reduced by reducing the cohesion, and by that the whole yield envelope.
+// For COLLINS_PLASTICITY only the damaged cohesion is reduced, vor VON_MISES_PLASTICITY all (constant) yield strength is reduced.
+// Strength reduction increases with decreasing density, where the shape of the curve that defines
 // the reducing factor is set by several parameters in the material config file (see there).
+// Works for all plasticity models above (not the experimental ones below).
 #define LOW_DENSITY_WEAKENING 0
 
 // model regolith as viscous fluid (warning: experimental option)

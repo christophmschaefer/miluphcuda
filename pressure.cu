@@ -404,7 +404,7 @@ __global__ void calculatePressure() {
             rho0 = matTillRho0[matId];
             eta = p.rho[i] / rho0;
         } else {
-            printf("ERROR, this EOS_TYPE is not yet implemented with LOW_DENSITY_WEAKENING...\n");
+            printf("ERROR. EOS_TYPE %d is not yet implemented with LOW_DENSITY_WEAKENING.\n", matEOS[matId]);
         }
         // compute factor for low-density weakening
         if( eta >= 1.0 ) {
@@ -420,7 +420,7 @@ __global__ void calculatePressure() {
                 ldw_f = pow( eta/ldw_eta_limit, ldw_beta ) * ldw_gamma;
             }
         }
-        // finally reduce cohesion
+        // finally reduce cohesion (locally)
         if( ldw_f <= 1.0  &&  ldw_f >= 0.0 ) {
             y_0 *= ldw_f;
         } else {
@@ -436,5 +436,5 @@ __global__ void calculatePressure() {
         if (p.p[i] < 0.0)
             p.p[i] = 0.0;
 #endif
-    }
+    }   // particle loop
 }

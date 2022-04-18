@@ -97,6 +97,10 @@
 # error Cannot use another PLASTICITY model along with JC_PLASTICITY at the same time. Decide for one and recompile.
 #endif
 
+#if COLLINS_PLASTICITY && LOW_DENSITY_WEAKENING && !FRAGMENTATION
+# error You want to use COLLINS_PLASTICITY together with LOW_DENSITY_WEAKENING, but without FRAGMENTATION. Makes no sense since LOW_DENSITY_WEAKENING only affects the damaged yield curve (its cohesion).
+#endif
+
 
 // checks for fragmentation model
 #if FRAGMENTATION && !SOLID
