@@ -45,7 +45,7 @@
 
 // integrate the energy equation
 // when setting up a SOLID simulation with Tillotson or ANEOS, it must be set to 1
-#define INTEGRATE_ENERGY 0
+#define INTEGRATE_ENERGY 1
 
 // integrate the continuity equation
 // if set to 0, the density will be calculated using the standard SPH sum \sum_i m_j W_ij
@@ -89,7 +89,7 @@
 
 // consistency switches
 // for zeroth order consistency
-#define SHEPARD_CORRECTION 0
+#define SHEPARD_CORRECTION 1
 // for linear consistency
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
 #define TENSORIAL_CORRECTION 0
@@ -133,11 +133,19 @@
 //       DAMAGE_ACTS_ON_S is set. For most plasticity models it depends on the use case whether this
 //       is desired, only for COLLINS_PLASTICITY it is not reasonable (and therefore not allowed).
 
-// model regolith as viscous fluid -> experimental setup, only for powerusers
+// Additional strength reduction for low-density states (below the reference density).
+// For most models, strength is reduced by reducing the cohesion, and by that the whole yield envelope.
+// For COLLINS_PLASTICITY only the damaged cohesion is reduced, vor VON_MISES_PLASTICITY all (constant) yield strength is reduced.
+// Strength reduction increases with decreasing density, where the shape of the curve that defines
+// the reducing factor is set by several parameters in the material config file (see there).
+// Works for all plasticity models above (not the experimental ones below).
+#define LOW_DENSITY_WEAKENING 0
+
+// model regolith as viscous fluid (warning: experimental option)
 #define VISCOUS_REGOLITH 0
-// use Bui model for regolith -> experimental setup, only for powerusers
+// use Bui model for regolith (warning: experimental option)
 #define PURE_REGOLITH 0
-// use Johnson-Cook plasticity model -> experimental setup, only for powerusers
+// use Johnson-Cook plasticity model (warning: experimental option)
 #define JC_PLASTICITY 0
 
 // Porosity models:
@@ -155,7 +163,7 @@
 #define MAX_NUM_INTERACTIONS 256
 
 // if VARIABLE_SML is set, the smoothing length (sml) is not fixed in time - choose either:
-//   FIXED_NOI for a fixed number of interaction partners, following the ansatz by Hernquist and Katz
+//   FIXED_NOI for a fixed number of interaction partners, following the ansatz by Hernquist & Katz (1989)
 //   or
 //   INTEGRATE_SML if you want to additionally integrate an ODE for the sml, following the ansatz by Benz:
 //                 d sml / dt  = sml/DIM * 1/rho  \nabla velocity
@@ -166,7 +174,8 @@
 // (if VARIABLE_SML is not set the individual smls remain constant)
 #define READ_INITIAL_SML_FROM_PARTICLE_FILE 0
 
-// correction terms for sml calculation: adds gradient of the smoothing length to continuity equation, equation of motion, internal energy equation
+// correction terms for sml calculation (warning: experimental option)
+// adds gradient of the smoothing length to continuity equation, equation of motion, energy equation
 #define SML_CORRECTION 0
 
 // if set to 0, h = (h_i + h_j)/2  is used to calculate W_ij

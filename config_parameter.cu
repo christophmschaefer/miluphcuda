@@ -85,6 +85,11 @@ double *matIsothermalSoundSpeed_d;
 double *matnu_d;
 double *matalpha_shakura_d;
 double *matzeta_d;
+// low-density weakening parameters
+double *matLdwEtaLimit_d;
+double *matLdwAlpha_d;
+double *matLdwBeta_d;
+double *matLdwGamma_d;
 
 #if ARTIFICIAL_STRESS
 double *matexponent_tensor_d;
@@ -273,6 +278,10 @@ __constant__ double *matCohesionCoefficient;
 __constant__ double *matMeltEnergy;
 __constant__ double *matDensityFloor;
 __constant__ double *matEnergyFloor;
+__constant__ double *matLdwEtaLimit;
+__constant__ double *matLdwAlpha;
+__constant__ double *matLdwBeta;
+__constant__ double *matLdwGamma;
 __constant__ double *tensorialCorrectionMatrix;
 __constant__ double *tensorialCorrectiondWdrr;
 __device__ int numParticles;
@@ -432,6 +441,12 @@ void transferMaterialsToGPU()
         double *epsilon_stress = (double*) calloc(numberOfElements, sizeof(double));
         double *mean_particle_distance = (double*) calloc(numberOfElements, sizeof(double));
 #endif
+#if LOW_DENSITY_WEAKENING
+        double *ldw_eta_limit = (double*)calloc(numberOfElements, sizeof(double));
+        double *ldw_alpha = (double*)calloc(numberOfElements, sizeof(double));
+        double *ldw_beta = (double*)calloc(numberOfElements, sizeof(double));
+        double *ldw_gamma = (double*)calloc(numberOfElements, sizeof(double));
+#endif
 #if PALPHA_POROSITY
         double *porjutzi_p_elastic = (double*)calloc(numberOfElements, sizeof(double));
         double *porjutzi_p_transition = (double*)calloc(numberOfElements, sizeof(double));
@@ -480,6 +495,7 @@ void transferMaterialsToGPU()
         double *CV = (double*)calloc(numberOfElements, sizeof(double));
 #endif
 
+
         // read material config file
         for (i = 0; i < numberOfElements; ++i) {
             material = config_setting_get_elem(materials, i);
@@ -496,37 +512,51 @@ void transferMaterialsToGPU()
             config_setting_lookup_float(material, "factor_sml_min", &f_sml_min[ID]);
             config_setting_lookup_float(material, "factor_sml_max", &f_sml_max[ID]);
 #endif
-
 #if ARTIFICIAL_VISCOSITY
-            // read params for artificial_viscosity
-            subset = config_setting_get_member(material, "artificial_viscosity");
-            config_setting_lookup_float(subset, "alpha", &alpha[ID]);
-            config_setting_lookup_float(subset, "beta", &beta[ID]);
+            alpha[ID] = 1.0;   // set defaults
+            beta[ID] = 2.0;
+            if( subset = config_setting_get_member(material, "artificial_viscosity") ) {
+                config_setting_lookup_float(subset, "alpha", &alpha[ID]);
+                config_setting_lookup_float(subset, "beta", &beta[ID]);
+            }
 #endif
-
 #if ARTIFICIAL_STRESS
-            // read params for artificial_stress
-            subset = config_setting_get_member(material, "artificial_stress");
+            if( !(subset = config_setting_get_member(material, "artificial_stress")) ) {
+                fprintf(stderr, "Error reading material config file. Subgroup 'artificial_stress' is missing for material with ID %d.\n", ID);
+                exit(EXIT_FAILURE);
+            }
             config_setting_lookup_float(subset, "exponent_tensor", &exponent_tensor[ID]);
             config_setting_lookup_float(subset, "epsilon_stress", &epsilon_stress[ID]);
             config_setting_lookup_float(subset, "mean_particle_distance", &mean_particle_distance[ID]);
 #endif
-
 #if NAVIER_STOKES
-            // read params for Navier-Stokes
-            subset = config_setting_get_member(material, "physical_viscosity");
-            // note nu and eta depend via density
-            // nu = eta/rho
+            if( !(subset = config_setting_get_member(material, "physical_viscosity")) ) {
+                fprintf(stderr, "Error reading material config file. Subgroup 'physical_viscosity' is missing for material with ID %d.\n", ID);
+                exit(EXIT_FAILURE);
+            }
+            // note nu and eta depend via density: nu = eta/rho
             config_setting_lookup_float(subset, "eta", &eta[ID]);
             config_setting_lookup_float(subset, "zeta", &zeta[ID]);
   	        config_setting_lookup_float(subset, "alpha_shakura", &alpha_shakura[ID]);
             config_setting_lookup_float(subset, "nu", &nu[ID]);
 #endif
+#if LOW_DENSITY_WEAKENING
+            ldw_gamma[ID] = 1.0;    // set default
+            if( subset = config_setting_get_member(material, "low_density_weakening") ) {
+                config_setting_lookup_float(subset, "eta_limit", &ldw_eta_limit[ID]);
+                config_setting_lookup_float(subset, "alpha", &ldw_alpha[ID]);
+                config_setting_lookup_float(subset, "beta", &ldw_beta[ID]);
+                config_setting_lookup_float(subset, "gamma", &ldw_gamma[ID]);
+            }
+#endif
 
-            // read group eos
-            subset = config_setting_get_member(material, "eos");
+            // read group 'eos'
+            if( !(subset = config_setting_get_member(material, "eos")) ) {
+                fprintf(stderr, "Error reading material config file. Subgroup 'eos' is missing for material with ID %d.\n", ID);
+                exit(EXIT_FAILURE);
+            }
             if( !config_setting_lookup_int(subset, "type", &eos[ID]) ) {
-                fprintf(stderr, "ERROR. Each material needs an eos.type in the material config file.\n");
+                fprintf(stderr, "Error. Each material needs an eos.type in the material config file.\n");
                 exit(EXIT_FAILURE);
             }
             config_setting_lookup_float(subset, "polytropic_K", &polytropic_K[ID]);
@@ -626,7 +656,6 @@ void transferMaterialsToGPU()
             }
             config_setting_lookup_int(subset, "crushcurve_style", &crushcurve_style[ID]);
 #endif
-
 #if SIRONO_POROSITY
             config_setting_lookup_float(subset, "porsirono_K_0", &porsirono_K_0[ID]);
             config_setting_lookup_float(subset, "porsirono_rho_0", &porsirono_rho_0[ID]);
@@ -638,7 +667,6 @@ void transferMaterialsToGPU()
             config_setting_lookup_float(subset, "porsirono_phi0", &porsirono_phi0[ID]);
             config_setting_lookup_float(subset, "porsirono_delta", &porsirono_delta[ID]);
 #endif
-
 #if EPSALPHA_POROSITY
             config_setting_lookup_float(subset, "porepsilon_kappa", &porepsilon_kappa[ID]);
             config_setting_lookup_float(subset, "porepsilon_alpha_0", &porepsilon_alpha_0[ID]);
@@ -751,6 +779,7 @@ void transferMaterialsToGPU()
 
         }  // loop over materials
 
+
         // begin memory allocation on device
 #if PALPHA_POROSITY
         cudaVerify(cudaMalloc((void **)&matporjutzi_p_elastic_d, numberOfElements*sizeof(double)));
@@ -796,6 +825,12 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matexponent_tensor_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matepsilon_stress_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matmean_particle_distance_d, numberOfElements*sizeof(double)));
+#endif
+#if LOW_DENSITY_WEAKENING
+        cudaVerify(cudaMalloc((void **)&matLdwEtaLimit_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matLdwAlpha_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matLdwBeta_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matLdwGamma_d, numberOfElements*sizeof(double)));
 #endif
         //begin of ANEOS allocations in (global) device memory (everything linearized)
         cudaVerify(cudaMalloc((void **)&aneos_n_rho_d, numberOfElements*sizeof(int)));
@@ -999,7 +1034,16 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(matepsilon_stress, &matepsilon_stress_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matmean_particle_distance, &matmean_particle_distance_d, sizeof(void*)));
 #endif
-
+#if LOW_DENSITY_WEAKENING
+        cudaVerify(cudaMemcpy(matLdwEtaLimit_d, ldw_eta_limit, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matLdwAlpha_d, ldw_alpha, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matLdwBeta_d, ldw_beta, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matLdwGamma_d, ldw_gamma, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpyToSymbol(matLdwEtaLimit, &matLdwEtaLimit_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matLdwAlpha, &matLdwAlpha_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matLdwBeta, &matLdwBeta_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matLdwGamma, &matLdwGamma_d, sizeof(void*)));
+#endif
 #if PALPHA_POROSITY
         cudaVerify(cudaMemcpy(matporjutzi_p_elastic_d, porjutzi_p_elastic, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matporjutzi_p_transition_d, porjutzi_p_transition, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
@@ -1024,7 +1068,6 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(matcs_solid, &matcs_solid_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matcrushcurve_style, &matcrushcurve_style_d, sizeof(void*)));
 #endif
-
 #if SIRONO_POROSITY
         cudaVerify(cudaMemcpy(matporsirono_K_0_d, porsirono_K_0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matporsirono_rho_0_d, porsirono_rho_0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
@@ -1045,7 +1088,6 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(matporsirono_phi0, &matporsirono_phi0_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matporsirono_delta, &matporsirono_delta_d, sizeof(void*)));
 #endif
-
 #if EPSALPHA_POROSITY
         cudaVerify(cudaMemcpy(matporepsilon_kappa_d, porepsilon_kappa, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matporepsilon_alpha_0_d, porepsilon_alpha_0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
@@ -1115,10 +1157,10 @@ void transferMaterialsToGPU()
         fprintf(stdout, "\nUsing grav. constant: %e\n", grav_const);
 
         fprintf(stdout, "\nUsing following values for general parameters:\n");
-        fprintf(stdout, "    material no.    smoothing length or number of interactions    density floor    energy floor        alpha        beta\n");
-        fprintf(stdout, "    ------------    ------------------------------------------    -------------    ------------    ---------    --------\n");
+        fprintf(stdout, "    material no.    smoothing length or number of interactions    density floor    energy floor\n");
+        fprintf(stdout, "    ------------    ------------------------------------------    -------------    ------------\n");
         for (i = 0; i < numberOfMaterials; i++) {
-            fprintf(stdout, "    %12d    %28e  or  %8d    %13g    %12g    %9g    %8g\n", i, sml[i], noi[i], density_floor[i], energy_floor[i], alpha[i], beta[i]);
+            fprintf(stdout, "    %12d    %28e  or  %8d    %13g    %12g\n", i, sml[i], noi[i], density_floor[i], energy_floor[i]);
         }
 #if VARIABLE_SML
         fprintf(stdout, "    material no.    factor for min and max smoothing length and corresponding smoothing lengths\n");
@@ -1128,6 +1170,14 @@ void transferMaterialsToGPU()
                     i, f_sml_min[i], f_sml_min[i]*sml[i], f_sml_max[i], f_sml_max[i]*sml[i]);
         }
 #endif
+#if ARTIFICIAL_VISCOSITY
+        fprintf(stdout, "\nUsing following values for artificial viscosity:\n");
+        fprintf(stdout, "    material no.           alpha            beta\n");
+        fprintf(stdout, "    ------------    ------------    ------------\n");
+        for (i = 0; i < numberOfMaterials; i++) {
+            fprintf(stdout, "    %12d    %12g    %12g\n", i, alpha[i], beta[i]);
+        }
+#endif
 #if PLASTICITY
         fprintf(stdout, "\nUsing following values for the plasticity model:\n");
         fprintf(stdout, "    material no.    yield_stress        cohesion    cohesion_damaged    friction_angle    friction_angle_damaged    melt_energy\n");
@@ -1135,6 +1185,14 @@ void transferMaterialsToGPU()
         for (i = 0; i < numberOfMaterials; i++) {
             fprintf(stdout, "    %12d    %12g    %12g    %16g    %14g    %22g    %11g\n",
                     i, yield_stress[i], cohesion[i], cohesion_damaged[i], friction_angle[i], friction_angle_damaged[i], melt_energy[i]);
+        }
+#endif
+#if LOW_DENSITY_WEAKENING
+        fprintf(stdout, "\nUsing following values for low-density weakening:\n");
+        fprintf(stdout, "    material no.     eta_limit         alpha          beta         gamma\n");
+        fprintf(stdout, "    ------------    ----------    ----------    ----------    ----------\n");
+        for (i = 0; i < numberOfMaterials; i++) {
+            fprintf(stdout, "    %12d    %10g    %10g    %10g    %10g\n", i, ldw_eta_limit[i], ldw_alpha[i], ldw_beta[i], ldw_gamma[i]);
         }
 #endif
         fprintf(stdout, "\nUsing following values for the equation of state:\n");
@@ -1344,6 +1402,7 @@ void transferMaterialsToGPU()
         free(mean_particle_distance);
 #endif
         free(alpha);
+        free(beta);
         free(nu);
         free(eta);
         free(zeta);
@@ -1359,7 +1418,6 @@ void transferMaterialsToGPU()
         free(noi);
         free(eos);
         free(alpha_shakura);
-        free(beta);
         free(polytropic_K);
         free(polytropic_gamma);
         free(n);
@@ -1387,6 +1445,12 @@ void transferMaterialsToGPU()
         free(energy_floor);
 #if SOLID
         free(young_modulus);
+#endif
+#if LOW_DENSITY_WEAKENING
+        free(ldw_eta_limit);
+        free(ldw_alpha);
+        free(ldw_beta);
+        free(ldw_gamma);
 #endif
 #if PALPHA_POROSITY
         free(porjutzi_p_elastic);
@@ -1489,6 +1553,10 @@ void cleanupMaterials()
     cudaVerify(cudaFree(matFrictionAngleDamaged_d));
     cudaVerify(cudaFree(matDensityFloor_d));
     cudaVerify(cudaFree(matEnergyFloor_d));
+    cudaVerify(cudaFree(matLdwEtaLimit_d));
+    cudaVerify(cudaFree(matLdwAlpha_d));
+    cudaVerify(cudaFree(matLdwBeta_d));
+    cudaVerify(cudaFree(matLdwGamma_d));
     cudaVerify(cudaFree(matporjutzi_p_elastic_d));
     cudaVerify(cudaFree(matporjutzi_p_transition_d));
     cudaVerify(cudaFree(matporjutzi_p_compacted_d));

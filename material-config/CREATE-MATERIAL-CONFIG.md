@@ -1,7 +1,7 @@
 How to set up the material config file for miluphcuda
 =====================================================
 
-last updated: 16/Aug/2021
+last updated: 17/Apr/2022
 
 Christoph Burger, Christoph Schäfer  
 christoph.burger@uni-tuebingen.de
@@ -196,13 +196,27 @@ Which elastic constants are required depends on the used material model and equa
 The shear modulus is always required for solid simulations (`SOLID` is set in parameter.h).
 The bulk modulus may be required for sound speed estimates, the Grady-Kipp fragmentation model, etc.
 
-        Key                 Type    Default
-        ___________________________________
+        Key                 Type      Default
+        _____________________________________
 
-        eos.bulk_modulus    float   0.
-        eos.shear_modulus   float   0.
+        eos.bulk_modulus    float     0.
+        eos.shear_modulus   float     0.
 
 Note: The other two elastic constants (Young's modulus and Poisson's ratio) are computed from them as needed.
+
+--------------------------------
+
+**Artificial viscosity**
+
+This is the standard artificial viscosity.
+
+You need to set `ARTIFICIAL_VISCOSITY` in parameter.h (at compile time), and in the material config file:
+
+        Key                             Type      Default
+        _________________________________________________
+
+        artificial_viscosity.alpha      float     1.
+        artificial_viscosity.beta       float     2.
 
 --------------------------------
 
@@ -364,6 +378,34 @@ The following parameters are currently only needed for some pre-processing tools
 
         fragmentation.weibull_k     float   none        not processed by miluphcuda
         fragmentation.weibull_m     float   none        not processed by miluphcuda
+
+--------------------------------
+
+**Low-density weakening model**
+
+Additional strength reduction for low-density states (below the reference density).
+For most models, strength is reduced by reducing the cohesion, and by that the whole yield envelope.
+For COLLINS_PLASTICITY only the damaged cohesion is reduced, vor VON_MISES_PLASTICITY all (constant) yield strength is reduced.  
+Strength reduction increases with decreasing density, where the shape of the curve that defines the reducing factor
+is set by the parameters below. It drops from 1 to gamma between rho0 and eta_limit, with slope alpha, then it drops
+further from gamma to zero between eta_limit and rho=0, with slope beta.  
+When combined with porosity, all densities are matrix densities.
+
+You need to set `LOW_DENSITY_WEAKENING` in parameter.h (at compile time), and in the material config file:
+
+        Key                                 Type    Default   Details
+        _______________________________________________________________
+
+        low_density_weakening.eta_limit     float   0.        defines transition density rho between
+                                                              power law regimes, with eta = rho/rho0,
+                                                              where rho0 is the reference density
+                                                              (i.e., eta_limit in [0,1])
+        low_density_weakening.alpha         float   0.        power-law exponent above eta_limit
+        low_density_weakening.beta          float   0.        power-law exponent below eta_limit
+        low_density_weakening.gamma         float   1.        sets cohesion-reducing factor at eta_limit
+                                                              (i.e., gamma in [0,1])
+
+Note: The defaults simply disable all low-density weakening for the respective material.
 
 --------------------------------
 

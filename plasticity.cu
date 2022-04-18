@@ -39,6 +39,7 @@ __global__ void plasticity()
     register double shear, bulk, poissons_ratio, sz;
 #endif
     register double S_i[DIM][DIM];
+
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         matId = p_rhs.materialId[i];
@@ -116,10 +117,14 @@ __global__ void plasticity()
 __global__ void plasticityModel(void) {
     register int i, inc, d, e;
     register double mises_f, tmp;
-    register double I1, J2, sqrt_J2;
+    register double I1, J2;
     register double y, y_i, y_d, y_M, y_0, y_0_d, damage, e_melt;
     register double A, B;   // Drucker-Prager constants
-    double mu_i, mu_d;  // coefficients of internal friction
+    register double mu_i, mu_d;  // coefficients of internal friction
+    register int matId;
+#if LOW_DENSITY_WEAKENING
+    register double rho0, eta, ldw_f, ldw_eta_limit, ldw_alpha, ldw_beta, ldw_gamma;
+#endif
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
@@ -131,7 +136,7 @@ __global__ void plasticityModel(void) {
 
         mises_f = 1.0;
 
-        /* second invariant of the deviator stress tensor */
+        // compute second invariant of the deviator stress tensor
         J2 = 0.0;
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
@@ -140,32 +145,72 @@ __global__ void plasticityModel(void) {
             }
         }
         J2 *= 0.5;
-        sqrt_J2 = sqrt(J2);
 
-        /* first invariant of the stress tensor */
+        // compute first invariant of the stress tensor
         I1 = -3.0 * p.p[i];
+
+#if LOW_DENSITY_WEAKENING   // reduce strength by reducing the cohesion for low densities
+        matId = p_rhs.materialId[i];
+        if( matEOS[matId] == EOS_TYPE_MURNAGHAN ) {
+            rho0 = matRho0[matId];
+            eta = p.rho[i] / rho0;
+        } else if( matEOS[matId] == EOS_TYPE_JUTZI ) {
+            // work only with matrix densities for porous media
+            rho0 = matTillRho0[matId];
+            eta = p.rho[i] * p.alpha_jutzi[i] / rho0;
+        } else if( matEOS[matId] == EOS_TYPE_TILLOTSON ) {
+            rho0 = matTillRho0[matId];
+            eta = p.rho[i] / rho0;
+        } else {
+            printf("ERROR. EOS_TYPE %d is not yet implemented with LOW_DENSITY_WEAKENING.\n", matEOS[matId]);
+        }
+        // compute weakening factor
+        if( eta >= 1.0 ) {
+            ldw_f = 1.0;
+        } else {
+            ldw_eta_limit = matLdwEtaLimit[matId];
+            ldw_gamma = matLdwGamma[matId];
+            if( eta > ldw_eta_limit  ||  ldw_eta_limit <= 0.0 ) {
+                ldw_alpha = matLdwAlpha[matId];
+                ldw_f = pow( (eta-ldw_eta_limit)/(1.0-ldw_eta_limit), ldw_alpha ) * (1.0-ldw_gamma) + ldw_gamma;
+            } else {
+                ldw_beta = matLdwBeta[matId];
+                ldw_f = pow( eta/ldw_eta_limit, ldw_beta ) * ldw_gamma;
+            }
+        }
+        if( ldw_f > 1.0  ||  ldw_f < 0.0 ) {
+            printf("ERROR. Found low-density weakening factor outside [0,1], with ldw_f = %e...\n", ldw_f);
+        }
+#endif
 
 #if MOHR_COULOMB_PLASTICITY
         // Mohr-Coulomb yield criterion
         // matInternalFriction = \mu = tan(matFrictionAngle)
-        y = matCohesion[p_rhs.materialId[i]] + matInternalFriction[p_rhs.materialId[i]] * p.p[i];
-        
+        y_0 = matCohesion[p_rhs.materialId[i]];
+# if LOW_DENSITY_WEAKENING
+        y_0 *= ldw_f;   // reduce cohesion (locally)
+# endif
+        y = y_0 + matInternalFriction[p_rhs.materialId[i]] * p.p[i];
+
         // additional von Mises limit if set
 # if VON_MISES_PLASTICITY
         y = min(y, matYieldStress[p_rhs.materialId[i]]);
 # endif
-        if (y < 0.0) {
-            y = 0.0;
-        }
+        if (y < 0.0) y = 0.0;
 
         // Drucker-Prager-like -> compare to sqrt(J2)
         if (J2 > 0.0) {
-            mises_f = y/sqrt_J2;
+            mises_f = y / sqrt(J2);
         }
+
 #elif DRUCKER_PRAGER_PLASTICITY
-        A = B = 0;
+        A = B = 0.0;
+        y_0 = matCohesion[p_rhs.materialId[i]];
+# if LOW_DENSITY_WEAKENING
+        y_0 *= ldw_f;   // reduce cohesion (locally)
+# endif
         // Drucker-Prager constants from Mohr-Coulomb constants -> 3D!
-        A = 6. * matCohesion[p_rhs.materialId[i]] * cos(matFrictionAngle[p_rhs.materialId[i]])
+        A = 6. * y_0 * cos(matFrictionAngle[p_rhs.materialId[i]])
                 / (sqrt(3.) * (3. - sin(matFrictionAngle[p_rhs.materialId[i]])));
         B = 2. * sin(matFrictionAngle[p_rhs.materialId[i]]) / (sqrt(3.) * (3. - sin(matFrictionAngle[p_rhs.materialId[i]])));
 
@@ -176,14 +221,13 @@ __global__ void plasticityModel(void) {
 # if VON_MISES_PLASTICITY
         y = min(y, matYieldStress[p_rhs.materialId[i]]);
 # endif
-        if (y < 0.0) {
-            y = 0.0;
-        }
+        if (y < 0.0) y = 0.0;
 
         // Drucker-Prager-like -> compare to sqrt(J2)
         if (J2 > 0.0) {
-            mises_f = y/sqrt_J2;
+            mises_f = y / sqrt(J2);
         }
+
 #elif COLLINS_PLASTICITY
         y_0 = matCohesion[p_rhs.materialId[i]];
         y_M = matYieldStress[p_rhs.materialId[i]];
@@ -206,18 +250,23 @@ __global__ void plasticityModel(void) {
 # endif
 # if FRAGMENTATION
         y_0_d = matCohesionDamaged[p_rhs.materialId[i]];
+#  if LOW_DENSITY_WEAKENING
+        // reduce damaged cohesion (locally)
+        // intact cohesion is not affected by low-density weakening
+        y_0_d *= ldw_f;
+#  endif
         mu_d = matInternalFrictionDamaged[p_rhs.materialId[i]];
         damage = p.damage_total[i];
         if (damage > 1.0) damage = 1.0;
         if (damage < 0.0) damage = 0.0;
 
-        // yield strength of damaged material, with the cohesion going (linearly) to zero for p < 0
+        // yield strength of damaged material, going (linearly) to zero for p < 0
         y_d = y_0_d + mu_d * p.p[i];
         if (y_d < 0.0)
             y_d = 0.0;
 
-        // the actual yield strength Y is a weighted mean of Y_i and Y_d
-        // note: therefore potential melt-energy effects are also included in Y
+        // the actual yield strength y is a weighted mean of y_i and y_d
+        // note: therefore potential melt-energy effects are also included in y
         y = (1.0-damage) * y_i + damage * y_d;
 
         // always limit the yield strength to the intact value
@@ -228,15 +277,20 @@ __global__ void plasticityModel(void) {
 # endif
         // Drucker-Prager-like -> compare to sqrt(J2)
         if (J2 > 0.0) {
-            mises_f = y/sqrt_J2;
+            mises_f = y / sqrt(J2);
         }
+
 #elif COLLINS_PLASTICITY_SIMPLE
         y_0 = matCohesion[p_rhs.materialId[i]];
         y_M = matYieldStress[p_rhs.materialId[i]];
         mu_i = matInternalFriction[p_rhs.materialId[i]];
 
+# if LOW_DENSITY_WEAKENING
+        y_0 *= ldw_f;   // reduce cohesion (locally)
+# endif
+
         // unlike the regular Collins model, the yield strength decreases to zero for p < 0,
-        // following a linear decline with slope = 1, i.e., the zero is always at -Y_0
+        // following a linear decline with slope = 1, i.e., the zero is always at -y_0
         if( p.p[i] > 0.0 ) {
             y = y_0 + mu_i * p.p[i]
                 / (1.0 + mu_i * p.p[i]  / (y_M - y_0) );
@@ -246,8 +300,8 @@ __global__ void plasticityModel(void) {
             y = 0.0;
         }
 
-        // let the yield strength decrease to zero for p < 0 following the regular Y_i curve,
-        // where the zero is at p_0 = -Y_0 (Y_M-Y_0) / (mu_i Y_M)
+        // let the yield strength decrease to zero for p < 0 following the regular y_i curve,
+        // where the zero is at p_0 = -y_0 (y_M-y_0) / (mu_i y_M)
 //        if ( p.p[i] > y_0*(y_0-y_M)/(mu_i*y_M) ) {
 //            y = y_0 + mu_i * p.p[i]
 //                / (1.0 + mu_i * p.p[i]  / (y_M - y_0) );
@@ -255,18 +309,19 @@ __global__ void plasticityModel(void) {
 //            y = 0.0;
 //        }
 
-        // also limit negative pressures to value at zero of yield strength curve (at -Y_0)
+        // also limit negative pressures to value at zero of yield strength curve (at -cohesion)
         if( p.p[i] < -y_0 )
             p.p[i] = -y_0;
 
         // Drucker-Prager-like -> compare to sqrt(J2)
         if (J2 > 0.0) {
-            mises_f = y/sqrt_J2;
+            mises_f = y / sqrt(J2);
         }
-#else // simple von Mises yield criterion without *any* dependency
+
+#elif VON_MISES_PLASTICITY
         y = matYieldStress[p_rhs.materialId[i]];
 # if SIRONO_POROSITY
-        // shear strength using Sironos model
+        // shear strength using the Sirono model
         if (matEOS[p_rhs.materialId[i]] == EOS_TYPE_SIRONO) {
             y = sqrt((-1.0) * p.tensile_strength[i] * p.compressive_strength[i]);
             p.shear_strength[i] = y;
@@ -275,11 +330,16 @@ __global__ void plasticityModel(void) {
             y = p.shear_strength[i];
         }
 # endif
+# if LOW_DENSITY_WEAKENING
+        // reduce whole yield/shear strength (locally)
+        y *= ldw_f;
+# endif
         // von Mises limit like
         if (J2 > 0.0) {
             mises_f = y*y/(3.0*J2);
         }
 #endif
+
         // finally limit the deviatoric stress tensor
         if (mises_f > 1.0)
             mises_f = 1.0;

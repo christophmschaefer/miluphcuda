@@ -177,7 +177,7 @@ __global__ void calculatePressure() {
             double dp; 			/* pressure change for the calculation of dalphadp */
             double rho_0 = matTillRho0[matId];      /* parameters for Tillotson EOS -> calc pressure solid */
             double eta = p.rho[i] * p.alpha_jutzi[i] / rho_0;
-			int crushcurve_style = matcrushcurve_style[matId]; /* crushcurve_style from material.cfg -> 0 is the quadratic crush curve, 1 is the real/steep crush curve by jutzi */
+            int crushcurve_style = matcrushcurve_style[matId]; /* crushcurve_style from material.cfg -> 0 is the quadratic crush curve, 1 is the real/steep crush curve by jutzi */
             if (matEOS[matId] == EOS_TYPE_JUTZI) {
                 double alpha_till = matTillAlpha[matId];
                 double beta_till = matTillBeta[matId];
@@ -380,6 +380,7 @@ __global__ void calculatePressure() {
         } else {
             printf("No such EOS. %d\n", matEOS[matId]);
         }
+
 #if PALPHA_POROSITY
         if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
             p.p[i] = pressure;
@@ -389,14 +390,52 @@ __global__ void calculatePressure() {
 #endif
 
 #if COLLINS_PLASTICITY_SIMPLE
-        // limit negative pressures to value at zero of yield strength curve (at -Y_0)
-        if( p.p[i] < -matCohesion[matId])
-            p.p[i] = -matCohesion[matId];
-#endif
+        double y_0 = matCohesion[matId];
+# if LOW_DENSITY_WEAKENING
+        // reduce strength by reducing the cohesion for low densities
+        register double rho0, ldw_f, ldw_eta_limit, ldw_alpha, ldw_beta, ldw_gamma;
+        if( matEOS[matId] == EOS_TYPE_MURNAGHAN ) {
+            rho0 = matRho0[matId];
+            eta = p.rho[i] / rho0;
+        } else if( matEOS[matId] == EOS_TYPE_JUTZI ) {
+            // work only with matrix densities for porous media
+            rho0 = matTillRho0[matId];
+            eta = p.rho[i] * p.alpha_jutzi[i] / rho0;
+        } else if( matEOS[matId] == EOS_TYPE_TILLOTSON ) {
+            rho0 = matTillRho0[matId];
+            eta = p.rho[i] / rho0;
+        } else {
+            printf("ERROR. EOS_TYPE %d is not yet implemented with LOW_DENSITY_WEAKENING.\n", matEOS[matId]);
+        }
+        // compute factor for low-density weakening
+        if( eta >= 1.0 ) {
+            ldw_f = 1.0;
+        } else {
+            ldw_eta_limit = matLdwEtaLimit[matId];
+            ldw_gamma = matLdwGamma[matId];
+            if( eta > ldw_eta_limit  ||  ldw_eta_limit <= 0.0 ) {
+                ldw_alpha = matLdwAlpha[matId];
+                ldw_f = pow( (eta-ldw_eta_limit)/(1.0-ldw_eta_limit), ldw_alpha ) * (1.0-ldw_gamma) + ldw_gamma;
+            } else {
+                ldw_beta = matLdwBeta[matId];
+                ldw_f = pow( eta/ldw_eta_limit, ldw_beta ) * ldw_gamma;
+            }
+        }
+        // finally reduce cohesion (locally)
+        if( ldw_f <= 1.0  &&  ldw_f >= 0.0 ) {
+            y_0 *= ldw_f;
+        } else {
+            printf("ERROR. Found low-density weakening factor outside [0,1], with ldw_f = %e...\n", ldw_f);
+        }
+# endif
+        // limit negative pressures to value at zero of yield strength curve (at -cohesion)
+        if( p.p[i] < -y_0)
+            p.p[i] = -y_0;
+#endif  // COLLINS_PLASTICITY_SIMPLE
 
 #if REAL_HYDRO
         if (p.p[i] < 0.0)
             p.p[i] = 0.0;
 #endif
-    }
+    }   // particle loop
 }
