@@ -190,7 +190,15 @@ __global__ void plasticityModel(void) {
 # if LOW_DENSITY_WEAKENING
         y_0 *= ldw_f;   // reduce cohesion (locally)
 # endif
-        y = y_0 + matInternalFriction[p_rhs.materialId[i]] * p.p[i];
+
+        // follow slope set by friction coefficient for p > 0, and slope = 1 for p < 0 (i.e., zero at -y_0)
+        if( p.p[i] > 0.0 ) {
+            y = y_0 + matInternalFriction[p_rhs.materialId[i]] * p.p[i];
+        } else if( p.p[i] > -y_0 ) {
+            y = y_0 + p.p[i];
+        } else {
+            y = 0.0;
+        }
 
         // additional von Mises limit if set
 # if VON_MISES_PLASTICITY
@@ -260,10 +268,16 @@ __global__ void plasticityModel(void) {
         if (damage > 1.0) damage = 1.0;
         if (damage < 0.0) damage = 0.0;
 
-        // yield strength of damaged material, going (linearly) to zero for p < 0
-        y_d = y_0_d + mu_d * p.p[i];
-        if (y_d < 0.0)
+        // yield strength of damaged material, going to zero with slope = 1 for p < 0 (i.e., the zero is at -y_0_d)
+        if( p.p[i] > 0.0 ) {
+            y_d = y_0_d + mu_d * p.p[i];
+        } else if( p.p[i] > -y_0_d ) {
+            y_d = y_0_d + p.p[i];
+        } else {
             y_d = 0.0;
+        }
+
+        if (y_d < 0.0) y_d = 0.0;
 
         // the actual yield strength y is a weighted mean of y_i and y_d
         // note: therefore potential melt-energy effects are also included in y
@@ -290,7 +304,7 @@ __global__ void plasticityModel(void) {
 # endif
 
         // unlike the regular Collins model, the yield strength decreases to zero for p < 0,
-        // following a linear decline with slope = 1, i.e., the zero is always at -y_0
+        // following a linear decline with slope = 1 (i.e., the zero is at -y_0)
         if( p.p[i] > 0.0 ) {
             y = y_0 + mu_i * p.p[i]
                 / (1.0 + mu_i * p.p[i]  / (y_M - y_0) );

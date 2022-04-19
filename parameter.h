@@ -24,7 +24,7 @@
 #define _PARAMETER_H
 
 // Dimension of the problem
-#define DIM 2
+#define DIM 3
 
 // Basic physical model, choose one of the following:
 // SOLID solves continuum mechanics with material strength, and stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
@@ -96,24 +96,29 @@
 
 // Available plastic flow conditions:
 // (if you do not know what this is, choose (1) or nothing)
-//   (1) Simple von Mises plasticity with a constant yield strength:
+//   (1) Simple von Mises plasticity with a constant yield strength
 #define VON_MISES_PLASTICITY 0
-//   (2) Drucker-Prager (DP) yield criterion -> yield strength is given by the condition \sqrt(J_2) + A * I_1 + B = 0
-//       with I_1: first invariant of stress tensor
+//   (2) Drucker-Prager yield criterion
+//       -> yield strength is given by the condition \sqrt(J_2) + A * I_1 + B = 0
+//          I_1: first invariant of stress tensor
 //          J_2: second invariant of stress tensor
-//          A, B: DP constants, which are calculated from angle of internal friction and cohesion
+//          A, B: Drucker-Prager constants, which are calculated from angle of internal friction and cohesion
+//       -> intended for granular-like materials, therefore the yield strength decreases to zero for p < 0
+//       -> you can additionally use (1) to set an upper limit for the yield stress
 #define DRUCKER_PRAGER_PLASTICITY 0
-//   (3) Mohr-Coulomb (MC) yield criterion
-//       -> yield strength is given by yield_stress = tan(friction_angle) \times pressure + cohesion 
+//   (3) Mohr-Coulomb yield criterion
+//       -> for p > 0: yield strength = tan(friction_angle) \times pressure + cohesion
+//       -> intended for granular-like materials, therefore the yield strength decreases to zero for p < 0:
+//          yield strength = pressure + cohesion (i.e., slope = 1)
+//       -> you can additionally use (1) to set an upper limit for the yield stress
 #define MOHR_COULOMB_PLASTICITY 0
-//       Note: DP and MC are intended for granular-like materials, therefore the yield strength simply decreases (linearly) to zero for p < 0.
-//       Note: For DP and MC you can additionally choose (1) to impose an upper limit for the yield stress.
 //   (4) Pressure dependent yield strength following Collins et al. (2004) and the implementation in Jutzi (2015)
 //       -> yield strength is different for damaged (Y_d) and intact material (Y_i), and averaged mean (Y) in between:
 //              Y_i = cohesion + \mu P / (1 + \mu P / (yield_stress - cohesion) )
-//          where *cohesion* is the yield strength for P=0 and *yield_stress* the asymptotic limit for P=\infty
+//          where *cohesion* is the yield strength for P = 0 and *yield_stress* the asymptotic limit for P = \infty
 //          \mu is the coefficient of internal friction (= tan(friction_angle))
-//              Y_d = cohesion_damaged + \mu_d \times P
+//              P > 0: Y_d = cohesion_damaged + \mu_d \times P
+//              P < 0: Y_d = cohesion_damaged + P (i.e., slope = 1)
 //          where \mu_d is the coefficient of friction of the *damaged* material
 //              Y = (1-damage)*Y_i + damage*Y_d
 //              Y is limited to <= Y_i
@@ -125,7 +130,7 @@
 #define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 0
 //   (5) Simplified version of the Collins et al. (2004) model, which uses only the
 //       strength representation for intact material (Y_i), irrespective of damage.
-//       Unlike in (4), Y decreases to zero for p < 0 with slope = 1 (i.e., zero at -cohesion).
+//       Unlike in (4), Y decreases to zero for p < 0 (with slope = 1, i.e., zero at -cohesion).
 //       In addition, negative pressures are limited to the zero of the yield strength
 //       curve at -cohesion (i.e., are set to this value when they get more negative).
 #define COLLINS_PLASTICITY_SIMPLE 0

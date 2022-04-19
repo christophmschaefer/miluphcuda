@@ -1,7 +1,7 @@
 How to set up the material config file for miluphcuda
 =====================================================
 
-last updated: 17/Apr/2022
+last updated: 19/Apr/2022
 
 Christoph Burger, Christoph Schäfer  
 christoph.burger@uni-tuebingen.de
@@ -331,7 +331,8 @@ You need to set `COLLINS_PLASTICITY_SIMPLE` in parameter.h (at compile time), an
 
 **Plasticity model: Drucker-Prager**
 
-This is a linear dependence of the yield strength on pressure.
+This is a linear dependence of the yield strength on pressure, intended for granular-like materials,
+therefore the yield strength decreases to zero for p < 0.
 
 You need to set `DRUCKER_PRAGER_PLASTICITY` in parameter.h (at compile time), and in the material config file:
 
@@ -349,7 +350,9 @@ You need to set `DRUCKER_PRAGER_PLASTICITY` in parameter.h (at compile time), an
 
 **Plasticity model: Mohr-Coulomb**
 
-This is a linear dependence of the yield strength on pressure.
+This is a linear dependence of the yield strength on pressure, intended for granular-like materials,
+therefore the yield strength decreases to zero for p < 0.
+Note that for p < 0 the slope is not set by the friction coefficient, but = 1 (i.e., the zero is at -cohesion).
 
 You need to set `MOHR_COULOMB_PLASTICITY` in parameter.h (at compile time), and in the material config file:
 
