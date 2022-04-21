@@ -191,10 +191,10 @@ struct Particle {
     int maxNumFlaws; ///< the maximum number of flaws allowed per particle
     int *numActiveFlaws; ///< the current number of activated flaws
     double *flaws; ///< the values for the strain for each flaw (array of size maxNumFlaws)
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
     double *damage_porjutzi;   ///< DIM-root of porous damage
     double *ddamage_porjutzidt; ///< time derivative of DIM-root of porous damage
-#endif
+# endif
 #endif
 
 #if ARTIFICIAL_VISCOSITY

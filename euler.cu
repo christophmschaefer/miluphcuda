@@ -92,10 +92,10 @@ __global__ void integrateEuler(void)
 #if SOLID
 #if FRAGMENTATION
             p.d[i] += dt * p.dddt[i];
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
             p.damage_porjutzi[i] += dt * p.ddamage_porjutzidt[i];
             p.pold[i] = p.p[i];
-#endif
+# endif
 #endif
             int k;
             for (k = 0; k < DIM*DIM; k++) {

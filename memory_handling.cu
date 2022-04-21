@@ -109,10 +109,10 @@ int allocate_particles_memory(struct Particle *a, int allocate_immutables)
     if (allocate_immutables) {
 	    cudaVerify(cudaMalloc((void**)&a->flaws, memorySizeForActivationThreshold));
     }
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
 	cudaVerify(cudaMalloc((void**)&a->damage_porjutzi, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&a->ddamage_porjutzidt, memorySizeForParticles));
-#endif
+# endif
 #endif
 
     if (allocate_immutables) {
@@ -454,9 +454,9 @@ int copy_particles_variables_device_to_device(struct Particle *dst, struct Parti
     cudaVerify(cudaMemcpy(dst->f, src->f, memorySizeForParticles, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy(dst->p, src->p, memorySizeForParticles, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy(dst->pold, src->pold, memorySizeForParticles, cudaMemcpyDeviceToDevice));
-#if FRAGMENTATION
+# if FRAGMENTATION
     cudaVerify(cudaMemcpy(dst->damage_porjutzi, src->damage_porjutzi, memorySizeForParticles, cudaMemcpyDeviceToDevice));
-#endif
+# endif
 #endif
 
 #if MORE_OUTPUT
@@ -714,10 +714,10 @@ int free_particles_memory(struct Particle *a, int free_immutables)
     if (free_immutables) {
 	    cudaVerify(cudaFree(a->h0));
     }
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
 	cudaVerify(cudaFree(a->damage_porjutzi));
 	cudaVerify(cudaFree(a->ddamage_porjutzidt));
-#endif
+# endif
 #endif
 
     return rc;
@@ -1161,9 +1161,9 @@ int copy_particle_data_to_device()
 	cudaVerify(cudaMemcpy(p_device.numFlaws, p_host.numFlaws, memorySizeForInteractions, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.numActiveFlaws, p_host.numActiveFlaws, memorySizeForInteractions, cudaMemcpyHostToDevice));
     cudaVerify(cudaMemcpy(p_device.flaws, p_host.flaws, memorySizeForActivationThreshold, cudaMemcpyHostToDevice));
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
     cudaVerify(cudaMemcpy(p_device.damage_porjutzi, p_host.damage_porjutzi, memorySizeForParticles, cudaMemcpyHostToDevice));
-#endif
+# endif
 #endif
 	cudaVerify(cudaMemcpy(p_device.noi, p_host.noi, memorySizeForInteractions, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.materialId, p_host.materialId, memorySizeForInteractions, cudaMemcpyHostToDevice));
@@ -1371,11 +1371,11 @@ int free_memory()
 	cudaVerify(cudaFree(p_device.numActiveFlaws));
 	cudaVerify(cudaFreeHost(p_host.flaws));
 	cudaVerify(cudaFree(p_device.flaws));
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
 	cudaVerify(cudaFree(p_device.damage_porjutzi));
 	cudaVerify(cudaFree(p_device.cs_old));
 	cudaVerify(cudaFree(p_device.ddamage_porjutzidt));
-#endif
+# endif
 #endif
 
 
@@ -1455,10 +1455,10 @@ int free_memory()
 	cudaVerify(cudaFreeHost(p_host.alpha_jutzi_old));
 	cudaVerify(cudaFreeHost(p_host.dalphadt));
 	cudaVerify(cudaFreeHost(p_host.pold));
-#if FRAGMENTATION
+# if FRAGMENTATION
     cudaVerify(cudaFreeHost(p_host.damage_porjutzi));
     cudaVerify(cudaFreeHost(p_host.ddamage_porjutzidt));
-#endif
+# endif
 #endif
 
 #if SIRONO_POROSITY

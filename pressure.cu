@@ -30,7 +30,7 @@
 
 __global__ void calculatePressure() {
     register int i, inc, matId;
-    register double eta, e, rho, mu, p1, p2;
+    register double eta, e, rho, rho0, mu, p1, p2;
     int i_rho, i_e;
     double pressure;
 
@@ -389,11 +389,12 @@ __global__ void calculatePressure() {
         }
 #endif
 
-#if COLLINS_PLASTICITY_SIMPLE
-        double y_0 = matCohesion[matId];
-# if LOW_DENSITY_WEAKENING
-        // reduce strength by reducing the cohesion for low densities
-        register double rho0, ldw_f, ldw_eta_limit, ldw_alpha, ldw_beta, ldw_gamma;
+        // negative-pressure cap
+        // note: for COLLINS_PLASTICITY, neg. pressures are adjusted only in plasticity.cu, to avoid double modification by (1-damage)
+#if MOHR_COULOMB_PLASTICITY || COLLINS_PLASTICITY_SIMPLE
+        register double y_0 = matCohesion[matId];
+# if LOW_DENSITY_WEAKENING  // reduce strength by reducing the cohesion for low densities
+        register double ldw_f, ldw_eta_limit, ldw_alpha, ldw_beta, ldw_gamma;
         if( matEOS[matId] == EOS_TYPE_MURNAGHAN ) {
             rho0 = matRho0[matId];
             eta = p.rho[i] / rho0;
@@ -407,7 +408,7 @@ __global__ void calculatePressure() {
         } else {
             printf("ERROR. EOS_TYPE %d is not yet implemented with LOW_DENSITY_WEAKENING.\n", matEOS[matId]);
         }
-        // compute factor for low-density weakening
+        // compute  weakening factor
         if( eta >= 1.0 ) {
             ldw_f = 1.0;
         } else {
@@ -431,7 +432,7 @@ __global__ void calculatePressure() {
         // limit negative pressures to value at zero of yield strength curve (at -cohesion)
         if( p.p[i] < -y_0)
             p.p[i] = -y_0;
-#endif  // COLLINS_PLASTICITY_SIMPLE
+#endif
 
 #if REAL_HYDRO
         if (p.p[i] < 0.0)

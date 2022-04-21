@@ -185,37 +185,35 @@ __global__ void internalForces(int *interactions) {
         sml = p.h[i];
 #if FRAGMENTATION
         di = p.damage_total[i];
-        if (di < 0) di = 0;
-        if (di > 1) di = 1;
+        if (di < 0.0) di = 0.0;
+        if (di > 1.0) di = 1.0;
 #endif
 
         x = p.x[i];
 #if DIM > 1
         y = p.y[i];
-#if DIM > 2
+# if DIM > 2
         z = p.z[i];
-#endif
+# endif
 #endif
         vx = p.vx[i];
 #if DIM > 1
         vy = p.vy[i];
-#if DIM > 2
+# if DIM > 2
         vz = p.vz[i];
+# endif
 #endif
-#endif
-
-
-#if 1
         p.dxdt[i] = 0;
         p.ax[i] = 0;
 #if DIM > 1
         p.dydt[i] = 0;
         p.ay[i] = 0;
-#if DIM > 2
+# if DIM > 2
         p.dzdt[i] = 0;
         p.az[i] = 0;
+# endif
 #endif
-#endif
+
 #if SOLID
         for (e = 0; e < DIM*DIM; e++) {
             p.dSdt[i*DIM*DIM+e] = 0.0;
@@ -243,7 +241,6 @@ __global__ void internalForces(int *interactions) {
         // finally continue
             continue;
         }
-#endif
 
 #if BALSARA_SWITCH
         curli = 0;
@@ -774,17 +771,23 @@ __global__ void internalForces(int *interactions) {
 
 #if INTEGRATE_ENERGY
 # if SOLID
-        double ptmp = 0;
-        double edottmp = 0;
-#  if FRAGMENTATION
-        if (p.p[i] < 0) {
-            ptmp = (1.0-di) * p.p[i];
+        double ptmp = 0.0;
+        double edottmp = 0.0;
+
+#  if COLLINS_PLASTICITY
+        // influence of damage on p < 0 already set in plasticity.cu
+        ptmp = p.p[i];
+#  elif FRAGMENTATION
+        if (p.p[i] < 0.0) {
+            // reduction of neg. pressure following Grady-Kipp model
+            ptmp = (1.0 - di) * p.p[i];
         } else {
             ptmp = p.p[i];
         }
 #  else
         ptmp = p.p[i];
 #  endif
+
         dedt -= ptmp / p.rho[i] * p_rhs.divv[i];
         // symmetrize edot
         for (d = 0; d < DIM; d++) {
@@ -798,6 +801,7 @@ __global__ void internalForces(int *interactions) {
             for (dd = 0; dd < DIM; dd++) {
                 double Stmp = p.S[stressIndex(i,d,dd)];
 #  if FRAGMENTATION && DAMAGE_ACTS_ON_S
+                // reduction of S following Grady-Kipp model
                 Stmp *= (1.0-di);
 #  endif
                 dedt += Stmp / p.rho[i] * edot[d][dd];
@@ -1011,7 +1015,7 @@ __global__ void internalForces(int *interactions) {
             if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
                 double deld = 0.01; 	/* variation in the damage to avoid infinity problem */
                 double alpha_0 = matporjutzi_alpha_0[matId];
-                if (alpha_0 > 1) {
+                if (alpha_0 > 1.0) {
                     p.ddamage_porjutzidt[i] = - 1.0/DIM * (pow(1.0 - (p.alpha_jutzi[i] - 1.0) / (alpha_0 - 1.0) + deld, 1.0/DIM - 1.0))
                                             / (pow(1.0 + deld, 1.0/DIM) - pow(deld, 1.0/DIM)) * 1.0/(alpha_0 - 1.0) * p.dalphadt[i];
                 }

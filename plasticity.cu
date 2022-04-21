@@ -206,6 +206,10 @@ __global__ void plasticityModel(void) {
 # endif
         if (y < 0.0) y = 0.0;
 
+        // negative-pressure cap: limit negative pressures to value at zero of yield strength curve (at -cohesion)
+        if( p.p[i] < -y_0 )
+            p.p[i] = -y_0;
+
         // Drucker-Prager-like -> compare to sqrt(J2)
         if (J2 > 0.0) {
             mises_f = y / sqrt(J2);
@@ -286,9 +290,22 @@ __global__ void plasticityModel(void) {
         // always limit the yield strength to the intact value
         if (y > y_i)
             y = y_i;
+
+        // here we apply a "cap on negative pressure release by damage"
+        // negative pressure is foremost released by (1-damage), in line with the Grady-Kipp model, but only
+        // up to the residual tensile strength the material retains even when fully damaged, assumed to be -y_0_d
+        // note: modification by (1-damage) must be done only once (here), otherwise it would be cumulative
+        if( p.p[i] < -y_0_d ) {
+            if( (1.0-damage)*p.p[i] > -y_0_d ) {
+                p.p[i] = -y_0_d;
+            } else {
+                p.p[i] = (1.0-damage)*p.p[i];
+            }
+        }
 # else
         y = y_i;
-# endif
+# endif   // FRAGMENTATION
+
         // Drucker-Prager-like -> compare to sqrt(J2)
         if (J2 > 0.0) {
             mises_f = y / sqrt(J2);
@@ -303,8 +320,8 @@ __global__ void plasticityModel(void) {
         y_0 *= ldw_f;   // reduce cohesion (locally)
 # endif
 
-        // unlike the regular Collins model, the yield strength decreases to zero for p < 0,
-        // following a linear decline with slope = 1 (i.e., the zero is at -y_0)
+        // Lundborg yield strength curve for p > 0
+        // linear decrease to zero with slope = 1 for p < 0 (i.e., zero at -y_0)
         if( p.p[i] > 0.0 ) {
             y = y_0 + mu_i * p.p[i]
                 / (1.0 + mu_i * p.p[i]  / (y_M - y_0) );
@@ -323,7 +340,7 @@ __global__ void plasticityModel(void) {
 //            y = 0.0;
 //        }
 
-        // also limit negative pressures to value at zero of yield strength curve (at -cohesion)
+        // negative-pressure cap: limit negative pressures to value at zero of yield strength curve (at -cohesion)
         if( p.p[i] < -y_0 )
             p.p[i] = -y_0;
 
@@ -352,7 +369,7 @@ __global__ void plasticityModel(void) {
         if (J2 > 0.0) {
             mises_f = y*y/(3.0*J2);
         }
-#endif
+#endif  // plasticity models
 
         // finally limit the deviatoric stress tensor
         if (mises_f > 1.0)

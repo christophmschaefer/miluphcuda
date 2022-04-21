@@ -829,9 +829,9 @@ __global__ void integrateSecondStep(void)
 #if FRAGMENTATION
         rk[RKSECOND].d[i] = rk[RKSTART].d[i] + dt * (B31 * rk[RKSTART].dddt[i] + B32 * rk[RKFIRST].dddt[i]);
         rk[RKSECOND].numActiveFlaws[i] = rk[RKFIRST].numActiveFlaws[i];
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
         rk[RKSECOND].damage_porjutzi[i] = rk[RKSTART].damage_porjutzi[i] + dt * (B31 * rk[RKSTART].ddamage_porjutzidt[i] + B32 * rk[RKFIRST].ddamage_porjutzidt[i]);
-#endif
+# endif
 #endif
 #if JC_PLASTICITY
         rk[RKSECOND].ep[i] = rk[RKSTART].ep[i] + dt * (B31 * rk[RKSTART].edotp[i] + B32 * rk[RKFIRST].edotp[i]);

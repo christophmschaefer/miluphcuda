@@ -25,7 +25,7 @@
 #define _CHECKS_H
 
 
-#if VON_MISES_PLASTICITY || MOHR_COLOUMB_PLASTICITY || DRUCKER_PRAGER_PLASTICITY || COLLINS_PLASTICITY || COLLINS_PLASTICITY_SIMPLE
+#if VON_MISES_PLASTICITY || MOHR_COULOMB_PLASTICITY || DRUCKER_PRAGER_PLASTICITY || COLLINS_PLASTICITY || COLLINS_PLASTICITY_SIMPLE
 # define PLASTICITY 1
 #endif
 
@@ -97,8 +97,8 @@
 # error Cannot use another PLASTICITY model along with JC_PLASTICITY at the same time. Decide for one and recompile.
 #endif
 
-#if LOW_DENSITY_WEAKENING && !(VON_MISES_PLASTICITY || MOHR_COLOUMB_PLASTICITY || DRUCKER_PRAGER_PLASTICITY || COLLINS_PLASTICITY || COLLINS_PLASTICITY_SIMPLE)
-# error LOW_DENSITY_WEAKENING only works in combination with either VON_MISES_PLASTICITY, MOHR_COLOUMB_PLASTICITY, DRUCKER_PRAGER_PLASTICITY, COLLINS_PLASTICITY, or COLLINS_PLASTICITY_SIMPLE.
+#if LOW_DENSITY_WEAKENING && !(VON_MISES_PLASTICITY || MOHR_COULOMB_PLASTICITY || DRUCKER_PRAGER_PLASTICITY || COLLINS_PLASTICITY || COLLINS_PLASTICITY_SIMPLE)
+# error LOW_DENSITY_WEAKENING only works in combination with either VON_MISES_PLASTICITY, MOHR_COULOMB_PLASTICITY, DRUCKER_PRAGER_PLASTICITY, COLLINS_PLASTICITY, or COLLINS_PLASTICITY_SIMPLE.
 #endif
 
 #if COLLINS_PLASTICITY && LOW_DENSITY_WEAKENING && !FRAGMENTATION
@@ -113,6 +113,14 @@
 
 #if DAMAGE_ACTS_ON_S && !FRAGMENTATION
 # error You set DAMAGE_ACTS_ON_S but not FRAGMENTATION in parameter.h. Not working...
+#endif
+
+#if MOHR_COULOMB_PLASTICITY && FRAGMENTATION
+# error MOHR_COULOMB_PLASTICITY is intended for granular-like materials and does not make sense together with FRAGMENTATION, does it? (Its negative-pressure cap may inhibit flaw activation for example, and additional stress reduction by damage would be ambiguous as well...)
+#endif
+
+#if COLLINS_PLASTICITY_SIMPLE && FRAGMENTATION
+# error COLLINS_PLASTICITY_SIMPLE does not make sense together with FRAGMENTATION, does it? (Its negative-pressure cap may inhibit flaw activation for example, and additional stress reduction by damage would be ambiguous as well...) Use the regular COLLINS_PLASTICITY instead?!
 #endif
 
 

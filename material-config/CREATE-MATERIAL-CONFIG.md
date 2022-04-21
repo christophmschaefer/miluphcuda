@@ -352,7 +352,8 @@ You need to set `DRUCKER_PRAGER_PLASTICITY` in parameter.h (at compile time), an
 
 This is a linear dependence of the yield strength on pressure, intended for granular-like materials,
 therefore the yield strength decreases to zero for p < 0.
-Note that for p < 0 the slope is not set by the friction coefficient, but = 1 (i.e., the zero is at -cohesion).
+Note that for p < 0 the slope is not set by the friction coefficient, but = 1 (i.e., the zero is at -cohesion).  
+A negative-pressure cap is applied: negative pressures are limited to zero of yield strength curve (at -cohesion).
 
 You need to set `MOHR_COULOMB_PLASTICITY` in parameter.h (at compile time), and in the material config file:
 
@@ -387,11 +388,13 @@ The following parameters are currently only needed for some pre-processing tools
 **Low-density weakening model**
 
 Additional strength reduction for low-density states (below the reference density).
-For most models, strength is reduced by reducing the cohesion, and by that the whole yield envelope.
-For COLLINS_PLASTICITY only the damaged cohesion is reduced, vor VON_MISES_PLASTICITY all (constant) yield strength is reduced.  
-Strength reduction increases with decreasing density, where the shape of the curve that defines the reducing factor
-is set by the parameters below. It drops from 1 to gamma between rho0 and eta_limit, with slope alpha, then it drops
-further from gamma to zero between eta_limit and rho=0, with slope beta.  
+
+For most plasticity models, this is done by reducing the cohesion, and by that the whole yield envelope.
+For COLLINS_PLASTICITY only the damaged cohesion is reduced, vor VON_MISES_PLASTICITY all (constant) yield strength is reduced.
+
+Strength reduction increases with decreasing density, where the functional form is set by the parameters below.
+It drops from 1 to gamma between rho0 and eta_limit, with slope alpha, then it drops further from gamma to zero
+between eta_limit and rho=0, with slope beta.  
 When combined with porosity, all densities are matrix densities.
 
 You need to set `LOW_DENSITY_WEAKENING` in parameter.h (at compile time), and in the material config file:

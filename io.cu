@@ -458,7 +458,7 @@ void read_particles_from_file(File inputFile)
         }
         free(x);
 
-# if FRAGMENTATION
+#  if FRAGMENTATION
         /* read damage_porjutzi */
         damage_porjutzi_id = H5Dopen(file_id, "/DIM_root_of_damage_porjutzi", H5P_DEFAULT);
         if (damage_porjutzi_id < 0) {
@@ -473,7 +473,7 @@ void read_particles_from_file(File inputFile)
             p_host.damage_porjutzi[i] = x[i];
         }
         free(x);
-# endif
+#  endif
 # endif
 
 # if SIRONO_POROSITY
@@ -1466,11 +1466,11 @@ void write_particles_to_file(File file) {
     hid_t activation_thresholds_id;
     hid_t maxnof_id;
     int maxnof = 0;
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
     hid_t damage_porjutzi_id;
     hid_t damage_total_id;
     hid_t ddamage_porjutzidt_id;
-#endif
+# endif
 #endif
 #if INTEGRATE_DENSITY
     hid_t drhodt_id;
@@ -2448,7 +2448,7 @@ void write_particles_to_file(File file) {
         status = H5Dwrite(damage_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(damage_id);
 
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
         /* damage porjutzi */
         damage_porjutzi_id = H5Dcreate2(file_id, "/DIM_root_of_damage_porjutzi", H5T_NATIVE_DOUBLE, dataspace_id,
                 H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -2469,7 +2469,7 @@ void write_particles_to_file(File file) {
 
         status = H5Dwrite(damage_total_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(damage_total_id);
-#endif
+# endif
 
         /* find maximum number of flaws of all particles */
         maxnof = -1;
@@ -2490,9 +2490,9 @@ void write_particles_to_file(File file) {
         if (maxnof > 0) {
             dims[0] = numberOfParticles;
             dims[1] = maxnof;
-#if DEBUG_MISC
+# if DEBUG_MISC
             fprintf(stdout, "using %d doubles for flaws in HDF5 output\n", maxnof);
-#endif
+# endif
             dataspace_id = H5Screate_simple(2, dims, NULL);
 
             activation_thresholds_id = H5Dcreate2(file_id, "/activation_thresholds", H5T_NATIVE_DOUBLE, dataspace_id,
@@ -2645,7 +2645,7 @@ void write_particles_to_file(File file) {
         status = H5Dwrite(dddt_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(dddt_id);
         free(x);
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
         /* change of damage porjutzi */
         x = (double *) malloc(sizeof(double) * numberOfParticles);
         ddamage_porjutzidt_id = H5Dcreate2(file_id, "/ddamage_porjutzidt", H5T_NATIVE_DOUBLE, dataspace_id,
@@ -2656,7 +2656,7 @@ void write_particles_to_file(File file) {
         status = H5Dwrite(ddamage_porjutzidt_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(ddamage_porjutzidt_id);
         free(x);
-#endif
+# endif
 #endif
 
 #if PALPHA_POROSITY
@@ -3064,10 +3064,10 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     cudaVerify(cudaMemcpy(p_host.dddt, p_device.dddt, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.numActiveFlaws, p_device.numActiveFlaws, memorySizeForInteractions, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.flaws, p_device.flaws, memorySizeForActivationThreshold, cudaMemcpyDeviceToHost));
-#if PALPHA_POROSITY
+# if PALPHA_POROSITY
     cudaVerify(cudaMemcpy(p_host.damage_porjutzi, p_device.damage_porjutzi, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.ddamage_porjutzidt, p_device.ddamage_porjutzidt, memorySizeForParticles, cudaMemcpyDeviceToHost));
-#endif
+# endif
 #endif
 
     cudaVerify(cudaDeviceSynchronize());

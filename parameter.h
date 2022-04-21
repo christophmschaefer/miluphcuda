@@ -59,9 +59,9 @@
 // artificial bulk viscosity according to Schaefer et al. (2004)
 #define KLEY_VISCOSITY 0
 
-// This is the damage model following Benz & Asphaug (1995). Set FRAGMENTATION to activate it.
-// The damage acts always on pressure, but only on deviator stresses if DAMAGE_ACTS_ON_S is
-// activated too, which is an important switch depending on the plasticity model (see comments there).
+// Grady-Kipp fragmentation/damage model, following Benz & Asphaug (1995). Set FRAGMENTATION to activate it.
+// Damage acts always on (negative) pressure, but only on deviatoric stresses if DAMAGE_ACTS_ON_S is set.
+// It depends on the use case and the plasticity model (set below) whether this is desired/reasonable.
 // Note: The damage model needs distribution of activation thresholds in the input file.
 #define FRAGMENTATION 0
 #define DAMAGE_ACTS_ON_S 0
@@ -94,10 +94,13 @@
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
 #define TENSORIAL_CORRECTION 0
 
+
 // Available plastic flow conditions:
 // (if you do not know what this is, choose (1) or nothing)
+
 //   (1) Simple von Mises plasticity with a constant yield strength
 #define VON_MISES_PLASTICITY 0
+
 //   (2) Drucker-Prager yield criterion
 //       -> yield strength is given by the condition \sqrt(J_2) + A * I_1 + B = 0
 //          I_1: first invariant of stress tensor
@@ -105,45 +108,49 @@
 //          A, B: Drucker-Prager constants, which are calculated from angle of internal friction and cohesion
 //       -> intended for granular-like materials, therefore the yield strength decreases to zero for p < 0
 //       -> you can additionally use (1) to set an upper limit for the yield stress
+//       -> negative pressures can get arbitrarily large (i.e., no negative-pressure cap)
 #define DRUCKER_PRAGER_PLASTICITY 0
+
 //   (3) Mohr-Coulomb yield criterion
 //       -> for p > 0: yield strength = tan(friction_angle) \times pressure + cohesion
 //       -> intended for granular-like materials, therefore the yield strength decreases to zero for p < 0:
 //          yield strength = pressure + cohesion (i.e., slope = 1)
 //       -> you can additionally use (1) to set an upper limit for the yield stress
+//       -> negative-pressure cap: negative pressures are limited to zero of yield strength curve (at -cohesion)
 #define MOHR_COULOMB_PLASTICITY 0
+
 //   (4) Pressure dependent yield strength following Collins et al. (2004) and the implementation in Jutzi (2015)
 //       -> yield strength is different for damaged (Y_d) and intact material (Y_i), and averaged mean (Y) in between:
-//              Y_i = cohesion + \mu P / (1 + \mu P / (yield_stress - cohesion) )
-//          where *cohesion* is the yield strength for P = 0 and *yield_stress* the asymptotic limit for P = \infty
-//          \mu is the coefficient of internal friction (= tan(friction_angle))
+//              P > 0: Y_i = cohesion + \mu P / (1 + \mu P / (yield_stress - cohesion) )
+//              P < 0: Y_i = cohesion
+//                  *cohesion* is the yield strength for P = 0 and *yield_stress* the asymptotic limit for P = \infty
+//                  \mu is the coefficient of internal friction (= tan(friction_angle))
 //              P > 0: Y_d = cohesion_damaged + \mu_d \times P
 //              P < 0: Y_d = cohesion_damaged + P (i.e., slope = 1)
-//          where \mu_d is the coefficient of friction of the *damaged* material
-//              Y = (1-damage)*Y_i + damage*Y_d
-//              Y is limited to <= Y_i
-//       Note: If FRAGMENTATION is not activated only Y_i is used.
-//             DAMAGE_ACTS_ON_S is not allowed for this model, since the limiting of S already depends on damage.
+//                  where \mu_d is the coefficient of friction of the *damaged* material
+//              combined/final yield strength:  Y = (1-damage)*Y_i + damage*Y_d
+//                                              Y is limited to <= Y_i
+//              negative-pressure release by damage:
+//                  foremost via (1-damage), in line with the Grady-Kipp model (FRAGMENTATION), but only up to the
+//                  residual tensile strength the material retains even when fully damaged, assumed to be -y_0_d
+//       Note: - If FRAGMENTATION (damage model) is not activated only Y_i is used.
+//             - DAMAGE_ACTS_ON_S is not reasonable for this model, since the limiting of S already depends on damage.
 //       If you want to additionally model the influence of some (single) melt energy on the yield strength, then activate
 //       COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY, which adds a factor (1-e/e_melt) to the yield strength.
 #define COLLINS_PLASTICITY 0
 #define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 0
-//   (5) Simplified version of the Collins et al. (2004) model, which uses only the
-//       strength representation for intact material (Y_i), irrespective of damage.
-//       Unlike in (4), Y decreases to zero for p < 0 (with slope = 1, i.e., zero at -cohesion).
-//       In addition, negative pressures are limited to the zero of the yield strength
-//       curve at -cohesion (i.e., are set to this value when they get more negative).
-#define COLLINS_PLASTICITY_SIMPLE 0
-// Note: The deviator stress tensor is additionally reduced by FRAGMENTATION (i.e., damage) only if
-//       DAMAGE_ACTS_ON_S is set. For most plasticity models it depends on the use case whether this
-//       is desired, only for COLLINS_PLASTICITY it is not reasonable (and therefore not allowed).
 
-// Additional strength reduction for low-density states (below the reference density).
-// For most models, strength is reduced by reducing the cohesion, and by that the whole yield envelope.
-// For COLLINS_PLASTICITY only the damaged cohesion is reduced, vor VON_MISES_PLASTICITY all (constant) yield strength is reduced.
-// Strength reduction increases with decreasing density, where the shape of the curve that defines
-// the reducing factor is set by several parameters in the material config file (see there).
-// Works for all plasticity models above (not the experimental ones below).
+//   (5) Simplified version of COLLINS_PLASTICITY, which uses only the Lundborg strength representation (Y_i above).
+//       For more detailed modeling including crack growth (FRAGMENTATION) use the regular COLLINS_PLASTICITY above.
+//       Unlike in (4), Y decreases to zero for p < 0 (with slope = 1, i.e., zero at -cohesion).
+//       In addition, a negative-pressure cap limits negative pressures to the zero of the yield strength curve (at -cohesion).
+#define COLLINS_PLASTICITY_SIMPLE 0
+
+// Additional strength reduction for low-density states (below the reference density). For most plasticity models this
+// is done by reducing the cohesion, and by that the whole yield envelope. For COLLINS_PLASTICITY only the damaged
+// cohesion is reduced, vor VON_MISES_PLASTICITY all the (constant) yield strength is reduced.
+// Strength reduction increases with decreasing density, where the functional form is set by several parameters in
+// the material config file (see there). Works for all plasticity models above (not the experimental ones below).
 #define LOW_DENSITY_WEAKENING 0
 
 // model regolith as viscous fluid (warning: experimental option)

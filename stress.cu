@@ -36,9 +36,8 @@
 # define DAMAGE_ACTS_ON_PRINCIPAL_STRESSES 0
 #endif
 
-// principal axes damage does not work for pressure dependent yield strengths
-#if DAMAGE_ACTS_ON_PRINCIPAL_STRESSES  &&  ( COLLINS_PLASTICITY || COLLINS_PLASTICITY_SIMPLE )
-#error Do not combine DAMAGE_ACTS_ON_PRINCIPAL_STRESSES and COLLINS_PLASTICITY or COLLINS_PLASTICITY_SIMPLE.
+#if DAMAGE_ACTS_ON_PRINCIPAL_STRESSES  &&  ( MOHR_COULOMB_PLASTICITY || DRUCKER_PRAGER_PLASTICITY || COLLINS_PLASTICITY || COLLINS_PLASTICITY_SIMPLE )
+# error Do not combine DAMAGE_ACTS_ON_PRINCIPAL_STRESSES and pressure-dependent yield strength models.
 #endif
 
 
@@ -56,18 +55,20 @@ __global__ void set_stress_tensor(void)
     double rotation_matrix[DIM][DIM];
     double main_stresses[DIM];
 # endif
-    double damage = 0.0;
+# if FRAGMENTATION
+    register double damage;
+# endif
+    register double ptmp;
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         matId = p_rhs.materialId[i];
         niters = 0;
+
 # if FRAGMENTATION
         damage = p.damage_total[i];
         if (damage > 1.0) damage = 1.0;
         if (damage < 0.0) damage = 0.0;
-# else
-        damage = 0.0;
 # endif
 
 # if DAMAGE_ACTS_ON_PRINCIPAL_STRESSES
@@ -96,22 +97,32 @@ __global__ void set_stress_tensor(void)
         // sigmatmp now holds the stress tensor for particle i with damaged reduced stresses
         copy_matrix(sigmatmp, sigma);
 # else
+
         // assemble stress tensor
+#  if COLLINS_PLASTICITY
+        // influence of damage on p < 0 already set in plasticity.cu
+        ptmp = p.p[i];
+#  elif FRAGMENTATION
+        if (p.p[i] < 0.0) {
+            // reduction of neg. pressure following Grady-Kipp model
+            ptmp = (1.0 - damage) * p.p[i];
+        } else {
+            ptmp = p.p[i];
+        }
+#  else
+        ptmp = p.p[i];
+#  endif
+
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
-#  if DAMAGE_ACTS_ON_S
+#  if FRAGMENTATION && DAMAGE_ACTS_ON_S
                 // reduction of S following Grady-Kipp model
                 sigma[d][e] = (1.0 - damage) * p.S[stressIndex(i, d, e)];
 #  else
                 sigma[d][e] = p.S[stressIndex(i, d, e)];
 #  endif
-                // the pure pressure part of sigma is always reduced for p < 0
-                if (d == e) { // the trace
-                    if (p.p[i] < 0) {
-                        sigma[d][e] += - (1.0 - damage) * p.p[i];
-                    } else {
-                        sigma[d][e] += -p.p[i];
-                    }
+                if (d == e) {   // the trace
+                    sigma[d][e] -= ptmp;
                 }
             }
         }
