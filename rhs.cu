@@ -512,6 +512,22 @@ void rightHandSide()
 # endif
 #endif
 
+#if FRAGMENTATION
+# if DEBUG_RHS_RUNTIMES
+    cudaEventRecord(start, 0);
+# endif
+    cudaVerifyKernel((damageLimit<<<numberOfMultiprocessors*4, NUM_THREADS_512>>>()));
+    cudaVerify(cudaDeviceSynchronize());
+# if DEBUG_RHS_RUNTIMES
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time[timerCounter], start, stop);
+    printf("duration damage limit: %.7f ms\n", time[timerCounter]);
+    totalTime += time[timerCounter++];
+# endif
+    fflush(stdout);
+#endif
+
 #if PLASTICITY
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
@@ -522,7 +538,7 @@ void rightHandSide()
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration plasticity: %.7f ms\n", time[timerCounter]);
+    printf("duration plasticityModel: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
 # endif
 #endif
@@ -540,22 +556,6 @@ void rightHandSide()
     printf("duration johnson-cook: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
 # endif
-#endif
-
-#if FRAGMENTATION
-# if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(start, 0);
-# endif
-    cudaVerifyKernel((damageLimit<<<numberOfMultiprocessors*4, NUM_THREADS_512>>>()));
-    cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration damage limit: %.7f ms\n", time[timerCounter]);
-    totalTime += time[timerCounter++];
-# endif
-    fflush(stdout);
 #endif
 
 #if TENSORIAL_CORRECTION
