@@ -166,5 +166,9 @@
 # error You set STRESS_PALPHA_POROSITY but not PALPHA_POROSITY in parameter.h.
 #endif
 
+#if (MORE_OUTPUT || MORE_ANEOS_OUTPUT) && !HDF5IO
+# error You need to set HDF5IO if you want MORE_OUTPUT or MORE_ANEOS_OUTPUT in parameter.h.
+#endif
+
 
 #endif
