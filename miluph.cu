@@ -225,9 +225,9 @@ static void print_compile_information(void)
 # endif
     fprintf(stdout, "\n");
 #elif COLLINS_PLASTICITY_SIMPLE
-    fprintf(stdout, "    simplified version of Collins model: pressure dependent yield strength irrespective of damage\n");
+    fprintf(stdout, "    simplified version of Collins model: only Lundborg yield strength curve + simple negative-pressure cap (i.e., no dynamic fragmentation/damage)\n");
 #elif VON_MISES_PLASTICITY
-    fprintf(stdout, "    simple von Mises yield criterion\n");
+    fprintf(stdout, "    simple von Mises yield strength, independent of pressure\n");
 #endif
 
 #if JC_PLASTICITY
@@ -235,7 +235,7 @@ static void print_compile_information(void)
 #else
     strcpy(yesno, "no");
 #endif
-    fprintf(stdout, "Plasticity model from Johnson - Cook:\t   %s\n", yesno);
+    fprintf(stdout, "Plasticity model from Johnson-Cook:\t   %s\n", yesno);
 
 #if LOW_DENSITY_WEAKENING
     strcpy(yesno, "yes");
@@ -301,32 +301,35 @@ static void print_compile_information(void)
 #else
     strcpy(yesno, "no");
 #endif
-    fprintf(stdout, "ghost boundaries:\t  %s\n", yesno);
-    fprintf(stdout, "boundary particle id: %d\n", BOUNDARY_PARTICLE_ID);
+    fprintf(stdout, "Boundary conditions:\n");
+    fprintf(stdout, "    ghost boundaries:\t  %s\n", yesno);
+    fprintf(stdout, "    boundary particle id: %d\n", BOUNDARY_PARTICLE_ID);
+
+    fprintf(stdout, "I/O settings:\n");
 #if HDF5IO
     strcpy(yesno, "yes");
 #else
     strcpy(yesno, "no");
 #endif
-    fprintf(stdout, "HDF5 i/o:\t  %s\n", yesno);
+    fprintf(stdout, "    HDF5 i/o:\t  %s\n", yesno);
     if (param.hdf5output) {
         strcpy(yesno, "yes");
     } else {
         strcpy(yesno, "no");
     }
-    fprintf(stdout, "using HDF5 output: \t %s \n", yesno);
+    fprintf(stdout, "    using HDF5 output: \t %s \n", yesno);
     if (param.hdf5input) {
         strcpy(yesno, "yes");
     } else {
         strcpy(yesno, "no");
     }
-    fprintf(stdout, "using HDF5 input: \t %s \n", yesno);
+    fprintf(stdout, "    using HDF5 input: \t %s \n", yesno);
     if (param.ascii_output) {
         strcpy(yesno, "yes");
     } else {
         strcpy(yesno, "no");
     }
-    fprintf(stdout, "using ASCII output: \t %s \n", yesno);
+    fprintf(stdout, "    using ASCII output: \t %s \n", yesno);
 
     fprintf(stdout, "\nImplemented equations of state and corresponding eos type entry in material.cfg:\n");
     fprintf(stdout, "EOS_TYPE_IGNORE          \t\t\t %d\n", EOS_TYPE_IGNORE);

@@ -1458,7 +1458,7 @@ void print_rk2_adaptive_settings()
     double tmp;
 
     fprintf(stdout, "\n\n");
-    fprintf(stdout, "Using rk2_adaptive with the following settings:\n");
+    fprintf(stdout, "Using rk2_adaptive for time-integration with the following settings:\n");
     fprintf(stdout, "    start time: %g\n", startTime);
     fprintf(stdout, "    output index of start time: %d\n", startTimestep);
     fprintf(stdout, "    no output times: %d\n", numberOfTimesteps);

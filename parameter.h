@@ -153,11 +153,11 @@
 // the material config file (see there). Works for all plasticity models above (not the experimental ones below).
 #define LOW_DENSITY_WEAKENING 0
 
-// model regolith as viscous fluid (warning: experimental option)
+// model regolith as viscous fluid (warning: experimental)
 #define VISCOUS_REGOLITH 0
-// use Bui model for regolith (warning: experimental option)
+// use Bui model for regolith (warning: experimental)
 #define PURE_REGOLITH 0
-// use Johnson-Cook plasticity model (warning: experimental option)
+// use Johnson-Cook plasticity model (warning: experimental)
 #define JC_PLASTICITY 0
 
 // Porosity models:
@@ -186,14 +186,13 @@
 // (if VARIABLE_SML is not set the individual smls remain constant)
 #define READ_INITIAL_SML_FROM_PARTICLE_FILE 0
 
-// correction terms for sml calculation (warning: experimental option)
+// correction terms for sml calculation (warning: experimental)
 // adds gradient of the smoothing length to continuity equation, equation of motion, energy equation
 #define SML_CORRECTION 0
 
 // if set to 0, h = (h_i + h_j)/2  is used to calculate W_ij
 // if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2
 #define AVERAGE_KERNELS 1
-
 
 // important switch: if the simulations yields at some point too many interactions for
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be set to 0
@@ -206,19 +205,18 @@
 #define DEAL_WITH_TOO_MANY_INTERACTIONS 0
 
 // additional smoothing of the velocity field
-// hinders particle penetration
-// see Morris and Monaghan 1984
+// hinders particle penetration (see Morris & Monaghan, 1984)
 #define XSPH 0
 
-// boundaries EXPERIMENTAL, please do not use this....
+// boundary conditions (warning: experimental)
+// note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions
 #define BOUNDARY_PARTICLE_ID -1
 #define GHOST_BOUNDARIES 0
-// note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions
 
 // IO options
 #define HDF5IO 1    // use HDF5 (needs libhdf5-dev and libhdf5)
-#define MORE_OUTPUT 0   //produce additional output to HDF5 files (p_max, p_min, rho_max, rho_min); only ueful when HDF5IO is set
-#define MORE_ANEOS_OUTPUT 0 // produce additional output to HDF5 files (T, cs, entropy, phase-flag); only useful when HDF5IO is set; set only if you use the ANEOS eos, but currently not supported for porosity+ANEOS
+#define MORE_OUTPUT 0   //produce additional output to HDF5 files: p_max, p_min, rho_max, rho_min
+#define MORE_ANEOS_OUTPUT 0 // produce additional output to HDF5 files: T, cs, entropy, phase-flag; set only if you use the ANEOS EoS; currently not supported for porosity + ANEOS
 #define OUTPUT_GRAV_ENERGY 0    // compute and output gravitational energy (at times when output files are written); of all SPH particles (and also w.r.t. gravitating point masses and between them); direct particle-particle summation, not tree; option exists to control costly computation for high particle numbers
 #define BINARY_INFO 0   // generates additional output file (binary_system.log) with info regarding binary system: semi-major axis, eccentricity if GRAVITATING_POINT_MASSES == 1
 
