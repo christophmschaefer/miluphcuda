@@ -516,7 +516,10 @@ __global__ void limitTimestepCourant(double *courantPerBlock)
 
     // loop for particles
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
-        courant = min(courant, p.h[i]/p.cs[i]);
+        // only consider particles that interact
+        if (p.noi[i] > 0) {
+            courant = min(courant, p.h[i] / p.cs[i]);
+        }
     }
 
     // reduce shared thread results to one per block
