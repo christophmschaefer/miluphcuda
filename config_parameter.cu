@@ -47,6 +47,7 @@
 
 double *matSml_d;
 int *matnoi_d;
+int *matdensity_via_kernel_sum_d;
 int *matEOS_d;
 double *matPolytropicK_d;
 double *matPolytropicGamma_d;
@@ -243,6 +244,7 @@ __constant__ double *matzeta;
 
 __constant__ double *matSml;
 __constant__ int *matnoi;
+__constant__ int *matdensity_via_kernel_sum;
 __constant__ int *matEOS;
 __constant__ double *matPolytropicK;
 __constant__ double *matPolytropicGamma;
@@ -294,7 +296,6 @@ __constant__ int maxNumFlaws;
 __device__ double max_abs_pressure_change;
 __constant__ double theta; // tree theta
 int *relaxedPerBlock;
-
 double *sml;
 double *till_rho_0;
 double *bulk_modulus;
@@ -424,6 +425,7 @@ void transferMaterialsToGPU()
         // end of ANEOS allocations in host memory
         double *shear_modulus = (double*)calloc(numberOfElements, sizeof(double));
         bulk_modulus = (double*)calloc(numberOfElements, sizeof(double));
+        int *density_via_kernel_sum = (int*)calloc(numberOfElements, sizeof(int));
         double *yield_stress = (double*)calloc(numberOfElements, sizeof(double));
         double *internal_friction = (double*)calloc(numberOfElements, sizeof(double));
         double *internal_friction_damaged = (double*)calloc(numberOfElements, sizeof(double));
@@ -576,6 +578,12 @@ void transferMaterialsToGPU()
             config_setting_lookup_string(subset, "table_path", &g_aneos_tab_file[ID]);
             config_setting_lookup_int(subset, "n_rho", &g_aneos_n_rho[ID]);
             config_setting_lookup_int(subset, "n_e", &g_aneos_n_e[ID]);
+            config_setting_lookup_int(subset, "density_via_kernel_sum", &density_via_kernel_sum[ID]);
+#if INTEGRATE_DENSITY
+            if (density_via_kernel_sum[ID] > 0) {
+                fprintf(stdout, "Determing the density of material %d via kernel sum and not by integration of the continuity equation.\n", ID);
+            }
+#endif
             config_setting_lookup_float(subset, "aneos_rho_0", &g_aneos_rho_0[ID]);
             config_setting_lookup_float(subset, "aneos_bulk_cs", &g_aneos_bulk_cs[ID]);
             // end reading ANEOS data from material file to host memory, begin reading ANEOS lookup table to host memory
@@ -892,6 +900,8 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matCp_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matCV_d, numberOfElements*sizeof(double)));
 #endif
+        cudaVerify(cudaMalloc((void **)&matdensity_via_kernel_sum_d, numberOfElements*sizeof(int)));
+        cudaVerify(cudaMemcpy(matdensity_via_kernel_sum_d, density_via_kernel_sum, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));
 #if SOLID
         cudaVerify(cudaMalloc((void **)&matYoungModulus_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMemcpy(matYoungModulus_d, young_modulus, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
@@ -1107,6 +1117,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(mat_f_sml_min, &mat_f_sml_min_d, sizeof(void*)));
 #endif
         cudaVerify(cudaMemcpyToSymbol(matnoi, &matnoi_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matdensity_via_kernel_sum, &matdensity_via_kernel_sum_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matEOS, &matEOS_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matPolytropicK, &matPolytropicK_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matPolytropicGamma, &matPolytropicGamma_d, sizeof(void*)));

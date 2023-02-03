@@ -258,14 +258,17 @@ __global__ void internalForces(int *interactions) {
             // the interaction partner
             j = interactions[i * MAX_NUM_INTERACTIONS + k];
 
+            for (d = 0; d < DIM; d++) {
+                accelsj[d] = 0.0;
+                dWdxj[d] = 0.0;
+                dWdx[d] = 0.0;
+            }
+
             matIdj = p_rhs.materialId[j];
             if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || matIdj == EOS_TYPE_IGNORE) {
                 continue;
             }
 
-            for (d = 0; d < DIM; d++) {
-                accelsj[d] = 0.0;
-            }
 
             boundia = 0;
             boundia = p_rhs.materialId[j] == BOUNDARY_PARTICLE_ID;
@@ -768,6 +771,13 @@ __global__ void internalForces(int *interactions) {
         p.drhodt[i] = drhodt;
 #endif // SML_CORRECTION
 
+#if INTEGRATE_DENSITY
+        // if the density is calculated via kernel sum, we set drhodt to 0 here again
+        if (matdensity_via_kernel_sum[p_rhs.materialId[i]]) {
+            p.drhodt[i] = 0.0;
+        }
+#endif
+
 
 #if INTEGRATE_ENERGY
 # if SOLID
@@ -930,6 +940,7 @@ __global__ void internalForces(int *interactions) {
 #  endif
                                                             * p.dalphadt[i];
                     }
+# endif
 # endif
                 }
             }

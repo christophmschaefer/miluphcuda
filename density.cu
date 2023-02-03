@@ -35,6 +35,9 @@ extern __device__ SPH_kernel wendlandc2_p;
 extern __device__ void redo_NeighbourSearch(int particle_id, int *interactions);
 #endif // SML_CORRECTION
 
+// calculates the density of all particles via the kernel sum
+// is also called for INTEGRATE_DENSITY to determine the densities of particles
+// of materials with density_via_kernel_sum = 1 in material.cfg
 __global__ void calculateDensity(int *interactions) {
     int i;
     int j;
@@ -58,7 +61,7 @@ __global__ void calculateDensity(int *interactions) {
     
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE || matdensity_via_kernel_sum[p_rhs.materialId[i]] < 1) {
                 continue;
         }
         tolerance = 0.0;

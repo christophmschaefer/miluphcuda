@@ -41,6 +41,8 @@ extern double *sml;
 extern double *bulk_modulus;
 extern double *cs_porous;
 extern double *till_rho_0;
+extern int *matdensity_via_kernel_sum_d;
+extern __constant__ int *matdensity_via_kernel_sum;
 
 extern double *matporjutzi_p_elastic_d;
 extern double *matporjutzi_p_transition_d;
@@ -230,6 +232,7 @@ extern __constant__ double *matmean_particle_distance;
 #endif
 
 extern __constant__ int *materialId;
+extern __constant__ int *density_via_kernel_sum;
 extern __constant__ double *matRhoLimit;
 extern __constant__ double *matN;
 extern __constant__ double *matCohesion;
