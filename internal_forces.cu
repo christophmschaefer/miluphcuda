@@ -665,13 +665,14 @@ __global__ void internalForces(int *interactions) {
 # if TENSORIAL_CORRECTION
 #  if 0 // cms 2020-06-10 testing time step size, this part gives a tiny step size due to density
       //                evolution, needs some debugging
+      // debugging started 2023-02-15, for the colliding rings, the original version is stable, this one not!
+            double divv = 0.0;
             for (d = 0; d < DIM; d++) {
                 for (dd = 0; dd < DIM; dd++) {
-                    drhodt += p.rho[i] * p.m[j]/p.rho[j] * dv[d] * dWdx[dd]
-                              * p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd];
+                    divv += p.m[j]/p.rho[j] * dv[d] * p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
                 }
             }
-
+            drhodt += p.rho[i] * divv;
 #  else
             drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
 #  endif

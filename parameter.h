@@ -24,7 +24,7 @@
 #define _PARAMETER_H
 
 // Dimension of the problem
-#define DIM 3
+#define DIM 2
 
 // Basic physical model, choose one of the following:
 // SOLID solves continuum mechanics with material strength, and stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
@@ -45,7 +45,7 @@
 
 // integrate the energy equation
 // when setting up a SOLID simulation with Tillotson or ANEOS, it must be set to 1
-#define INTEGRATE_ENERGY 1
+#define INTEGRATE_ENERGY 0
 
 // integrate the continuity equation
 // if set to 0, the density will be calculated using the standard SPH sum \sum_i m_j W_ij
@@ -77,7 +77,7 @@
 
 // for the tensile instability fix
 // you do not need this
-#define ARTIFICIAL_STRESS 0
+#define ARTIFICIAL_STRESS 1
 
 // standard SPH alpha/beta viscosity
 #define ARTIFICIAL_VISCOSITY 1
@@ -89,7 +89,7 @@
 
 // consistency switches
 // for zeroth order consistency
-#define SHEPARD_CORRECTION 0
+#define SHEPARD_CORRECTION 1
 // for linear consistency
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
 #define TENSORIAL_CORRECTION 1
@@ -137,7 +137,7 @@
 //             - DAMAGE_ACTS_ON_S is not reasonable for this model, since the limiting of S already depends on damage.
 //       If you want to additionally model the influence of some (single) melt energy on the yield strength, then activate
 //       COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY, which adds a factor (1-e/e_melt) to the yield strength.
-#define COLLINS_PLASTICITY 1
+#define COLLINS_PLASTICITY 0
 #define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 0
 
 //   (5) Simplified version of COLLINS_PLASTICITY, which uses only the Lundborg strength representation (Y_i above).
@@ -198,7 +198,7 @@
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be set to 0
 // and the simulation continues. It will be announced on *stdout* when this happens
 // if set to 0, the simulation stops in such a case unless DEAL_WITH_TOO_MANY_INTERACTIONS is used
-#define TOO_MANY_INTERACTIONS_KILL_PARTICLE 1
+#define TOO_MANY_INTERACTIONS_KILL_PARTICLE 0
 // important switch: if the simulations yields at some point too many interactions for
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be lowered until
 // the interactions are lower than MAX_NUM_INTERACTIONS

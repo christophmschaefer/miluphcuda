@@ -28,14 +28,14 @@
 #define MILUPHCUDA_VERSION "devel"
 
 // debug flags, mainly for additional output
-#define DEBUG_TIMESTEP 0
-#define DEBUG_LINALG 0
-#define DEBUG_TREE 0
+#define DEBUG_TIMESTEP 1
+#define DEBUG_LINALG 1
+#define DEBUG_TREE 1
 #define DEBUG_TREE_TO_FILE 0
-#define DEBUG_GRAVITY 0
-#define DEBUG_RHS 0
-#define DEBUG_RHS_RUNTIMES 0
-#define DEBUG_MISC 0
+#define DEBUG_GRAVITY 1
+#define DEBUG_RHS 1
+#define DEBUG_RHS_RUNTIMES 1
+#define DEBUG_MISC 1
 
 
 #define FALSE 0
