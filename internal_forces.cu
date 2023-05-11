@@ -940,6 +940,7 @@ __global__ void internalForces(int *interactions) {
                                                             * p.S[stressIndex(i,d,e)]
 #  endif
                                                             * p.dalphadt[i];
+#  endif // 0
                     }
 # endif
 # endif
