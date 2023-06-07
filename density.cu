@@ -61,9 +61,15 @@ __global__ void calculateDensity(int *interactions) {
     
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+#if INTEGRATE_DENSITY
         if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE || matdensity_via_kernel_sum[p_rhs.materialId[i]] < 1) {
                 continue;
         }
+#else
+        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+                continue;
+        }
+#endif // INTEGRATE_DENSITY
         tolerance = 0.0;
         int cnt = 0;
         
