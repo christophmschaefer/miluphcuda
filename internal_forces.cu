@@ -985,11 +985,15 @@ __global__ void internalForces(int *interactions) {
             double K2 = 0;
             for (d = 0; d < DIM; d++) {
                 for (e = 0; e < DIM; e++) {
-                    K2 += edotp[d][e]*edotp[d][e];
+                    // a measure for the total deviatoric strain rate
+                    K2 += p.dSdt[stressIndex(i,d,e)]*p.dSdt[stressIndex(i,d,e)];
+//                    K2 += edotp[d][e]*edotp[d][e];
                 }
             }
             // still to double check factor 2./3 here -> reference from LS-DYNA support page on effective plastic strain
-            p.edotp[i] = sqrt(2./3.*K2);
+//            p.edotp[i] = sqrt(2./3.*K2);
+            // now consider only the plastic part (with the plasticity factor from this time step and convert to strain
+            p.edotp[i] = (1-p_rhs.plastic_f[i])/(3*shear)*sqrt(3./2.*K2);
 # endif
 
 # if ARTIFICIAL_VISCOSITY

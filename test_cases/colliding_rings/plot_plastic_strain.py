@@ -22,10 +22,9 @@ h5f.close()
 
 plt.figure(figsize=(720/my_dpi, 720/my_dpi), dpi=my_dpi)
 
-plt.scatter(x, y, c=total_strain, s=1, edgecolor='')
+plt.scatter(x, y, c=total_strain, s=0.5, edgecolor=None)
 plt.xlim(-10,10)
 plt.ylim(-10,10)
-# plt.clim(0.8, 1.2)
 
 plt.xlabel("x")
 plt.ylabel("y")
