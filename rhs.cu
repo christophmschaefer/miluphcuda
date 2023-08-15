@@ -40,14 +40,15 @@
 #include "viscosity.h"
 #include "artificial_stress.h"
 #include "stress.h"
-#include "damage.h"
 
 extern int flag_force_gravity_calc;
 extern int gravity_index;
 extern __device__ int movingparticles;
 extern __device__ int reset_movingparticles;
 
+
 extern __device__ volatile int maxNodeIndex;
+extern __device__ int treeMaxDepth;
 
 // tree computational domain
 extern double *minxPerBlock, *maxxPerBlock;
@@ -138,22 +139,17 @@ __global__ void zero_all_derivatives(int *interactions)
 /* determine all derivatives */
 void rightHandSide()
 {
-#if DEBUG_RHS_RUNTIMES
     cudaEvent_t start, stop;
     float time[MAX_NUMBER_PROFILED_KERNELS];
-    float totalTime = 0.0;
-    int timerCounter = 0;
-#endif
-#if DEBUG_TREE
-    double xmin, xmax, ymin, ymax, zmin, zmax;
+    float totalTime = 0;
     double radiusmax, radiusmin;
+    int timerCounter = 0;
     int *treeDepthPerBlock;
-    int maxtreedepth_host = 0;
-    int maxNodeIndex_host;
-#endif
     int *movingparticlesPerBlock;
+    int maxtreedepth_host = 0;
     int movingparticles_host = 0;
     int calculate_nbody = 0;
+
 
 #if GRAVITATING_POINT_MASSES
     if (param.integrator_type == HEUN_RK4) {
@@ -163,66 +159,52 @@ void rightHandSide()
     }
 #endif
 
+
 #if USE_SIGNAL_HANDLER
     if (terminate_flag) {
         copyToHostAndWriteToFile(-2, -2);
     }
 #endif
 
-#if DEBUG_RHS_RUNTIMES
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-#endif
 
     cudaVerify(cudaMemset(childListd, EMPTY, memorySizeForChildren));
     cudaVerify(cudaDeviceSynchronize());
 
-#if DEBUG_RHS || DEBUG_TIMESTEP
-    fprintf(stdout, "rhs call\n");
-#endif
+
+    if (param.verbose) fprintf(stdout, "rhs call\n");
 
     // zero all accelerations
-#if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
-#endif
     cudaVerifyKernel((zero_all_derivatives<<<numberOfMultiprocessors, NUM_THREADS_256>>>(interactions)));
-#if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration zeroing all: %.7f ms\n", time[timerCounter]);
-    totalTime += time[timerCounter++];
-#endif
+    if (param.verbose) printf("duration zeroing all: %.7f ms\n", time[timerCounter]);
 
     // check if boundary conditions are violated
     cudaVerifyKernel((BoundaryConditionsBeforeRHS<<<16 * numberOfMultiprocessors, NUM_THREADS_BOUNDARY_CONDITIONS>>>(interactions)));
 
     cudaVerify(cudaDeviceSynchronize());
-
 #if GHOST_BOUNDARIES
     /*
        the location of the ghost boundary particles are set. The quantities for the ghost particles will
        be set later on as soon as we know the quantities for the real particles (density, pressure...)
      */
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((insertGhostParticles<<<4 * numberOfMultiprocessors, NUM_THREADS_BOUNDARY_CONDITIONS>>>()));
     //cudaVerifyKernel((insertGhostParticles<<<1, 1>>>()));
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration inserting ghost particles: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration inserting ghost particles: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 #endif
 
     cudaVerify(cudaDeviceSynchronize());
 
-#if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
-#endif
     cudaVerifyKernel((computationalDomain<<<numberOfMultiprocessors, NUM_THREADS_COMPUTATIONAL_DOMAIN>>>(
                     minxPerBlock, maxxPerBlock
 #if DIM > 1
@@ -232,112 +214,113 @@ void rightHandSide()
                     , minzPerBlock, maxzPerBlock
 #endif
                     )));
-#if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration comp domain: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration comp domain: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
+    if (param.verbose || param.decouplegravity) {
+        double xmin, xmax;
+#if DIM > 1
+        double ymin, ymax;
 #endif
+#if DIM == 3
+        double zmin, zmax;
+#endif
+        cudaMemcpyFromSymbol(&xmin, minx, sizeof(double));
+        cudaMemcpyFromSymbol(&xmax, maxx, sizeof(double));
+#if DIM > 1
+        cudaMemcpyFromSymbol(&ymin, miny, sizeof(double));
+        cudaMemcpyFromSymbol(&ymax, maxy, sizeof(double));
+#endif
+#if DIM == 3
+        cudaMemcpyFromSymbol(&zmin, minz, sizeof(double));
+        cudaMemcpyFromSymbol(&zmax, maxz, sizeof(double));
+#endif
+        radiusmax = xmax - xmin;
+#if DIM > 1
+        radiusmax = max(radiusmax, ymax-ymin);
+#endif
+        if (param.verbose) {
+            printf("computational domain: x [%e, %e]", xmin, xmax);
+#if DIM > 1
+            printf(", y [%e, %e]", ymin, ymax);
+#endif
+#if DIM == 3
+            printf(", z [%e, %e]", zmin, zmax);
+            radiusmax = max(radiusmax, zmax-zmin);
+#endif
+            printf("\n");
+        }
+    }
 
     cudaVerify(cudaDeviceSynchronize());
 
-#if DEBUG_TREE
-    cudaMemcpyFromSymbol(&xmin, minx, sizeof(double));
-    cudaMemcpyFromSymbol(&xmax, maxx, sizeof(double));
-    radiusmax = xmax - xmin;
-# if DIM > 1
-    cudaMemcpyFromSymbol(&ymin, miny, sizeof(double));
-    cudaMemcpyFromSymbol(&ymax, maxy, sizeof(double));
-    radiusmax = max(radiusmax, ymax-ymin);
-# endif
-# if DIM == 3
-    cudaMemcpyFromSymbol(&zmin, minz, sizeof(double));
-    cudaMemcpyFromSymbol(&zmax, maxz, sizeof(double));
-    radiusmax = max(radiusmax, zmax-zmin);
-# endif
-    printf("computational domain: x [%e, %e]", xmin, xmax);
-# if DIM > 1
-    printf(", y [%e, %e]", ymin, ymax);
-# endif
-# if DIM == 3
-    printf(", z [%e, %e]", zmin, zmax);
-# endif
-    printf("\n");
-#endif  // DEBUG_TREE
-
-#if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
-#endif
     cudaVerifyKernel((buildTree<<<numberOfMultiprocessors, NUM_THREADS_BUILD_TREE>>>()));
     cudaVerify(cudaDeviceSynchronize());
-#if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration build tree: %.7f ms\n", time[timerCounter]);
-    totalTime += time[timerCounter++];
-#endif
-
-#if DEBUG_TREE
     cudaMemcpyFromSymbol(&maxNodeIndex_host, maxNodeIndex, sizeof(int));
-    fprintf(stdout, "number of inner nodes: %d\n", (numberOfNodes - maxNodeIndex_host));
-    fprintf(stdout, "number of used inner nodes / number of allocated nodes: %.7f %%\n",
-            100.0 * (float)(numberOfNodes - maxNodeIndex_host) / (float)(numberOfNodes - numberOfParticles));
-    // get maximum depth of tree
-    cudaVerify(cudaMalloc((void**)&treeDepthPerBlock, sizeof(int)*numberOfMultiprocessors));
-    cudaVerifyKernel((getTreeDepth<<<numberOfMultiprocessors, NUM_THREADS_TREEDEPTH>>>(treeDepthPerBlock)));
-    cudaMemcpyFromSymbol(&maxtreedepth_host, treeMaxDepth, sizeof(int));
-    fprintf(stdout, "max depth of tree: %d\n", maxtreedepth_host);
-    radiusmin = radiusmax * pow(0.5, maxtreedepth_host-1);
-    fprintf(stdout, "largest node length: %g \t smallest node length: %g\n", radiusmax, radiusmin);
-    cudaVerify(cudaFree(treeDepthPerBlock));
-#endif
+    if (param.verbose) fprintf(stdout, "build tree duration: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) fprintf(stdout, "number of inner nodes: %d\n", (numberOfNodes - maxNodeIndex_host));
+    if (param.verbose) fprintf(stdout, "number of used inner nodes / number of allocated nodes: %.7f %%\n", 100.0 * (float)(numberOfNodes - maxNodeIndex_host) / (float)(numberOfNodes - numberOfParticles));
 
+
+    // get maximum depth of tree
+    if (param.decouplegravity || param.treeinformation) {
+        cudaVerify(cudaMalloc((void**)&treeDepthPerBlock, sizeof(int)*numberOfMultiprocessors));
+        if (param.verbose) fprintf(stdout, "Determing depth of tree\n");
+        cudaVerifyKernel((getTreeDepth<<<numberOfMultiprocessors, NUM_THREADS_TREEDEPTH>>>(treeDepthPerBlock)));
+        cudaMemcpyFromSymbol(&maxtreedepth_host, treeMaxDepth, sizeof(int));
+        if (param.verbose) fprintf(stdout, "Maximum depth of tree is: %d\n", maxtreedepth_host);
+        radiusmin = radiusmax * pow(0.5, maxtreedepth_host-1);
+        if (param.verbose) fprintf(stdout, "Largest node length: %g \t smallest node length: %g\n", radiusmax, radiusmin);
+        cudaVerify(cudaFree(treeDepthPerBlock));
+    }
+
+
+    totalTime += time[timerCounter++];
     cudaVerify(cudaDeviceSynchronize());
 
-#if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
-#endif
+
+
 #if VARIABLE_SML
-    // boundary conditions for sml
-# if DEBUG_RHS
-    printf("calling check_sml_boundary\n");
-# endif
+    // boundary conditions for the smoothing lengths
+    if (param.verbose) printf("calling check_sml_boundary\n");
     cudaVerifyKernel((check_sml_boundary<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>()));
     cudaVerify(cudaDeviceSynchronize());
 #endif
+
 #if VARIABLE_SML && FIXED_NOI
     // call only for the fixed number of interactions case
-    // if INTEGRATE_SML, the sml is integrated and we only need to symmetrize the interactions later on
-# if DEBUG_RHS
-    printf("calling knnNeighbourSearch\n");
-# endif
+    // if INTEGRATE_SML is set, the sml is integrated and we only need to symmetrize the interactions
+    // later on
+    if (param.verbose) printf("calling knnNeighbourSearch\n");
     cudaVerifyKernel((knnNeighbourSearch<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>(
                     interactions)));
     cudaVerify(cudaDeviceSynchronize());
 #endif
+
 #if DEAL_WITH_TOO_MANY_INTERACTIONS // make sure that a particle does not get more than MAX_NUM_INTERACTIONS
-# if DEBUG_RHS
-    printf("calling nearNeighbourSearch_modify_sml\n");
-# endif
+    if (param.verbose) printf("calling nearNeighbourSearch_modify_sml\n");
     cudaVerifyKernel((nearNeighbourSearch_modify_sml<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>(
                     interactions)));
 #else // risk a termination if MAX_NUM_INTERACTIONS is reached for one particle
-# if DEBUG_RHS
-    printf("calling nearNeighbourSearch\n");
-# endif
+    if (param.verbose) printf("calling nearNeighbourSearch\n");
     cudaVerifyKernel((nearNeighbourSearch<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>(
                     interactions)));
 #endif
+
+
     cudaVerify(cudaDeviceSynchronize());
-#if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration neighboursearch: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration neighboursearch: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-#endif
     cudaVerifyKernel((setEmptyMassForInnerNodes<<<numberOfMultiprocessors * 4, NUM_THREADS_512>>>()));
     cudaVerify(cudaDeviceSynchronize());
     // TODO: only if debug
@@ -356,109 +339,90 @@ void rightHandSide()
     printf("maximum number of interactions: %d\n", maxNumInteractions);
 #endif
 
-//#if !INTEGRATE_DENSITY
-# if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
+
+#if !INTEGRATE_DENSITY
     cudaEventRecord(start, 0);
-# endif
-    cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>( interactions)));
-//    cudaVerifyKernel((calculateDensity<<<1,1>>>( interactions)));
-# if DEBUG_RHS_RUNTIMES
+    cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>(
+                    interactions)));
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration density: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration density: %.7f ms\n", time[timerCounter]);
+#endif
     totalTime += time[timerCounter++];
-# endif
-//#endif
+
 
 #if SHEPARD_CORRECTION
-# if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((shepardCorrection<<<numberOfMultiprocessors*4, NUM_THREADS_256>>>( interactions)));
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration shepard correction: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration shepard correction: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
     //cudaVerifyKernel((printTensorialCorrectionMatrix<<<1,1>>>( interactions)));
 #endif
-
-#if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-#endif
     cudaVerifyKernel((calculateSoundSpeed<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
     cudaVerify(cudaDeviceSynchronize());
-#if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration soundspeed: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration soundspeed: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-#endif
 
 #if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH)
-# if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((CalcDivvandCurlv<<<numberOfMultiprocessors * 4, NUM_THREADS_128>>>(
                     interactions)));
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration div v and curl v: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration div v and curl v: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 #endif
 
 #if SIRONO_POROSITY
-# if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((calculateCompressiveStrength<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
     cudaVerify(cudaDeviceSynchronize());
     cudaVerifyKernel((calculateTensileStrength<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration compressive, tensile and shear strength: %.2f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration compressive, tensile and shear strength: %.2f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
+    time[timerCounter] = 0;
 #endif
 
-#if PURE_REGOLITH
-# if DEBUG_RHS_RUNTIMES
+#if (SOLID && PURE_REGOLITH)
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((plasticity<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration plasticity: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration plasticity: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 #endif
 
-#if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-#endif
     cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
     cudaVerify(cudaDeviceSynchronize());
-#if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration pressure: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration pressure: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-#endif
 /*  function is not in porosity.cu anymore but in timeintecration.cu internal forces
 #if PALPHA_POROSITY
     cudaVerifyKernel((calculateDistensionChange<<<numberOfMultiprocessors * 4, NUM_THREADS_PALPHA_POROSITY>>>()));
@@ -466,127 +430,105 @@ void rightHandSide()
 #endif
 */
 
+    time[timerCounter] = 0;
     if (param.selfgravity) {
-#if DEBUG_RHS_RUNTIMES
         cudaEventRecord(start, 0);
-#endif
         cudaVerifyKernel((calculateCentersOfMass<<<1, NUM_THREADS_CALC_CENTER_OF_MASS>>>()));
         cudaVerify(cudaDeviceSynchronize());
-#if DEBUG_RHS_RUNTIMES
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
         cudaEventElapsedTime(&time[timerCounter], start, stop);
-        printf("duration calc center of mass: %.7f ms\n", time[timerCounter]);
-        totalTime += time[timerCounter++];
-#endif
+        if (param.verbose) {
+            printf("duration calc center of mass: %.7f ms\n", time[timerCounter]);
+        }
     }
+    totalTime += time[timerCounter++];
 
 #if INVISCID_SPH
-# if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((betaviscosity<<<numberOfMultiprocessors * 4, NUM_THREADS_128>>>(
 		    interactions)));
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration betaviscosity: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration betaviscosity: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 #endif
 
-#if (SYMMETRIC_STRESSTENSOR || FRAGMENTATION || PLASTICITY)
-# if DEBUG_RHS_RUNTIMES
+
+#if (SYMMETRIC_STRESSTENSOR || FRAGMENTATION || VON_MISES_PLASTICITY || JC_PLASTICITY)
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((symmetrizeStress<<<4 * numberOfMultiprocessors, NUM_THREADS_512>>>()));
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration symmetrize stress tensor: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration symmetrize stress tensor: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 #endif
 
-#if FRAGMENTATION
-# if DEBUG_RHS_RUNTIMES
+#if VON_MISES_PLASTICITY
     cudaEventRecord(start, 0);
-# endif
-    cudaVerifyKernel((damageLimit<<<numberOfMultiprocessors*4, NUM_THREADS_512>>>()));
+    time[timerCounter] = 0;
+    cudaVerifyKernel((vonMisesPlasticity<<<numberOfMultiprocessors * 4, NUM_THREADS_512>>>()));
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration damage limit: %.7f ms\n", time[timerCounter]);
-    totalTime += time[timerCounter++];
-# endif
-    fflush(stdout);
-#endif
-
-#if PLASTICITY
-# if DEBUG_RHS_RUNTIMES
+    if (param.verbose) printf("duration von mises: %.7f ms\n", time[timerCounter]);
     cudaEventRecord(start, 0);
-# endif
-    cudaVerifyKernel((plasticityModel<<<numberOfMultiprocessors * 4, NUM_THREADS_512>>>()));
-    cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration plasticityModel: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 #endif
-
 #if JC_PLASTICITY
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
-# endif
+    time[timerCounter] = 0;
     cudaVerifyKernel((JohnsonCookPlasticity<<<numberOfMultiprocessors * 4, NUM_THREADS_512>>>()));
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration johnson-cook: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration johnson-cook: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 #endif
+#if FRAGMENTATION
+    time[timerCounter] = 0;
+    cudaEventRecord(start, 0);
+    cudaVerifyKernel((damageLimit<<<numberOfMultiprocessors*4, NUM_THREADS_512>>>()));
+    cudaVerify(cudaDeviceSynchronize());
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time[timerCounter], start, stop);
+    if (param.verbose) printf("duration damage limit: %.7f ms\n", time[timerCounter]);
+    fflush(stdout);
+    totalTime += time[timerCounter++];
+#endif
+
 
 #if TENSORIAL_CORRECTION
-# if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((tensorialCorrection<<<numberOfMultiprocessors*4, NUM_THREADS_256>>>( interactions)));
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration tensorial correction: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration tensorial correction: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 //    cudaVerifyKernel((printTensorialCorrectionMatrix<<<1,1>>>( interactions)));
 #endif
-
 #if VISCOUS_REGOLITH
-# if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((calculatedeviatoricStress<<<numberOfMultiprocessors*4, NUM_THREADS_256>>>( interactions)));
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration viscous regolith : %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration viscous regolith : %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 #endif
 
 #if XSPH
@@ -594,139 +536,119 @@ void rightHandSide()
     cudaVerifyKernel((calculateXSPHchanges<<<4 * numberOfMultiprocessors, NUM_THREADS_512>>>(interactions)));
 #endif /*XSPH */
 
+
 #if GHOST_BOUNDARIES
     /*
        the location of the ghost boundary particles are set. The quantities for the ghost particles will
        be set later on as soon as we know the quantities for the real particles (density, pressure...)
      */
-# if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((setQuantitiesGhostParticles<<<numberOfMultiprocessors, NUM_THREADS_BOUNDARY_CONDITIONS>>>()));
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration quantities ghost particles: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration quantities ghost particles: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 #endif
 
-#if DEBUG_MISC
-    fprintf(stdout, "checking correlation matrix\n");
+#if DEBUG
+    if (param.verbose) fprintf(stdout, "checking correlation matrix\n");
     fflush(stdout);
     cudaVerifyKernel((checkNaNs<<<numberOfMultiprocessors, NUM_THREADS_128>>>(interactions)));
     cudaVerify(cudaDeviceSynchronize());
-    fprintf(stdout, "starting internalForces\n");
+    if (param.verbose) fprintf(stdout, "starting internalForces\n");
     fflush(stdout);
 #endif
 
+
 #if SOLID
-# if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((set_stress_tensor<<<numberOfMultiprocessors, NUM_THREADS_256>>>()));
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration set stress tensor: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration set stress tensor: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 #endif
 
 #if NAVIER_STOKES
-# if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((calculate_kinematic_viscosity<<<numberOfMultiprocessors, NUM_THREADS_256>>>()));
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration calculation kinematic viscosity: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration calculation kinematic viscosity: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 #endif
 
 #if NAVIER_STOKES
-# if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((calculate_shear_stress_tensor<<<numberOfMultiprocessors, NUM_THREADS_256>>>(interactions)));
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration calculation shear stress tensor: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration calculation shear stress tensor: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 #endif
 
 
 #if ARTIFICIAL_STRESS
-# if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((compute_artificial_stress<<<numberOfMultiprocessors, NUM_THREADS_256>>>(interactions)));
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration artificial_stress: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration artificial_stress: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 #endif
 
     // the main loop, where all accelerations are calculated
-#if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-#endif
     cudaVerifyKernel((internalForces<<<numberOfMultiprocessors, NUM_THREADS_128>>>(interactions)));
     //cudaVerifyKernel((internalForces<<<1, 1 >>>(interactions)));
     cudaVerify(cudaDeviceSynchronize());
-#if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration internal forces: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration internal forces: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-#endif
 
 #if GRAVITATING_POINT_MASSES
     // interaction with the point masses
-# if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     cudaVerifyKernel((gravitation_from_point_masses<<<numberOfMultiprocessors, NUM_THREADS_128>>>(calculate_nbody)));
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration gravitation from point masses: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration gravitation from point masses: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
+#endif
+#if GRAVITATING_POINT_MASSES
     // back reaction from the disk
-# if DEBUG_RHS_RUNTIMES
+    time[timerCounter] = 0;
     cudaEventRecord(start, 0);
-# endif
     backreaction_from_disk_to_point_masses(calculate_nbody);
     cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration backreaction from the particles on pointmasses: %.7f ms\n", time[timerCounter]);
+    if (param.verbose) printf("duration backreaction from the particles on pointmasses: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
-# endif
 #endif
 
-#if DEBUG_MISC
+#if DEBUG
     if (param.verbose) fprintf(stdout, "checking for nans after internal_forces\n");
     fflush(stdout);
     cudaVerifyKernel((checkNaNs<<<numberOfMultiprocessors, NUM_THREADS_128>>>(interactions)));
@@ -745,9 +667,8 @@ void rightHandSide()
        if we could use the node masses and positions of last time step */
 
     if (param.selfgravity && param.decouplegravity) {
-#if DEBUG_RHS_RUNTIMES
+        time[timerCounter] = 0;
         cudaEventRecord(start, 0);
-#endif
         if (gravity_index%10 == 0) {
             flag_force_gravity_calc = 1;
         }
@@ -758,77 +679,61 @@ void rightHandSide()
         /* get number of changing particles */
         cudaMemcpyFromSymbol(&movingparticles_host, movingparticles, sizeof(int));
         double changefraction = movingparticles_host*1.0/numberOfParticles;
-#if DEBUG_GRAVITY
-        fprintf(stdout, "%d particles change their nodes, this is a fraction of %g %% (currently allowed max is 0.1 %%)\n",
-                movingparticles_host, changefraction*1e2);
-#endif
+        if (param.verbose) {
+            fprintf(stdout, "%d particles change their nodes, this is a fraction of %g %% \n", movingparticles_host, changefraction*1e2);
+            fprintf(stdout, "currently allowed maximum fraction is 0.1 %%.\n");
+        }
         if (changefraction > 1e-3) {
             flag_force_gravity_calc = 1;
             cudaMemcpyToSymbol(reset_movingparticles, &flag_force_gravity_calc, sizeof(int));
         }
         /* free mem */
         cudaVerify(cudaFree(movingparticlesPerBlock));
-#if DEBUG_RHS_RUNTIMES
-        cudaEventRecord(stop, 0);
-        cudaEventSynchronize(stop);
-        cudaEventElapsedTime(&time[timerCounter], start, stop);
-        printf("duration tree changes: %.7f ms\n", time[timerCounter]);
+        if (param.verbose) printf("duration tree changes: %.7f ms\n", time[timerCounter]);
         totalTime += time[timerCounter++];
-#endif
     }
 
     /* self-gravitation using TREE */
+    time[timerCounter] = 0;
     if (param.selfgravity) {
-#if DEBUG_RHS_RUNTIMES
         cudaEventRecord(start, 0);
-#endif
         if (!param.decouplegravity)
             flag_force_gravity_calc = 1;
         if (flag_force_gravity_calc) {
-#if DEBUG_GRAVITY
-            fprintf(stdout, "calculating self-gravity using new tree\n");
-#endif
+            if (param.verbose) fprintf(stdout, "Calculating accelerations using new tree.\n");
             cudaVerifyKernel((selfgravity<<<16*numberOfMultiprocessors, NUM_THREADS_SELFGRAVITY>>>()));
             flag_force_gravity_calc = 0;
             cudaMemcpyToSymbol(reset_movingparticles, &flag_force_gravity_calc, sizeof(int));
         } else {
-#if DEBUG_GRAVITY
-            printf("skipping calculation of self-gravity, using values from last timestep\n");
-#endif
+            if (param.verbose) printf("Skipping calculation of self_gravity, using values from last timestep.\n");
             cudaVerifyKernel((addoldselfgravity<<<16*numberOfMultiprocessors, NUM_THREADS_SELFGRAVITY>>>()));
         }
         cudaVerify(cudaDeviceSynchronize());
-#if DEBUG_RHS_RUNTIMES
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
-        cudaEventElapsedTime(&time[timerCounter], start, stop);
-        printf("duration selfgravity: %.7f ms\n", time[timerCounter]);
-        totalTime += time[timerCounter++];
-#endif
         gravity_index++;
+        cudaEventElapsedTime(&time[timerCounter], start, stop);
+        if (param.verbose)
+            printf("duration selfgravity: %.7f ms\n", time[timerCounter]);
     }
 
     /* self gravitation using particle-particle forces */
     if (param.directselfgravity) {
-#if DEBUG_GRAVITY
-        fprintf(stdout, "calculating self-gravity using n**2 algorithm\n");
-#endif
-#if DEBUG_RHS_RUNTIMES
-        cudaEventRecord(start, 0);
-#endif
+        if (param.verbose) fprintf(stdout, "Calculating accelerations using n**2 algorithm.\n");
         cudaVerifyKernel((direct_selfgravity<<<numberOfMultiprocessors, NUM_THREADS_SELFGRAVITY>>>()));
         cudaVerify(cudaDeviceSynchronize());
-#if DEBUG_RHS_RUNTIMES
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
         cudaEventElapsedTime(&time[timerCounter], start, stop);
-        printf("duration selfgravity: %.7f ms\n", time[timerCounter]);
-        totalTime += time[timerCounter++];
-#endif
+        if (param.verbose)
+            printf("duration selfgravity: %.7f ms\n", time[timerCounter]);
     }
 
 
+    totalTime += time[timerCounter];
+
     /* set any special particle values */
+
     cudaVerifyKernel((BoundaryConditionsAfterRHS<<<16 * numberOfMultiprocessors, NUM_THREADS_BOUNDARY_CONDITIONS>>>(interactions)));
 
     // set dx/dt = v or dx/dt = v + dxsph/dt
@@ -838,19 +743,16 @@ void rightHandSide()
 #if 0 // disabled, cms 2019-12-03: should be sufficient to do this at start of rhs
 #if VARIABLE_SML && !READ_INITIAL_SML_FROM_PARTICLE_FILE
     // boundary conditions for the smoothing lengths
-# if DEBUG_RHS
-    printf("calling check_sml_boundary\n");
-# endif
+    if (param.verbose) printf("calling check_sml_boundary\n");
     cudaVerifyKernel((check_sml_boundary<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>()));
     cudaVerify(cudaDeviceSynchronize());
 #endif
 #endif // 0
 
-#if DEBUG_RHS_RUNTIMES
-    fprintf(stdout, "total duration rhs: %.7f ms\n", totalTime);
-    if (param.performanceTest)
+    if (param.verbose) fprintf(stdout, "total duration right hand side: %.7f ms\n", totalTime);
+
+    if (param.performanceTest) {
         write_performance(time);
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
-#endif
+    }
+
 }

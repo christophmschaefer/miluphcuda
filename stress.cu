@@ -21,11 +21,14 @@
  *
  */
 
+
+
 #include "stress.h"
 #include "parameter.h"
 #include "miluph.h"
 #include "timeintegration.h"
 #include "linalg.h"
+
 
 #if FRAGMENTATION
 // if 1, then damage reduces the principal stresses
@@ -36,42 +39,56 @@
 # define DAMAGE_ACTS_ON_PRINCIPAL_STRESSES 0
 #endif
 
-#if DAMAGE_ACTS_ON_PRINCIPAL_STRESSES  &&  ( MOHR_COULOMB_PLASTICITY || DRUCKER_PRAGER_PLASTICITY || COLLINS_PLASTICITY || COLLINS_PLASTICITY_SIMPLE )
-# error Do not combine DAMAGE_ACTS_ON_PRINCIPAL_STRESSES and pressure-dependent yield strength models.
+
+// principal axes damage does not work for pressure dependent yield strengths
+#if DAMAGE_ACTS_ON_PRINCIPAL_STRESSES && COLLINS_PRESSURE_DEPENDENT_YIELD_STRENGTH
+#error Do not combine DAMAGE_ACTS_ON_PRINCIPAL_STRESSES and COLLINS_PRESSURE_DEPENDENT_YIELD_STRENGTH
 #endif
 
-
 #if SOLID
-// here we set the stress tensor sigma from pressure and deviatoric stress S
-// note, that S was already lowered in plasticity
+
 __global__ void set_stress_tensor(void)
 {
     register int i, inc, matId;
     int d, e;
     int niters;
     double sigma[DIM][DIM];
-# if DAMAGE_ACTS_ON_PRINCIPAL_STRESSES
     double sigmatmp[DIM][DIM];
     double rotation_matrix[DIM][DIM];
     double main_stresses[DIM];
-# endif
-# if FRAGMENTATION
-    register double damage;
-# endif
-    register double ptmp;
+    double max_ev;
+    double damage = 0.0;
+    double stress_damage = 0.0;
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         matId = p_rhs.materialId[i];
+
+        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+            continue;
+        }
         niters = 0;
 
-# if FRAGMENTATION
+        // here we set the stress tensor sigma from pressure and deviatoric stress S
+        // note, that S was already lowered in plasticity
+#if FRAGMENTATION
         damage = p.damage_total[i];
         if (damage > 1.0) damage = 1.0;
-        if (damage < 0.0) damage = 0.0;
-# endif
+        stress_damage = damage;
 
-# if DAMAGE_ACTS_ON_PRINCIPAL_STRESSES
+        // special handling of granular media with pressure dependent yield strengths
+# if COLLINS_PRESSURE_DEPENDENT_YIELD_STRENGTH
+        if (!(damage < 1)) {
+            stress_damage = 0.0;
+        }
+# endif
+#else
+        damage = 0.0;
+        stress_damage = 0.0;
+#endif
+
+
+#if DAMAGE_ACTS_ON_PRINCIPAL_STRESSES
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
                 sigmatmp[d][e] = 0.0;
@@ -96,37 +113,21 @@ __global__ void set_stress_tensor(void)
 
         // sigmatmp now holds the stress tensor for particle i with damaged reduced stresses
         copy_matrix(sigmatmp, sigma);
-# else
-
-        // assemble stress tensor
-#  if COLLINS_PLASTICITY
-        // influence of damage on p < 0 already set in plasticity.cu
-        ptmp = p.p[i];
-#  elif FRAGMENTATION
-        if (p.p[i] < 0.0) {
-            // reduction of neg. pressure following Grady-Kipp model
-            ptmp = (1.0 - damage) * p.p[i];
-        } else {
-            ptmp = p.p[i];
-        }
-#  else
-        ptmp = p.p[i];
-#  endif
-
+#else
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
-#  if FRAGMENTATION && DAMAGE_ACTS_ON_S
-                // reduction of S following Grady-Kipp model
-                sigma[d][e] = (1.0 - damage) * p.S[stressIndex(i, d, e)];
-#  else
-                sigma[d][e] = p.S[stressIndex(i, d, e)];
-#  endif
-                if (d == e) {   // the trace
-                    sigma[d][e] -= ptmp;
+                sigma[d][e] = (1.0 - stress_damage) * p.S[stressIndex(i, d, e)];
+                if (d == e) { // the trace
+                    if (p.p[i] < 0) {
+                        sigma[d][e] += - (1.0 - damage) * p.p[i];
+                    } else {
+                        sigma[d][e] += -p.p[i];
+                    }
                 }
             }
         }
-# endif
+
+#endif
 
         // remember sigma
         for (d = 0; d < DIM; d++) {
@@ -137,4 +138,4 @@ __global__ void set_stress_tensor(void)
 
     }
 }
-#endif  // SOLID
+#endif

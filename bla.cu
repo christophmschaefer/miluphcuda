@@ -57,11 +57,10 @@ __global__ void internalForces(int *interactions) {
     double vxj, vyj, vzj, Sj[DIM*DIM];
 
 #if FRAGMENTATION
-    double di;
-    double di_tensile;
+    double di, di_tensile;  // both are directly the damage (not DIM-root of it)
 #endif
 
-#if ARTIFICIAL_VISCOSITY || WILLYS_VISC
+#if ARTIFICIAL_VISCOSITY
     double vr; // vr = v_ij * r_ij
     double rr;
     double rhobar; // rhobar = 0.5*(rho_i + rho_j)
@@ -153,6 +152,7 @@ __global__ void internalForces(int *interactions) {
 #if DIM > 2
         az = 0;
 #endif
+
 #if ARTIFICIAL_VISCOSITY
         alpha = matAlpha[matId];
         beta = matBeta[matId];
@@ -176,7 +176,6 @@ __global__ void internalForces(int *interactions) {
                 rdot[d][e] = 0.0;
             }
         }
-
 #endif
         for (d = 0; d < DIM; d++) {
             accels[d] = 0.0;
@@ -184,41 +183,37 @@ __global__ void internalForces(int *interactions) {
             accelshearj[d] = 0.0;
         }
         sml = p.h[i];
-
-
 #if FRAGMENTATION
         di = p.damage_total[i];
-        if (di < 0) di = 0;
-        if (di > 1) di = 1;
+        if (di < 0.0) di = 0.0;
+        if (di > 1.0) di = 1.0;
 #endif
 
         x = p.x[i];
 #if DIM > 1
         y = p.y[i];
-#if DIM > 2
+# if DIM > 2
         z = p.z[i];
-#endif
+# endif
 #endif
         vx = p.vx[i];
 #if DIM > 1
         vy = p.vy[i];
-#if DIM > 2
+# if DIM > 2
         vz = p.vz[i];
+# endif
 #endif
-#endif
-
-
-#if 1
         p.dxdt[i] = 0;
         p.ax[i] = 0;
 #if DIM > 1
         p.dydt[i] = 0;
         p.ay[i] = 0;
-#if DIM > 2
+# if DIM > 2
         p.dzdt[i] = 0;
         p.az[i] = 0;
+# endif
 #endif
-#endif
+
 #if SOLID
         for (e = 0; e < DIM*DIM; e++) {
             p.dSdt[i*DIM*DIM+e] = 0.0;
@@ -242,11 +237,10 @@ __global__ void internalForces(int *interactions) {
 #endif
         // if particle has no interactions continue and set all derivs to zero
         // but not the accels (these are handled in the tree for gravity)
-    if (numInteractions < 1) {
-    // finally continue
-       continue;
-    }
-#endif
+        if (numInteractions < 1) {
+        // finally continue
+            continue;
+        }
 
 #if BALSARA_SWITCH
         curli = 0;
@@ -264,14 +258,17 @@ __global__ void internalForces(int *interactions) {
             // the interaction partner
             j = interactions[i * MAX_NUM_INTERACTIONS + k];
 
+            for (d = 0; d < DIM; d++) {
+                accelsj[d] = 0.0;
+                dWdxj[d] = 0.0;
+                dWdx[d] = 0.0;
+            }
+
             matIdj = p_rhs.materialId[j];
             if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || matIdj == EOS_TYPE_IGNORE) {
                 continue;
             }
 
-            for (d = 0; d < DIM; d++) {
-                accelsj[d] = 0.0;
-            }
 
             boundia = 0;
             boundia = p_rhs.materialId[j] == BOUNDARY_PARTICLE_ID;
@@ -355,7 +352,6 @@ __global__ void internalForces(int *interactions) {
 # endif
 #endif
 
-
             dv[0] = dvx = vx - vxj;
 #if DIM > 1
             dv[1] = dvy = vy - vyj;
@@ -372,7 +368,7 @@ __global__ void internalForces(int *interactions) {
 #endif
 #endif
 
-#if (ARTIFICIAL_VISCOSITY || WILLYS_VISC)
+#if ARTIFICIAL_VISCOSITY || KLEY_VISCOSITY
             rr = 0.0;
             vr = 0.0;
             for (e = 0; e < DIM; e++) {
@@ -380,7 +376,6 @@ __global__ void internalForces(int *interactions) {
                 vr += dv[e]*dr[e];
             }
 #endif
-
 
 #if SOLID
             //get sigma_i
@@ -486,8 +481,6 @@ __global__ void internalForces(int *interactions) {
             } // not EOS_TYPE_VISCOUS_REGOLITH
 #endif // SOLID
 
-
-
             pij = 0.0;
 #if ARTIFICIAL_VISCOSITY
             // artificial viscosity force only if v_ij * r_ij < 0
@@ -502,7 +495,6 @@ __global__ void internalForces(int *interactions) {
                     muijmax = mu;
                 }
                 rhobar = 0.5*(p.rho[i] + p.rho[j]);
-
 # if BALSARA_SWITCH
                 curlj = 0;
                 for (d = 0; d < DIM; d++) {
@@ -512,14 +504,11 @@ __global__ void internalForces(int *interactions) {
                 fj = fabs(p_rhs.divv[j]) / (fabs(p_rhs.divv[j]) + curlj + eps_balsara*p.cs[j]/p.h[j]);
                 mu *= (fi+fj)/2.;
 # endif
-
                 pij = (beta*mu - alpha*csbar) * mu/rhobar;
 # if INVISCID_SPH
                 pij =  ((2 * mu - csbar) * p.beta[i] * mu) / rhobar;
 # endif
             }
-
-
 #endif // ARTIFICIAL_VISCOSITY
 
 
@@ -528,35 +517,34 @@ __global__ void internalForces(int *interactions) {
             for (d = 0; d < DIM; d++) {
                 accelshearj[d] = 0;
                 for (dd = 0; dd < DIM; dd++) {
-# if (SPHEQUATIONS == SPH_VERSION1)
+# if (SPH_EQU_VERSION == 1)
 #  if SML_CORRECTION
                     accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]/(p.sml_omega[j]*p.rho[j]*p.rho[j])+ p.Tshear[stressIndex(i,d,dd)]/(p.sml_omega[i]*p.rho[i]*p.rho[i])) *dWdx[dd];
 #  else
                     accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j]) + p.Tshear[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i])) *dWdx[dd];
-#  endif // SML_CORRECTION
-# elif (SPHEQUATIONS == SPH_VERSION2)
+#  endif
+# elif (SPH_EQU_VERSION == 2)
 #  if SML_CORRECTION
                     accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]+p.Tshear[stressIndex(i,d,dd)])/(p.sml_omega[i]*p.rho[i]*p.sml_omega[j]*p.rho[j]) *dWdx[dd];
 #  else
                     accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]+p.Tshear[stressIndex(i,d,dd)])/(p.rho[i]*p.rho[j]) *dWdx[dd];
-#  endif // SML_CORRECTION
-# endif // SPHEQUATIONS
+#  endif
+# endif // SPH_EQU_VERSION
                 }
             }
-
-#if WILLYS_VISC //artificial bulk viscosity with f=0.5
+#if KLEY_VISCOSITY //artificial bulk viscosity with f=0.5
             zetaij = 0.0;
             if (vr < 0) { // only for approaching particles
                 zetaij = -0.5 * (0.25*(p.h[i] + p.h[j])*(p.h[i]+p.h[j])) * (p.rho[i]+p.rho[j])*0.5 * (p_rhs.divv[i] + p_rhs.divv[j])*0.5;
             }
             for (d = 0; d < DIM; d++) {
-# if (SPHEQUATIONS == SPH_VERSION1)
+# if (SPH_EQU_VERSION == 1)
                 accelshearj[d] += zetaij * p.m[j] * (p_rhs.divv[i] + p_rhs.divv[j]) /(p.rho[i]*p.rho[j]) * dWdx[d];
-# elif (SPHEQUATIONS == SPH_VERSION2)
+# elif (SPH_EQU_VERSION == 2)
                 accelshearj[d] += zetaij * p.m[j] * (p_rhs.divv[i]/(p.rho[i]*p.rho[i]) + p_rhs.divv[j]/(p.rho[j]*p.rho[j])) * dWdx[d];
 # endif
             }
-#endif
+#endif // KLEY_VISCOSITY
 
 #endif // NAVIER_STOKES
 
@@ -573,23 +561,23 @@ __global__ void internalForces(int *interactions) {
                     //accelsj[d] = p.m[j] * (sigma_j[d][dd]+sigma_i[d][dd])/(p.rho[i]*p.rho[j]) *dWdx[dd];
 
                     // the same but with tensorial correction
-# if (SPHEQUATIONS == SPH_VERSION1)
+# if (SPH_EQU_VERSION == 1)
                     // warning! look below, the accelsj for each inner loop are added to accels[d]
                     // this is very confusing
 #  if SML_CORRECTION
                     accelsj[d] = p.m[j] * (sigma_j[d][dd]/(p.sml_omega[j]*p.rho[j]*p.rho[j]) + sigma_i[d][dd]/(p.sml_omega[i]*p.rho[i]*p.rho[i])) *dWdx[dd];
 #  else
                     accelsj[d] = p.m[j] * (sigma_j[d][dd]/(p.rho[j]*p.rho[j]) + sigma_i[d][dd]/(p.rho[i]*p.rho[i])) *dWdx[dd];
-#  endif // SML_CORRECTION
-# elif (SPHEQUATIONS == SPH_VERSION2)
+#  endif
+# elif (SPH_EQU_VERSION == 2)
 #  if SML_CORRECTION
                     accelsj[d] = p.m[j] * (sigma_j[d][dd]+sigma_i[d][dd])/(p.sml_omega[i]*p.sml_omega[j]*p.rho[i]*p.rho[j]) *dWdx[dd];
 #  else
                     accelsj[d] = p.m[j] * (sigma_j[d][dd]+sigma_i[d][dd])/(p.rho[i]*p.rho[j]) *dWdx[dd];
-#  endif // SML_CORRECTION
+#  endif
 # else
-# error wrong choice of SPHEQUATIONS settings in parameter.h
-# endif // SPHEQUATIONS
+# error Invalid choice of SPH_EQU_VERSION in parameter.h.
+# endif // SPH_EQU_VERSION
 
                     // the standard formula as also used by Martin Jutzi
                     //accelsj[d] = p.m[j] * (sigma_j[d][dd]/(p.rho[j]*p.rho[j]) + sigma_i[d][dd]/(p.rho[i]*p.rho[i])) *dWdx[dd];
@@ -602,17 +590,15 @@ __global__ void internalForces(int *interactions) {
                             p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+dd*DIM+e];
                       } */
 
-
-
 // Correction for tensile instability fix according to Monaghan, jcp 159 (2000)
 # if ARTIFICIAL_STRESS
                     double arts_rij;
-#  if (SPHEQUATIONS == SPH_VERSION1)
+#  if (SPH_EQU_VERSION == 1)
                     arts_rij = p_rhs.R[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i])
                               + p_rhs.R[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j]);
-#  elif (SPHEQUATIONS == SPH_VERSION2)
+#  elif (SPH_EQU_VERSION == 2)
                     arts_rij = (p_rhs.R[stressIndex(i,d,dd)] + p_rhs.R[stressIndex(j,d,dd)])/(p.rho[i]*p.rho[j]);
-#  endif // SPHEQUATIONS
+#  endif
                     // add the special artificial stress
                     accels[d] += p.m[j] * arts_rij * artf * dWdx[dd];
 # endif // ARTIFICIAL_STRESS
@@ -624,7 +610,7 @@ __global__ void internalForces(int *interactions) {
                 }
             }
 #else // NOT SOLID
-# if (SPHEQUATIONS == SPH_VERSION1)
+# if (SPH_EQU_VERSION == 1)
 #  if SML_CORRECTION
             for (d = 0; d < DIM; d++) {
                 accelsj[d] =  -p.m[j] * (p.p[i]/(p.sml_omega[i]*p.rho[i]*p.rho[i]) + p.p[j]/(p.sml_omega[j]*p.rho[j]*p.rho[j])) * dWdx[d];
@@ -636,7 +622,7 @@ __global__ void internalForces(int *interactions) {
                 accels[d] += accelsj[d];
             }
 #  endif // SML_CORRECTION
-# elif (SPHEQUATIONS == SPH_VERSION2)
+# elif (SPH_EQU_VERSION == 2)
 #  if SML_CORRECTION
             for (d = 0; d < DIM; d++) {
                 accelsj[d] =  -p.m[j] * ((p.p[i]+p.p[j])/(p.sml_omega[i]*p.rho[i]*p.sml_omega[j]*p.rho[j])) * dWdx[d];
@@ -647,8 +633,8 @@ __global__ void internalForces(int *interactions) {
                 accelsj[d] =  -p.m[j] * ((p.p[i]+p.p[j])/(p.rho[i]*p.rho[j])) * dWdx[d];
                 accels[d] += accelsj[d];
             }
-#  endif // SML_CORRECTION
-# endif // SPHEQUATIONS
+#  endif
+# endif // SPH_EQU_VERSION
 #endif // SOLID
 
 #if NAVIER_STOKES
@@ -676,31 +662,30 @@ __global__ void internalForces(int *interactions) {
             // see Frank Ott's thesis for details
             //drhodt += p.m[i]*vvnablaW;
             // Randles and Libersky's version (1996)
-#if TENSORIAL_CORRECTION
-# if 0 // cms 2020-06-10 testing time step size, this part gives a tiny step size due to density
+# if TENSORIAL_CORRECTION
+#  if 0 // cms 2020-06-10 testing time step size, this part gives a tiny step size due to density
       //                evolution, needs some debugging
+      // debugging started 2023-02-15, for the colliding rings, the original version is stable, this one not!
+            double divv = 0.0;
             for (d = 0; d < DIM; d++) {
                 for (dd = 0; dd < DIM; dd++) {
-                    drhodt += p.rho[i] * p.m[j]/p.rho[j] * dv[d] * dWdx[dd]
-                              * p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd];
+                    divv += p.m[j]/p.rho[j] * dv[d] * p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
                 }
             }
-
+            drhodt += p.rho[i] * divv;
+#  else
+            drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
+#  endif
 # else
             drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
-# endif
-#else
-            drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
-#endif // TENSORIAL CORRECTIONS
-
-
+# endif // TENSORIAL CORRECTION
 
 #else // HYDRO now
-#if SML_CORRECTION 
+# if SML_CORRECTION 
             drhodt += p.m[j]*vvnablaW;
-#else
+# else
             drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
-#endif // SML_CORRECTION
+# endif // SML_CORRECTION
 #endif // SOLID
 
 
@@ -735,12 +720,12 @@ __global__ void internalForces(int *interactions) {
 // new implementation cms 2019-05-23
             for (d = 0; d < DIM; d++) {
                 for (dd = 0; dd < DIM; dd++) {
-#  if (SPHEQUATIONS == SPH_VERSION1)
+#  if (SPH_EQU_VERSION == 1)
                     dedt += 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i]) + p_rhs.sigma[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j])) * dv[d] * dWdx[dd];
-#  elif (SPHEQUATIONS == SPH_VERSION2)
+#  elif (SPH_EQU_VERSION == 2)
                     dedt += 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)] + p_rhs.sigma[stressIndex(j,d,dd)])/(p.rho[i]*p.rho[j]) * dv[d] * dWdx[dd];
 #endif
-#if DEBUG
+#if DEBUG_MISC
                     if (isnan(dedt)) {
                         printf("no %d m=%e sigma_i[%d][%d]=%e sigma_j[%d][%d]= %e dv[%d] %e  dWdx[%d] %e  p_i %e  p_j %e rho_i %e rho_j %e pij %e cs_i %e cs_j %e\n", i, p.m[j], d, dd, p_rhs.sigma[stressIndex(i,d,dd)], d, dd,p_rhs.sigma[stressIndex(j,d,dd)], d, dv[d], dd, dWdx[dd], p.p[i], p.p[j], p.rho[i], p.rho[j], pij,p.cs[i], p.cs[j]);
                         assert(0);
@@ -764,6 +749,7 @@ __global__ void internalForces(int *interactions) {
 #endif // INTEGRATE ENERGY
 
         } // neighbors loop end
+
         ax = accels[0];
 #if DIM > 1
         ay = accels[1];
@@ -786,44 +772,60 @@ __global__ void internalForces(int *interactions) {
         p.drhodt[i] = drhodt;
 #endif // SML_CORRECTION
 
+#if INTEGRATE_DENSITY
+        // if the density is calculated via kernel sum, we set drhodt to 0 here again
+        if (matdensity_via_kernel_sum[p_rhs.materialId[i]]) {
+            p.drhodt[i] = 0.0;
+        }
+#endif
+
+
 #if INTEGRATE_ENERGY
 # if SOLID
-    double ptmp = 0;
-    double edottmp = 0;
-#  if FRAGMENTATION
-    if (p.p[i] < 0) {
-        ptmp = (1-di) * p.p[i];
-    } else {
+        double ptmp = 0.0;
+        double edottmp = 0.0;
+
+#  if COLLINS_PLASTICITY
+        // influence of damage on p < 0 already set in plasticity.cu
         ptmp = p.p[i];
-    }
-#  else
-    ptmp = p.p[i];
-#  endif
-    dedt -= 1./p.rho[i]*ptmp * p_rhs.divv[i];
-    // symmetrize edot
-    for (d = 0; d < DIM; d++) {
-        for (dd = 0; dd < d; dd++) {
-            edottmp = 0.5*(edot[d][dd] + edot[dd][d]);
-            edot[d][dd] = edottmp;
-            edot[dd][d] = edottmp;
-         }
-    }
-    for (d = 0; d < DIM; d++) {
-        for (dd = 0; dd < DIM; dd++) {
-            double Stmp = p.S[stressIndex(i,d,dd)];
-#  if FRAGMENTATION
-        Stmp *= (1-di);
-#  endif
-        dedt += 1./p.rho[i]*Stmp*edot[d][dd];
+#  elif FRAGMENTATION
+        if (p.p[i] < 0.0) {
+            // reduction of neg. pressure following Grady-Kipp model
+            ptmp = (1.0 - di) * p.p[i];
+        } else {
+            ptmp = p.p[i];
         }
-    }
-# endif
+#  else
+        ptmp = p.p[i];
+#  endif
+
+        dedt -= ptmp / p.rho[i] * p_rhs.divv[i];
+        // symmetrize edot
+        for (d = 0; d < DIM; d++) {
+            for (dd = 0; dd < d; dd++) {
+                edottmp = 0.5*(edot[d][dd] + edot[dd][d]);
+                edot[d][dd] = edottmp;
+                edot[dd][d] = edottmp;
+            }
+        }
+        for (d = 0; d < DIM; d++) {
+            for (dd = 0; dd < DIM; dd++) {
+                double Stmp = p.S[stressIndex(i,d,dd)];
+#  if FRAGMENTATION && DAMAGE_ACTS_ON_S
+                // reduction of S following Grady-Kipp model
+                Stmp *= (1.0-di);
+#  endif
+                dedt += Stmp / p.rho[i] * edot[d][dd];
+            }
+        }
+# endif // SOLID
 # if SML_CORRECTION
         p.dedt[i] = p.p[i]/(p.rho[i]*p.rho[i] * p.sml_omega[i]) * dedt;
 # else
         p.dedt[i] = dedt;
 # endif // SML_CORRECTION
-#endif
+#endif // INTEGRATE_ENERGY
+
 
 #if PALPHA_POROSITY
         if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
@@ -896,116 +898,111 @@ __global__ void internalForces(int *interactions) {
         double bulk = matBulkmodulus[matId];
         double young = matYoungModulus[matId];
         int f;
-#if JC_PLASTICITY
+# if JC_PLASTICITY
 	    double edotp[DIM][DIM]; // plastic strain rate
-#endif
-#if SIRONO_POROSITY
+# endif
+# if SIRONO_POROSITY
         if (matEOS[matId] == EOS_TYPE_SIRONO) {
             shear = 0.5 * p.K[i];
             bulk = p.K[i];
             young = (9.0 * bulk * shear / (3.0 * bulk + shear));
         }
-#endif
+# endif
 
         if (matEOS[matId] != EOS_TYPE_REGOLITH && matEOS[matId] != EOS_TYPE_VISCOUS_REGOLITH) {
             for (d = 0; d < DIM; d++) {
                 for (e = 0; e < DIM; e++) {
                     // Hooke's law
                     p.dSdt[stressIndex(i,d,e)] = 2.0 * shear * edot[d][e];
-#if JC_PLASTICITY
+# if JC_PLASTICITY
 		            edotp[d][e] = (1 - p.jc_f[i]) * edot[d][e];
-#endif
+# endif
                     // rotation terms
                     for (f = 0; f < DIM; f++) {
                         // trace
                         if (d == e) {
                             p.dSdt[stressIndex(i,d,e)] -= 2.0 * shear * edot[f][f] / 3.0;
-#if JC_PLASTICITY
+# if JC_PLASTICITY
 		            	    edotp[d][e] += (-1./3)*(1-p.jc_f[i])*edot[f][f];
-#endif
+# endif
                         }
                         p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,d,f)] * rdot[e][f];
                         p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,e,f)] * rdot[d][f];
                     }
-#if PALPHA_POROSITY
-# if STRESS_PALPHA_POROSITY
-#  if FRAGMENTATION
+# if PALPHA_POROSITY && STRESS_PALPHA_POROSITY
                     if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
                         p.dSdt[stressIndex(i,d,e)] = p.f[i] / p.alpha_jutzi[i] * p.dSdt[stressIndex(i,d,e)]
-                                                            - 1.0 / (p.alpha_jutzi[i]*p.alpha_jutzi[i]) * (1-di)*p.S[stressIndex(i,d,e)] * p.dalphadt[i];
-                    }
-
+                                                            - 1.0 /
+                                                              (p.alpha_jutzi[i]*p.alpha_jutzi[i])
+#  if 0 // FRAGMENTATION && DAMAGE_ACTS_ON_S
+                                                            * (1-di)*p.S[stressIndex(i,d,e)]
 #  else
-                    if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN|| matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
-                        p.dSdt[stressIndex(i,d,e)] = p.f[i] / p.alpha_jutzi[i] * p.dSdt[stressIndex(i,d,e)]
-                                                            - 1.0 / (p.alpha_jutzi[i]*p.alpha_jutzi[i]) * p.S[stressIndex(i,d,e)] * p.dalphadt[i];
-                    }
+                                                            * p.S[stressIndex(i,d,e)]
 #  endif
+                                                            * p.dalphadt[i];
+                    }
 # endif
-#endif
                 }
             }
 
-
-#if JC_PLASTICITY
-        /* calculate plastic strain rate tensor from dSdt */
-        double K2 = 0;
-        for (d = 0; d < DIM; d++) {
-            for (e = 0; e < DIM; e++) {
-                K2 += 0.5*edotp[d][e]*edotp[d][e];
+# if JC_PLASTICITY
+            /* calculate plastic strain rate tensor from dSdt */
+            double K2 = 0;
+            for (d = 0; d < DIM; d++) {
+                for (e = 0; e < DIM; e++) {
+                    K2 += 0.5*edotp[d][e]*edotp[d][e];
+                }
             }
-        }
-        p.edotp[i] = 2./3. * sqrt(3*K2);
+            p.edotp[i] = 2./3. * sqrt(3*K2);
 
-        /* change of temperature due to plastic deformation */
-        double work = 0;
-        for (d = 0; d < DIM; d++) {
-            for (e = 0; e < DIM; e++) {
-                work += sigma_i[d][e] * edotp[d][e];
+            /* change of temperature due to plastic deformation */
+            double work = 0;
+            for (d = 0; d < DIM; d++) {
+                for (e = 0; e < DIM; e++) {
+                    work += sigma_i[d][e] * edotp[d][e];
+                }
             }
-        }
-        /* these are the particles that fail the adiabatic assumption */
-        if (work < 0) {
-          /*  fprintf(stderr, "Warning: work related to plastic strain is negative for particle %d located at \t", i);
-            for (d = 0; d < DIM; d++)
-                fprintf(stderr, "x[%d]: %g \t", d, p[i].x[d]);
-            fprintf(stderr, "\n"); */
-            work = 0;
-        }
-        /* daniel Thun daniel thun */
-        p.dTdt[i] = work / (matCp[p_rhs.materialId[i]] * p.rho[i]);
-        if (p.dTdt[i] < 0) {
-            //fprintf(stderr, "%d work: %g, Cp: %g, rho: %g\n", i, work, matCp[p_rhs.materialId[i]], p.rho[i]);
-        }
-        if (p.noi[i] < 1)
-            p.dTdt[i] = 0.0;
+            /* these are the particles that fail the adiabatic assumption */
+            if (work < 0) {
+                /*  fprintf(stderr, "Warning: work related to plastic strain is negative for particle %d located at \t", i);
+                for (d = 0; d < DIM; d++)
+                    fprintf(stderr, "x[%d]: %g \t", d, p[i].x[d]);
+                fprintf(stderr, "\n"); */
+                work = 0;
+            }
+            /* daniel Thun daniel thun */
+            p.dTdt[i] = work / (matCp[p_rhs.materialId[i]] * p.rho[i]);
+            if (p.dTdt[i] < 0) {
+                //fprintf(stderr, "%d work: %g, Cp: %g, rho: %g\n", i, work, matCp[p_rhs.materialId[i]], p.rho[i]);
+            }
+            if (p.noi[i] < 1)
+                p.dTdt[i] = 0.0;
+# endif
 
-#endif  /* JC_PLASTICITY */
+# if ARTIFICIAL_VISCOSITY
+            p.muijmax[i] = muijmax;
+# endif
 
-#if ARTIFICIAL_VISCOSITY
-        p.muijmax[i] = muijmax;
-#endif
+            double tensileMax = 0.0;
+            tensileMax = calculateMaxEigenvalue(sigma_i);
+            p.local_strain[i] = tensileMax/young;
 
-        double tensileMax = 0;
-#if SOLID
-        tensileMax = calculateMaxEigenvalue(sigma_i);
-        p.local_strain[i] = tensileMax/young;
-#endif
-#if FRAGMENTATION
-            // calculate the damage caused by the strain
-            // 1st: get maximum eigenvalue of sigma_i
-            // 2nd: get local scalar strain out of maximum tensile stress
-            // di = pow(di, DIM); // it is already ^DIM
-            di_tensile = pow(p.d[i], DIM);
-            int n_active = 0;
+# if FRAGMENTATION
+            // calculate damage evolution dd/dt...
+            // 1st: get max eigenvalue (max principle stress) of sigma_i
+            // 2nd: get local scalar strain out of max tensile stress
+            di_tensile = pow(p.d[i], DIM);  // because p.d is DIM-root of damage
             if (di_tensile < 1.0) {
-                p.local_strain[i] = ((tensileMax)/((1.0 - di_tensile) * young));
-                // 3rd: calculate evolution of damage
-                // note: ddamagedt**1./DIM is calculated
+                p.local_strain[i] = tensileMax / ((1.0 - di_tensile) * young);
+
+                // 3rd: calculate dd/dt
+                // note: d(d**1/DIM)/dt is calculated
                 // speed of a longitudinal elastic wave, see eg. Melosh, Impact Cratering
                 // crack growth velocity = 0.4 times c_elast
                 double c_g = 0.4 * sqrt((bulk + 4.0 * shear * (1.0 - di_tensile) / 3.0) * 1.0 / p.rho[i]);
+
                 // find number of active flaws
+                int n_active = 0;
                 for (d = 0; d < p.numFlaws[i]; d++) {
                     if (p_rhs.flaws[i*maxNumFlaws+d] < p.local_strain[i]) {
                         n_active++;
@@ -1013,51 +1010,44 @@ __global__ void internalForces(int *interactions) {
                 }
                 p.numActiveFlaws[i] = max(n_active, p.numActiveFlaws[i]);
                 p.dddt[i] = n_active * c_g / sml1;
-                if (p.dddt[i] < 0) {
-                    printf("error!\n");
-                    printf("%e %e %e %d %d %e %e \n", p.x[i], p.y[i], p.damage_total[i], p.numFlaws[i],
-                            p.numActiveFlaws[i], p.dddt[i], p.local_strain[i]);
-                }
 
+                if (p.dddt[i] < 0.0) {
+                    printf("ERROR. Found dd/dt < 0 for:\n");
+                    printf("x: %e\t y: %e\t damage_total: %e\t numFlaws: %d\t numActiveFlaws: %d\t dddt: %e\t local_strain: %e\n",
+                            p.x[i], p.y[i], p.damage_total[i], p.numFlaws[i], p.numActiveFlaws[i], p.dddt[i], p.local_strain[i]);
+                }
             } else {
                 // particle already dead
                 p.local_strain[i] = 0.0;
-                n_active = p.numFlaws[i];
-                p.numActiveFlaws[i] = n_active;
+                p.numActiveFlaws[i] = p.numFlaws[i];
                 p.dddt[i] = 0.0;
                 p.d[i] = 1.0;
             }
-#if PALPHA_POROSITY
+#  if PALPHA_POROSITY
             if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
                 double deld = 0.01; 	/* variation in the damage to avoid infinity problem */
                 double alpha_0 = matporjutzi_alpha_0[matId];
-                if (alpha_0 > 1) {
-                        p.ddamage_porjutzidt[i] = - 1.0/DIM * (pow(1.0 - (p.alpha_jutzi[i] - 1.0) / (alpha_0 - 1.0) + deld, 1.0/DIM - 1.0))
-                                                / (pow(1.0 + deld, 1.0/DIM) - pow(deld, 1.0/DIM)) * 1.0/(alpha_0 - 1.0) * p.dalphadt[i];
+                if (alpha_0 > 1.0) {
+                    p.ddamage_porjutzidt[i] = - 1.0/DIM * (pow(1.0 - (p.alpha_jutzi[i] - 1.0) / (alpha_0 - 1.0) + deld, 1.0/DIM - 1.0))
+                                            / (pow(1.0 + deld, 1.0/DIM) - pow(deld, 1.0/DIM)) * 1.0/(alpha_0 - 1.0) * p.dalphadt[i];
                 }
             }
-#endif
-#endif // FRAGMENTATION
-
+#  endif
+# endif // FRAGMENTATION
 
         } else if (matEOS[matId] != EOS_TYPE_VISCOUS_REGOLITH) { // if materialtype = regolith
-
             alpha_phi = matAlphaPhi[matId];
             kc = matCohesionCoefficient[matId];
-
             tr_edot = 0.0;
             for (d = 0; d < DIM; d++) {
                 tr_edot += edot[d][d];
             }
-
-#if DIM == 2
+# if DIM == 2
             double poissons_ratio = (3*bulk - 2*shear) / (2*(3*bulk + shear));
             I1 = (1 + poissons_ratio) * (p.S[stressIndex(i, 0, 0)] + p.S[stressIndex(i, 1, 1)]);
-#else
+# else
             I1 = p.S[stressIndex(i,0,0)] + p.S[stressIndex(i,1,1)] + p.S[stressIndex(i,2,2)];
-#endif
-
-
+# endif
             //get S
             for (d = 0; d < DIM; d++) {
                 for (e = 0; e < DIM; e++) {
@@ -1065,10 +1055,9 @@ __global__ void internalForces(int *interactions) {
                 }
                 S_i[d][d] -= I1/3.0;
             }
-#if DIM == 2
+# if DIM == 2
             double sz = poissons_ratio*(S_i[0][0] + S_i[1][1]);
-#endif
-
+# endif
             //calculate sqrt(J2)
             sqrt_J2 = 0.0;
             for (d = 0; d < DIM; d++) {
@@ -1076,16 +1065,15 @@ __global__ void internalForces(int *interactions) {
                     sqrt_J2 += S_i[d][e]*S_i[d][e];
                 }
             }
-#if DIM == 2
+# if DIM == 2
             sqrt_J2 += sz*sz;
-#endif
+# endif
             sqrt_J2 *= 0.5;
             sqrt_J2 = sqrt(sqrt_J2);
 
             //calculate lambda_dot
             lambda_dot = 0.0;
             if (!(sqrt_J2 + alpha_phi * I1 - kc < 0)) {
-
                 if (sqrt_J2 > 0.0) {
                     for (d = 0; d < DIM; d++) {
                         for (e = 0; e < DIM; e++) {
@@ -1117,29 +1105,25 @@ __global__ void internalForces(int *interactions) {
                 /*p.dSdt[stressIndex(i,d,d)] += tr_edot*(bulk-2*shear/3.0) - 3*lambda_dot*alpha_phi*bulk;*/
                 p.dSdt[stressIndex(i,d,d)] += tr_edot*(bulk-2*shear/3.0);
             }
-
-
-#if FRAGMENTATION
-    /* disable fragmentation for regolith, cause there's none */
-                p.local_strain[i] = 0.0;
-                p.numActiveFlaws[i] = 0;
-                p.dddt[i] = 0.0;
-#endif
-
-
+# if FRAGMENTATION
+            /* disable fragmentation for regolith, cause there's none */
+            p.local_strain[i] = 0.0;
+            p.numActiveFlaws[i] = 0;
+            p.dddt[i] = 0.0;
+# endif
         } else if (matEOS[matId] == EOS_TYPE_VISCOUS_REGOLITH) {
             for (d = 0; d < DIM; d++) {
                 for (e = 0; e < DIM; e++) {
                     p.dSdt[stressIndex(i,d,e)] = 0.0;
                 }
             }
-        }//end material-if
+        } //end material-if
 
 #endif // SOLID
 
-
     } // particle loop end
 }
+
 
 
 #if VISCOUS_REGOLITH

@@ -58,12 +58,10 @@ __global__ void calculateSoundSpeed()
                 m_com += pointmass.m[j];
             }
 
-            double vkep = sqrt(gravConst * m_com/distance);
+            double vkep = sqrt(C_GRAVITY * m_com/distance);
             p.cs[i] = vkep * scale_height;
         } else if (EOS_TYPE_IDEAL_GAS == matEOS[matId]) {
             p.cs[i] = sqrt(matPolytropicGamma[matId] * p.p[i] / p.rho[i]);
-        } else if (EOS_TYPE_ISOTHERMAL_GAS == matEOS[matId]) {
-            p.cs[i] = matIsothermalSoundSpeed[matId];
         } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
             rho = p.rho[i];
             eta = rho / matTillRho0[matId];
@@ -96,24 +94,25 @@ __global__ void calculateSoundSpeed()
                 y = (p.e[i]-matTillEiv[matId])/(matTillEcv[matId]-matTillEiv[matId]);
                 cs_sq = cs_e_sq*(1.0-y)+cs_c_sq*y;
             }
-            // set to >= lower limit
-            if (cs_sq < matcsLimit[matId]*matcsLimit[matId]){
-                p.cs[i] = matcsLimit[matId];
+            //check whether soundspeed is smaller than lower limit and if so set it to the lower limit
+            //lower limit can be set in material.cfg or if not set the lower limit is sqrt(A/rho_0)
+            if (cs_sq < matTillcsLimit[matId]*matTillcsLimit[matId]){
+                p.cs[i] = matTillcsLimit[matId];
             } else {
                 p.cs[i] = sqrt(cs_sq);
             }
         } else if (EOS_TYPE_ANEOS == matEOS[matId]) {
-            // find array-indices just below the actual values of rho and e
+            /* find array-indices just below the actual values of rho and e */
             i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
             i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
-            // interpolate (bi)linearly to obtain the sound speed
-            p.cs[i] = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], i);
-            // set to >= lower limit
-            if (p.cs[i] < matcsLimit[matId]) {
-                p.cs[i] = matcsLimit[matId];
+            /* interpolate (bi)linearly to obtain the sound speed */
+            p.cs[i] = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId]);
+            /* set to lowest allowed value if below; read from materialconfig file or (if not found) 10% of aneos_bulk_cs by default */
+            if (p.cs[i] < aneos_cs_limit_c[matId]) {
+                p.cs[i] = aneos_cs_limit_c[matId];
             }
-#if PALPHA_POROSITY
         } else if (EOS_TYPE_JUTZI_MURNAGHAN == matEOS[matId]) {
+#if PALPHA_POROSITY
             //p.cs[i] = sqrt(matBulkmodulus[matId]/matTillRho0[matId]);
 //            if (p.alpha_jutzi[i] > 1.0 && abs(p.dalphadp[i]) > 0) {
 //                if (abs(p.delpdelrho[i]) > 0.0 || abs(p.delpdele[i]) > 0.0) {
@@ -128,31 +127,24 @@ __global__ void calculateSoundSpeed()
 //            }
             /* switched from jutzis implementation of the soundspeed to a linear soundspeed from cs_porous with alpha=alpha0 to cs_solid with alpha=1 (also done in iSale) */
             p.cs[i] = matcs_solid[matId] + (matcs_porous[matId] - matcs_solid[matId]) * (p.alpha_jutzi[i] - 1.0) / (matporjutzi_alpha_0[matId] - 1.0);
-#if DEBUG_MISC
+#if DEBUG
             if (isnan(p.cs[i])) {
                 printf("i %d alpha_jutzi %e delpdelrho %e delpdele %e dalphadp %e p %e rho %e\n", i, p.alpha_jutzi[i], p.delpdelrho[i], p.delpdele[i], p.dalphadp[i], p.p[i], p.rho[i]);
                 assert(0);
             }
 #endif
         } else if (EOS_TYPE_JUTZI_ANEOS == matEOS[matId]) {
-            // find array-indices just below the actual values of rho and e
+            /* find array-indices just below the actual values of rho and e */
             i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
             i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
-            // interpolate (bi)linearly to obtain the sound speed
-            cs = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], i);
-            // do interpolation only if computed sound speed is above cs_porous, to capture
-            // only compaction process, but not expanded states for example...
-            if( cs > matcs_porous[matId] ) {
-                // linear interpolation between the sound speed in the matrix (from above) and cs_porous (a constant)
-                cs = cs + (matcs_porous[matId] - cs) * (p.alpha_jutzi[i] - 1.0) / (matporjutzi_alpha_0[matId] - 1.0);
+            /* interpolate (bi)linearly to obtain the sound speed */
+            cs = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId]);
+            /* set to lowest allowed value if below; read from materialconfig file or (if not found) 10% of aneos_bulk_cs by default */
+            if (cs < aneos_cs_limit_c[matId]) {
+                cs = aneos_cs_limit_c[matId];
             }
-            // set to >= lower limit
-            if (cs < matcsLimit[matId]) {
-                p.cs[i] = matcsLimit[matId];
-            } else {
-                p.cs[i] = cs;
-            }
-#if DEBUG_MISC
+            p.cs[i] = cs + (matcs_porous[matId] - cs) * (p.alpha_jutzi[i] - 1.0) / (matporjutzi_alpha_0[matId] - 1.0);
+#if DEBUG
             if (isnan(p.cs[i])) {
                 printf("i %d alpha_jutzi %e delpdelrho %e delpdele %e dalphadp %e p %e rho %e\n", i, p.alpha_jutzi[i], p.delpdelrho[i], p.delpdele[i], p.dalphadp[i], p.p[i], p.rho[i]);
                 assert(0);
@@ -167,8 +159,7 @@ __global__ void calculateSoundSpeed()
             z = (1.0 - eta)/eta;
             //condensed and expanded cold states
             if (eta >= 0.0 || p.e[i] < matTillEiv[matId]) {
-                if (pressure < 0.0 || eta < matRhoLimit[matId])
-                    pressure = 0.0;
+                if (pressure < 0.0 || eta < matRhoLimit[matId]) pressure = 0.0;
                 cs_sq = matTilla[matId]*p.e[i]+(matTillb[matId]*p.e[i])/(omega0*omega0)*(3.0*omega0-2.0) +
                     (matTillA[matId]+2.0*matTillB[matId]*mu)/rho + pressure/(rho*rho)*(matTilla[matId]*rho+matTillb[matId]*rho/(omega0*omega0));
             }
@@ -191,49 +182,37 @@ __global__ void calculateSoundSpeed()
                 y = (p.e[i]-matTillEiv[matId])/(matTillEcv[matId]-matTillEiv[matId]);
                 cs_sq = cs_e_sq*(1.0-y)+cs_c_sq*y;
             }
-            // do interpolation only if computed sound speed is above cs_porous, to capture
-            // only compaction process, but not expanded states for example...
-            if( cs_sq > matcs_porous[matId]*matcs_porous[matId] ) {
-                cs = sqrt(cs_sq);
-                // linear interpolation between the sound speed in the matrix (from above) and cs_porous (a constant)
-                cs = cs + (matcs_porous[matId] - cs) * (p.alpha_jutzi[i] - 1.0) / (matporjutzi_alpha_0[matId] - 1.0);
-                // set to >= lower limit
-                if (cs < matcsLimit[matId]) {
-                    p.cs[i] = matcsLimit[matId];
-                } else {
-                    p.cs[i] = cs;
-                }
+            //check whether soundspeed is smaller than lower limit and if so set it to the lower limit
+            //lower limit can be set in material.cfg or if not set the lower limit is sqrt(A/rho_0)
+            if (cs_sq < matTillcsLimit[matId]*matTillcsLimit[matId]){
+                cs = matTillcsLimit[matId];
             } else {
-                // set to >= lower limit
-                if (cs_sq < matcsLimit[matId]*matcsLimit[matId]){
-                    p.cs[i] = matcsLimit[matId];
-                } else {
-                    p.cs[i] = sqrt(cs_sq);
-                }
+                cs = sqrt(cs_sq);
             }
-#if DEBUG_MISC
+            p.cs[i] = cs + (matcs_porous[matId] - cs) * (p.alpha_jutzi[i] - 1.0) / (matporjutzi_alpha_0[matId] - 1.0);
+#if DEBUG
             if (isnan(p.cs[i])) {
                 printf("i %d alpha_jutzi %e delpdelrho %e delpdele %e dalphadp %e p %e rho %e\n", i, p.alpha_jutzi[i], p.delpdelrho[i], p.delpdele[i], p.dalphadp[i], p.p[i], p.rho[i]);
                 assert(0);
             }
 #endif
 #endif // PALPHA_POROSITY
-#if SIRONO_POROSITY
         } else if (EOS_TYPE_SIRONO == matEOS[matId]) {
+#if SIRONO_POROSITY
             if (p.flag_plastic[i] > 0)
                 p.cs[i] = sqrt(p.compressive_strength[i] / p.rho[i]);
             else
                 p.cs[i] = sqrt(p.K[i] / p.rho_0prime[i]);
 #endif
-#if EPSALPHA_POROSITY
         /* Improvements to epsilon-alpha model by Collins et al 2010 */
         } else if (EOS_TYPE_EPSILON == matEOS[matId]) {
+#if EPSALPHA_POROSITY
             double c_s0 = sqrt(matBulkmodulus[matId]/matTillRho0[matId]);
             double c_p0 = sqrt(matBulkmodulus[matId]/(matTillRho0[matId] / matporepsilon_alpha_0[matId]));
             p.cs[i] = c_s0 + (p.alpha_epspor[i] - 1.0) / (matporepsilon_alpha_0[matId] - 1.0) * (c_p0 - c_s0);
 #endif
         }
-        // other material types have a constant soundspeed which is set in initializeSoundspeed()
+        // other material types have a constant soundspeed which is calculated in initializeSoundspeed
     }
 }
 
@@ -249,19 +228,13 @@ __global__ void initializeSoundspeed()
             p.cs[i] = 0.0; // for gas this will be calculated each step by kernel calculateSoundSpeed
         } else if (EOS_TYPE_ISOTHERMAL_GAS == matEOS[matId]) {
             /* this is pure molecular hydrogen at 10 K */
-            p.cs[i] = 203.0;
+            p.cs[i] = 203;
         } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
             p.cs[i] = sqrt(matBulkmodulus[matId]/matTillRho0[matId]);
         } else if (EOS_TYPE_ANEOS == matEOS[matId]) {
             p.cs[i] = aneos_bulk_cs_c[matId];
         } else if (EOS_TYPE_MURNAGHAN == matEOS[matId]) {
             p.cs[i] = sqrt(matBulkmodulus[matId]/matRho0[matId]);
-        } else if (EOS_TYPE_JUTZI == matEOS[matId]) {
-            p.cs[i] = matcs_porous[matId];
-        } else if (EOS_TYPE_JUTZI_ANEOS == matEOS[matId]) {
-            p.cs[i] = matcs_porous[matId];
-        } else if (EOS_TYPE_JUTZI_MURNAGHAN == matEOS[matId]) {
-            p.cs[i] = matcs_porous[matId];
         } else if (EOS_TYPE_REGOLITH == matEOS[matId]) {
             //sound speed in soil is typically between 450 and 600 m/s according to Ha H. Bui 2008
             p.cs[i] = 500.0;

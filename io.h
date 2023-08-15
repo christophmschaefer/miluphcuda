@@ -39,6 +39,7 @@ extern File inputFile;
 extern int currentDiskIO;
 
 extern void loadConfigFromFile(char *configFile);
+extern void transferMaterialsToGPU();
 extern void write_tree_to_file(File file);
 extern void write_particles_to_file(File file);
 extern void read_particles_from_file(File inputFile);

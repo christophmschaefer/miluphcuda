@@ -36,8 +36,6 @@
 #define TOLERANCE_WANTED_NUMBER_OF_INTERACTIONS 5
 
 
-__device__ int treeMaxDepth = 0;
-
 extern __device__ double dt;
 extern __device__ volatile double radius;
 extern __device__ volatile int maxNodeIndex;
@@ -47,6 +45,7 @@ extern __device__ double miny, maxy;
 #if DIM == 3
 extern __device__ double minz, maxz;
 #endif
+extern __device__ int treeMaxDepth;
 extern __device__ int movingparticles;
 extern __device__ int reset_movingparticles;
 extern __constant__ volatile int *childList;
@@ -307,8 +306,6 @@ __global__ void getTreeDepth(int *treeDepthPerBlock)
 
 }
 
-
-
 /* give an estimate how many particles will leave their leaves */
 __global__ void measureTreeChange(int * movingparticlesPerBlock)
 {
@@ -379,7 +376,6 @@ __global__ void measureTreeChange(int * movingparticlesPerBlock)
     }
 
 }
-
 
 
 __global__ void calculateCentersOfMass()
@@ -636,7 +632,7 @@ __global__ void knnNeighbourSearch(int *interactions)
                 htmpold = htmp;
                 htmp *= 0.5 *  ( 1.0 + pow( (double) matnoi[p_rhs.materialId[i]]/ (double) numberOfInteractions, 1./DIM));
             }
-#if DEBUG_MISC
+#if DEBUG
             if (htmp < 1e-20) {
                 printf("+++ particle: %d it: %d htmp: %e htmpold: %e wanted: %d current: %d mId: %d \n", i, nit,
                         htmp, htmpold, matnoi[p_rhs.materialId[i]], numberOfInteractions, p_rhs.materialId[i]);

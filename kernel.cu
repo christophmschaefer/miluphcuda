@@ -32,7 +32,10 @@
 
 // for interaction partners less than this value, the tensorial correction matrix
 // will be set to the identity matrix (-> disabling the correction factors)
-#define MIN_NUMBER_OF_INTERACTIONS_FOR_TENSORIAL_CORRECTION_TO_WORK 0
+#define MIN_NUMBER_OF_INTERACTIONS_FOR_TENSORIAL_CORRECTION_TO_WORK 12
+
+
+#define DEBUG_LINALG 1
 
 
 // pointers for the kernel function
@@ -41,6 +44,7 @@ __device__ SPH_kernel wendlandc2_p = wendlandc2;
 __device__ SPH_kernel wendlandc4_p = wendlandc4;
 __device__ SPH_kernel wendlandc6_p = wendlandc6;
 __device__ SPH_kernel cubic_spline_p = cubic_spline;
+__device__ SPH_kernel quartic_spline_p = quartic_spline;
 __device__ SPH_kernel spiky_p = spiky;
 
 
@@ -133,6 +137,46 @@ __device__ void cubic_spline(double *W, double dWdx[DIM], double *dWdr, double d
         dWdx[d] = *dWdr/r * dx[d];
     }
 }
+
+// quartic spline from Dehnen & Aly 2012
+__device__ void quartic_spline(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double sml)
+{
+    int d;
+    double r;
+    double f;
+    double q;
+
+    r = 0;
+    for (d = 0; d < DIM; d++) {
+        r += dx[d]*dx[d];
+        dWdx[d] = 0;
+    }
+    r = sqrt(r);
+    *dWdr = 0;
+    *W = 0;
+    q = r/sml;
+
+    f = 3125./768. * 1/sml;
+#if DIM > 1
+    f = 46875./(2398.*M_PI) * 1./(sml*sml);
+#if DIM > 2
+    f = 15625./(512.*M_PI) * 1./(sml*sml*sml);
+#endif
+#endif
+
+    if (r > sml) {
+        *W = 0;
+    } else {
+        *W = f*( (1-q)*(1-q)*(1-q)*(1-q) - 5*(3./5.-q)*(3./5.-q)*(3./5.-q)*(3./5.-q)
+                + 10.0*(1./5.-q)*(1./5.-q)*(1./5.-q)*(1./5.-q) ) * (q < 1);
+        *dWdr = f/sml*( -40.*(1./5.-q)*(1./5.-q)*(1./5.-q)+20*(3./5.-q)*(3./5.-q)*(3./5.-q)
+                - 4*(1-q)*(1-q)*(1-q) ) * (q < 1);
+        for (d = 0; d < DIM; d++) {
+            dWdx[d] = *dWdr/r * dx[d];
+        }
+    }
+}
+
 
 // Wendland C2 from Dehnen & Aly 2012
 __device__ void wendlandc2(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double sml)

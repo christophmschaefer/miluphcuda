@@ -21,17 +21,11 @@
  *
  */
 
+#ifndef _COMCORRECTION_H
+#define _COMCORRECTION_H
 
+#include "parameter.h"
 
-#ifndef _RHS_H
-#define _RHS_H
-
-
-#define MAX_NUMBER_PROFILED_KERNELS 32
-
-
-void rightHandSide(void);
-
-
+__global__ void COMcorrection(void);
 
 #endif
