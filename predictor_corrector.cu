@@ -120,8 +120,6 @@ __global__ void CorrectorStep()
         p.h[i] = predictor.h[i];
 #endif
 #if JC_PLASTICITY
-        p.ep[i] = p.ep[i] + dt * predictor.edotp[i];
-        p.edotp[i] = predictor.edotp[i];
         p.T[i] = p.T[i] + dt * predictor.dTdt[i];
         p.dTdt[i] = predictor.dTdt[i];
 #endif
@@ -153,6 +151,8 @@ __global__ void CorrectorStep()
                 p.dSdt[stressIndex(i,j,k)] = predictor.dSdt[stressIndex(i,j,k)];
             }
         }
+        p.ep[i] = p.ep[i] + dt * predictor.edotp[i];
+        p.edotp[i] = predictor.edotp[i];
 #endif
     }
 }
@@ -227,7 +227,6 @@ __global__ void PredictorStep()
 #endif
 #endif
 #if JC_PLASTICITY
-        predictor.ep[i] = p.ep[i] + dt/2 * p.edotp[i];
         predictor.T[i] = p.T[i] + dt/2 * p.dTdt[i];
 #endif
 #if SIRONO_POROSITY
@@ -254,6 +253,7 @@ __global__ void PredictorStep()
                 predictor.S[stressIndex(i,j,k)] = p.S[stressIndex(i,j,k)] + dt/2 * p.dSdt[stressIndex(i,j,k)];
             }
         }
+        predictor.ep[i] = p.ep[i] + dt/2 * p.edotp[i];
 #endif
     }
 

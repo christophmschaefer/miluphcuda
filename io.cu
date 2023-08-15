@@ -1479,13 +1479,14 @@ void write_particles_to_file(File file) {
     hid_t dedt_id;
 #endif
 #if JC_PLASTICITY
-    hid_t ep_id, T_id;
+    hid_t T_id;
 #endif
     hid_t p_id;
 #if NAVIER_STOKES
     hid_t Tshear_id;
 #endif
 #if SOLID
+    hid_t ep_id;
     hid_t S_id;
     hid_t dSdt_id;
     hid_t local_strain_id;
@@ -2619,6 +2620,18 @@ void write_particles_to_file(File file) {
         status = H5Dwrite(local_strain_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(local_strain_id);
         free(x);
+
+
+        /* total plastic strain */
+        x = (double *) malloc(sizeof(double) * numberOfParticles);
+        ep_id = H5Dcreate2(file_id, "/total_plastic_strain", H5T_NATIVE_DOUBLE, dataspace_id,
+                                     H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        for (i = 0; i < numberOfParticles; i++)
+            x[i] = p_host.ep[i];
+
+        status = H5Dwrite(ep_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(ep_id);
+        free(x);
 #endif
 
 #if INTEGRATE_ENERGY
@@ -3048,7 +3061,6 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     cudaVerify(cudaMemcpy(p_host.dedt, p_device.dedt, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #endif
 #if JC_PLASTICITY
-    cudaVerify(cudaMemcpy(p_host.ep, p_device.ep, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.T, p_device.T, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #endif
 #if NAVIER_STOKES
@@ -3058,6 +3070,7 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     cudaVerify(cudaMemcpy(p_host.S, p_device.S, memorySizeForStress, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.dSdt, p_device.dSdt, memorySizeForStress, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.local_strain, p_device.local_strain, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.ep, p_device.ep, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #endif
 #if FRAGMENTATION
     cudaVerify(cudaMemcpy(p_host.d, p_device.d, memorySizeForParticles, cudaMemcpyDeviceToHost));

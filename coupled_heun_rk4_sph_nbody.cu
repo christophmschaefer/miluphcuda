@@ -18,7 +18,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with miluphcuda.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 
@@ -107,8 +106,6 @@ __global__ void CorrectorStep_heun()
         p.h[i] = predictor.h[i];
 #endif
 #if JC_PLASTICITY
-        p.ep[i] = p.ep[i] + dt/2 * (predictor.edotp[i] + p.edotp[i]);
-        p.edotp[i] = 0.5*(predictor.edotp[i] + p.edotp[i]);
         p.T[i] = p.T[i] + dt/2 * (predictor.dTdt[i] + p.dTdt[i]);
         p.dTdt[i] = 0.5*(predictor.dTdt[i] + p.dTdt[i]);
 #endif
@@ -174,6 +171,8 @@ __global__ void CorrectorStep_heun()
         p.pold[i] = predictor.pold[i];
         p.alpha_jutzi_old[i] = p.alpha_jutzi_old[i];
 #endif
+        p.ep[i] = p.ep[i] + dt/2 * (predictor.edotp[i] + p.edotp[i]);
+        p.edotp[i] = 0.5*(predictor.edotp[i] + p.edotp[i]);
 #endif
     }
 }
@@ -250,13 +249,13 @@ __global__ void PredictorStep_heun()
         predictor.flag_plastic[i] = p.flag_plastic[i];
 #endif
 #if JC_PLASTICITY
-        predictor.ep[i] = p.ep[i] + dt * p.edotp[i];
         predictor.T[i] = p.T[i] + dt * p.dTdt[i];
 #endif
 #if INVISCID_SPH
         predictor.beta[i] = p.beta[i] + dt * p.dbetadt[i];
 #endif
 #if SOLID
+        predictor.ep[i] = p.ep[i] + dt * p.edotp[i];
         for (j = 0; j < DIM; j++) {
             for (k = 0; k < DIM; k++) {
                 predictor.S[stressIndex(i,j,k)] = p.S[stressIndex(i,j,k)] + dt * p.dSdt[stressIndex(i,j,k)];

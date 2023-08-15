@@ -85,6 +85,8 @@ int allocate_particles_memory(struct Particle *a, int allocate_immutables)
 	cudaVerify(cudaMalloc((void**)&a->S, memorySizeForStress));
 	cudaVerify(cudaMalloc((void**)&a->dSdt, memorySizeForStress));
 	cudaVerify(cudaMalloc((void**)&a->local_strain, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&a->ep, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&a->edotp, memorySizeForParticles));
 #endif
 
 #if NAVIER_STOKES
@@ -217,8 +219,6 @@ int allocate_particles_memory(struct Particle *a, int allocate_immutables)
 //	cudaVerify(cudaMalloc((void**)&a->materialId, memorySizeForInteractions));
 
 #if JC_PLASTICITY
-	cudaVerify(cudaMalloc((void**)&a->ep, memorySizeForParticles));
-	cudaVerify(cudaMalloc((void**)&a->edotp, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&a->T, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&a->dTdt, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&a->jc_f, memorySizeForParticles));
@@ -335,6 +335,7 @@ int copy_particles_derivatives_device_to_device(struct Particle *dst, struct Par
 
 #if SOLID
     cudaVerify(cudaMemcpy(dst->dSdt, src->dSdt, memorySizeForStress, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->edotp, src->edotp, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
 
 #if INVISCID_SPH
@@ -342,7 +343,6 @@ int copy_particles_derivatives_device_to_device(struct Particle *dst, struct Par
 #endif
 
 #if JC_PLASTICITY
-    cudaVerify(cudaMemcpy(dst->edotp, src->edotp, memorySizeForParticles, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy(dst->dTdt, src->dTdt, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
 
@@ -495,6 +495,7 @@ int copy_particles_variables_device_to_device(struct Particle *dst, struct Parti
 #endif
 #if SOLID
     cudaVerify(cudaMemcpy(dst->S, src->S, memorySizeForStress, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->ep, src->ep, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
 #if NAVIER_STOKES
     cudaVerify(cudaMemcpy(dst->Tshear, src->Tshear, memorySizeForStress, cudaMemcpyDeviceToDevice));
@@ -507,7 +508,6 @@ int copy_particles_variables_device_to_device(struct Particle *dst, struct Parti
 #endif
 
 #if JC_PLASTICITY
-    cudaVerify(cudaMemcpy(dst->ep, src->ep, memorySizeForParticles, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy(dst->T, src->T, memorySizeForParticles, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy(dst->jc_f, src->jc_f, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
@@ -657,14 +657,14 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 	cudaVerify(cudaFree(a->S));
 	cudaVerify(cudaFree(a->dSdt));
 	cudaVerify(cudaFree(a->local_strain));
+    cudaVerify(cudaFree(a->ep));
+    cudaVerify(cudaFree(a->edotp));
 #endif
 #if NAVIER_STOKES
 	cudaVerify(cudaFree(a->Tshear));
 #endif
 
 #if JC_PLASTICITY
-	cudaVerify(cudaFree(a->ep));
-	cudaVerify(cudaFree(a->edotp));
 	cudaVerify(cudaFree(a->T));
 	cudaVerify(cudaFree(a->dTdt));
 	cudaVerify(cudaFree(a->jc_f));
@@ -868,8 +868,12 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&p_device.S, memorySizeForStress));
 	cudaVerify(cudaMalloc((void**)&p_device.dSdt, memorySizeForStress));
 	cudaVerify(cudaMallocHost((void**)&p_host.local_strain, memorySizeForParticles));
-	cudaVerify(cudaMalloc((void**)&p_device.local_strain, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&p_device.local_strain, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**) &p_device.sigma, memorySizeForStress));
+    cudaVerify(cudaMalloc((void**)&p_device.plastic_f, memorySizeForParticles));
+    cudaVerify(cudaMallocHost((void**)&p_host.ep, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&p_device.ep, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&p_device.edotp, memorySizeForParticles));
 #endif
 
 #if NAVIER_STOKES
@@ -883,11 +887,8 @@ int init_allocate_memory(void)
 #endif
 
 #if JC_PLASTICITY
-	cudaVerify(cudaMallocHost((void**)&p_host.ep, memorySizeForParticles));
-	cudaVerify(cudaMallocHost((void**)&p_host.T, memorySizeForParticles));
-	cudaVerify(cudaMalloc((void**)&p_device.ep, memorySizeForParticles));
-	cudaVerify(cudaMalloc((void**)&p_device.edotp, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&p_device.T, memorySizeForParticles));
+	cudaVerify(cudaMallocHost((void**)&p_host.T, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&p_device.dTdt, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&p_device.jc_f, memorySizeForParticles));
 #endif
@@ -1116,6 +1117,7 @@ int copy_particle_data_to_device()
 #endif
 #if SOLID
 	cudaVerify(cudaMemcpy(p_device.S, p_host.S, memorySizeForStress, cudaMemcpyHostToDevice));
+    cudaVerify(cudaMemcpy(p_device.ep, p_host.ep, memorySizeForParticles, cudaMemcpyHostToDevice));
 #endif
 #if NAVIER_STOKES
 	cudaVerify(cudaMemcpy(p_device.Tshear, p_host.Tshear, memorySizeForStress, cudaMemcpyHostToDevice));
@@ -1153,7 +1155,6 @@ int copy_particle_data_to_device()
 #endif
     cudaVerify(cudaMemcpy(p_device.h0, p_host.h0, memorySizeForParticles, cudaMemcpyHostToDevice));
 #if JC_PLASTICITY
-	cudaVerify(cudaMemcpy(p_device.ep, p_host.ep, memorySizeForParticles, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(p_device.T, p_host.T, memorySizeForParticles, cudaMemcpyHostToDevice));
 #endif
 #if FRAGMENTATION
@@ -1185,7 +1186,7 @@ int free_memory()
 
 	/* free device memory */
 	if (param.verbose)
-        fprintf(stdout, "Freeing device memory...\n");
+        fprintf(stdout, "Freeing memory...\n");
 	cudaVerify(cudaFree(p_device.x));
 	cudaVerify(cudaFree(p_device.g_x));
 	cudaVerify(cudaFree(p_device.g_local_cellsize));
@@ -1336,20 +1337,22 @@ int free_memory()
 #endif
 #if SOLID
 	cudaVerify(cudaFree(p_device.S));
+    cudaVerify(cudaFreeHost(p_host.ep));
 	cudaVerify(cudaFree(p_device.dSdt));
 	cudaVerify(cudaFreeHost(p_host.S));
 	cudaVerify(cudaFreeHost(p_host.dSdt));
 	cudaVerify(cudaFree(p_device.local_strain));
 	cudaVerify(cudaFreeHost(p_host.local_strain));
+    cudaVerify(cudaFree(p_device.plastic_f));
 	cudaVerify(cudaFree(p_device.sigma));
+    cudaVerify(cudaFree(p_device.ep));
+    cudaVerify(cudaFree(p_device.edotp));
 #endif
 #if ARTIFICIAL_STRESS
 	cudaVerify(cudaFree(p_device.R));
 #endif
 
 #if JC_PLASTICITY
-	cudaVerify(cudaFree(p_device.ep));
-	cudaVerify(cudaFree(p_device.edotp));
 	cudaVerify(cudaFree(p_device.T));
 	cudaVerify(cudaFree(p_device.dTdt));
 	cudaVerify(cudaFree(p_device.jc_f));
@@ -1411,9 +1414,6 @@ int free_memory()
     cudaVerify(cudaFree(p_device.depsilon_vdt));
 #endif
 
-	/* free host memory */
-	if (param.verbose)
-        fprintf(stdout, "Freeing host memory...\n");
 	cudaVerify(cudaFreeHost(p_host.x));
 	cudaVerify(cudaFreeHost(p_host.vx));
 	cudaVerify(cudaFreeHost(p_host.ax));
@@ -1479,7 +1479,6 @@ int free_memory()
 #endif
 
 #if JC_PLASTICITY
-	cudaVerify(cudaFreeHost(p_host.ep));
 	cudaVerify(cudaFreeHost(p_host.T));
 #endif
 #if DIM > 2

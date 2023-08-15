@@ -14,4 +14,10 @@ The runtime of the simulation is 2 min on a Nvidia Geforce GTX 1080 Ti.
 
 The small plot script plot.py can be used to generate a density colourcoded plot of the sph particles.
 
+
+If you want to additionally test some plastic deformation, set VON_MISES_PLASTICITY to 1 in
+parameter.h and recompile. Use the plot script plot_plastic_strain.py to plot the hdf5 output file
+(make sure to use hdf5, since the total strain is only stored in the hdf5 files).
+
 # Christoph Schaefer, 2 October 2019
+# Christoph Schaefer, 15 August 2023

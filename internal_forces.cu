@@ -898,7 +898,7 @@ __global__ void internalForces(int *interactions) {
         double bulk = matBulkmodulus[matId];
         double young = matYoungModulus[matId];
         int f;
-# if JC_PLASTICITY
+# if SOLID
 	    double edotp[DIM][DIM]; // plastic strain rate
 # endif
 # if SIRONO_POROSITY
@@ -916,6 +916,8 @@ __global__ void internalForces(int *interactions) {
                     p.dSdt[stressIndex(i,d,e)] = 2.0 * shear * edot[d][e];
 # if JC_PLASTICITY
 		            edotp[d][e] = (1 - p.jc_f[i]) * edot[d][e];
+# else // plasticity via other plasticity model
+                    edotp[d][e] = (1 - p_rhs.plastic_f[i]) * edotp[d][e];
 # endif
                     // rotation terms
                     for (f = 0; f < DIM; f++) {
@@ -924,6 +926,8 @@ __global__ void internalForces(int *interactions) {
                             p.dSdt[stressIndex(i,d,e)] -= 2.0 * shear * edot[f][f] / 3.0;
 # if JC_PLASTICITY
 		            	    edotp[d][e] += (-1./3)*(1-p.jc_f[i])*edot[f][f];
+# else
+                            edotp[d][e] += (-1./3)*(1-p_rhs.plastic_f[i])*edot[f][f];
 # endif
                         }
                         p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,d,f)] * rdot[e][f];
@@ -976,6 +980,16 @@ __global__ void internalForces(int *interactions) {
             }
             if (p.noi[i] < 1)
                 p.dTdt[i] = 0.0;
+# else // some other plasticity model at work
+            /* calculate plastic strain rate tensor from dSdt */
+            double K2 = 0;
+            for (d = 0; d < DIM; d++) {
+                for (e = 0; e < DIM; e++) {
+                    K2 += edotp[d][e]*edotp[d][e];
+                }
+            }
+            // still to double check factor 2./3 here -> reference from LS-DYNA support page on effective plastic strain
+            p.edotp[i] = sqrt(2./3.*K2);
 # endif
 
 # if ARTIFICIAL_VISCOSITY

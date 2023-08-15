@@ -152,8 +152,10 @@ struct Particle {
 #if SOLID
     double *S;  ///< the deviatoric stress tensor
     double *dSdt; ///< the time derivative of the deviatoric stress tensor
-    double *local_strain; ///< the local strain of a sph particle
-
+    double *local_strain; ///< the local strain of a sph particle as required for the Grady-Kipp fragmentation model
+    double *ep; ///< the total strain of a sph particle
+    double *edotp; ///< and its time derivative
+    double *plastic_f; ///< the plasticity factor (reduce factor of elastic strain to plastic strain
     double *sigma; ///< the stress tensor, \sigma^{\alpha \beta} = -p\delta^{\alpha \beta} + S^{\alpha \beta}
 #endif
 
@@ -163,8 +165,6 @@ struct Particle {
 
 /// experimental/outdated, do not use.... Johnson-Cook plasticity related
 #if JC_PLASTICITY
-    double *ep;
-    double *edotp;
     double *T;
     double *dTdt;
     double *jc_f;

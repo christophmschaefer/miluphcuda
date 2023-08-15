@@ -83,7 +83,6 @@ __global__ void integrateEuler(void)
             p.h[i] += dt * p.dhdt[i];
 #endif
 #if JC_PLASTICITY
-            p.ep[i] += dt * p.edotp[i];
             p.T[i] += dt * p.dTdt[i];
 #endif
 #if INVISCID_SPH
@@ -101,6 +100,7 @@ __global__ void integrateEuler(void)
             for (k = 0; k < DIM*DIM; k++) {
                     p.S[i*DIM*DIM+k] += dt * p.dSdt[i*DIM*DIM+k];
             }
+            p.ep[i] += dt * p.edotp[i];
 #endif
             p.x[i] += dt * p.dxdt[i];
 #if DIM > 1
