@@ -937,6 +937,7 @@ __global__ void internalForces(int *interactions) {
                     if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
                         p.dSdt[stressIndex(i,d,e)] = p.f[i] / p.alpha_jutzi[i] * p.dSdt[stressIndex(i,d,e)]
                                                             - 1.0 / (p.alpha_jutzi[i]*p.alpha_jutzi[i])
+
 #  if 0 // FRAGMENTATION && DAMAGE_ACTS_ON_S
                                                             * (1-di)*p.S[stressIndex(i,d,e)]
 #  else
