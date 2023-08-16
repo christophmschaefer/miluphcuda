@@ -24,15 +24,15 @@
 #define _PARAMETER_H
 
 // Dimension of the problem
-#define DIM 3
+#define DIM 2
 
 // Basic physical model, choose one of the following:
 // SOLID solves continuum mechanics with material strength, and stress tensor \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta}
 // HYDRO solves only the Euler equation, and there is only (scalar) pressure
-#define SOLID 0
-#define HYDRO 1
+#define SOLID 1
+#define HYDRO 0
 // set additionally p to 0 if p < 0
-#define REAL_HYDRO 1
+#define REAL_HYDRO 0
 
 // add additional point masses to the simulation, read from file <filename>.mass
 // format is location velocities mass r_min r_max, where location and velocities are vectors with size DIM and
@@ -45,7 +45,7 @@
 
 // integrate the energy equation
 // when setting up a SOLID simulation with Tillotson or ANEOS, it must be set to 1
-#define INTEGRATE_ENERGY 1
+#define INTEGRATE_ENERGY 0
 
 // integrate the continuity equation
 // if set to 0, the density will be calculated using the standard SPH sum \sum_i m_j W_ij
@@ -77,7 +77,7 @@
 
 // for the tensile instability fix
 // you do not need this
-#define ARTIFICIAL_STRESS 0
+#define ARTIFICIAL_STRESS 1
 
 // standard SPH alpha/beta viscosity
 #define ARTIFICIAL_VISCOSITY 1
@@ -89,10 +89,10 @@
 
 // consistency switches
 // for zeroth order consistency
-#define SHEPARD_CORRECTION 1
+#define SHEPARD_CORRECTION 0
 // for linear consistency
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
-#define TENSORIAL_CORRECTION 0
+#define TENSORIAL_CORRECTION 1
 
 
 // Available plastic flow conditions:
@@ -192,7 +192,7 @@
 
 // if set to 0, h = (h_i + h_j)/2  is used to calculate W_ij
 // if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2
-#define AVERAGE_KERNELS 1
+#define AVERAGE_KERNELS 0
 
 // important switch: if the simulations yields at some point too many interactions for
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be set to 0
@@ -202,6 +202,7 @@
 // important switch: if the simulations yields at some point too many interactions for
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be lowered until
 // the interactions are lower than MAX_NUM_INTERACTIONS
+// sfair
 #define DEAL_WITH_TOO_MANY_INTERACTIONS 0
 
 // additional smoothing of the velocity field
@@ -215,7 +216,7 @@
 
 // IO options
 #define HDF5IO 1    // use HDF5 (needs libhdf5-dev and libhdf5)
-#define MORE_OUTPUT 0   //produce additional output to HDF5 files: p_max, p_min, rho_max, rho_min
+#define MORE_OUTPUT 1   //produce additional output to HDF5 files: p_max, p_min, rho_max, rho_min
 #define MORE_ANEOS_OUTPUT 0 // produce additional output to HDF5 files: T, cs, entropy, phase-flag; set only if you use the ANEOS EoS; currently not supported for porosity + ANEOS
 #define OUTPUT_GRAV_ENERGY 0    // compute and output gravitational energy (at times when output files are written); of all SPH particles (and also w.r.t. gravitating point masses and between them); direct particle-particle summation, not tree; option exists to control costly computation for high particle numbers
 #define BINARY_INFO 0   // generates additional output file (binary_system.log) with info regarding binary system: semi-major axis, eccentricity if GRAVITATING_POINT_MASSES == 1

@@ -356,7 +356,7 @@ void rightHandSide()
     printf("maximum number of interactions: %d\n", maxNumInteractions);
 #endif
 
-#if !INTEGRATE_DENSITY
+//#if !INTEGRATE_DENSITY
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
 # endif
@@ -369,7 +369,7 @@ void rightHandSide()
     printf("duration density: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
 # endif
-#endif
+//#endif
 
 #if SHEPARD_CORRECTION
 # if DEBUG_RHS_RUNTIMES

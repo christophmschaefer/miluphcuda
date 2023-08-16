@@ -258,14 +258,17 @@ __global__ void internalForces(int *interactions) {
             // the interaction partner
             j = interactions[i * MAX_NUM_INTERACTIONS + k];
 
+            for (d = 0; d < DIM; d++) {
+                accelsj[d] = 0.0;
+                dWdxj[d] = 0.0;
+                dWdx[d] = 0.0;
+            }
+
             matIdj = p_rhs.materialId[j];
             if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || matIdj == EOS_TYPE_IGNORE) {
                 continue;
             }
 
-            for (d = 0; d < DIM; d++) {
-                accelsj[d] = 0.0;
-            }
 
             boundia = 0;
             boundia = p_rhs.materialId[j] == BOUNDARY_PARTICLE_ID;
@@ -662,13 +665,14 @@ __global__ void internalForces(int *interactions) {
 # if TENSORIAL_CORRECTION
 #  if 0 // cms 2020-06-10 testing time step size, this part gives a tiny step size due to density
       //                evolution, needs some debugging
+      // debugging started 2023-02-15, for the colliding rings, the original version is stable, this one not!
+            double divv = 0.0;
             for (d = 0; d < DIM; d++) {
                 for (dd = 0; dd < DIM; dd++) {
-                    drhodt += p.rho[i] * p.m[j]/p.rho[j] * dv[d] * dWdx[dd]
-                              * p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd];
+                    divv += p.m[j]/p.rho[j] * dv[d] * p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
                 }
             }
-
+            drhodt += p.rho[i] * divv;
 #  else
             drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
 #  endif
@@ -767,6 +771,13 @@ __global__ void internalForces(int *interactions) {
 #else
         p.drhodt[i] = drhodt;
 #endif // SML_CORRECTION
+
+#if INTEGRATE_DENSITY
+        // if the density is calculated via kernel sum, we set drhodt to 0 here again
+        if (matdensity_via_kernel_sum[p_rhs.materialId[i]]) {
+            p.drhodt[i] = 0.0;
+        }
+#endif
 
 
 #if INTEGRATE_ENERGY
@@ -887,7 +898,7 @@ __global__ void internalForces(int *interactions) {
         double bulk = matBulkmodulus[matId];
         double young = matYoungModulus[matId];
         int f;
-# if JC_PLASTICITY
+# if SOLID
 	    double edotp[DIM][DIM]; // plastic strain rate
 # endif
 # if SIRONO_POROSITY
@@ -905,6 +916,8 @@ __global__ void internalForces(int *interactions) {
                     p.dSdt[stressIndex(i,d,e)] = 2.0 * shear * edot[d][e];
 # if JC_PLASTICITY
 		            edotp[d][e] = (1 - p.jc_f[i]) * edot[d][e];
+# else // plasticity via other plasticity model
+                    edotp[d][e] = (1 - p_rhs.plastic_f[i]) * edot[d][e];
 # endif
                     // rotation terms
                     for (f = 0; f < DIM; f++) {
@@ -913,6 +926,8 @@ __global__ void internalForces(int *interactions) {
                             p.dSdt[stressIndex(i,d,e)] -= 2.0 * shear * edot[f][f] / 3.0;
 # if JC_PLASTICITY
 		            	    edotp[d][e] += (-1./3)*(1-p.jc_f[i])*edot[f][f];
+# else
+                            edotp[d][e] += (-1./3)*(1-p_rhs.plastic_f[i])*edot[f][f];
 # endif
                         }
                         p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,d,f)] * rdot[e][f];
@@ -921,8 +936,8 @@ __global__ void internalForces(int *interactions) {
 # if PALPHA_POROSITY && STRESS_PALPHA_POROSITY
                     if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
                         p.dSdt[stressIndex(i,d,e)] = p.f[i] / p.alpha_jutzi[i] * p.dSdt[stressIndex(i,d,e)]
-                                                            - 1.0 /
-                                                              (p.alpha_jutzi[i]*p.alpha_jutzi[i])
+                                                            - 1.0 / (p.alpha_jutzi[i]*p.alpha_jutzi[i])
+
 #  if 0 // FRAGMENTATION && DAMAGE_ACTS_ON_S
                                                             * (1-di)*p.S[stressIndex(i,d,e)]
 #  else
@@ -966,6 +981,20 @@ __global__ void internalForces(int *interactions) {
             }
             if (p.noi[i] < 1)
                 p.dTdt[i] = 0.0;
+# else // some other plasticity model at work
+            /* calculate plastic strain rate tensor from dSdt */
+            double K2 = 0;
+            for (d = 0; d < DIM; d++) {
+                for (e = 0; e < DIM; e++) {
+                    // a measure for the total deviatoric strain rate
+//                    K2 += p.dSdt[stressIndex(i,d,e)]*p.dSdt[stressIndex(i,d,e)];
+                    K2 += edotp[d][e]*edotp[d][e];
+                }
+            }
+            // still to double check factor 2./3 here -> reference from LS-DYNA support page on effective plastic strain
+            p.edotp[i] = sqrt(2./3.*K2);
+            // now consider only the plastic part (with the plasticity factor from this time step and convert to strain
+//            p.edotp[i] = (1-p_rhs.plastic_f[i])/(3*shear)*sqrt(3./2.*K2);
 # endif
 
 # if ARTIFICIAL_VISCOSITY
