@@ -133,6 +133,7 @@ __device__ void get_acceleration_by_particle(int n, double *ax, double *ay, doub
 {
     // do some more magic here
     int d;
+    register double m_star;
     double r = 0.0;
     double rrr;
     double smlcubed;
