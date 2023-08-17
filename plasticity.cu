@@ -374,6 +374,9 @@ __global__ void plasticityModel(void) {
         // finally limit the deviatoric stress tensor
         if (mises_f > 1.0)
             mises_f = 1.0;
+        if (mises_f < 0) // actually, this should never happen
+            mises_f = 0.0;
+
         // remember the plastic lowering factor for later usage
         p_rhs.plastic_f[i] = mises_f;
         for (d = 0; d < DIM; d++) {
