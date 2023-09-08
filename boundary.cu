@@ -173,13 +173,15 @@ __global__ void BoundaryConditionsAfterIntegratorStep(int *interactions)
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         matId = p_rhs.materialId[i];
+#if 0 // deactivated, usually not wanted
         // deactivate particles that have no interaction partners
         if (p.noi[i] < 1 && matId != EOS_TYPE_IGNORE) {
             p_rhs.materialId[i] = EOS_TYPE_IGNORE;
 #if DIM > 2
-            printf("DEBUG: Deactivating particle %i at position %e %e %e with speed %e %e %e and density %e and energy %e\n", p.x[i], p.y[i], p.z[i], p.vx[i], p.vy[i], p.vz[i], p.rho[i], p.e[i]);
+            printf("DEBUG: Deactivating particle %d at position %e %e %e with speed %e %e %e and density %e and energy %e\n", i, p.x[i], p.y[i], p.z[i], p.vx[i], p.vy[i], p.vz[i], p.rho[i], p.e[i]);
 #endif
         }
+#endif
     }
 }
 

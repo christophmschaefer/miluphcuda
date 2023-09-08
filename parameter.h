@@ -37,7 +37,7 @@
 // add additional point masses to the simulation, read from file <filename>.mass
 // format is location velocities mass r_min r_max, where location and velocities are vectors with size DIM and
 // r_min/r_max are min/max distances of sph particles to the bodies before they are taken out of the simulation
-#define GRAVITATING_POINT_MASSES 0
+#define GRAVITATING_POINT_MASSES 1
 
 // sink particles (set point masses to be sink particles)
 #define PARTICLE_ACCRETION 0 // check if particle is bound to one of the sink particles (crossed the accretion radius, rmin); if also UPDATE_SINK_VALUES 1: particle is accreted and ignored afterwards, else: continues orbiting without being accreted
