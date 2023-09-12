@@ -313,8 +313,19 @@ __global__ void calculatePressure() {
                 // see doc/papers_and_models/porosity_models/crush_curve_Blum2023
                 // alpha = (P0/P+a)**(1/x+b/x*P) + 1/phi_max
                 // dalphadp = (P0/P + a)**(1/x+b/x*P) * (b/x*np.log(P0/P+a) - P0*(1/x+b/x*P)/(P**2*(P0/P)+a))
-                p.dalphadp[i] = pow((P0/pressure + a), (1/x+b/x*pressure)) * (b/x*log(P0/pressure+a) -
+                p.dalphadp[i] = 0.0;
+                //if (pressure > 0.0) {
+                if (pressure > 1e0) {
+                    p.dalphadp[i] = pow((P0/pressure + a), (1/x+b/x*pressure)) * (b/x*log(P0/pressure+a) -
                                 P0*(1/x+b/x*pressure)/(P0*pressure+a*pressure*pressure));
+                }
+                if (isnan(p.dalphadp[i])) {
+                    printf("ISNAN in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
+                }
+                if (isinf(p.dalphadp[i])) {
+                    printf("ISINF in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
+                }
+                // printf("p.dalphadp %lf pressure %lf", p.dalphadp[i], pressure);
             }
             p.dalphadrho[i] = ((pressure / (p.rho[i] * p.rho[i]) * p.delpdele[i] + p.alpha_jutzi[i] * p.delpdelrho[i]) * p.dalphadp[i])
                             / (p.alpha_jutzi[i] + p.dalphadp[i] * (pressure - p.rho[i] * p.delpdelrho[i]));
