@@ -302,6 +302,19 @@ __global__ void calculatePressure() {
                     p.dalphadp[i] = 0.0;
 //                    p.alpha_jutzi[i] = 1.0;
                 }
+            } else if (crushcurve_style == 2) {  // Blum et al. 2023 experimental crush curve
+                // values will go to material.cfg eventually
+                // constants from Max rescaled from MPa to Pa
+                const double P0 = 0.044*1e6;
+                const double phi_max = 0.875;
+                const double x = 8.915;
+                const double a = 0;
+                const double b = 7e-4*1e-6;
+                // see doc/papers_and_models/porosity_models/crush_curve_Blum2023
+                // alpha = (P0/P+a)**(1/x+b/x*P) + 1/phi_max
+                // dalphadp = (P0/P + a)**(1/x+b/x*P) * (b/x*np.log(P0/P+a) - P0*(1/x+b/x*P)/(P**2*(P0/P)+a))
+                p.dalphadp[i] = pow((P0/pressure + a), (1/x+b/x*pressure)) * (b/x*log(P0/pressure+a) -
+                                P0*(1/x+b/x*pressure)/(P0*pressure+a*pressure*pressure));
             }
             p.dalphadrho[i] = ((pressure / (p.rho[i] * p.rho[i]) * p.delpdele[i] + p.alpha_jutzi[i] * p.delpdelrho[i]) * p.dalphadp[i])
                             / (p.alpha_jutzi[i] + p.dalphadp[i] * (pressure - p.rho[i] * p.delpdelrho[i]));
