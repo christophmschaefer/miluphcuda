@@ -326,6 +326,18 @@ __global__ void calculatePressure() {
                     printf("ISINF in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
                 }
                 // printf("p.dalphadp %lf pressure %lf", p.dalphadp[i], pressure);
+            } else if (crushcurve_style == 3) {  // Malamud 2023 experimental crush curve
+                if (pressure > 6e0) { // valid for pressures > 6 Pa ...
+                    // dalpha / dp = - 0.084 * ln(10) / (-P * (0.084 * ln(P) - 0.064 * ln(10))**2)
+                    p.dalphadp[i] = - 0.19341714781149988/(-pressure * (pow((0.084 * log(pressure) - 0.14736544595161893),2)));
+                }
+                if (isnan(p.dalphadp[i])) {
+                    printf("ISNAN in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
+                }
+                if (isinf(p.dalphadp[i])) {
+                    printf("ISINF in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
+                }
+
             }
             p.dalphadrho[i] = ((pressure / (p.rho[i] * p.rho[i]) * p.delpdele[i] + p.alpha_jutzi[i] * p.delpdelrho[i]) * p.dalphadp[i])
                             / (p.alpha_jutzi[i] + p.dalphadp[i] * (pressure - p.rho[i] * p.delpdelrho[i]));
