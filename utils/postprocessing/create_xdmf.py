@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 """
-Generates xdmf file from .h5 miluphcuda output files for Paraview postprocessing.
+Generates xdmf file from .h5 miluphcuda/miluphhpc output files for Paraview postprocessing.
 
 Authors: Christoph Schäfer, Christoph Burger
-Last updated: 17/Mar/2021
+Last updated: 24/Oct/2023
 
 """
 
@@ -30,12 +30,14 @@ def parse_args():
             h5files.append(file)
 
     parser = argparse.ArgumentParser(
-        description='Generates xdmf file from .h5 miluphcuda output files for Paraview postprocessing. '
+        description='Generates xdmf file from .h5 miluphcuda/miluphpc output files for Paraview postprocessing. '
                     'Then open the generated .xdmf file with Paraview. '
-                    'Usually the defaults will produce what you want (if cwd contains the .h5 files).')
+                    'Usually the defaults will produce what you want for miluphcuda (if cwd contains the .h5 files). '
+                    'For miluphpc add --miluphpc.')
 
     parser.add_argument('--output', help='output file name, default is paraview.xdmf', default='paraview.xdmf')
     parser.add_argument('--dim', help='dimension, default is 3', default='3')
+    parser.add_argument('--miluphpc', help='hdf5 files are miluphpc output files', action='store_true')
     parser.add_argument('--input_files', nargs='+', help='input file names, default is *.h5', default=h5files)
     parser.add_argument('--add_attr', nargs='+',
                         help='Additional attributes to read from the .h5 files. You only need this if the automatic '
@@ -82,11 +84,16 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # list of all attributes to search for (only scalars for now, see processing below)
-    possible_attributes = [ 'aneos_T', 'aneos_cs', 'aneos_entropy', 'aneos_phase_flag',
-                            'rho', 'p', 'e', 'm', 'local_strain', 'material_type', 'soundspeed',
-                            'sml', 'sml_initial', 'number_of_interactions', 'tree_depth',
-                            'deviatoric_stress', 'DIM_root_of_damage_tensile', 'number_of_activated_flaws',
-                            'alpha_jutzi', 'DIM_root_of_damage_porjutzi', 'damage_total' ]
+    modern = args.miluphpc
+    if (args.miluphpc): 
+        print("Assuming miluphc output files.") 
+        possible_attributes = [ 'Sxx', 'Sxy', 'Syy', 'cs', 'dSdtxx', 'dSdtxy', 'dSdtyy', 'drhodt', 'e', 'localStrain', 'm', 'noi', 'p', 'proc', 'rho', 'sml' ]
+    else:
+        possible_attributes = [ 'aneos_T', 'aneos_cs', 'aneos_entropy', 'aneos_phase_flag',
+                                'rho', 'p', 'e', 'm', 'local_strain', 'material_type', 'soundspeed',
+                                'sml', 'sml_initial', 'number_of_interactions', 'tree_depth',
+                                'deviatoric_stress', 'DIM_root_of_damage_tensile', 'number_of_activated_flaws',
+                                'alpha_jutzi', 'DIM_root_of_damage_porjutzi', 'damage_total', 'total_plastic_strain' ]
     # find matching attributes in h5 file
     wanted_attributes = []
     for attr in possible_attributes:
@@ -153,7 +160,7 @@ if __name__ == "__main__":
                 xdmfh.write('</Attribute>\n')
             else:
                 datatype = "Float"
-                if myattr in ['number_of_interactions', 'material_type', 'number_of_activated_flaws', 'aneos_phase_flag']:
+                if myattr in [ 'noi', 'proc', 'key', 'number_of_interactions', 'material_type', 'number_of_activated_flaws', 'aneos_phase_flag']:
                     datatype = "Integer"
                 xdmfh.write('<Attribute AttributeType="Scalar" Centor="Node" Name="%s">\n' % myattr)
                 xdmfh.write('<DataItem DataType="%s" Dimensions="%s 1" Format="HDF">\n' % (datatype, mylen))
