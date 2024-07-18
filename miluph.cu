@@ -96,7 +96,7 @@ int maxNumberOfParticles;
 
 int memorySizeForTree;
 int memorySizeForParticles;
-int memorySizeForInteractions;
+size_t memorySizeForInteractions;
 int memorySizeForChildren;
 int memorySizeForStress;
 #if FRAGMENTATION

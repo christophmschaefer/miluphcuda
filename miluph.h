@@ -368,7 +368,7 @@ extern int integermemorySizeForPointmasses;
 
 extern int memorySizeForParticles;
 extern int memorySizeForTree;
-extern int memorySizeForInteractions;
+extern size_t memorySizeForInteractions;
 extern int memorySizeForChildren;
 extern int memorySizeForStress;
 #if FRAGMENTATION
