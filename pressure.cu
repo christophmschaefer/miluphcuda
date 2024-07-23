@@ -327,7 +327,8 @@ __global__ void calculatePressure() {
                 }
                 // printf("p.dalphadp %lf pressure %lf", p.dalphadp[i], pressure);
             } else if (crushcurve_style == 3) {  // Malamud 2023 experimental crush curve
-                if (pressure > 6e0) { // valid for pressures > 6 Pa ...
+                // if (pressure > 6e0) { // valid for pressures > 6 Pa ...
+                if (pressure > 1e2) { // elastic pressure is given by the initial alpha0, see uri_crush_curve_plot.py
                     // dalpha / dp = - 0.084 * ln(10) / (-P * (0.084 * ln(P) - 0.064 * ln(10))**2)
                     p.dalphadp[i] = - 0.19341714781149988/(-pressure * (pow((0.084 * log(pressure) - 0.14736544595161893),2)));
                 }
@@ -338,6 +339,23 @@ __global__ void calculatePressure() {
                     printf("ISINF in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
                 }
 
+            } else if (crushcurve_style == 4) {  // Malamud 2023 experimental crush curve, blue curve in figure 2-c
+                // if (pressure > 6e0) { // valid for pressures > 6 Pa ...
+                //if (pressure > 1e4) { // elastic pressure is given by the initial alpha0, see blue_curve_fig2c.py
+                const double a = 0.41;
+                const double b = 0.09;
+                const double pelastic_uri = 1e6 * pow(1/(a*alpha_0), 1./b);
+                //printf("pelastic uri: %le\n\n", pelastic_uri);
+                if (pressure > pelastic_uri) { // elastic pressure is given by the initial alpha0, see blue_curve_fig2c.py
+                // from VFF = a*p**b with a=0.41 and b=0.09 and p in MPa
+                    p.dalphadp[i] = -0.7611296717250695*pow(pressure, -1.09);
+                }
+                if (isnan(p.dalphadp[i])) {
+                    printf("ISNAN in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
+                }
+                if (isinf(p.dalphadp[i])) {
+                    printf("ISINF in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
+                }
             }
             p.dalphadrho[i] = ((pressure / (p.rho[i] * p.rho[i]) * p.delpdele[i] + p.alpha_jutzi[i] * p.delpdelrho[i]) * p.dalphadp[i])
                             / (p.alpha_jutzi[i] + p.dalphadp[i] * (pressure - p.rho[i] * p.delpdelrho[i]));
