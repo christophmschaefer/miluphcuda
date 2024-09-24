@@ -4,7 +4,7 @@
 Generates xdmf file from .h5 miluphcuda/miluphhpc output files for Paraview postprocessing.
 
 Authors: Christoph Schäfer, Christoph Burger
-Last updated: 24/Oct/2023
+Last updated: 24/Sep/2024
 
 """
 
@@ -92,6 +92,7 @@ if __name__ == "__main__":
         possible_attributes = [ 'aneos_T', 'aneos_cs', 'aneos_entropy', 'aneos_phase_flag',
                                 'rho', 'p', 'e', 'm', 'local_strain', 'material_type', 'soundspeed',
                                 'sml', 'sml_initial', 'number_of_interactions', 'tree_depth',
+                                'cs_min', 'e_min', 'p_min', 'rho_min', 'cs_max', 'e_max', 'p_max', 'rho_max',
                                 'deviatoric_stress', 'DIM_root_of_damage_tensile', 'number_of_activated_flaws',
                                 'alpha_jutzi', 'DIM_root_of_damage_porjutzi', 'damage_total', 'total_plastic_strain' ]
     # find matching attributes in h5 file
