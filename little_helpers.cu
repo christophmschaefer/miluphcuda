@@ -99,9 +99,12 @@ __global__ void checkNaNs(int *interactions)
         assert(!isnan(p.az[i]));
 # endif
 #endif
+
+#if DEBUG_PARTICLE_WITH_NO_INTERACTIONS
         if (p.noi[i] == 0) {
             printf("particle %d with no interactions...\n", i);
         }
+#endif
     }
 }
 

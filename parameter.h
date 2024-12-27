@@ -37,11 +37,11 @@
 // add additional point masses to the simulation, read from file <filename>.mass
 // format is location velocities mass r_min r_max, where location and velocities are vectors with size DIM and
 // r_min/r_max are min/max distances of sph particles to the bodies before they are taken out of the simulation
-#define GRAVITATING_POINT_MASSES 0
+#define GRAVITATING_POINT_MASSES 1
 
 // sink particles (set point masses to be sink particles)
-#define PARTICLE_ACCRETION 0 // check if particle is bound to one of the sink particles (crossed the accretion radius, rmin); if also UPDATE_SINK_VALUES 1: particle is accreted and ignored afterwards, else: continues orbiting without being accreted
-#define UPDATE_SINK_VALUES 0 // add to sink the quantities of the accreted particle: mass, velocity and COM
+#define PARTICLE_ACCRETION 1 // check if particle is bound to one of the sink particles (crossed the accretion radius, rmin); if also UPDATE_SINK_VALUES 1: particle is accreted and ignored afterwards, else: continues orbiting without being accreted
+#define UPDATE_SINK_VALUES 1 // add to sink the quantities of the accreted particle: mass, velocity and COM
 
 // integrate the energy equation
 // when setting up a SOLID simulation with Tillotson or ANEOS, it must be set to 1
@@ -82,13 +82,13 @@
 // standard SPH alpha/beta viscosity
 #define ARTIFICIAL_VISCOSITY 1
 // Balsara switch: lowers the artificial viscosity in regions without shocks
-#define BALSARA_SWITCH 0
+#define BALSARA_SWITCH 1
 
 // INVISCID SPH (see Cullen & Dehnen paper)
 #define INVISCID_SPH 0
 
 // consistency switches
-// for zeroth order consistency
+// for zeroth order consistency, careful if you integrate the continuity equation (INTEGRATE_DENSITY=1)
 #define SHEPARD_CORRECTION 0
 // for linear consistency
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
@@ -137,17 +137,14 @@
 //             - DAMAGE_ACTS_ON_S is not reasonable for this model, since the limiting of S already depends on damage.
 //       If you want to additionally model the influence of some (single) melt energy on the yield strength, then activate
 //       COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY, which adds a factor (1-e/e_melt) to the yield strength.
-#define COLLINS_PLASTICITY 0
-#define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 0
-//   (5) Simplified version of the Collins et al. (2004) model, which uses only the
-//       strength representation for intact material (Y_i), irrespective of damage.
-//       Unlike in (4), Y decreases to zero (following a linear yield strength curve) for p<0.
-//       In addition, negative pressures are limited to the pressure corresponding to
-//       yield strength = 0 (i.e., are set to this value when they get more negative).
-#define COLLINS_PLASTICITY_SIMPLE 1
-// Note: The deviator stress tensor is additionally reduced by FRAGMENTATION (i.e., damage) only if
-//       DAMAGE_ACTS_ON_S is set. For most plasticity models it depends on the use case whether this
-//       is desired, only for COLLINS_PLASTICITY it is not reasonable (and therefore not allowed).
+#define COLLINS_PLASTICITY 1
+#define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 1
+
+//   (5) Simplified version of COLLINS_PLASTICITY, which uses only the Lundborg strength representation (Y_i above).
+//       For more detailed modeling including crack growth (FRAGMENTATION) use the regular COLLINS_PLASTICITY above.
+//       Unlike in (4), Y decreases to zero for p < 0 (with slope = 1, i.e., zero at -cohesion).
+//       In addition, a negative-pressure cap limits negative pressures to the zero of the yield strength curve (at -cohesion).
+#define COLLINS_PLASTICITY_SIMPLE 0
 
 // Additional strength reduction for low-density states (below the reference density). For most plasticity models this
 // is done by reducing the cohesion, and by that the whole yield envelope. For COLLINS_PLASTICITY only the damaged
@@ -164,33 +161,30 @@
 #define JC_PLASTICITY 0
 
 // Porosity models:
-// p-alpha model implemented following Jutzi (200x)
-#define PALPHA_POROSITY 1          // pressure depends on distention
-#define STRESS_PALPHA_POROSITY 1 // deviatoric stress is also affected by distention
+// p-alpha model implemented following Jutzi (200x); if in doubt activate both of the following options
+#define PALPHA_POROSITY 0         // pressure depends on distention
+#define STRESS_PALPHA_POROSITY 0  // deviatoric stress is also affected by distention
 // Sirono model modified by Geretshauser (2009/10)
 #define SIRONO_POROSITY 0
 // eps-alpha model implemented following Wuennemann
 #define EPSALPHA_POROSITY 0
 
 // max number of activation thresholds per particle, only required for FRAGMENTATION, otherwise set to 1
-#define MAX_NUM_FLAWS 32
+#define MAX_NUM_FLAWS 1
 // maximum number of interactions per particle -> fixed array size
 #define MAX_NUM_INTERACTIONS 512
 
-// if set to 1, the smoothing length is not fixed for each material type
-// choose either FIXED_NOI for a fixed number of interaction partners following
-// the ansatz by Hernquist and Katz
-// or choose INTEGRATE_SML if you want to additionally integrate an ODE for
-// the sml following the ansatz by Benz and integrate the ODE for the smoothing length
-// d sml / dt  = sml/DIM * 1/rho  \nabla velocity
-// if you want to specify an individual initial smoothing length for each particle (instead of the material
-// specific one in material.cfg) in the initial particle file, set READ_INITIAL_SML_FROM_PARTICLE_FILE to 1
+// if VARIABLE_SML is set, the smoothing length (sml) is not fixed in time - choose either:
+//   FIXED_NOI for a fixed number of interaction partners, following the ansatz by Hernquist & Katz (1989)
+//   or
+//   INTEGRATE_SML if you want to additionally integrate an ODE for the sml, following the ansatz by Benz:
+//                 d sml / dt  = sml/DIM * 1/rho  \nabla velocity
 #define VARIABLE_SML 1
 #define FIXED_NOI 0
 #define INTEGRATE_SML 1
 // read sml for each particle from input file (instead of using a single, material-specific one from material.cfg)
 // (if VARIABLE_SML is not set the individual smls remain constant)
-#define READ_INITIAL_SML_FROM_PARTICLE_FILE 1
+#define READ_INITIAL_SML_FROM_PARTICLE_FILE 0
 
 // correction terms for sml calculation (warning: experimental)
 // adds gradient of the smoothing length to continuity equation, equation of motion, energy equation
@@ -208,7 +202,6 @@
 // important switch: if the simulations yields at some point too many interactions for
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be lowered until
 // the interactions are lower than MAX_NUM_INTERACTIONS
-// sfair
 #define DEAL_WITH_TOO_MANY_INTERACTIONS 0
 
 // additional smoothing of the velocity field
@@ -223,7 +216,7 @@
 // IO options
 #define HDF5IO 1    // use HDF5 (needs libhdf5-dev and libhdf5)
 #define MORE_OUTPUT 1   //produce additional output to HDF5 files: p_max, p_min, rho_max, rho_min
-#define MORE_ANEOS_OUTPUT 0 // produce additional output to HDF5 files: T, cs, entropy, phase-flag; set only if you use the ANEOS EoS; currently not supported for porosity + ANEOS
+#define MORE_ANEOS_OUTPUT 1 // produce additional output to HDF5 files: T, cs, entropy, phase-flag; set only if you use the ANEOS EoS; currently not supported for porosity + ANEOS
 #define OUTPUT_GRAV_ENERGY 0    // compute and output gravitational energy (at times when output files are written); of all SPH particles (and also w.r.t. gravitating point masses and between them); direct particle-particle summation, not tree; option exists to control costly computation for high particle numbers
 #define BINARY_INFO 0   // generates additional output file (binary_system.log) with info regarding binary system: semi-major axis, eccentricity if GRAVITATING_POINT_MASSES == 1
 

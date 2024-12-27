@@ -207,7 +207,7 @@ void initIntegration()
 }
 
 
-//this function is called after every successful integration (not only when ouput is generated)
+//this function is called after every successful integration (not only when output is generated)
 void afterIntegrationStep(void)
 {
 #if PARTICLE_ACCRETION
@@ -217,6 +217,11 @@ void afterIntegrationStep(void)
 #if MORE_OUTPUT
 	cudaVerifyKernel((get_extrema<<<numberOfMultiprocessors*4, NUM_THREADS_PRESSURE>>>()));
 #endif
+
+
+
+
+
 }
 
 

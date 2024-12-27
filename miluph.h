@@ -28,14 +28,24 @@
 #define MILUPHCUDA_VERSION "devel"
 
 // debug flags, mainly for additional output
+// print information on each individual timestep and the error, very helpful
 #define DEBUG_TIMESTEP 1
+// print information if matrix cannot be inverted, usually not required
 #define DEBUG_LINALG 1
+// print information on Barnes-Hut tree
 #define DEBUG_TREE 1
+// saves tree structure to file, extension is .tree
 #define DEBUG_TREE_TO_FILE 0
+// print information on the gravitational forces on pointmasses
 #define DEBUG_GRAVITY 1
+// print some information on which functions are called in rhs.cu
 #define DEBUG_RHS 1
+// print out runtimes for each function in rhs.cu
 #define DEBUG_RHS_RUNTIMES 1
+// various additional output in each and every routine, only required for development
 #define DEBUG_MISC 1
+// print out particle id of particle with no neighbours (may produce a lot of output)
+#define DEBUG_PARTICLE_WITH_NO_INTERACTIONS 0
 
 
 #define FALSE 0
