@@ -61,7 +61,6 @@ momentum_pm = np.expand_dims(m_pm, axis=1)*v_pm
 angular_momentum_p = np.cross(x_p, momentum_p)
 angular_momentum_pm = np.cross(x_pm, momentum_pm)
 
-print(angular_momentum_p.shape)
 print("Angular momentum at time %g from particles in (x,y,z): %.17e %.17e %.17e" % (time, np.sum(angular_momentum_p[:,0]), np.sum(angular_momentum_p[:,1]), np.sum(angular_momentum_p[:,2])))
 print("Angular momentum at time %g from point masses in (x,y,z): %.17e %.17e %.17e" % (time, np.sum(angular_momentum_pm[:,0]), np.sum(angular_momentum_pm[:,1]), np.sum(angular_momentum_pm[:,2])))
 
@@ -72,3 +71,4 @@ L_tot_z = np.sum(angular_momentum_p[:,2]) + np.sum(angular_momentum_pm[:,2])
 
 print("Total angular momentum at time %g in (x,y,z): %.17e %.17e %.17e" % (time, L_tot_x, L_tot_y, L_tot_z))
 # write to file
+np.savetxt(output_file, np.array([[time, L_tot_x, L_tot_y, L_tot_z]]), header="time Lx Ly Lz", fmt="%.17g", delimiter="\t")
