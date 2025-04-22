@@ -34,6 +34,7 @@ print("Time in input file %g" % time)
 x_p = np.array(h5data['x'])
 v_p = np.array(h5data['v'])  
 m_p = np.array(h5data['m'])  
+material_type_p = np.array(h5data['material_type'])  # Read the material type of the particles
 
 # try to open point mass file if available
 try:
@@ -53,6 +54,13 @@ if len(x_pm) > 0:
 else:   
     print("Found particles file with %d particles" % (x_p.shape[0]))
 
+
+# filter for active particles that were not accreted or disabled or removed somehow
+x_p = x_p[material_type_p > -1]
+v_p = v_p[material_type_p > -1]
+m_p = m_p[material_type_p > -1]
+
+print("Found %d active particles" % (x_p.shape[0]))
 # calculate momentum
 momentum_p = np.expand_dims(m_p, axis=1)*v_p
 momentum_pm = np.expand_dims(m_pm, axis=1)*v_pm
