@@ -294,7 +294,7 @@ static void print_compile_information(void)
 #if AVERAGE_KERNELS
     fprintf(stdout, "Kernel for interaction is calculated by averaging kernels for each particle: \t W_ij = 0.5 ( W(h_i) + W(h_j) )\n");
 #else
-    fprintf(stdout, "Kernel for interaction is calculated using averaged smooting length: \t W_ij = W(0.5 (h_i + h_j))\n");
+    fprintf(stdout, "Kernel for interaction is calculated using averaged smoothing length: \t W_ij = W(0.5 (h_i + h_j))\n");
 #endif
 #if GHOST_BOUNDARIES
     strcpy(yesno, "yes");
