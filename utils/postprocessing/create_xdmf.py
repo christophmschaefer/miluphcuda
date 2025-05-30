@@ -4,7 +4,7 @@
 Generates xdmf file from .h5 miluphcuda/miluphhpc output files for Paraview postprocessing.
 
 Authors: Christoph Schäfer, Christoph Burger
-Last updated: 24/Sep/2024
+Last updated: 30/May/2025
 
 """
 
@@ -135,10 +135,10 @@ if __name__ == "__main__":
         xdmfh.write('<Topology TopologyType="Polyvertex" NodesPerElement="%s"></Topology>\n' % mylen)
         if args.dim == '3':
             xdmfh.write('<Geometry GeometryType="XYZ">\n')
-            xdmfh.write('<DataItem DataType="Float" Dimensions="%s 3" Format="HDF">\n' % mylen)
+            xdmfh.write('<DataItem DataType="Float" Precision="8" Dimensions="%s 3" Format="HDF">\n' % mylen)
         else:
             xdmfh.write('<Geometry GeometryType="XY">\n')
-            xdmfh.write('<DataItem DataType="Float" Dimensions="%s 2" Format="HDF">\n' % mylen)
+            xdmfh.write('<DataItem DataType="Float" Precisions="8" Dimensions="%s 2" Format="HDF">\n' % mylen)
         xdmfh.write('%s:/x\n' % hfile) 
         xdmfh.write('</DataItem>\n')
         xdmfh.write('</Geometry>\n')
