@@ -34,7 +34,7 @@ extern __device__ SPH_kernel kernel;
 
 __global__ void calculateXSPHchanges(int *interactions)
 {
-
+    register int64_t interactions_index;
     register int i, k, inc, j, numInteractions, e;
 
     double W;
@@ -84,7 +84,8 @@ __global__ void calculateXSPHchanges(int *interactions)
 #endif
         // neighbours loop
         for (k = 0; k < numInteractions; k++) {
-            j = interactions[i * MAX_NUM_INTERACTIONS + k];
+            interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + k;
+            j = interactions[interactions_index];
 
             // if j is brush, continue
             if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || EOS_TYPE_IGNORE == p_rhs.materialId[j]) {

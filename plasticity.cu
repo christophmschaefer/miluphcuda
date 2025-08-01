@@ -304,11 +304,6 @@ __global__ void plasticityModel(void) {
         }
 # else
         y = y_i;
-        # warning adding limit to tension in line 307 COLLINS_PLASTICITY for intact material using - cohesion of intact material
-        if (p.p[i] < -y_i) {
-            printf("pressure of particle %d is %lf, setting to %lf\n", i, p.p[i], -y_i);
-            p.p[i] = -y_i;
-        }
 # endif   // FRAGMENTATION
 
         // Drucker-Prager-like -> compare to sqrt(J2)
@@ -345,16 +340,6 @@ __global__ void plasticityModel(void) {
 //            y = 0.0;
 //        }
 
-# if COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
-		e_melt = matMeltEnergy[p_rhs.materialId[i]];
-
-		if (p.e[i] >= e_melt) {
-			y = 0.0;
-		} else if (p.e[i] > 0.0) {
-			y *= ( 1.0 - p.e[i] / e_melt );
-		}
-# endif
-
         // negative-pressure cap: limit negative pressures to value at zero of yield strength curve (at -cohesion)
         if( p.p[i] < -y_0 )
             p.p[i] = -y_0;
@@ -389,6 +374,11 @@ __global__ void plasticityModel(void) {
         // finally limit the deviatoric stress tensor
         if (mises_f > 1.0)
             mises_f = 1.0;
+        if (mises_f < 0) // actually, this should never happen
+            mises_f = 0.0;
+
+        // remember the plastic lowering factor for later usage
+        p_rhs.plastic_f[i] = mises_f;
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
                 p.S[stressIndex(i, d, e)] *= mises_f;

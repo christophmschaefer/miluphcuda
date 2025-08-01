@@ -119,7 +119,10 @@ __global__ void symmetrizeStress(void);
 #define EMPTY -1
 #define LOCKED -2
 
-#define MAXDEPTH 128
+
+// 128 seems like a very high default
+//#define MAXDEPTH 128
+#define MAXDEPTH 64
 
 
 // Runge-Kutta constants

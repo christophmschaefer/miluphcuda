@@ -39,6 +39,7 @@ extern __device__ void redo_NeighbourSearch(int particle_id, int *interactions);
 // is also called for INTEGRATE_DENSITY to determine the densities of particles
 // of materials with density_via_kernel_sum = 1 in material.cfg
 __global__ void calculateDensity(int *interactions) {
+    register int64_t interactions_index;
     int i;
     int j;
     int inc;
@@ -102,7 +103,8 @@ __global__ void calculateDensity(int *interactions) {
             }
             // sph sum for particle i
             for (j = 0; j < p.noi[i]; j++) {
-                ip = interactions[i * MAX_NUM_INTERACTIONS + j];
+                interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + j;
+                ip = interactions[interactions_index];
                 if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[ip]] || p_rhs.materialId[ip] == EOS_TYPE_IGNORE) {
                     continue;
                 }

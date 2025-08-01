@@ -23,6 +23,7 @@
 
 
 #include "parameter.h"
+#include "pressure.h"
 #include "miluph.h"
 #include "config_parameter.h"
 #include "little_helpers.h"
@@ -50,6 +51,9 @@ __global__ void checkNaNs(int *interactions)
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numRealParticles; i += inc) {
+        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+                continue;
+        }
         assert(!isnan(p.e[i]));
         assert(!isnan(p.p[i]));
         assert(!isnan(p.rho[i]));
@@ -71,6 +75,15 @@ __global__ void checkNaNs(int *interactions)
             assert(!isnan(p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d]));
 #endif
 #if SOLID
+            if (isnan(p.S[i*DIM*DIM+d])) {
+                printf("stress component of particle %d is nan, dying here \n", i);
+                for (int e = 0; e < DIM; e++) {
+                        for (int f = 0; f < DIM; f++) {
+                                printf("%e \t", p.S[i*DIM*DIM+e*DIM+f]);
+                        }
+                        printf("\n");
+                }
+            }
             assert(!isnan(p.S[i*DIM*DIM+d]));
             assert(!isnan(p_rhs.sigma[i*DIM*DIM+d]));
 #endif
@@ -99,12 +112,9 @@ __global__ void checkNaNs(int *interactions)
         assert(!isnan(p.az[i]));
 # endif
 #endif
-
-#if DEBUG_PARTICLE_WITH_NO_INTERACTIONS
         if (p.noi[i] == 0) {
             printf("particle %d with no interactions...\n", i);
         }
-#endif
     }
 }
 

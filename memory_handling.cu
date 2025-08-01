@@ -729,20 +729,36 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 int init_allocate_memory(void)
 {
     int rc = 0;
+    // where does the 2.5 come from?
+	// numberOfNodes = ceil(2.5 * maxNumberOfParticles);
+	numberOfNodes = ceil(3.5 * maxNumberOfParticles);
 
-	numberOfNodes = ceil(2.5 * maxNumberOfParticles);
     if (numberOfNodes < 1024*numberOfMultiprocessors)
         numberOfNodes = 1024*numberOfMultiprocessors;
 
+	if (param.verbose) {
+		fprintf(stdout, "Allocating memory for %d nodes of tree...\n", numberOfNodes);
+	}
+
+	numberOfChildren = 8; // always 8 children per node
+	numberOfRealParticles = maxNumberOfParticles;
+	if (param.verbose) {
+		fprintf(stdout, "Allocating memory for %d particles...\n", numberOfRealParticles);
+	}
+
 #define WARPSIZE 32
     
-    while ((numberOfNodes & (WARPSIZE-1)) != 0)
-        numberOfNodes++;
+    while ((numberOfNodes & (WARPSIZE-1)) != 0) numberOfNodes++;
+
+	if (param.verbose) {
+		fprintf(stdout, "After checking with WARPSIZE of %d, allocating memory for %d nodes of tree...\n", WARPSIZE, numberOfNodes); 
+	}
 
 	if (param.verbose) {
         fprintf(stdout, "\nAllocating memory for %d particles...\n", numberOfParticles);
 	    fprintf(stdout, "Allocating memory for %d pointmasses...\n", numberOfPointmasses);
         fprintf(stdout, "Number of nodes of tree: %d\n", numberOfNodes);
+		fprintf(stdout, "Allocating memory for maximum of %d children.\n", numberOfChildren * (numberOfNodes-numberOfRealParticles));
     }
 
 	memorySizeForParticles = maxNumberOfParticles * sizeof(double);
@@ -752,6 +768,18 @@ int init_allocate_memory(void)
 	memorySizeForStress = maxNumberOfParticles * DIM * DIM * sizeof(double);
 	memorySizeForChildren = numberOfChildren * (numberOfNodes-numberOfRealParticles) * sizeof(int);
 	memorySizeForInteractions = maxNumberOfParticles * sizeof(int);
+
+	if (param.verbose) {
+		fprintf(stdout, "Memory size for particles: %d bytes\n", memorySizeForParticles);
+		fprintf(stdout, "Memory size for pointmasses: %d bytes\n", memorySizeForPointmasses);
+		fprintf(stdout, "Memory size for tree: %d bytes\n", memorySizeForTree);
+		fprintf(stdout, "Memory size for stress: %d bytes\n", memorySizeForStress);
+		fprintf(stdout, "Memory size for children: %d bytes\n", memorySizeForChildren);
+		fprintf(stdout, "Memory size for interactions: %d bytes\n", memorySizeForInteractions);
+	}
+
+	cudaVerify(cudaMalloc((void**)&p_device.x0, memorySizeForTree));
+
 
     cudaVerify(cudaMallocHost((void**)&p_host.x, memorySizeForTree));
 	cudaVerify(cudaMallocHost((void**)&p_host.vx, memorySizeForParticles));
@@ -1028,6 +1056,7 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&p_device.noi, memorySizeForInteractions));
 	cudaVerify(cudaMalloc((void**)&p_device.materialId, memorySizeForInteractions));
 	cudaVerify(cudaMalloc((void**)&p_device.materialId0, memorySizeForInteractions));
+	cudaVerify(cudaMalloc((void**)&p_device.deactivate_me_flag, memorySizeForInteractions));
 
 #if MORE_OUTPUT
 	cudaVerify(cudaMalloc((void**)&p_device.p_min, memorySizeForParticles));
@@ -1292,6 +1321,7 @@ int free_memory()
 	cudaVerify(cudaFree(interactions));
 	cudaVerify(cudaFree(p_device.materialId));
 	cudaVerify(cudaFree(p_device.materialId0));
+	cudaVerify(cudaFree(p_device.deactivate_me_flag));
 	cudaVerify(cudaFree(childListd));
 #if DIM > 2
 	cudaVerify(cudaFree(p_device.z));

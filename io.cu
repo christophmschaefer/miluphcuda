@@ -1276,7 +1276,7 @@ void read_particles_from_file(File inputFile)
 #endif
 
             // check for end of line
-#if DEBUG_MISC
+#if DEBUG_IO
 # if DIM == 1
             fprintf(stdout, "Read coordinates for particle no. %d (x) = %e\n", i+1, p_host.x[i]);
 # endif

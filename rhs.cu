@@ -66,12 +66,15 @@ extern volatile int terminate_flag;
 // zero all derivatives
 __global__ void zero_all_derivatives(int *interactions)
 {
-    register int i, inc, dd;
+    register int64_t interactions_index;
+    register size_t i, inc, dd;
 #if SOLID
     register int ddd;
 #endif
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+        //printf("DEBUG: zeroing derivatives for particle %zu\n", i);
+        // printf("DEBUG: zeroing derivatives for particle %llu\n", i);
         p.ax[i] = 0.0;
 #if DIM > 1
         p.ay[i] = 0.0;
@@ -110,7 +113,8 @@ __global__ void zero_all_derivatives(int *interactions)
 #endif
         // reset all interactions
         for (dd = 0; dd < MAX_NUM_INTERACTIONS; dd++) {
-            interactions[i*MAX_NUM_INTERACTIONS + dd] = -1;
+            interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + dd;
+            interactions[interactions_index] = -1;
         }
 
 #if FRAGMENTATION
@@ -282,6 +286,7 @@ void rightHandSide()
 #if DEBUG_TREE
     cudaMemcpyFromSymbol(&maxNodeIndex_host, maxNodeIndex, sizeof(int));
     fprintf(stdout, "number of inner nodes: %d\n", (numberOfNodes - maxNodeIndex_host));
+    fprintf(stdout, "highest index number in tree: %d\n", maxNodeIndex_host);
     fprintf(stdout, "number of used inner nodes / number of allocated nodes: %.7f %%\n",
             100.0 * (float)(numberOfNodes - maxNodeIndex_host) / (float)(numberOfNodes - numberOfParticles));
     // get maximum depth of tree

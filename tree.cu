@@ -486,6 +486,8 @@ __global__ void calculateCentersOfMass()
 */
 __global__ void symmetrizeInteractions(int *interactions)
 {
+	register int64_t interactions_index;
+	register int64_t interactions_index_2;
 	int i, inc, indexP, j;
 	int noi;
     int found;
@@ -503,12 +505,14 @@ __global__ void symmetrizeInteractions(int *interactions)
         noi = p.noi[i];
         for (j = 0; j < noi; j++) {
             /* index of interaction partner */
-            indexP = interactions[i * MAX_NUM_INTERACTIONS + j];
+			interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + j;
+            indexP = interactions[interactions_index];
             /* check if i is in interaction list of indexP */
             found = FALSE;
             /* loop over all interactions of interaction partner */
             for (k = 0; k < p.noi[indexP]; k++) {
-                if (interactions[indexP * MAX_NUM_INTERACTIONS + k] == i) {
+				interactions_index_2 = (int64_t)indexP * MAX_NUM_INTERACTIONS + k;
+                if (interactions[interactions_index_2] == i) {
                     found = TRUE;
                     break;
                 }
@@ -521,7 +525,10 @@ __global__ void symmetrizeInteractions(int *interactions)
         }
         /* remove deleted partners from interaction list */
         for (k = 0; k < nod; k++) {
-            interactions[i*MAX_NUM_INTERACTIONS+di[k]] = interactions[i*MAX_NUM_INTERACTIONS+noi--];
+			interactions_index_2 = (int64_t)i * MAX_NUM_INTERACTIONS + di[k];			
+			interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + noi--;			
+            interactions[interactions_index_2] = interactions[interactions_index];
+            //interactions[i*MAX_NUM_INTERACTIONS+di[k]] = interactions[i*MAX_NUM_INTERACTIONS+noi--];
         }
         p.noi[i] = noi;
     } /* for loop over all particles */
@@ -778,6 +785,7 @@ start_interaction_search_for_particle:
 /* search interaction partners for each particle */
 __global__ void nearNeighbourSearch(int *interactions)
 {
+	register int64_t interactions_index;
 	register int i, inc, nodeIndex, depth, childNumber, child;
 	register double x, interactionDistance, dx, r, d;
 #if DIM > 1
@@ -789,6 +797,8 @@ __global__ void nearNeighbourSearch(int *interactions)
 #if DIM == 3
 	register double z, dz;
 #endif
+
+
 	inc = blockDim.x * gridDim.x;
 	for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
 		x = p.x[i];
@@ -816,7 +826,17 @@ __global__ void nearNeighbourSearch(int *interactions)
 			nodeIndex = currentNodeIndex[depth];
 
 			while (childNumber < numChildren) {
+#if DEBUG_DEVEL			
+				register int childListIndex_int = childListIndex(nodeIndex, childNumber);
+				assert(childListIndex_int > 0);
+#endif 
 				child = childList[childListIndex(nodeIndex, childNumber)];
+#if DEBUG_DEVEL				
+				if (child < LOCKED) {
+					printf("child %d (depth %d) is broken\n", child, depth);
+					assert(child > 0);
+				}
+#endif
 				childNumber++;
 				if (child != EMPTY && child != i) {
 					dx = x - p.x[child];
@@ -843,7 +863,9 @@ __global__ void nearNeighbourSearch(int *interactions)
                         smlj = p.h[child];
 
 						if (d < sml*sml && d < smlj*smlj) {
-							interactions[i * MAX_NUM_INTERACTIONS + numberOfInteractions] = child;
+							interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + numberOfInteractions;
+							// interactions[i * MAX_NUM_INTERACTIONS + numberOfInteractions] = child;
+							interactions[interactions_index] = child;
 							numberOfInteractions++;
 #if TOO_MANY_INTERACTIONS_KILL_PARTICLE
                             if (numberOfInteractions >= MAX_NUM_INTERACTIONS) {
@@ -964,6 +986,7 @@ __global__ void computationalDomain(
 	localMaxZ = p.z[0];
 #endif
 #endif
+	// printf("DEBUG: threadId.x: %d, blockIdx.x: %d, blockDim.x: %d, gridDim.x: %d, threadIdx.x + blockIdx.x * blockDim.x: %d, numParticles: %d\n", threadIdx.x, blockIdx.x, blockDim.x, gridDim.x, threadIdx.x + blockIdx.x * blockDim.x, numParticles);
 	for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
 		// find minimum and maximum coordinates
 		localMinX = min(localMinX, p.x[i]);
@@ -1019,7 +1042,7 @@ __global__ void computationalDomain(
 #endif
 #endif
 		m = gridDim.x - 1;
-		if (m == atomicInc((unsigned int *)&blockCount, m)) {
+		if (m == atomicInc((unsigned int *) &blockCount, m)) {
 			// last block, so combine all block results
 			for (j = 0; j <= m; j++) {
 				localMinX = min(localMinX, minxPerBlock[j]);
@@ -1053,6 +1076,7 @@ __global__ void computationalDomain(
 #endif
 #endif
 			radius *= 0.5;
+			// printf("DEBUG: Computational domain: minx: %e, maxx: %e, radius: %e\n", localMinX, localMaxX, radius);
 			p.x[k] = 0.5 * (localMaxX + localMinX);
 #if DIM > 1
 			p.y[k] = 0.5 * (localMaxY + localMinY);
@@ -1073,6 +1097,7 @@ __global__ void computationalDomain(
 /* redo NeighbourSearch for particular particle only: search for interaction partners */
 __device__ void redo_NeighbourSearch(int particle_id, int *interactions)
 {
+	register int64_t interactions_index;
 	register int i, inc, nodeIndex, depth, childNumber, child;
 	register double x, y, interactionDistance, dx, dy, r, d;
 	register int currentNodeIndex[MAXDEPTH];
@@ -1130,7 +1155,9 @@ __device__ void redo_NeighbourSearch(int particle_id, int *interactions)
                     smlj = p.h[child];
 
 					if (d < sml*sml && d < smlj*smlj) {
-						interactions[i * MAX_NUM_INTERACTIONS + numberOfInteractions] = child;
+						interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + numberOfInteractions;
+						interactions[interactions_index] = child;
+						// interactions[i * MAX_NUM_INTERACTIONS + numberOfInteractions] = child;
 						numberOfInteractions++;
 #if TOO_MANY_INTERACTIONS_KILL_PARTICLE
                         if (numberOfInteractions >= MAX_NUM_INTERACTIONS) {

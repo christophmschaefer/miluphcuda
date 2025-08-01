@@ -701,7 +701,7 @@ void transferMaterialsToGPU()
                     rho_limit[ID] = 0.9;
                 }
             }
-            // read n (for Murnaghan EoS) or set default // whoever came up with only 'n' oO...
+            // read n (for Murnaghan EoS) or set default
             if( !config_setting_lookup_float(subset, "n", &n[ID]) ) {
                 n[ID] = 1.0;
             }

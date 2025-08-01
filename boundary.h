@@ -27,6 +27,7 @@
 
 __global__ void BoundaryConditionsBeforeRHS(int *interactions);
 __global__ void BoundaryConditionsAfterIntegratorStep(int *interactions);
+__global__ void BoundaryConditionsBeforeIntegratorStep(int *interactions);
 __global__ void BoundaryConditionsAfterRHS(int *interactions);
 __global__ void BoundaryConditionsBrushesBefore(int *interactions);
 __global__ void BoundaryConditionsBrushesAfter(int *interactions);

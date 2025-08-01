@@ -67,7 +67,8 @@
 #define RK2_TIMESTEP_SAFETY 0.9    // safety factor for setting next timestep
 #define SMALLEST_DT_ALLOWED 1e-16  // simulation aborts if timestep falls below
 #define RK2_MAX_DAMAGE_CHANGE 0.15   // max allowed (absolute) damage (DIM-root of tensile) change per timestep (for RK2_USE_DAMAGE_LIMIT)
-#define RK2_MAX_ALPHA_CHANGE 2e-3    // max allowed (absolute) distention change per timestep (for RK2_LIMIT_ALPHA_CHANGE)
+//#define RK2_MAX_ALPHA_CHANGE 2e-3    // max allowed (absolute) distention change per timestep (for RK2_LIMIT_ALPHA_CHANGE)
+#define RK2_MAX_ALPHA_CHANGE 1e-2    // max allowed (absolute) distention change per timestep (for RK2_LIMIT_ALPHA_CHANGE)
 
 
 /**

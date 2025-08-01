@@ -74,8 +74,8 @@ struct Pointmass predictor_pointmass_device;
 __constant__ struct Pointmass predictor_pointmass;
 __constant__ struct Pointmass pointmass_rhs;
 int numberOfPointmasses;
-int memorySizeForPointmasses;
-int integermemorySizeForPointmasses;
+size_t memorySizeForPointmasses;
+size_t integermemorySizeForPointmasses;
 
 
 int restartedRun = FALSE;
@@ -94,18 +94,19 @@ int numberOfParticles;
 int numberOfRealParticles;
 int maxNumberOfParticles;
 
-int memorySizeForTree;
-int memorySizeForParticles;
+size_t memorySizeForTree;
+size_t memorySizeForParticles;
 size_t memorySizeForInteractions;
-int memorySizeForChildren;
-int memorySizeForStress;
+size_t memorySizeForChildren;
+size_t memorySizeForStress;
 #if FRAGMENTATION
-int memorySizeForActivationThreshold;
+size_t memorySizeForActivationThreshold;
 #endif
 
 int numberOfMultiprocessors;
 
 int numberOfChildren = pow(2, DIM);
+// size_t numberOfNodes;
 int numberOfNodes;
 
 
@@ -1108,7 +1109,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "There is no CUDA capable device. Exiting...\n");
         exit(-1);
     }
-    fprintf(stdout, "Found compute capability %d.%d (need at least 2.0).\n", deviceProp.major, deviceProp.minor);
+    fprintf(stdout, "Found compute capability %d.%d (need at least 3.5).\n", deviceProp.major, deviceProp.minor);
     fprintf(stdout, "Found #gpus: %d: %s\n", cnt, deviceProp.name);
     numberOfMultiprocessors = deviceProp.multiProcessorCount;
     fprintf(stdout, "Found cuda device with %d multiprocessors.\n", numberOfMultiprocessors);

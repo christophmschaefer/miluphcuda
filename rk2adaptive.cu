@@ -194,6 +194,9 @@ void rk2Adaptive()
 
         // loop until end of current output time
         while (currentTime < endTime) {
+            // set all deactivation flags to zero
+            cudaVerifyKernel((BoundaryConditionsBeforeIntegratorStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(interactions))); 
+            cudaVerify(cudaDeviceSynchronize());
             // get the correct time
             substep_currentTime = currentTime;
             cudaVerify(cudaMemcpyToSymbol(substep_currentTimeD, &substep_currentTime, sizeof(double)));
@@ -1172,6 +1175,7 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
     double min_pos_change_rk2 = 0.0;
 
 
+
 #if GRAVITATING_POINT_MASSES && RK2_USE_VELOCITY_ERROR_POINTMASSES
     // loop for pointmasses
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numPointmasses; i+= blockDim.x * gridDim.x) {
@@ -1452,6 +1456,22 @@ __global__ void checkError(double *maxPosAbsErrorPerBlock
             blockCount = 0;   // reset block count
         }
     }
+
+// another loop to check if one particle got deactivated. if so, the timestep is
+// set to the old time step and the last step is repeated
+// we do not use reduction or atomic here because if the flag is set for one particle, the whole step
+// has to be repeated for all
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
+        if (p_rhs.deactivate_me_flag[i] > 0) {
+            printf("Deactivation flag set for particle %d - deactivation now!! and re-doing the last time step\n.", i);
+            p_rhs.materialId[i] = EOS_TYPE_IGNORE;
+            p_rhs.deactivate_me_flag[i] = FALSE;
+            errorSmallEnough = FALSE;
+            dtNewErrorCheck = 0.1*dt;
+        }
+    }
+
+
 }
 
 

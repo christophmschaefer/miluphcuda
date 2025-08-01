@@ -55,7 +55,7 @@ __global__ void calculate_kinematic_viscosity(void)
 #if NAVIER_STOKES
 __global__ void calculate_shear_stress_tensor(int *interactions)
 {
-
+    register int64_t interactions_index;
 	int i, inc;
     int e, f, g;
     int j, k;
@@ -74,7 +74,8 @@ __global__ void calculate_shear_stress_tensor(int *interactions)
         }
 
         for (k = 0; k < p.noi[i]; k++) {
-            j = interactions[i * MAX_NUM_INTERACTIONS + k];
+            interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + k;
+            j = interactions[interactions_index];
 
             dv[0] = p.vx[i] - p.vx[j];
 #if DIM > 1
@@ -194,7 +195,7 @@ __global__ void calculate_shear_stress_tensor(int *interactions)
 #if INVISCID_SPH
 __global__ void betaviscosity(int *interactions)
 {
-
+    register int64_t interactions_index;
 	register int d, i, j, k, m, inc, numInteractions;
 	inc = blockDim.x * gridDim.x;
 
@@ -226,7 +227,8 @@ __global__ void betaviscosity(int *interactions)
 
         //Interaction Partner Loop
 		for(k = 0; k < numInteractions; k++) {
-    		j = interactions[i * MAX_NUM_INTERACTIONS + k];
+            interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + k;
+    		j = interactions[interactions_index];
             dx[0] = p.x[i] - p.x[j];
             dv[0] = p.vx[i] - p.vx[j];
 #if DIM > 1

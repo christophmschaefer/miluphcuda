@@ -293,6 +293,7 @@ __device__ double fixTensileInstability(int a, int b)
 #if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH || INTEGRATE_ENERGY)
 __global__ void CalcDivvandCurlv(int *interactions)
 {
+    register int64_t interactions_index;
     int i, inc, j, k, m, d, dd;
     /* absolute values of div v and curl v */
     double divv;
@@ -317,7 +318,8 @@ __global__ void CalcDivvandCurlv(int *interactions)
         sml = p.h[i];
         /* interaction partner loop */
         for (m = 0; m < k; m++) {
-            j = interactions[i*MAX_NUM_INTERACTIONS+m];
+            interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + m;
+            j = interactions[interactions_index];
             /* get the kernel values */
 #if VARIABLE_SML
             sml = 0.5 *(p.h[i] + p.h[j]);
@@ -411,6 +413,7 @@ __global__ void CalcDivvandCurlv(int *interactions)
 // this adds zeroth order consistency but needs one more loop over all neighbours
 __global__ void shepardCorrection(int *interactions) {
 
+    register int64_t interactions_index;
     register int i, inc, j, m;
     register double dr[DIM], h, dWdr;
     inc = blockDim.x * gridDim.x;
@@ -426,7 +429,8 @@ __global__ void shepardCorrection(int *interactions) {
 
         for (m = 0; m < p.noi[i]; m++) {
             W = 0;
-            j = interactions[i*MAX_NUM_INTERACTIONS+m];
+            interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + m;
+            j = interactions[interactions_index];
             if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || p_rhs.materialId[j] == EOS_TYPE_IGNORE) {
                 continue;
             }
@@ -465,6 +469,7 @@ __global__ void shepardCorrection(int *interactions) {
 // this adds first order consistency but needs one more loop over all neighbours
 __global__ void tensorialCorrection(int *interactions)
 {
+    register int64_t interactions_index;
     register int i, inc, j, k, m;
     register int d, dd;
     int rv = 0;
@@ -488,7 +493,8 @@ __global__ void tensorialCorrection(int *interactions)
 
         // loop over all interaction partner
         for (m = 0; m < k; m++) {
-            j = interactions[i*MAX_NUM_INTERACTIONS+m];
+            interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + m;
+            j = interactions[interactions_index];
             if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || p_rhs.materialId[j] == EOS_TYPE_IGNORE) {
                 continue;
             }
@@ -551,6 +557,10 @@ __global__ void tensorialCorrection(int *interactions)
                         printf("\n");
                 }
             }
+            #endif
+            #if 0 //  deactivation is turned off, cms 2023-10-19. implement munroe
+            printf("Deactivating particle %d due to matrix inversion problems\n", i);
+            p_rhs.deactivate_me_flag[i] = TRUE; // particle is deactivated and the whole rhs step is redone with a shorter timestep
             #endif
             for (d = 0; d < DIM; d++) {
                 for (dd = 0; dd < DIM; dd++) {

@@ -39,6 +39,7 @@ extern __device__ SPH_kernel kernel;
 
 //__launch_bounds__(64, 16)
 __global__ void internalForces(int *interactions) {
+    register int64_t interactions_index;
     int i, k, inc, j, numInteractions;
     int f, kk;
 
@@ -255,8 +256,9 @@ __global__ void internalForces(int *interactions) {
         // loop over interaction partners for SPH sums
         for (k = 0; k < numInteractions; k++) {
             matIdj = EOS_TYPE_IGNORE;
-            // the interaction partner
-            j = interactions[i * MAX_NUM_INTERACTIONS + k];
+            // the interaction parotner
+            interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + k;
+            j = interactions[interactions_index];
 
             for (d = 0; d < DIM; d++) {
                 accelsj[d] = 0.0;
@@ -1147,6 +1149,7 @@ __global__ void internalForces(int *interactions) {
 #if VISCOUS_REGOLITH
 __global__ void calculatedeviatoricStress(int *interactions)
 {
+    register int64_t interactions_index;
     register int i, j, inc, d, e, k;
     register int mt;
     int noi;
@@ -1194,7 +1197,8 @@ __global__ void calculatedeviatoricStress(int *interactions)
          /* interaction loop */
         for (k = 0; k < noi; k++) {
             // interacting particle id
-            j = interactions[i * MAX_NUM_INTERACTIONS + k];
+            interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + k;
+            j = interactions[interactions_index];
             if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || EOS_TYPE_IGNORE == p_rhs.materialId[j]) {
                 continue;
             }

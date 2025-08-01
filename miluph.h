@@ -28,24 +28,18 @@
 #define MILUPHCUDA_VERSION "devel"
 
 // debug flags, mainly for additional output
-// print information on each individual timestep and the error, very helpful
 #define DEBUG_TIMESTEP 1
-// print information if matrix cannot be inverted, usually not required
 #define DEBUG_LINALG 1
-// print information on Barnes-Hut tree
 #define DEBUG_TREE 1
-// saves tree structure to file, extension is .tree
 #define DEBUG_TREE_TO_FILE 0
-// print information on the gravitational forces on pointmasses
 #define DEBUG_GRAVITY 1
-// print some information on which functions are called in rhs.cu
 #define DEBUG_RHS 1
-// print out runtimes for each function in rhs.cu
 #define DEBUG_RHS_RUNTIMES 1
-// various additional output in each and every routine, only required for development
 #define DEBUG_MISC 1
-// print out particle id of particle with no neighbours (may produce a lot of output)
-#define DEBUG_PARTICLE_WITH_NO_INTERACTIONS 0
+#define DEBUG_IO 0
+#define DEBUG_DEVEL 1
+// define if you want to pass around cudaVerify()
+#undef NDEBUG  // NO DEBUG 
 
 
 #define FALSE 0
@@ -270,6 +264,7 @@ struct Particle {
     int *materialId; ///< the current materialID of the sph particle
     int *materialId0; ///< the initial materialID of the sph particle
     int *depth; ///< the depth in the tree where the particle is located
+    int *deactivate_me_flag; ///< flag to organise deactivation of particles after integration step
 };  // end 'struct Particle'
 
 /// struct for a gravitating pointmass
@@ -371,21 +366,21 @@ extern __constant__ volatile int *childList;
 extern int numberOfParticles;
 extern int maxNumberOfParticles;
 extern int numberOfRealParticles;
-
 extern int numberOfPointmasses;
-extern int memorySizeForPointmasses;
-extern int integermemorySizeForPointmasses;
 
-extern int memorySizeForParticles;
-extern int memorySizeForTree;
+extern size_t memorySizeForPointmasses;
+extern size_t integermemorySizeForPointmasses;
+extern size_t memorySizeForParticles;
+extern size_t memorySizeForTree;
 extern size_t memorySizeForInteractions;
-extern int memorySizeForChildren;
-extern int memorySizeForStress;
+extern size_t memorySizeForChildren;
+extern size_t memorySizeForStress;
 #if FRAGMENTATION
-extern int memorySizeForActivationThreshold;
+extern size_t memorySizeForActivationThreshold;
 #endif
 
 extern int numberOfChildren; // 4 for 2D, 8 for 3D
+// extern size_t numberOfNodes;
 extern int numberOfNodes;
 
 extern int restartedRun;
