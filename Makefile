@@ -22,7 +22,7 @@ CUDA_LINK_OBJ = cuLink.o
 
 
 # important: compute capability, corresponding to GPU model (e.g., -arch=sm_52 for 5.2)
-GPU_ARCH = -arch=sm_52
+GPU_ARCH = -arch=sm_75
 # (very) incomplete list:
 # compute capability    GPU models
 #                2.0    GeForce GTX 570, Quadro 4000

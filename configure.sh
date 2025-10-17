@@ -61,6 +61,9 @@ else
         *"GeForce GTX 1080" | *"GeForce GTX 1080 Ti" )
             GPU_ARCH="-arch=sm_61"
             GPU_ARCH_FOUND=1 ;;
+        *"GeForce RTX 2070 SUPER" )
+            GPU_ARCH="-arch=sm_75"
+            GPU_ARCH_FOUND=1 ;;
         *)
             echo "Warning: didn't find GPU model '$GPU' in lookup list, set compute capability (GPU_ARCH) manually in Makefile, and/or drop the developers a line to add it..."
             ISSUES=1
