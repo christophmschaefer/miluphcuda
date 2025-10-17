@@ -8,7 +8,7 @@ LDFLAGS  = -lm
 
 GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
 
-CUDA_DIR    = /usr/local/cuda
+CUDA_DIR    = /usr/local/cuda-13
 
 NVCC   = ${CUDA_DIR}/bin/nvcc
 
