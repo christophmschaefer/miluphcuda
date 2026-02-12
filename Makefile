@@ -37,8 +37,8 @@ GPU_ARCH = -arch=sm_75
 CUDA_LIB      = ${CUDA_DIR}
 INCLUDE_DIRS += -I$(CUDA_LIB)/include -I/usr/include/hdf5/serial -I/usr/lib/openmpi/include/
 # if you use HDF5 I/O use the first, otherwise the second:
-#LDFLAGS      += -ccbin ${CC} -L$(CUDA_LIB)/lib64 -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lcudart -lpthread -lconfig -lhdf5
-LDFLAGS      += -ccbin ${CC} -L$(CUDA_LIB)/lib64 -lcudart -lpthread -lconfig
+LDFLAGS      += -ccbin ${CC} -L$(CUDA_LIB)/lib64 -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lcudart -lpthread -lconfig -lhdf5
+#LDFLAGS      += -ccbin ${CC} -L$(CUDA_LIB)/lib64 -lcudart -lpthread -lconfig
 
 
 # default target
