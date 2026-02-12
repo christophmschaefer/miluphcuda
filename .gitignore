@@ -60,7 +60,8 @@ create_doc/
 *.inc
 *.swp
 
-# exclude non-exec stuff
+# exclude non-exec stuff (and miluphcuda exe itself of course)
 *.old
 examples/
 .vscode/
+miluphcuda
