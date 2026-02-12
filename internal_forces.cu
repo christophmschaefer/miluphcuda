@@ -370,6 +370,27 @@ __global__ void internalForces(int *interactions) {
 #endif
 #endif
 
+#if TENSORIAL_CORRECTION
+            // Pre-compute corrected gradients for forces
+            double dWdx_corr_i[DIM];
+            double dWdx_corr_j[DIM];
+            for (d = 0; d < DIM; d++) {
+                dWdx_corr_i[d] = 0.0;
+                dWdx_corr_j[d] = 0.0;
+                for (dd = 0; dd < DIM; dd++) {
+                     dWdx_corr_i[d] += p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
+                     dWdx_corr_j[d] += p_rhs.tensorialCorrectionMatrix[j*DIM*DIM+d*DIM+dd] * dWdx[dd];
+                }
+            }
+            vvnablaW = dvx * dWdx_corr_i[0];
+#if DIM > 1
+            vvnablaW += dvy * dWdx_corr_i[1];
+#if DIM > 2
+            vvnablaW += dvz * dWdx_corr_i[2];
+#endif
+#endif
+#endif
+
 #if ARTIFICIAL_VISCOSITY || KLEY_VISCOSITY
             rr = 0.0;
             vr = 0.0;
@@ -429,28 +450,15 @@ __global__ void internalForces(int *interactions) {
                 //printf("%d\n", boundia);
                 tmp = p.m[j];
 # if TENSORIAL_CORRECTION
-                // new implementation (after july 2017, modified 2020)
                 for (e = 0; e < DIM; e++) {
                     for (f = 0; f < DIM; f++) {
-                        for (kk = 0; kk < DIM; kk++) {
-                            edot[e][f] += 0.5 * p.m[j]/p.rho[j] *
-                                (p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+f*DIM+kk] *
-//                                  (-dv[e]) * dr[kk] * dWdr/r
-                                  (-dv[e]) * dWdx[kk]
-                                  + p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+e*DIM+kk] *
-//                                  (-dv[f]) * dr[kk] * dWdr/r);
-                                  (-dv[f]) * dWdx[kk]);
+                        edot[e][f] += 0.5 * p.m[j]/p.rho[i] *
+                            (dWdx_corr_i[f] * (-dv[e]) + dWdx_corr_i[e] * (-dv[f]));
 
-                            rdot[e][f] += 0.5 * p.m[j]/p.rho[j] *
-                                (p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+f*DIM+kk] *
-//                                  (-dv[e]) * dr[kk] * dWdr/r
-                                  (-dv[e]) * dWdx[kk]
-                                  - p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+e*DIM+kk] *
-//                                  (-dv[f]) * dr[kk] * dWdr/r);
-                                  (-dv[f]) * dWdx[kk]);
-					    }
-			    	}
-			    }
+                        rdot[e][f] += 0.5 * p.m[j]/p.rho[i] *
+                            (dWdx_corr_i[f] * (-dv[e]) - dWdx_corr_i[e] * (-dv[f]));
+                    }
+                }
 # else
                 tmp = -0.5*tmp/p.rho[i];
                 edot[0][0] += tmp*(dvx*dWdx[0] + dvx*dWdx[0]);
@@ -521,15 +529,31 @@ __global__ void internalForces(int *interactions) {
                 for (dd = 0; dd < DIM; dd++) {
 # if (SPH_EQU_VERSION == 1)
 #  if SML_CORRECTION
+#   if TENSORIAL_CORRECTION
+                    accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]/(p.sml_omega[j]*p.rho[j]*p.rho[j]) * dWdx_corr_j[dd] + p.Tshear[stressIndex(i,d,dd)]/(p.sml_omega[i]*p.rho[i]*p.rho[i]) * dWdx_corr_i[dd]);
+#   else
                     accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]/(p.sml_omega[j]*p.rho[j]*p.rho[j])+ p.Tshear[stressIndex(i,d,dd)]/(p.sml_omega[i]*p.rho[i]*p.rho[i])) *dWdx[dd];
+#   endif
 #  else
+#   if TENSORIAL_CORRECTION
+                    accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j]) * dWdx_corr_j[dd] + p.Tshear[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i]) * dWdx_corr_i[dd]);
+#   else
                     accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j]) + p.Tshear[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i])) *dWdx[dd];
+#   endif
 #  endif
 # elif (SPH_EQU_VERSION == 2)
 #  if SML_CORRECTION
+#   if TENSORIAL_CORRECTION
+                    accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]+p.Tshear[stressIndex(i,d,dd)])/(p.sml_omega[i]*p.rho[i]*p.sml_omega[j]*p.rho[j]) * 0.5 * (dWdx_corr_i[dd] + dWdx_corr_j[dd]);
+#   else
                     accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]+p.Tshear[stressIndex(i,d,dd)])/(p.sml_omega[i]*p.rho[i]*p.sml_omega[j]*p.rho[j]) *dWdx[dd];
+#   endif
 #  else
+#   if TENSORIAL_CORRECTION
+                    accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]+p.Tshear[stressIndex(i,d,dd)])/(p.rho[i]*p.rho[j]) * 0.5 * (dWdx_corr_i[dd] + dWdx_corr_j[dd]);
+#   else
                     accelshearj[d] += eta * p.m[j] * (p.Tshear[stressIndex(j,d,dd)]+p.Tshear[stressIndex(i,d,dd)])/(p.rho[i]*p.rho[j]) *dWdx[dd];
+#   endif
 #  endif
 # endif // SPH_EQU_VERSION
                 }
@@ -541,9 +565,17 @@ __global__ void internalForces(int *interactions) {
             }
             for (d = 0; d < DIM; d++) {
 # if (SPH_EQU_VERSION == 1)
+#  if TENSORIAL_CORRECTION
+                accelshearj[d] += zetaij * p.m[j] * (p_rhs.divv[i] + p_rhs.divv[j]) /(p.rho[i]*p.rho[j]) * 0.5 * (dWdx_corr_i[d] + dWdx_corr_j[d]);
+#  else
                 accelshearj[d] += zetaij * p.m[j] * (p_rhs.divv[i] + p_rhs.divv[j]) /(p.rho[i]*p.rho[j]) * dWdx[d];
+#  endif
 # elif (SPH_EQU_VERSION == 2)
+#  if TENSORIAL_CORRECTION
+                accelshearj[d] += zetaij * p.m[j] * (p_rhs.divv[i]/(p.rho[i]*p.rho[i]) * dWdx_corr_i[d] + p_rhs.divv[j]/(p.rho[j]*p.rho[j])* dWdx_corr_j[d]);
+#  else
                 accelshearj[d] += zetaij * p.m[j] * (p_rhs.divv[i]/(p.rho[i]*p.rho[i]) + p_rhs.divv[j]/(p.rho[j]*p.rho[j])) * dWdx[d];
+#  endif
 # endif
             }
 #endif // KLEY_VISCOSITY
@@ -567,15 +599,31 @@ __global__ void internalForces(int *interactions) {
                     // warning! look below, the accelsj for each inner loop are added to accels[d]
                     // this is very confusing
 #  if SML_CORRECTION
+#   if TENSORIAL_CORRECTION
+                    accelsj[d] = p.m[j] * (sigma_j[d][dd]/(p.sml_omega[j]*p.rho[j]*p.rho[j]) * dWdx_corr_j[dd] + sigma_i[d][dd]/(p.sml_omega[i]*p.rho[i]*p.rho[i]) * dWdx_corr_i[dd]);
+#   else
                     accelsj[d] = p.m[j] * (sigma_j[d][dd]/(p.sml_omega[j]*p.rho[j]*p.rho[j]) + sigma_i[d][dd]/(p.sml_omega[i]*p.rho[i]*p.rho[i])) *dWdx[dd];
+#   endif
 #  else
+#   if TENSORIAL_CORRECTION
+                    accelsj[d] = p.m[j] * (sigma_j[d][dd]/(p.rho[j]*p.rho[j]) * dWdx_corr_j[dd] + sigma_i[d][dd]/(p.rho[i]*p.rho[i]) * dWdx_corr_i[dd]);
+#   else
                     accelsj[d] = p.m[j] * (sigma_j[d][dd]/(p.rho[j]*p.rho[j]) + sigma_i[d][dd]/(p.rho[i]*p.rho[i])) *dWdx[dd];
+#   endif
 #  endif
 # elif (SPH_EQU_VERSION == 2)
 #  if SML_CORRECTION
+#   if TENSORIAL_CORRECTION
+                    accelsj[d] = p.m[j] * (sigma_j[d][dd]+sigma_i[d][dd])/(p.sml_omega[i]*p.sml_omega[j]*p.rho[i]*p.rho[j]) * 0.5 * (dWdx_corr_i[dd] + dWdx_corr_j[dd]);
+#   else
                     accelsj[d] = p.m[j] * (sigma_j[d][dd]+sigma_i[d][dd])/(p.sml_omega[i]*p.sml_omega[j]*p.rho[i]*p.rho[j]) *dWdx[dd];
+#   endif
 #  else
+#   if TENSORIAL_CORRECTION
+                    accelsj[d] = p.m[j] * (sigma_j[d][dd]+sigma_i[d][dd])/(p.rho[i]*p.rho[j]) * 0.5 * (dWdx_corr_i[dd] + dWdx_corr_j[dd]);
+#   else
                     accelsj[d] = p.m[j] * (sigma_j[d][dd]+sigma_i[d][dd])/(p.rho[i]*p.rho[j]) *dWdx[dd];
+#   endif
 #  endif
 # else
 # error Invalid choice of SPH_EQU_VERSION in parameter.h.
@@ -596,13 +644,22 @@ __global__ void internalForces(int *interactions) {
 # if ARTIFICIAL_STRESS
                     double arts_rij;
 #  if (SPH_EQU_VERSION == 1)
+#   if TENSORIAL_CORRECTION
+                    accels[d] += p.m[j] * artf * (p_rhs.R[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i]) * dWdx_corr_i[dd]
+                              + p_rhs.R[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j]) * dWdx_corr_j[dd]);
+#   else
                     arts_rij = p_rhs.R[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i])
                               + p_rhs.R[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j]);
+                    accels[d] += p.m[j] * arts_rij * artf * dWdx[dd];
+#   endif
 #  elif (SPH_EQU_VERSION == 2)
                     arts_rij = (p_rhs.R[stressIndex(i,d,dd)] + p_rhs.R[stressIndex(j,d,dd)])/(p.rho[i]*p.rho[j]);
-#  endif
-                    // add the special artificial stress
+#   if TENSORIAL_CORRECTION
+                    accels[d] += p.m[j] * arts_rij * artf * 0.5 * (dWdx_corr_i[dd] + dWdx_corr_j[dd]);
+#   else
                     accels[d] += p.m[j] * arts_rij * artf * dWdx[dd];
+#   endif
+#  endif
 # endif // ARTIFICIAL_STRESS
 
                     // bs...
@@ -615,24 +672,40 @@ __global__ void internalForces(int *interactions) {
 # if (SPH_EQU_VERSION == 1)
 #  if SML_CORRECTION
             for (d = 0; d < DIM; d++) {
+#   if TENSORIAL_CORRECTION
+                accelsj[d] =  -p.m[j] * (p.p[i]/(p.sml_omega[i]*p.rho[i]*p.rho[i]) * dWdx_corr_i[d] + p.p[j]/(p.sml_omega[j]*p.rho[j]*p.rho[j]) * dWdx_corr_j[d]);
+#   else
                 accelsj[d] =  -p.m[j] * (p.p[i]/(p.sml_omega[i]*p.rho[i]*p.rho[i]) + p.p[j]/(p.sml_omega[j]*p.rho[j]*p.rho[j])) * dWdx[d];
+#   endif
                 accels[d] += accelsj[d];
             }
 #  else
             for (d = 0; d < DIM; d++) {
+#   if TENSORIAL_CORRECTION
+                accelsj[d] =  -p.m[j] * (p.p[i]/(p.rho[i]*p.rho[i]) * dWdx_corr_i[d] + p.p[j]/(p.rho[j]*p.rho[j]) * dWdx_corr_j[d]);
+#   else
                 accelsj[d] =  -p.m[j] * (p.p[i]/(p.rho[i]*p.rho[i]) + p.p[j]/(p.rho[j]*p.rho[j])) * dWdx[d];
+#   endif
                 accels[d] += accelsj[d];
             }
 #  endif // SML_CORRECTION
 # elif (SPH_EQU_VERSION == 2)
 #  if SML_CORRECTION
             for (d = 0; d < DIM; d++) {
+#   if TENSORIAL_CORRECTION
+                accelsj[d] =  -p.m[j] * ((p.p[i]+p.p[j])/(p.sml_omega[i]*p.rho[i]*p.sml_omega[j]*p.rho[j])) * 0.5 * (dWdx_corr_i[d] + dWdx_corr_j[d]);
+#   else
                 accelsj[d] =  -p.m[j] * ((p.p[i]+p.p[j])/(p.sml_omega[i]*p.rho[i]*p.sml_omega[j]*p.rho[j])) * dWdx[d];
+#   endif
                 accels[d] += accelsj[d];
             }
 #  else
             for (d = 0; d < DIM; d++) {
+#   if TENSORIAL_CORRECTION
+                accelsj[d] =  -p.m[j] * ((p.p[i]+p.p[j])/(p.rho[i]*p.rho[j])) * 0.5 * (dWdx_corr_i[d] + dWdx_corr_j[d]);
+#   else
                 accelsj[d] =  -p.m[j] * ((p.p[i]+p.p[j])/(p.rho[i]*p.rho[j])) * dWdx[d];
+#   endif
                 accels[d] += accelsj[d];
             }
 #  endif
@@ -647,13 +720,23 @@ __global__ void internalForces(int *interactions) {
 #endif
 
 # if ARTIFICIAL_VISCOSITY
-            accels[0] += p.m[j]*(-pij)*dWdx[0];
-#  if DIM > 1
-            accels[1] += p.m[j]*(-pij)*dWdx[1];
-#   if DIM > 2
-            accels[2] += p.m[j]*(-pij)*dWdx[2];
+#  if TENSORIAL_CORRECTION
+            accels[0] += p.m[j]*(-pij * 0.5)*(dWdx_corr_i[0] + dWdx_corr_j[0]);
+#   if DIM > 1
+            accels[1] += p.m[j]*(-pij * 0.5)*(dWdx_corr_i[1] + dWdx_corr_j[1]);
+#    if DIM > 2
+            accels[2] += p.m[j]*(-pij * 0.5)*(dWdx_corr_i[2] + dWdx_corr_j[2]);
+#    endif
 #   endif
-# endif
+#  else
+            accels[0] += p.m[j]*(-pij)*dWdx[0];
+#   if DIM > 1
+            accels[1] += p.m[j]*(-pij)*dWdx[1];
+#    if DIM > 2
+            accels[2] += p.m[j]*(-pij)*dWdx[2];
+#    endif
+#   endif
+#  endif
 # endif
 
 
@@ -664,23 +747,7 @@ __global__ void internalForces(int *interactions) {
             // see Frank Ott's thesis for details
             //drhodt += p.m[i]*vvnablaW;
             // Randles and Libersky's version (1996)
-# if TENSORIAL_CORRECTION
-#  if 0 // cms 2020-06-10 testing time step size, this part gives a tiny step size due to density
-      //                evolution, needs some debugging
-      // debugging started 2023-02-15, for the colliding rings, the original version is stable, this one not!
-            double divv = 0.0;
-            for (d = 0; d < DIM; d++) {
-                for (dd = 0; dd < DIM; dd++) {
-                    divv += p.m[j]/p.rho[j] * dv[d] * p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
-                }
-            }
-            drhodt += p.rho[i] * divv;
-#  else
             drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
-#  endif
-# else
-            drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
-# endif // TENSORIAL CORRECTION
 
 #else // HYDRO now
 # if SML_CORRECTION 
@@ -693,27 +760,34 @@ __global__ void internalForces(int *interactions) {
 
 #if INTEGRATE_SML
             // minus since vvnablaW is v_i - v_j \nabla W_ij
-# if TENSORIAL_CORRECTION
-            for (d = 0; d < DIM; d++) {
-                for (dd = 0; dd < DIM; dd++) {
-                    p.dhdt[i] -= 1./DIM * p.h[i] * p.m[j]/p.rho[j] * dv[d] * dWdx[dd] * p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd];
-                }
-            }
-# else
-#  if !SML_CORRECTION
+# if !SML_CORRECTION
             p.dhdt[i] -= 1./DIM * p.h[i] * p.m[j]/p.rho[j] * vvnablaW;
-#  endif // SML_CORRECTION
-# endif
+# endif // SML_CORRECTION
 #endif // INTEGRATE_SML
 
 #if INTEGRATE_ENERGY
 # if ARTIFICIAL_VISCOSITY
             if (!isRelaxationRun) {
-#  if SML_CORRECTION
-                dedt += p.m[j] * vvnablaW;
+#  if TENSORIAL_CORRECTION
+                double vvnablaW_corr = 0.0;
+                // use average of corrected gradients for symmetry
+                for (d = 0; d < DIM; d++) {
+                    vvnablaW_corr += dv[d] * 0.5 * (dWdx_corr_i[d] + dWdx_corr_j[d]);
+                }
+#  endif
+#  if TENSORIAL_CORRECTION
+#   if SML_CORRECTION
+                dedt += p.m[j] * vvnablaW_corr;
+#   else
+                dedt += 0.5 * p.m[j] * pij * vvnablaW_corr;
+#   endif
 #  else
+#   if SML_CORRECTION
+                dedt += p.m[j] * vvnablaW;
+#   else
                 dedt += 0.5 * p.m[j] * pij * vvnablaW;
-#  endif // SML_CORRECTION
+#   endif // SML_CORRECTION
+#  endif // TENSORIAL_CORRECTION
             }
 # endif
 
@@ -723,9 +797,17 @@ __global__ void internalForces(int *interactions) {
             for (d = 0; d < DIM; d++) {
                 for (dd = 0; dd < DIM; dd++) {
 #  if (SPH_EQU_VERSION == 1)
+#   if TENSORIAL_CORRECTION
+                    dedt += 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i]) * dWdx_corr_i[dd] + p_rhs.sigma[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j]) * dWdx_corr_j[dd]) * dv[d];
+#   else
                     dedt += 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i]) + p_rhs.sigma[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j])) * dv[d] * dWdx[dd];
+#   endif
 #  elif (SPH_EQU_VERSION == 2)
+#   if TENSORIAL_CORRECTION
+                    dedt += 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)] + p_rhs.sigma[stressIndex(j,d,dd)])/(p.rho[i]*p.rho[j]) * dv[d] * 0.5 * (dWdx_corr_i[dd] + dWdx_corr_j[dd]);
+#   else
                     dedt += 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)] + p_rhs.sigma[stressIndex(j,d,dd)])/(p.rho[i]*p.rho[j]) * dv[d] * dWdx[dd];
+#   endif
 #endif
 #if DEBUG_MISC
                     if (isnan(dedt)) {
@@ -801,7 +883,11 @@ __global__ void internalForces(int *interactions) {
         ptmp = p.p[i];
 #  endif
 
+#  if TENSORIAL_CORRECTION
+        dedt += ptmp * drhodt / (p.rho[i] * p.rho[i]);
+#  else
         dedt -= ptmp / p.rho[i] * p_rhs.divv[i];
+#  endif
         // symmetrize edot
         for (d = 0; d < DIM; d++) {
             for (dd = 0; dd < d; dd++) {
