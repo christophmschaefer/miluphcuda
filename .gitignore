@@ -63,3 +63,4 @@ create_doc/
 # exclude non-exec stuff
 *.old
 examples/
+.vscode/
