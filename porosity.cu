@@ -29,6 +29,13 @@
 #include "math.h"
 #include "float.h"
 
+// we need these material globals in scope
+#if SIRONO_POROSITY
+#ifndef _CONFIG_PARAMETER_H
+#include "config_parameter.h"
+#endif
+#endif
+
 #if PALPHA_POROSITY
 
 __global__ void calculateDistensionChange()
