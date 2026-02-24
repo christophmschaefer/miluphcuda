@@ -34,6 +34,10 @@
 // will be set to the identity matrix (-> disabling the correction factors)
 #define MIN_NUMBER_OF_INTERACTIONS_FOR_TENSORIAL_CORRECTION_TO_WORK 0
 
+// Additional safety: even if the moment matrix is formally full-rank, it can be
+// extremely ill-conditioned near free surfaces/contact, producing a huge inverse
+// and injecting unphysical torque. Clamp overly large correction matrices.
+#define MAX_ABS_TENSORIAL_CORRECTION_ENTRY 5.0
 
 
 // pointers for the kernel function
@@ -390,17 +394,22 @@ __global__ void CalcDivvandCurlv(int *interactions)
 #error unset BALSARA SWITCH in 1D
 #elif DIM == 2
 # if TENSORIAL_CORRECTION
-            // Pre-compute corrected gradients first? Or just reconstruct on the fly like divv's loop?
-            // Reconstructing for efficiency in this kernel structure.
-            double dWdx_corr[DIM] = {0.0, 0.0};
+            double dWdx_corr_i[DIM];
+            double dWdx_corr_j[DIM];
             for (int d = 0; d < DIM; d++) {
+                dWdx_corr_i[d] = 0.0;
+                dWdx_corr_j[d] = 0.0;
                 for (int dd = 0; dd < DIM; dd++) {
-                     dWdx_corr[d] += p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
+                     dWdx_corr_i[d] += p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
+                     dWdx_corr_j[d] += p_rhs.tensorialCorrectionMatrix[j*DIM*DIM+d*DIM+dd] * dWdx[dd];
                 }
             }
-            // only one component in 2D
-            curlv[0] += p.m[j]/p.rho[i] * ((vi[0] - vj[0]) * dWdx_corr[1]
-                        - (vi[1] - vj[1]) * dWdx_corr[0]);
+
+            // curlv[0] = d(vy)/dx - d(vx)/dy
+            double term_vy_dx = p.m[j] * ( (vi[1]/p.rho[i]) * dWdx_corr_i[0] - (vj[1] * p.rho[i] / (p.rho[j]*p.rho[j])) * dWdx_corr_j[0] );
+            double term_vx_dy = p.m[j] * ( (vi[0]/p.rho[i]) * dWdx_corr_i[1] - (vj[0] * p.rho[i] / (p.rho[j]*p.rho[j])) * dWdx_corr_j[1] );
+            
+            curlv[0] += (term_vy_dx - term_vx_dy);
             curlv[1] = 0;
 # else
             // only one component in 2D
@@ -410,18 +419,31 @@ __global__ void CalcDivvandCurlv(int *interactions)
 # endif
 #elif DIM == 3
 # if TENSORIAL_CORRECTION
-            double dWdx_corr[DIM] = {0.0, 0.0, 0.0};
+            double dWdx_corr_i[DIM];
+            double dWdx_corr_j[DIM];
             for (int d = 0; d < DIM; d++) {
+                dWdx_corr_i[d] = 0.0;
+                dWdx_corr_j[d] = 0.0;
                 for (int dd = 0; dd < DIM; dd++) {
-                     dWdx_corr[d] += p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
+                     dWdx_corr_i[d] += p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
+                     dWdx_corr_j[d] += p_rhs.tensorialCorrectionMatrix[j*DIM*DIM+d*DIM+dd] * dWdx[dd];
                 }
             }
-            curlv[0] += p.m[j]/p.rho[i] * ((vi[1] - vj[1]) * dWdx_corr[2]
-                        - (vi[2] - vj[2]) * dWdx_corr[1]);
-            curlv[1] += p.m[j]/p.rho[i] * ((vi[2] - vj[2]) * dWdx_corr[0]
-                        - (vi[0] - vj[0]) * dWdx_corr[2]);
-            curlv[2] += p.m[j]/p.rho[i] * ((vi[0] - vj[0]) * dWdx_corr[1]
-                        - (vi[1] - vj[1]) * dWdx_corr[0]);
+
+            // curl x: d(vz)/dy - d(vy)/dz
+            double term_vz_dy = p.m[j] * ( (vi[2]/p.rho[i]) * dWdx_corr_i[1] - (vj[2] * p.rho[i] / (p.rho[j]*p.rho[j])) * dWdx_corr_j[1] );
+            double term_vy_dz = p.m[j] * ( (vi[1]/p.rho[i]) * dWdx_corr_i[2] - (vj[1] * p.rho[i] / (p.rho[j]*p.rho[j])) * dWdx_corr_j[2] );
+            curlv[0] += (term_vz_dy - term_vy_dz);
+
+            // curl y: d(vx)/dz - d(vz)/dx
+            double term_vx_dz = p.m[j] * ( (vi[0]/p.rho[i]) * dWdx_corr_i[2] - (vj[0] * p.rho[i] / (p.rho[j]*p.rho[j])) * dWdx_corr_j[2] );
+            double term_vz_dx = p.m[j] * ( (vi[2]/p.rho[i]) * dWdx_corr_i[0] - (vj[2] * p.rho[i] / (p.rho[j]*p.rho[j])) * dWdx_corr_j[0] );
+            curlv[1] += (term_vx_dz - term_vz_dx);
+
+            // curl z: d(vy)/dx - d(vx)/dy
+            double term_vy_dx = p.m[j] * ( (vi[1]/p.rho[i]) * dWdx_corr_i[0] - (vj[1] * p.rho[i] / (p.rho[j]*p.rho[j])) * dWdx_corr_j[0] );
+            double term_vx_dy = p.m[j] * ( (vi[0]/p.rho[i]) * dWdx_corr_i[1] - (vj[0] * p.rho[i] / (p.rho[j]*p.rho[j])) * dWdx_corr_j[1] );
+            curlv[2] += (term_vy_dx - term_vx_dy);
 # else
             curlv[0] += p.m[j]/p.rho[i] * ((vi[1] - vj[1]) * dWdx[2]
                         - (vi[2] - vj[2]) * dWdx[1]);
@@ -535,7 +557,19 @@ __global__ void tensorialCorrection(int *interactions)
             r = sqrt(dr[0]*dr[0]+dr[1]*dr[1]);
 #endif
 #endif
+
+#if AVERAGE_KERNELS
+            double dWdrj;
             kernel(&W, dWdx, &dWdr, dr, p.h[i]);
+            kernel(&Wj, dWdxj, &dWdrj, dr, p.h[j]);
+
+            W = 0.5 * (W + Wj);
+            for (d = 0; d < DIM; d++) {
+                dWdx[d] = 0.5 * (dWdx[d] + dWdxj[d]);
+            }
+#else
+            kernel(&W, dWdx, &dWdr, dr, p.h[i]);
+#endif
 
             for (d = 0; d < DIM; d++) {
                 for (dd = 0; dd < DIM; dd++) {
@@ -545,15 +579,7 @@ __global__ void tensorialCorrection(int *interactions)
         } // end loop over interaction partners
 
         // invert the moment matrix (corrmatrix) into matrix
-        rv = invert_svd_schaefer(corrmatrix, matrix, 1e-8);
-
-        if (rv == 0) {
-            for (d = 0; d < DIM; d++) {
-                  for (dd = 0; dd < DIM; dd++) {
-                      matrix[d*DIM+dd] = (d == dd) ? 1.0 : 0.0;
-                  }
-            }
-        }
+        rv = invert_svd(corrmatrix, matrix, 1e-8);
 
         for (d = 0; d < DIM*DIM; d++) {
             p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d] = matrix[d];
