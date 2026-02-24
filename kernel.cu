@@ -35,6 +35,7 @@
 #define MIN_NUMBER_OF_INTERACTIONS_FOR_TENSORIAL_CORRECTION_TO_WORK 0
 
 
+
 // pointers for the kernel function
 __device__ SPH_kernel kernel;
 __device__ SPH_kernel wendlandc2_p = wendlandc2;
@@ -388,17 +389,47 @@ __global__ void CalcDivvandCurlv(int *interactions)
 #if (DIM == 1 && BALSARA_SWITCH)
 #error unset BALSARA SWITCH in 1D
 #elif DIM == 2
+# if TENSORIAL_CORRECTION
+            // Pre-compute corrected gradients first? Or just reconstruct on the fly like divv's loop?
+            // Reconstructing for efficiency in this kernel structure.
+            double dWdx_corr[DIM] = {0.0, 0.0};
+            for (int d = 0; d < DIM; d++) {
+                for (int dd = 0; dd < DIM; dd++) {
+                     dWdx_corr[d] += p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
+                }
+            }
+            // only one component in 2D
+            curlv[0] += p.m[j]/p.rho[i] * ((vi[0] - vj[0]) * dWdx_corr[1]
+                        - (vi[1] - vj[1]) * dWdx_corr[0]);
+            curlv[1] = 0;
+# else
             // only one component in 2D
             curlv[0] += p.m[j]/p.rho[i] * ((vi[0] - vj[0]) * dWdx[1]
                         - (vi[1] - vj[1]) * dWdx[0]);
             curlv[1] = 0;
+# endif
 #elif DIM == 3
+# if TENSORIAL_CORRECTION
+            double dWdx_corr[DIM] = {0.0, 0.0, 0.0};
+            for (int d = 0; d < DIM; d++) {
+                for (int dd = 0; dd < DIM; dd++) {
+                     dWdx_corr[d] += p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
+                }
+            }
+            curlv[0] += p.m[j]/p.rho[i] * ((vi[1] - vj[1]) * dWdx_corr[2]
+                        - (vi[2] - vj[2]) * dWdx_corr[1]);
+            curlv[1] += p.m[j]/p.rho[i] * ((vi[2] - vj[2]) * dWdx_corr[0]
+                        - (vi[0] - vj[0]) * dWdx_corr[2]);
+            curlv[2] += p.m[j]/p.rho[i] * ((vi[0] - vj[0]) * dWdx_corr[1]
+                        - (vi[1] - vj[1]) * dWdx_corr[0]);
+# else
             curlv[0] += p.m[j]/p.rho[i] * ((vi[1] - vj[1]) * dWdx[2]
                         - (vi[2] - vj[2]) * dWdx[1]);
             curlv[1] += p.m[j]/p.rho[i] * ((vi[2] - vj[2]) * dWdx[0]
                         - (vi[0] - vj[0]) * dWdx[2]);
             curlv[2] += p.m[j]/p.rho[i] * ((vi[0] - vj[0]) * dWdx[1]
                         - (vi[1] - vj[1]) * dWdx[0]);
+# endif
 #endif
         }
         for (d = 0; d < DIM; d++) {
@@ -461,12 +492,8 @@ __global__ void shepardCorrection(int *interactions) {
 #endif
 
 
-
-
-
-
 #if TENSORIAL_CORRECTION
-// this adds first order consistency but needs one more loop over all neighbours
+
 __global__ void tensorialCorrection(int *interactions)
 {
     register int64_t interactions_index;
@@ -508,34 +535,7 @@ __global__ void tensorialCorrection(int *interactions)
             r = sqrt(dr[0]*dr[0]+dr[1]*dr[1]);
 #endif
 #endif
-
-#if AVERAGE_KERNELS
             kernel(&W, dWdx, &dWdr, dr, p.h[i]);
-            kernel(&Wj, dWdxj, &dWdr, dr, p.h[j]);
-# if SHEPARD_CORRECTION
-            W /= p_rhs.shepard_correction[i];
-            Wj /= p_rhs.shepard_correction[j];
-            for (d = 0; d < DIM; d++) {
-                dWdx[d] /= p_rhs.shepard_correction[i];
-                dWdxj[d] /= p_rhs.shepard_correction[j];
-            }
-            for (d = 0; d < DIM; d++) {
-                dWdx[d] = 0.5 * (dWdx[d] + dWdxj[d]);
-            }
-            W = 0.5 * (W + Wj);
-# endif
-
-
-#else
-            h = 0.5*(p.h[i] + p.h[j]);
-            kernel(&W, dWdx, &dWdr, dr, h);
-# if SHEPARD_CORRECTION
-            W /= p_rhs.shepard_correction[i];
-            for (d = 0; d < DIM; d++) {
-                dWdx[d] /= p_rhs.shepard_correction[i];
-            }
-# endif
-#endif // AVERAGE_KERNELS
 
             for (d = 0; d < DIM; d++) {
                 for (dd = 0; dd < DIM; dd++) {
@@ -544,32 +544,17 @@ __global__ void tensorialCorrection(int *interactions)
             }
         } // end loop over interaction partners
 
-        rv = invertMatrix(corrmatrix, matrix);
-        // if something went wrong during inversion, use identity matrix
-        if (rv < 0 || k < MIN_NUMBER_OF_INTERACTIONS_FOR_TENSORIAL_CORRECTION_TO_WORK) {
-            #if DEBUG_LINALG
-            if (threadIdx.x == 0) {
-                printf("could not invert matrix: rv: %d and k: %d\n", rv, k);
-                for (d = 0; d < DIM; d++) {
-                    for (dd = 0; dd < DIM; dd++) {
-                        printf("%e\t", corrmatrix[d*DIM+dd]);
-                    }
-                        printf("\n");
-                }
-            }
-            #endif
-            #if 0 //  deactivation is turned off, cms 2023-10-19. implement munroe
-            printf("Deactivating particle %d due to matrix inversion problems\n", i);
-            p_rhs.deactivate_me_flag[i] = TRUE; // particle is deactivated and the whole rhs step is redone with a shorter timestep
-            #endif
+        // invert the moment matrix (corrmatrix) into matrix
+        rv = invert_svd_schaefer(corrmatrix, matrix, 1e-8);
+
+        if (rv == 0) {
             for (d = 0; d < DIM; d++) {
-                for (dd = 0; dd < DIM; dd++) {
-                    matrix[d*DIM+dd] = 0.0;
-                    if (d == dd)
-                        matrix[d*DIM+dd] = 1.0;
-                }
+                  for (dd = 0; dd < DIM; dd++) {
+                      matrix[d*DIM+dd] = (d == dd) ? 1.0 : 0.0;
+                  }
             }
         }
+
         for (d = 0; d < DIM*DIM; d++) {
             p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d] = matrix[d];
 

@@ -216,8 +216,8 @@ __device__ int calculate_all_eigenvalues(double M[DIM][DIM], double eigenvalues[
             identity_matrix(A);
             A[e][e] = c;
             A[f][f] = c;
-            A[e][f] = -s;
-            A[f][e] = s;
+            A[e][f] = s;
+            A[f][e] = -s;
             // calculate the eigenvectors
             multiply_matrix(v, A, vtmp);
             copy_matrix(vtmp, v);
@@ -335,3 +335,263 @@ __device__ int invertMatrix(double *m, double *inverted) {
 
     return 1;
 }
+
+__device__ void symmetrizeMatrix(double A[DIM][DIM]) {
+    for (int i = 0; i < DIM; ++i)
+        for (int j = i + 1; j < DIM; ++j) {
+            double s = 0.5 * (A[i][j] + A[j][i]);
+            A[i][j] = s;
+            A[j][i] = s;
+        }
+}
+
+__device__ int invert_svd(double *m, double *inverted, double threshold_svd) {
+    // SVD based matrix inversion for symmetric matrices by Sascha Eckstein
+    int i, j, k;
+    double A[DIM][DIM];
+    double V[DIM][DIM];
+    double eigenvalues[DIM];
+    double P[DIM][DIM];
+
+    // Load matrix into local memory
+    for (i = 0; i < DIM; i++) {
+        for (j = 0; j < DIM; j++) {
+            A[i][j] = m[i * DIM + j];
+        }
+    }
+
+    // Since m (and thus A) is symmetric for SPH tensor corrections,
+    // we can compute Eigenvalues and Eigenvectors directly on A.
+    // This avoids limiting precision by computing A^T * A.
+    calculate_all_eigenvalues(A, eigenvalues, V);
+
+    // Compute Pseudo-Inverse: M^+ = V * Sigma^-1 * V^T
+    // For a symmetric matrix, SVD singular values are abs(eigenvalues).
+    // The pseudo-inverse eigenvalues are 1/eigenvalue.
+
+    for (i = 0; i < DIM; i++) {
+        for (j = 0; j < DIM; j++) {
+            P[i][j] = 0.0;
+        }
+    }
+
+    int used_eigenvalues = 0;
+
+    for (k = 0; k < DIM; k++) {
+        double ev = eigenvalues[k];
+        // Threshold check on absolute value of eigenvalue (singular value)
+        if (fabs(ev) > threshold_svd) {
+            used_eigenvalues++;
+            double inv_ev = 1.0 / ev;
+            for (i = 0; i < DIM; i++) {
+                for (j = 0; j < DIM; j++) {
+                    P[i][j] += inv_ev * V[i][k] * V[j][k];
+                }
+            }
+        }
+    }
+
+    // Store result
+    // For symmetric matrices, the result P is already the inverse.
+    for (i = 0; i < DIM; i++) {
+        for (j = 0; j < DIM; j++) {
+            inverted[i * DIM + j] = P[i][j];
+        }
+    }
+    return used_eigenvalues;
+}
+
+// cms invert matrix using SVD, tests by Sascha show better stability
+// 2025-12-19
+#define EPSILON_SVD 1e-10
+#define MAX_ITER 100
+
+// Matrix operations
+__device__ void mat_multiply(double A[DIM][DIM], double B[DIM][DIM], double C[DIM][DIM]) {
+    for (int i = 0; i < DIM; i++)
+        for (int j = 0; j < DIM; j++) {
+            C[i][j] = 0;
+            for (int k = 0; k < DIM; k++)
+                C[i][j] += A[i][k] * B[k][j];
+        }
+}
+
+__device__ void mat_transpose(double A[DIM][DIM], double AT[DIM][DIM]) {
+    for (int i = 0; i < DIM; i++)
+        for (int j = 0; j < DIM; j++)
+            AT[j][i] = A[i][j];
+}
+
+__device__ void mat_copy(double src[DIM][DIM], double dst[DIM][DIM]) {
+    for (int i = 0; i < DIM; i++)
+        for (int j = 0; j < DIM; j++)
+            dst[i][j] = src[i][j];
+}
+
+__device__ void identity(double I[DIM][DIM]) {
+    for (int i = 0; i < DIM; i++)
+        for (int j = 0; j < DIM; j++)
+            I[i][j] = (i == j) ? 1.0 : 0.0;
+}
+
+// Jacobi eigenvalue decomposition
+__device__ void jacobi(double A[DIM][DIM], double eigenval[DIM], double eigenvec[DIM][DIM]) {
+    double S[DIM][DIM], temp[DIM][DIM];
+    mat_copy(A, S);
+    identity(eigenvec);
+
+    for (int iter = 0; iter < MAX_ITER; iter++) {
+        // Find largest off-diagonal element
+        int p = 0, q = 1;
+        double max_val = fabs(S[0][1]);
+
+        for (int i = 0; i < DIM; i++)
+            for (int j = i + 1; j < DIM; j++)
+                if (fabs(S[i][j]) > max_val) {
+                    max_val = fabs(S[i][j]);
+                    p = i; q = j;
+                }
+
+        if (max_val < EPSILON_SVD) break;
+
+        // Compute rotation angle
+        double theta = (fabs(S[p][p] - S[q][q]) < EPSILON_SVD) ?
+            M_PI / 4.0 : 0.5 * atan2(2.0 * S[p][q], S[q][q] - S[p][p]);
+
+        double c = cos(theta), s = sin(theta);
+
+        // Build rotation matrix
+        double R[DIM][DIM];
+        identity(R);
+        R[p][p] = c; R[q][q] = c;
+        R[p][q] = s; R[q][p] = -s;
+
+        // S = R^T * S * R
+        double RT[DIM][DIM];
+        mat_transpose(R, RT);
+        mat_multiply(RT, S, temp);
+        mat_multiply(temp, R, S);
+
+        // Accumulate eigenvectors
+        mat_multiply(eigenvec, R, temp);
+        mat_copy(temp, eigenvec);
+    }
+
+    for (int i = 0; i < DIM; i++)
+        eigenval[i] = S[i][i];
+}
+
+// Singular Value Decomposition: A = U * Sigma * V^T
+__device__ void svd_3x3(double A[DIM][DIM], double U[DIM][DIM], double S[DIM], double V[DIM][DIM]) {
+    double AT[DIM][DIM], ATA[DIM][DIM];
+    double eigenval[DIM];
+
+    // Compute A^T * A
+    mat_transpose(A, AT);
+    mat_multiply(AT, A, ATA);
+
+    // Eigendecomposition of A^T * A gives V and sigma^2
+    jacobi(ATA, eigenval, V);
+
+    // Sort singular values (descending)
+    for (int i = 0; i < DIM; i++)
+        for (int j = i + 1; j < DIM; j++)
+            if (eigenval[i] < eigenval[j]) {
+                double temp = eigenval[i];
+                eigenval[i] = eigenval[j];
+                eigenval[j] = temp;
+
+                for (int k = 0; k < DIM; k++) {
+                    temp = V[k][i];
+                    V[k][i] = V[k][j];
+                    V[k][j] = temp;
+                }
+            }
+
+    // Singular values: sigma = sqrt(λ)
+    for (int i = 0; i < DIM; i++)
+        S[i] = (eigenval[i] > 0) ? sqrt(eigenval[i]) : 0.0;
+
+    // Compute U: u_i = A * v_i / sigma_i
+    for (int i = 0; i < DIM; i++) {
+        if (S[i] > EPSILON_SVD) {
+            for (int j = 0; j < DIM; j++) {
+                U[j][i] = 0;
+                for (int k = 0; k < DIM; k++)
+                    U[j][i] += A[j][k] * V[k][i];
+                U[j][i] /= S[i];
+            }
+        } else {
+            for (int j = 0; j < DIM; j++)
+                U[j][i] = (i == j) ? 1.0 : 0.0;
+        }
+    }
+}
+
+// Matrix inversion via SVD: A^(-1) = V * Sigma^(-1) * U^T
+// Returns rank of matrix
+// threshold: singular values < threshold are treated as zero (pseudo-inverse)
+__device__ int invert_svd_schaefer(double *Atmp, double *A_tmpinv, double threshold)
+{
+    double U[DIM][DIM], V[DIM][DIM], S[DIM];
+    double A[DIM][DIM], A_inv[DIM][DIM];
+
+
+    // map Atmp to A
+    for (int i = 0; i < DIM; i++)
+        for (int j = 0; j < DIM; j++)
+            A[i][j] = Atmp[i * DIM + j];
+
+    svd_3x3(A, U, S, V);
+
+    // Count rank and build Σ^(-1)
+    int rank = 0;
+    double S_inv[DIM][DIM] = {0};
+    for (int i = 0; i < DIM; i++) {
+        if (S[i] > threshold) {
+            S_inv[i][i] = 1.0 / S[i];
+            rank++;
+        }
+    }
+
+    // A^(-1) = V * Σ^(-1) * U^T
+    double UT[DIM][DIM], temp[DIM][DIM];
+    mat_transpose(U, UT);
+    mat_multiply(S_inv, UT, temp);
+    mat_multiply(V, temp, A_inv);
+
+    // map A_inv to A_tmpinv 
+    for (int i = 0; i < DIM; i++)
+        for (int j = 0; j < DIM; j++)
+            A_tmpinv[i * DIM + j] = A_inv[i][j];
+
+    return rank;
+}
+
+// Print functions for testing
+__device__ void print_mat(const char* name, double M[DIM][DIM])
+{
+    printf("%s:\n", name);
+    for (int i = 0; i < DIM; i++) {
+        for (int j = 0; j < DIM; j++)
+            printf("%10.6f ", M[i][j]);
+        printf("\n");
+    }
+    printf("\n");
+}
+
+/*
+    double L_inv[DIM][DIM];
+    double threshold = 1e-10;  // adjust based on condition number
+
+    int rank = invert_svd(L, L_inv, threshold);
+    printf("Matrix rank: %d\n\n", rank);
+
+    print_mat("L^(-1)", L_inv);
+
+    // Verify: L * L^(-1) = I
+    double check[DIM][DIM];
+    mat_multiply(L, L_inv, check);
+    print_mat("L * L^(-1) (should be identity)", check);
+
+*/

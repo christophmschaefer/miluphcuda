@@ -634,7 +634,9 @@ void usage(char *name)
 #endif
             "\t-Y, --format\t\t\t Print information about input and output format of the data files,\n"
             "\t\t\t\t\t and about the compile time options of the binary.\n\n"
-            "Take a deep look at parameter.h. There you find most of the physics and numerics settings.\n\n"
+            "Take a deep look at parameter.h. There you find most of the settings for physics and numerics.\n\n"
+            "Take also a deep look at timeintegration.h if you have issues with tiny timesteps or halting simulations. There you find a lot of additional settings for the time integration scheme, especially for the adaptive Runge-Kutta integrator.\n\n"
+            "Take also deep look at miluph.h for some debugging switches if you do changes in the code or start developing.\n\n"
             "More information on github: https://github.com/christophmschaefer/miluphcuda\n\n",
         MILUPHCUDA_VERSION, name);
     exit(0);

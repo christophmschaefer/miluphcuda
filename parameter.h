@@ -175,6 +175,7 @@
 // max number of activation thresholds per particle, only required for FRAGMENTATION, otherwise set to 1
 #define MAX_NUM_FLAWS 1
 // maximum number of interactions per particle -> fixed array size
+// here, you can reduce the memory requirements quite easy by setting this to a lower value, but be aware that the simulation will stop when this number is exceeded for one particle (unless DEAL_WITH_TOO_MANY_INTERACTIONS is set)
 #define MAX_NUM_INTERACTIONS 256
 
 // if set to 1, the smoothing length is not fixed for each material type
@@ -185,12 +186,12 @@
 // d sml / dt  = sml/DIM * 1/rho  \nabla velocity
 // if you want to specify an individual initial smoothing length for each particle (instead of the material
 // specific one in material.cfg) in the initial particle file, set READ_INITIAL_SML_FROM_PARTICLE_FILE to 1
-#define VARIABLE_SML 1
+#define VARIABLE_SML 0
 #define FIXED_NOI 0
-#define INTEGRATE_SML 1
+#define INTEGRATE_SML 0
 // read sml for each particle from input file (instead of using a single, material-specific one from material.cfg)
 // (if VARIABLE_SML is not set the individual smls remain constant)
-#define READ_INITIAL_SML_FROM_PARTICLE_FILE 1
+#define READ_INITIAL_SML_FROM_PARTICLE_FILE 0
 
 // correction terms for sml calculation (warning: experimental)
 // adds gradient of the smoothing length to continuity equation, equation of motion, energy equation
@@ -204,7 +205,7 @@
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be set to 0
 // and the simulation continues. It will be announced on *stdout* when this happens
 // if set to 0, the simulation stops in such a case unless DEAL_WITH_TOO_MANY_INTERACTIONS is used
-#define TOO_MANY_INTERACTIONS_KILL_PARTICLE 1
+#define TOO_MANY_INTERACTIONS_KILL_PARTICLE 0
 // important switch: if the simulations yields at some point too many interactions for
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be lowered until
 // the interactions are lower than MAX_NUM_INTERACTIONS

@@ -240,7 +240,6 @@ void endIntegration(void)
     cleanupMaterials();
 }
 
-
 /* just do it */
 void timeIntegration()
 {

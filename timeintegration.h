@@ -82,12 +82,18 @@ void afterIntegrationStep(void);
 __global__ void symmetrizeStress(void);
 
 
+
+
 #define NUM_THREADS_512 512
 #define NUM_THREADS_256 256
 #define NUM_THREADS_128 128
 #define NUM_THREADS_64 64
 #define NUM_THREADS_1 1
 
+
+
+// well, these thread numbers are not really set in stone and can be changed according
+// to your hardware
 #define NUM_THREADS_COMPUTATIONAL_DOMAIN 128
 #define NUM_THREADS_BUILD_TREE 32
 #define NUM_THREADS_TREEDEPTH 128

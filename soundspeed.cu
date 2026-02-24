@@ -127,7 +127,11 @@ __global__ void calculateSoundSpeed()
 //                p.cs[i] = p_rhs.cs_old[i];
 //            }
             /* switched from jutzis implementation of the soundspeed to a linear soundspeed from cs_porous with alpha=alpha0 to cs_solid with alpha=1 (also done in iSale) */
-            p.cs[i] = matcs_solid[matId] + (matcs_porous[matId] - matcs_solid[matId]) * (p.alpha_jutzi[i] - 1.0) / (matporjutzi_alpha_0[matId] - 1.0);
+            if (matporjutzi_alpha_0[matId] > 1.0) {
+                p.cs[i] = matcs_solid[matId] + (matcs_porous[matId] - matcs_solid[matId]) * (p.alpha_jutzi[i] - 1.0) / (matporjutzi_alpha_0[matId] - 1.0);
+            } else {
+                p.cs[i] = matcs_solid[matId];
+            }
 #if DEBUG_MISC
             if (isnan(p.cs[i])) {
                 printf("i %d alpha_jutzi %e delpdelrho %e delpdele %e dalphadp %e p %e rho %e\n", i, p.alpha_jutzi[i], p.delpdelrho[i], p.delpdele[i], p.dalphadp[i], p.p[i], p.rho[i]);
@@ -196,7 +200,11 @@ __global__ void calculateSoundSpeed()
             if( cs_sq > matcs_porous[matId]*matcs_porous[matId] ) {
                 cs = sqrt(cs_sq);
                 // linear interpolation between the sound speed in the matrix (from above) and cs_porous (a constant)
-                cs = cs + (matcs_porous[matId] - cs) * (p.alpha_jutzi[i] - 1.0) / (matporjutzi_alpha_0[matId] - 1.0);
+                if (matporjutzi_alpha_0[matId] > 1.0) {
+                    cs = cs + (matcs_porous[matId] - cs) * (p.alpha_jutzi[i] - 1.0) / (matporjutzi_alpha_0[matId] - 1.0);
+                } else {
+                    cs = matcs_solid[matId];
+                }
                 // set to >= lower limit
                 if (cs < matcsLimit[matId]) {
                     p.cs[i] = matcsLimit[matId];
