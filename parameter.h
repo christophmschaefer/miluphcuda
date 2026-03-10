@@ -152,7 +152,8 @@
 // max number of activation thresholds per particle, only required for FRAGMENTATION, otherwise set to 1
 #define MAX_NUM_FLAWS 1
 // maximum number of interactions per particle -> fixed array size
-#define MAX_NUM_INTERACTIONS 512
+// here, you can reduce the memory requirements quite easy by setting this to a lower value, but be aware that the simulation will stop when this number is exceeded for one particle (unless DEAL_WITH_TOO_MANY_INTERACTIONS is set)
+#define MAX_NUM_INTERACTIONS 256
 
 // if set to 1, the smoothing length is not fixed for each material type
 // choose either FIXED_NOI for a fixed number of interaction partners following
@@ -162,9 +163,11 @@
 // d sml / dt  = sml/DIM * 1/rho  \nabla velocity
 // if you want to specify an individual initial smoothing length for each particle (instead of the material
 // specific one in material.cfg) in the initial particle file, set READ_INITIAL_SML_FROM_PARTICLE_FILE to 1
-#define VARIABLE_SML 1
+#define VARIABLE_SML 0
 #define FIXED_NOI 0
-#define INTEGRATE_SML 1
+#define INTEGRATE_SML 0
+// read sml for each particle from input file (instead of using a single, material-specific one from material.cfg)
+// (if VARIABLE_SML is not set the individual smls remain constant)
 #define READ_INITIAL_SML_FROM_PARTICLE_FILE 0
 
 // correction terms for sml calculation: adds gradient of the smoothing length to continuity equation, equation of motion, internal energy equation

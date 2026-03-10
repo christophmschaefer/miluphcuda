@@ -29,13 +29,14 @@
 
 // debug flags, mainly for additional output
 #define DEBUG_TIMESTEP 1
-#define DEBUG_LINALG 1
+#define DEBUG_LINALG 0
 #define DEBUG_TREE 1
 #define DEBUG_TREE_TO_FILE 0
 #define DEBUG_GRAVITY 1
 #define DEBUG_RHS 1
 #define DEBUG_RHS_RUNTIMES 1
-#define DEBUG_MISC 1
+// checks for some NaNs
+#define DEBUG_MISC 0
 #define DEBUG_IO 0
 #define DEBUG_DEVEL 1
 // define if you want to pass around cudaVerify()

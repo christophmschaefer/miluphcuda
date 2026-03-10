@@ -645,8 +645,12 @@ __global__ void internalForces(int *interactions) {
                     double arts_rij;
 #  if (SPH_EQU_VERSION == 1)
 #   if TENSORIAL_CORRECTION
-                    accels[d] += p.m[j] * artf * (p_rhs.R[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i]) * dWdx_corr_i[dd]
+                    double accels_art_term = p.m[j] * artf * (p_rhs.R[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i]) * dWdx_corr_i[dd]
                               + p_rhs.R[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j]) * dWdx_corr_j[dd]);
+                    accels[d] += accels_art_term;
+#if INTEGRATE_ENERGY
+                    dedt += 0.5 * accels_art_term * -dv[d];
+#endif
 #   else
                     arts_rij = p_rhs.R[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i])
                               + p_rhs.R[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j]);
@@ -792,7 +796,7 @@ __global__ void internalForces(int *interactions) {
 # endif
 
 # if SOLID
-# if 0 // deactivated cms 2019-07-02 SOLID
+# if 1 // activated pairwise for conservation
 // new implementation cms 2019-05-23
             for (d = 0; d < DIM; d++) {
                 for (dd = 0; dd < DIM; dd++) {
@@ -865,7 +869,7 @@ __global__ void internalForces(int *interactions) {
 
 
 #if INTEGRATE_ENERGY
-# if SOLID
+# if 0 // SOLID continuum disabled for pairwise conservation
         double ptmp = 0.0;
         double edottmp = 0.0;
 
