@@ -59,9 +59,9 @@
 // artificial bulk viscosity according to Schaefer et al. (2004)
 #define KLEY_VISCOSITY 0
 
-// This is the damage model following Benz & Asphaug (1995). Set FRAGMENTATION to activate it.
-// The damage acts always on pressure, but only on deviator stresses if DAMAGE_ACTS_ON_S is
-// activated too, which is an important switch depending on the plasticity model (see comments there).
+// Grady-Kipp fragmentation/damage model, following Benz & Asphaug (1995). Set FRAGMENTATION to activate it.
+// Damage acts always on (negative) pressure, but only on deviatoric stresses if DAMAGE_ACTS_ON_S is set.
+// It depends on the use case and the plasticity model (set below) whether this is desired/reasonable.
 // Note: The damage model needs distribution of activation thresholds in the input file.
 #define FRAGMENTATION 0
 #define DAMAGE_ACTS_ON_S 0
@@ -94,31 +94,47 @@
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
 #define TENSORIAL_CORRECTION 1
 
+
 // Available plastic flow conditions:
 // (if you do not know what this is, choose (1) or nothing)
-//   (1) Simple von Mises plasticity with a constant yield strength:
+
+//   (1) Simple von Mises plasticity with a constant yield strength
 #define VON_MISES_PLASTICITY 1
-//   (2) Drucker-Prager (DP) yield criterion -> yield strength is given by the condition \sqrt(J_2) + A * I_1 + B = 0
-//       with I_1: first invariant of stress tensor
+
+//   (2) Drucker-Prager yield criterion
+//       -> yield strength is given by the condition \sqrt(J_2) + A * I_1 + B = 0
+//          I_1: first invariant of stress tensor
 //          J_2: second invariant of stress tensor
-//          A, B: DP constants, which are calculated from angle of internal friction and cohesion
+//          A, B: Drucker-Prager constants, which are calculated from angle of internal friction and cohesion
+//       -> intended for granular-like materials, therefore the yield strength decreases to zero for p < 0
+//       -> you can additionally use (1) to set an upper limit for the yield stress
+//       -> negative pressures can get arbitrarily large (i.e., no negative-pressure cap)
 #define DRUCKER_PRAGER_PLASTICITY 0
-//   (3) Mohr-Coulomb (MC) yield criterion
-//       -> yield strength is given by yield_stress = tan(friction_angle) \times pressure + cohesion 
+
+//   (3) Mohr-Coulomb yield criterion
+//       -> for p > 0: yield strength = tan(friction_angle) \times pressure + cohesion
+//       -> intended for granular-like materials, therefore the yield strength decreases to zero for p < 0:
+//          yield strength = pressure + cohesion (i.e., slope = 1)
+//       -> you can additionally use (1) to set an upper limit for the yield stress
+//       -> negative-pressure cap: negative pressures are limited to zero of yield strength curve (at -cohesion)
 #define MOHR_COULOMB_PLASTICITY 0
-//       Note: DP and MC are intended for granular-like materials, therefore the yield strength simply decreases (linearly) to zero for p<0.
-//       Note: For DP and MC you can additionally choose (1) to impose an upper limit for the yield stress.
+
 //   (4) Pressure dependent yield strength following Collins et al. (2004) and the implementation in Jutzi (2015)
 //       -> yield strength is different for damaged (Y_d) and intact material (Y_i), and averaged mean (Y) in between:
-//              Y_i = cohesion + \mu P / (1 + \mu P / (yield_stress - cohesion) )
-//          where *cohesion* is the yield strength for P=0 and *yield_stress* the asymptotic limit for P=\infty
-//          \mu is the coefficient of internal friction (= tan(friction_angle))
-//              Y_d = cohesion_damaged + \mu_d \times P
-//          where \mu_d is the coefficient of friction of the *damaged* material
-//              Y = (1-damage)*Y_i + damage*Y_d
-//              Y is limited to <= Y_i
-//       Note: If FRAGMENTATION is not activated only Y_i is used.
-//             DAMAGE_ACTS_ON_S is not allowed for this model, since the limiting of S already depends on damage.
+//              P > 0: Y_i = cohesion + \mu P / (1 + \mu P / (yield_stress - cohesion) )
+//              P < 0: Y_i = cohesion
+//                  *cohesion* is the yield strength for P = 0 and *yield_stress* the asymptotic limit for P = \infty
+//                  \mu is the coefficient of internal friction (= tan(friction_angle))
+//              P > 0: Y_d = cohesion_damaged + \mu_d \times P
+//              P < 0: Y_d = cohesion_damaged + P (i.e., slope = 1)
+//                  where \mu_d is the coefficient of friction of the *damaged* material
+//              combined/final yield strength:  Y = (1-damage)*Y_i + damage*Y_d
+//                                              Y is limited to <= Y_i
+//              negative-pressure release by damage:
+//                  foremost via (1-damage), in line with the Grady-Kipp model (FRAGMENTATION), but only up to the
+//                  residual tensile strength the material retains even when fully damaged, assumed to be -y_0_d
+//       Note: - If FRAGMENTATION (damage model) is not activated only Y_i is used.
+//             - DAMAGE_ACTS_ON_S is not reasonable for this model, since the limiting of S already depends on damage.
 //       If you want to additionally model the influence of some (single) melt energy on the yield strength, then activate
 //       COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY, which adds a factor (1-e/e_melt) to the yield strength.
 #define COLLINS_PLASTICITY 0
@@ -133,11 +149,18 @@
 //       DAMAGE_ACTS_ON_S is set. For most plasticity models it depends on the use case whether this
 //       is desired, only for COLLINS_PLASTICITY it is not reasonable (and therefore not allowed).
 
-// model regolith as viscous fluid -> experimental setup, only for powerusers
+// Additional strength reduction for low-density states (below the reference density). For most plasticity models this
+// is done by reducing the cohesion, and by that the whole yield envelope. For COLLINS_PLASTICITY only the damaged
+// cohesion is reduced, vor VON_MISES_PLASTICITY all the (constant) yield strength is reduced.
+// Strength reduction increases with decreasing density, where the functional form is set by several parameters in
+// the material config file (see there). Works for all plasticity models above (not the experimental ones below).
+#define LOW_DENSITY_WEAKENING 0
+
+// model regolith as viscous fluid (warning: experimental)
 #define VISCOUS_REGOLITH 0
-// use Bui model for regolith -> experimental setup, only for powerusers
+// use Bui model for regolith (warning: experimental)
 #define PURE_REGOLITH 0
-// use Johnson-Cook plasticity model -> experimental setup, only for powerusers
+// use Johnson-Cook plasticity model (warning: experimental)
 #define JC_PLASTICITY 0
 
 // Porosity models:
@@ -146,7 +169,7 @@
 #define STRESS_PALPHA_POROSITY 0 // deviatoric stress is also affected by distention
 // Sirono model modified by Geretshauser (2009/10)
 #define SIRONO_POROSITY 1
-// Epsilon-Alpha model implemented following Wuennemann
+// eps-alpha model implemented following Wuennemann
 #define EPSALPHA_POROSITY 0
 
 // max number of activation thresholds per particle, only required for FRAGMENTATION, otherwise set to 1
@@ -170,13 +193,13 @@
 // (if VARIABLE_SML is not set the individual smls remain constant)
 #define READ_INITIAL_SML_FROM_PARTICLE_FILE 0
 
-// correction terms for sml calculation: adds gradient of the smoothing length to continuity equation, equation of motion, internal energy equation
+// correction terms for sml calculation (warning: experimental)
+// adds gradient of the smoothing length to continuity equation, equation of motion, energy equation
 #define SML_CORRECTION 0
 
 // if set to 0, h = (h_i + h_j)/2  is used to calculate W_ij
 // if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2
 #define AVERAGE_KERNELS 0
-
 
 // important switch: if the simulations yields at some point too many interactions for
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be set to 0
@@ -186,22 +209,22 @@
 // important switch: if the simulations yields at some point too many interactions for
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be lowered until
 // the interactions are lower than MAX_NUM_INTERACTIONS
+// sfair
 #define DEAL_WITH_TOO_MANY_INTERACTIONS 0
 
 // additional smoothing of the velocity field
-// hinders particle penetration
-// see Morris and Monaghan 1984
+// hinders particle penetration (see Morris & Monaghan, 1984)
 #define XSPH 0
 
-// boundaries EXPERIMENTAL, please do not use this....
+// boundary conditions (warning: experimental)
+// note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions
 #define BOUNDARY_PARTICLE_ID -1
 #define GHOST_BOUNDARIES 0
-// note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions
 
 // IO options
 #define HDF5IO 1    // use HDF5 (needs libhdf5-dev and libhdf5)
-#define MORE_OUTPUT 1   //produce additional output to HDF5 files (p_max, p_min, rho_max, rho_min); only ueful when HDF5IO is set
-#define MORE_ANEOS_OUTPUT 0 // produce additional output to HDF5 files (T, cs, entropy, phase-flag); only useful when HDF5IO is set; set only if you use the ANEOS eos, but currently not supported for porosity+ANEOS
+#define MORE_OUTPUT 1   //produce additional output to HDF5 files: p_max, p_min, rho_max, rho_min
+#define MORE_ANEOS_OUTPUT 0 // produce additional output to HDF5 files: T, cs, entropy, phase-flag; set only if you use the ANEOS EoS; currently not supported for porosity + ANEOS
 #define OUTPUT_GRAV_ENERGY 0    // compute and output gravitational energy (at times when output files are written); of all SPH particles (and also w.r.t. gravitating point masses and between them); direct particle-particle summation, not tree; option exists to control costly computation for high particle numbers
 #define BINARY_INFO 0   // generates additional output file (binary_system.log) with info regarding binary system: semi-major axis, eccentricity if GRAVITATING_POINT_MASSES == 1
 
