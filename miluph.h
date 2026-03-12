@@ -39,6 +39,7 @@
 #define DEBUG_MISC 0
 #define DEBUG_IO 0
 #define DEBUG_DEVEL 1
+#define DEBUG_PRESSURE 1
 // define if you want to pass around cudaVerify()
 #undef NDEBUG  // NO DEBUG 
 

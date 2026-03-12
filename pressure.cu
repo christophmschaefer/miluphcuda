@@ -88,6 +88,13 @@ __global__ void calculatePressure() {
                     p.p[i] = 0.0;
                 }
             }
+            // now check if the particle is in a complete vaporized state and if so set the pressure to the ideal gas pressure
+            if (e > 1e2*matTillEcv[matId] && eta < 1.0) {
+#if DEBUG_PRESSURE
+                printf("Particle %d is in a complete vaporized state with e = %e and eta = %e. Setting pressure to ideal gas pressure.using gamma = %e\n", i, e, eta, matPolytropicGamma[matId]);
+#endif
+                p.p[i] = (matPolytropicGamma[matId] - 1) * rho * e;
+            }
         } else if (EOS_TYPE_ANEOS == matEOS[matId]) {
             /* find array-indices just below the actual values of rho and e */
             i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);

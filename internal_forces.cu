@@ -148,6 +148,7 @@ __global__ void internalForces(int *interactions) {
 
         numInteractions = p.noi[i];
 
+
         ax = 0;
         ay = 0;
 #if DIM > 2
@@ -381,7 +382,24 @@ __global__ void internalForces(int *interactions) {
                      dWdx_corr_i[d] += p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
                      dWdx_corr_j[d] += p_rhs.tensorialCorrectionMatrix[j*DIM*DIM+d*DIM+dd] * dWdx[dd];
                 }
+            //     // use original kernel gradient if particle has not enough interactions
+            //     if (p_rhs.noi[i] < 10) {
+            //         dWdx_corr_i[d] = dWdx[d];
+            //     }
+            //     if (p_rhs.noi[j] < 10) {
+            //         dWdx_corr_j[d] = dWdx[d];
+            //     }
             }
+#if 1
+// total symmetrized variant of vvnablaW
+            vvnablaW = 0.0;
+            for (d = 0; d < DIM; d++) {
+                vvnablaW += dv[d] * 0.5*(dWdx_corr_i[d] + dWdx_corr_j[d]);
+            }
+#endif
+
+#if 0
+// the same but without symmetrization. can be more stable
             vvnablaW = dvx * dWdx_corr_i[0];
 #if DIM > 1
             vvnablaW += dvy * dWdx_corr_i[1];
@@ -389,7 +407,8 @@ __global__ void internalForces(int *interactions) {
             vvnablaW += dvz * dWdx_corr_i[2];
 #endif
 #endif
-#endif
+#endif 
+#endif //TENSORIAL_CORRECTION
 
 #if ARTIFICIAL_VISCOSITY || KLEY_VISCOSITY
             rr = 0.0;
@@ -452,11 +471,15 @@ __global__ void internalForces(int *interactions) {
 # if TENSORIAL_CORRECTION
                 for (e = 0; e < DIM; e++) {
                     for (f = 0; f < DIM; f++) {
-                        edot[e][f] += 0.5 * p.m[j]/p.rho[i] *
-                            (dWdx_corr_i[f] * (-dv[e]) + dWdx_corr_i[e] * (-dv[f]));
+                        double sym_f = 0.5*(dWdx_corr_i[f] + dWdx_corr_j[f]);
+                        double sym_e = 0.5*(dWdx_corr_i[e] + dWdx_corr_j[e]);
+                        edot[e][f] += 0.5 * p.m[j]/p.rho[i] * (sym_f * (-dv[e]) + sym_e * (-dv[f]));
+                        rdot[e][f] += 0.5 * p.m[j]/p.rho[i] * (sym_f * (-dv[e]) - sym_e * (-dv[f]));
+                        //edot[e][f] += 0.5 * p.m[j]/p.rho[i] *
+                         //   (dWdx_corr_i[f] * (-dv[e]) + dWdx_corr_i[e] * (-dv[f]));
 
-                        rdot[e][f] += 0.5 * p.m[j]/p.rho[i] *
-                            (dWdx_corr_i[f] * (-dv[e]) - dWdx_corr_i[e] * (-dv[f]));
+                        //rdot[e][f] += 0.5 * p.m[j]/p.rho[i] *
+                        //    (dWdx_corr_i[f] * (-dv[e]) - dWdx_corr_i[e] * (-dv[f]));
                     }
                 }
 # else

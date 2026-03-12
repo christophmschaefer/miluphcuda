@@ -580,6 +580,21 @@ __global__ void tensorialCorrection(int *interactions)
 
         // invert the moment matrix (corrmatrix) into matrix
         rv = invert_svd(corrmatrix, matrix, 1e-8);
+        // revert to identity if matrix is ill-conditioned
+        #if DIM == 2
+        double det = matrix[0]*matrix[3] - matrix[1]*matrix[2];
+        #elif DIM == 3
+        double det = matrix[0]*(matrix[4]*matrix[8]-matrix[5]*matrix[7])
+                - matrix[1]*(matrix[3]*matrix[8]-matrix[5]*matrix[6])
+                + matrix[2]*(matrix[3]*matrix[7]-matrix[4]*matrix[6]);
+        #endif
+        if (fabs(det) < 0.2 || fabs(det) > 5.0) {
+#if DEBUG_DEVEL
+            printf("Warning: tensorial correction matrix for particle %d is ill-conditioned, determinant = %g, rv = %d. Setting to identity.\n", i, det, rv);
+#endif
+            for (d = 0; d < DIM*DIM; d++)
+                matrix[d] = (double)(d % (DIM+1) == 0); // identity
+        }
 
         for (d = 0; d < DIM*DIM; d++) {
             p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d] = matrix[d];
