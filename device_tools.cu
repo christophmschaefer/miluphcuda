@@ -96,6 +96,11 @@ void printfDeviceInformation(void)
  *********************************************************************** */
 {
     int i, device_count, driverVersion = 0, runtimeVersion = 0;
+
+# if CUDART_VERSION >= 13000
+    int clockRate, memoryClockRate, kernelExecTimeoutEnabled;
+# endif
+
     struct cudaDeviceProp prop;
 
     cudaGetDeviceCount(&device_count);
@@ -111,6 +116,13 @@ void printfDeviceInformation(void)
         cudaDriverGetVersion(&driverVersion);
         cudaRuntimeGetVersion(&runtimeVersion);
 
+#if CUDART_VERSION >= 13000
+        // cuda version >13.0 has deprecated prop.clockRate etc
+        cudaDeviceGetAttribute(&clockRate, cudaDevAttrClockRate, i);
+        cudaDeviceGetAttribute(&memoryClockRate, cudaDevAttrMemoryClockRate, i);
+        cudaDeviceGetAttribute(&kernelExecTimeoutEnabled, cudaDevAttrKernelExecTimeout, i);
+#endif
+
         printf("\nGeneral Information for Device %d -- %s\n\n", i, prop.name);
         printf("  CUDA Driver Version:                           %d.%d\n", driverVersion/1000, (driverVersion%100)/10);
         printf("  CUDA Runtime Version:                          %d.%d\n", runtimeVersion/1000, (runtimeVersion%100)/10);
@@ -119,11 +131,19 @@ void printfDeviceInformation(void)
         printf("  Multiprocessors:                               %d\n", prop.multiProcessorCount);
         printf("  CUDA Cores / Multiprocessor:                   %d\n", _ConvertSMVer2Cores(prop.major, prop.minor));
         printf("  Total amount of CUDA Cores:                    %d\n", _ConvertSMVer2Cores(prop.major, prop.minor)*prop.multiProcessorCount);
+#if CUDART_VERSION < 13000
         printf("  GPU clock rate:                                %0.f MHz\n\n", prop.clockRate * 1e-3f);
+#else
+        printf("  GPU clock rate:                                %0.f MHz\n\n", clockRate * 1e-3f);
+#endif
 
 #if CUDART_VERSION >= 5000
         /* This is supported in CUDA 5.0 (runtime API device properties) */
+#if CUDART_VERSION < 13000
         printf("  Memory Clock rate:                             %.0f Mhz\n", prop.memoryClockRate * 1e-3f);
+#else
+        printf("  Memory Clock rate:                             %.0f Mhz\n", memoryClockRate * 1e-3f);
+#endif
         printf("  Memory Bus Width:                              %d-bit\n",   prop.memoryBusWidth);
 
         if (prop.l2CacheSize) {
@@ -152,7 +172,11 @@ void printfDeviceInformation(void)
         printf("  Max dimension size of a thread block (x,y,z): (%d, %d, %d)\n", prop.maxThreadsDim[0], prop.maxThreadsDim[1], prop.maxThreadsDim[2]);
         printf("  Max dimension size of a grid size    (x,y,z): (%d, %d, %d)\n\n", prop.maxGridSize[0], prop.maxGridSize[1], prop.maxGridSize[2]);
 
+#if CUDART_VERSION < 13000
         printf("  Run time limit on kernels:                     %s\n", prop.kernelExecTimeoutEnabled ? "Yes" : "No");
+#else
+        printf("  Run time limit on kernels:                     %s\n", kernelExecTimeoutEnabled ? "Yes" : "No");
+#endif
         printf("  Integrated GPU sharing Host Memory:            %s\n", prop.integrated ? "Yes" : "No");
         printf("  Support host page-locked memory mapping:       %s\n", prop.canMapHostMemory ? "Yes" : "No");
         printf("  Device has ECC support:                        %s\n", prop.ECCEnabled ? "Enabled" : "Disabled");

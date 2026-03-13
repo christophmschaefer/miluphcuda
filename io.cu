@@ -2515,7 +2515,7 @@ void write_particles_to_file(File file) {
         /* damage total */
         // damage_total_id = H5Dcreate2(file_id, "/damage_total", H5T_NATIVE_DOUBLE, dataspace_id,
         damage_total_id = create_compressed_dataset(file_id, "/damage_total_porjutzi", H5T_NATIVE_DOUBLE, dataspace_id, dims, 1);
-                H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+                //H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
         for (i = 0; i < numberOfParticles; i++) {
             x[i] = pow(p_host.damage_porjutzi[i], DIM) + pow(p_host.d[i], DIM);
             if (x[i] > 1.0)

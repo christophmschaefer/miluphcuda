@@ -46,7 +46,7 @@ __device__ void multiply_matrix(double a[DIM][DIM], double b[DIM][DIM], double c
 __device__ void copy_matrix(double src[DIM][DIM], double dst[DIM][DIM]);
 __device__ void identity_matrix(double a[DIM][DIM]);
 __device__ void transpose_matrix(double a[DIM][DIM]);
-
+__device__ int invert_svd_schaefer(double *Atmp, double *A_tmpinv, double threshold);
 
 __device__ int invert_svd(double *m, double *inverted, double threshold_svd);
 __device__ int invert_svd_schaefer(double *Atmp, double *A_tmpinv, double threshold);

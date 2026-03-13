@@ -99,7 +99,7 @@
 // (if you do not know what this is, choose (1) or nothing)
 
 //   (1) Simple von Mises plasticity with a constant yield strength
-#define VON_MISES_PLASTICITY 0
+#define VON_MISES_PLASTICITY 1
 
 //   (2) Drucker-Prager yield criterion
 //       -> yield strength is given by the condition \sqrt(J_2) + A * I_1 + B = 0
@@ -144,7 +144,7 @@
 //       Unlike in (4), Y decreases to zero (following a linear yield strength curve) for p<0.
 //       In addition, negative pressures are limited to the pressure corresponding to
 //       yield strength = 0 (i.e., are set to this value when they get more negative).
-#define COLLINS_PLASTICITY_SIMPLE 1
+#define COLLINS_PLASTICITY_SIMPLE 0
 // Note: The deviator stress tensor is additionally reduced by FRAGMENTATION (i.e., damage) only if
 //       DAMAGE_ACTS_ON_S is set. For most plasticity models it depends on the use case whether this
 //       is desired, only for COLLINS_PLASTICITY it is not reasonable (and therefore not allowed).
@@ -165,10 +165,10 @@
 
 // Porosity models:
 // p-alpha model implemented following Jutzi (200x)
-#define PALPHA_POROSITY 1          // pressure depends on distention
-#define STRESS_PALPHA_POROSITY 1 // deviatoric stress is also affected by distention
+#define PALPHA_POROSITY 0          // pressure depends on distention
+#define STRESS_PALPHA_POROSITY 0 // deviatoric stress is also affected by distention
 // Sirono model modified by Geretshauser (2009/10)
-#define SIRONO_POROSITY 0
+#define SIRONO_POROSITY 1
 // eps-alpha model implemented following Wuennemann
 #define EPSALPHA_POROSITY 0
 
@@ -176,7 +176,7 @@
 #define MAX_NUM_FLAWS 1
 // maximum number of interactions per particle -> fixed array size
 // here, you can reduce the memory requirements quite easy by setting this to a lower value, but be aware that the simulation will stop when this number is exceeded for one particle (unless DEAL_WITH_TOO_MANY_INTERACTIONS is set)
-#define MAX_NUM_INTERACTIONS 256
+#define MAX_NUM_INTERACTIONS 512
 
 // if set to 1, the smoothing length is not fixed for each material type
 // choose either FIXED_NOI for a fixed number of interaction partners following
@@ -186,9 +186,9 @@
 // d sml / dt  = sml/DIM * 1/rho  \nabla velocity
 // if you want to specify an individual initial smoothing length for each particle (instead of the material
 // specific one in material.cfg) in the initial particle file, set READ_INITIAL_SML_FROM_PARTICLE_FILE to 1
-#define VARIABLE_SML 0
+#define VARIABLE_SML 1
 #define FIXED_NOI 0
-#define INTEGRATE_SML 0
+#define INTEGRATE_SML 1
 // read sml for each particle from input file (instead of using a single, material-specific one from material.cfg)
 // (if VARIABLE_SML is not set the individual smls remain constant)
 #define READ_INITIAL_SML_FROM_PARTICLE_FILE 0
