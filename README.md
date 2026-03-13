@@ -99,7 +99,9 @@ Christoph Burger,
 Marius Morlock,
 Evita Vavilina,
 Michael Staneker,
-Maximilian Rutz.
+Maximilian Rutz,
+Sascha Eckstein,
+Derek Luyer.
 
 
 ## References
