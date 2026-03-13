@@ -197,10 +197,10 @@ __device__ void wendlandc4(double *W, double dWdx[DIM], double *dWdr, double dx[
         q = r/sml;
 #if (DIM == 2)
         *W = 9./(M_PI*sml*sml) * (1-q)*(1-q)*(1-q)*(1-q)*(1-q)*(1-q) * (1.+6*q+35./3.*q*q) * (q < 1);
-        *dWdr = -54./(M_PI*sml*sml*sml) * (1-q)*(1-q)*(1-q)*(1-q)*(1-q) * (1.-35.*q*q+105.*q*q*q) * (q< 1);
+        *dWdr = -168./(M_PI*sml*sml*sml) * q*(1-q)*(1-q)*(1-q)*(1-q)*(1-q) * (1.+5.*q) * (q < 1);
 #elif (DIM == 3)
         *W = 495./(32.*M_PI*sml*sml*sml) * (1-q)*(1-q)*(1-q)*(1-q)*(1-q)*(1-q) * (1.+6.*q+35./3.*q*q) * (q < 1);
-        *dWdr = -1485./(16.*M_PI*sml*sml*sml*sml) * (1-q)*(1-q)*(1-q)*(1-q)*(1-q) * (1.-35.*q*q+105.*q*q*q) * (q< 1);
+        *dWdr = -1155./(4.*M_PI*sml*sml*sml*sml) * q*(1-q)*(1-q)*(1-q)*(1-q)*(1-q) * (1.+5.*q) * (q < 1);
 #elif (DIM == 1)
         *W = 3./(2.*sml) * (1-q)*(1-q)*(1-q)*(1-q)*(1-q) * (1+5*q+8*q*q) * (q < 1);
         *dWdr = -21./(sml*sml) * q * (1-q)*(1-q)*(1-q)*(1-q) * (1+4*q) * (q < 1);
