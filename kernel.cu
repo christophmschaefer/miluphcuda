@@ -46,6 +46,7 @@ __device__ SPH_kernel wendlandc2_p = wendlandc2;
 __device__ SPH_kernel wendlandc4_p = wendlandc4;
 __device__ SPH_kernel wendlandc6_p = wendlandc6;
 __device__ SPH_kernel cubic_spline_p = cubic_spline;
+__device__ SPH_kernel quintic_spline_p = quintic_spline;
 __device__ SPH_kernel spiky_p = spiky;
 
 
@@ -138,6 +139,59 @@ __device__ void cubic_spline(double *W, double dWdx[DIM], double *dWdr, double d
         dWdx[d] = *dWdr/r * dx[d];
     }
 }
+
+__device__ void quintic_spline(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double sml)
+{
+    int d;
+    double r = 0;
+    for (d = 0; d < DIM; d++) {
+        r += dx[d]*dx[d];
+        dWdx[d] = 0;
+    }
+    r = sqrt(r);
+    *dWdr = 0;
+    *W = 0;
+
+    if (r >= sml) return;
+
+    double q = r / sml;
+
+    // pieces in terms of q = r/sml
+    double t1 = (3. - 3.*q);           // = 3(1-q), always active
+    double t2 = (2. - 3.*q);           // active for q < 2/3
+    double t3 = (1. - 3.*q);           // active for q < 1/3
+
+    double f = 0;
+    double dfdq = 0;
+
+    if (q < 1./3.) {
+        f    =  t1*t1*t1*t1*t1 - 6.*t2*t2*t2*t2*t2 + 15.*t3*t3*t3*t3*t3;
+        dfdq = -15.*t1*t1*t1*t1 + 90.*t2*t2*t2*t2 - 225.*t3*t3*t3*t3;
+    } else if (q < 2./3.) {
+        f    =  t1*t1*t1*t1*t1 - 6.*t2*t2*t2*t2*t2;
+        dfdq = -15.*t1*t1*t1*t1 + 90.*t2*t2*t2*t2;
+    } else {
+        f    =  t1*t1*t1*t1*t1;
+        dfdq = -15.*t1*t1*t1*t1;
+    }
+
+#if (DIM == 1)
+    double sigma = 1.   / (40.     * sml);
+#elif (DIM == 2)
+    double sigma = 63.  / (478. * M_PI * sml*sml);
+#elif (DIM == 3)
+    double sigma = 9.   / (40.  * M_PI * sml*sml*sml);
+#endif
+
+    *W = sigma * f;
+    *dWdr = sigma * dfdq / sml;
+
+    for (d = 0; d < DIM; d++) {
+        dWdx[d] = *dWdr / r * dx[d];
+    }
+}
+
+
 
 // Wendland C2 from Dehnen & Aly 2012
 __device__ void wendlandc2(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double sml)

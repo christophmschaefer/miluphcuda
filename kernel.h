@@ -72,6 +72,10 @@ __device__ void cubic_spline(double *W, double dWdx[DIM], double *dWdr, double d
  * @param h 
  * @return __device__ 
  */
+
+
+__device__ void quintic_spline(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double h);
+
 __device__ void spiky(double *W, double dWdx[DIM], double *dWdr, double dx[DIM], double h);
 /**
  * @brief Quartic spline kernel.
