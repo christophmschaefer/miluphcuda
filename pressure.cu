@@ -96,6 +96,10 @@ __global__ void calculatePressure() {
                 p.p[i] = (matPolytropicGamma[matId] - 1) * rho * e;
             }
         } else if (EOS_TYPE_ANEOS == matEOS[matId]) {
+            if (p.rho[i] <= 0.0) {
+                p.p[i] = 0.0;
+                continue;
+            }
             /* find array-indices just below the actual values of rho and e */
             i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
             i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
