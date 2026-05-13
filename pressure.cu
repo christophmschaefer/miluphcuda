@@ -277,6 +277,12 @@ __global__ void calculatePressure() {
                 p.delpdele[i] = 0.0;
                 p.delpdelrho[i] = K_0 / rho_0 * (pow(eta, n - 1.0));
             } else if (matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
+                 if (p.rho[i] <= 0.0) {
+                    pressure_solid = 0.0;
+                    p.delpdelrho[i] = 0.0;
+                    p.delpdele[i] = 0.0;
+                    continue;
+                } 
                 /* find array-indices just below the actual values of rho and e */
                 i_rho = array_index(p.alpha_jutzi[i] * p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
                 i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
