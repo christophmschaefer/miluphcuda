@@ -30,6 +30,13 @@
 #include "linalg.h"
 #include "pressure.h"
 
+
+// choose one of the following two schemes: either the traditional KGC or the modern weighted one
+#define USE_OLDSCHOOL_KERNEL_GRADIENT_CORRECTION_SCHEME 0
+// Ren et al. weighted kgc scheme
+#define USE_WEIGHTED_KERNEL_GRADIENT_CORRECTION_SCHEME 1
+
+
 // for interaction partners less than this value, the tensorial correction matrix
 // will be set to the identity matrix (-> disabling the correction factors)
 #define MIN_NUMBER_OF_INTERACTIONS_FOR_TENSORIAL_CORRECTION_TO_WORK 0
@@ -38,6 +45,10 @@
 // extremely ill-conditioned near free surfaces/contact, producing a huge inverse
 // and injecting unphysical torque. Clamp overly large correction matrices.
 #define MAX_ABS_TENSORIAL_CORRECTION_ENTRY 5.0
+
+
+
+
 
 
 // pointers for the kernel function
@@ -632,8 +643,11 @@ __global__ void tensorialCorrection(int *interactions)
             }
         } // end loop over interaction partners
 
+#if USE_OLDSCHOOL_KERNEL_GRADIENT_CORRECTION_SCHEME
         // invert the moment matrix (corrmatrix) into matrix
         rv = invert_svd(corrmatrix, matrix, 1e-8);
+
+
         // revert to identity if matrix is ill-conditioned
         #if DIM == 2
         double det = matrix[0]*matrix[3] - matrix[1]*matrix[2];
@@ -642,14 +656,53 @@ __global__ void tensorialCorrection(int *interactions)
                 - matrix[1]*(matrix[3]*matrix[8]-matrix[5]*matrix[6])
                 + matrix[2]*(matrix[3]*matrix[7]-matrix[4]*matrix[6]);
         #endif
-        if (fabs(det) < 0.2 || fabs(det) > 5.0) {
+
+        // check for ill-conditioning
+        double max_entry = 0.0;
+        for (d = 0; d < DIM*DIM; d++) {
+            max_entry = fmax(max_entry, fabs(matrix[d]));
+        }
+        if (fabs(det) < 0.2 || fabs(det) > 5.0 ||  max_entry > MAX_ABS_TENSORIAL_CORRECTION_ENTRY) {
 #if DEBUG_DEVEL
-            printf("Warning: tensorial correction matrix for particle %d is ill-conditioned, determinant = %g, rv = %d. Setting to identity.\n", i, det, rv);
+            printf("Warning: tensorial correction matrix for particle %d is ill-conditioned, determinant = %g, rv = %d, max_entry = %lf. Setting to identity.\n", i, det, rv, max_entry);
 #endif
             for (d = 0; d < DIM*DIM; d++)
                 matrix[d] = (double)(d % (DIM+1) == 0); // identity
         }
 
+#elif USE_WEIGHTED_KERNEL_GRADIENT_CORRECTION_SCHEME // following Ren et al. https://arxiv.org/abs/2304.14865
+        // invert the moment matrix (corrmatrix) into matrix
+        rv = invert_svd(corrmatrix, matrix, 1e-8);
+
+        // compute det of the moment matrix A (before inversion)
+        // this is the natural quality measure: det(A) -> 1 in bulk, -> 0 at surface
+        #if DIM == 2
+        double det_A = corrmatrix[0]*corrmatrix[3] - corrmatrix[1]*corrmatrix[2];
+        #elif DIM == 3
+        double det_A = corrmatrix[0]*(corrmatrix[4]*corrmatrix[8]-corrmatrix[5]*corrmatrix[7])
+                    - corrmatrix[1]*(corrmatrix[3]*corrmatrix[8]-corrmatrix[5]*corrmatrix[6])
+                    + corrmatrix[2]*(corrmatrix[3]*corrmatrix[7]-corrmatrix[4]*corrmatrix[6]);
+        #endif
+
+        if (rv < DIM || fabs(det_A) < 1e-14) {
+            // truly rank-deficient: hard fallback to identity
+        #if DEBUG_DEVEL
+            printf("Warning: tensorial correction matrix for particle %d is rank-deficient, det_A = %g, rv = %d. Setting to identity.\n", i, det_A, rv);
+        #endif
+            for (d = 0; d < DIM*DIM; d++)
+                matrix[d] = (double)(d % (DIM+1) == 0);
+        } else {
+            // smooth blend: w=1 in bulk (det_A~1), w->0 near surface (det_A->0)
+            // no free parameters needed
+            double w = fmin(1.0, fabs(det_A));
+            for (d = 0; d < DIM*DIM; d++) {
+                double identity_val = (double)(d % (DIM+1) == 0);
+                matrix[d] = w * matrix[d] + (1.0 - w) * identity_val;
+            }
+        }
+#else
+# error: You have to choose between the old school kernel gradient correction scheme or the weighter kgc in kernel.cu
+#endif
         for (d = 0; d < DIM*DIM; d++) {
             p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d] = matrix[d];
 
