@@ -32,9 +32,9 @@
 
 
 // choose one of the following two schemes: either the traditional KGC or the modern weighted one
-#define USE_OLDSCHOOL_KERNEL_GRADIENT_CORRECTION_SCHEME 0
+#define USE_OLDSCHOOL_KERNEL_GRADIENT_CORRECTION_SCHEME 1
 // Ren et al. weighted kgc scheme
-#define USE_WEIGHTED_KERNEL_GRADIENT_CORRECTION_SCHEME 1
+#define USE_WEIGHTED_KERNEL_GRADIENT_CORRECTION_SCHEME 0
 
 
 // for interaction partners less than this value, the tensorial correction matrix
@@ -693,7 +693,7 @@ __global__ void tensorialCorrection(int *interactions)
                 matrix[d] = (double)(d % (DIM+1) == 0);
         } else {
             // smooth blend: w=1 in bulk (det_A~1), w->0 near surface (det_A->0)
-            // no free parameters needed
+            // no free parameters needed, experimental do not use!!
             double w = fmin(1.0, fabs(det_A));
             for (d = 0; d < DIM*DIM; d++) {
                 double identity_val = (double)(d % (DIM+1) == 0);
@@ -701,7 +701,7 @@ __global__ void tensorialCorrection(int *interactions)
             }
         }
 #else
-# error: You have to choose between the old school kernel gradient correction scheme or the weighter kgc in kernel.cu
+#error You have to choose between the old school kernel gradient correction scheme or the weighted kgc in kernel.cu
 #endif
         for (d = 0; d < DIM*DIM; d++) {
             p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d] = matrix[d];

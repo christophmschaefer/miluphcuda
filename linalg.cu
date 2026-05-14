@@ -27,7 +27,10 @@
 #include "parameter.h"
 #include "linalg.h"
 
-
+// choose one of the two options for the SVD scheme below
+#define USE_ALL_EIGENVALUES 0
+// do not use all eigenvalues if they differ too much
+#define USE_ONLY_RELIABLE_EIGENVALUES 1
 
 __device__ void copy_matrix(double src[DIM][DIM], double dst[DIM][DIM])
 {
@@ -377,6 +380,7 @@ __device__ int invert_svd(double *m, double *inverted, double threshold_svd) {
 
     int used_eigenvalues = 0;
 
+#if USE_ALL_EIGENVALUES
     for (k = 0; k < DIM; k++) {
         double ev = eigenvalues[k];
         // Threshold check on absolute value of eigenvalue (singular value)
@@ -390,6 +394,31 @@ __device__ int invert_svd(double *m, double *inverted, double threshold_svd) {
             }
         }
     }
+#elif USE_ONLY_RELIABLE_EIGENVALUES
+    // compute sigma_max = largest eigenvalue to form a relative threshold
+    double sigma_max = 0.0;
+    for (k = 0; k < DIM; k++)
+        sigma_max = fmax(sigma_max, fabs(eigenvalues[k]));
+
+    // relative threshold: discard eigenvalues smaller than eps * sigma_max
+    // 1e-6 means we tolerate a condition number up to 1e6
+    double rel_threshold = 1e-6 * sigma_max;
+
+    for (k = 0; k < DIM; k++) {
+        double ev = eigenvalues[k];
+        if (fabs(ev) > rel_threshold) {
+            used_eigenvalues++;
+            double inv_ev = 1.0 / ev;
+            for (i = 0; i < DIM; i++) {
+                for (j = 0; j < DIM; j++) {
+                    P[i][j] += inv_ev * V[i][k] * V[j][k];
+                }
+            }
+        }
+    }
+#else
+#error choose between USE_ALL_EIGENVALUES or USE_ONLY_RELIABLE_EIGENVALUES in linalg.cu
+#endif
 
     // Store result
     // For symmetric matrices, the result P is already the inverse.

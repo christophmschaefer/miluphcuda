@@ -65,11 +65,7 @@ __global__ void calculateDensity(int *interactions) {
 #if INTEGRATE_DENSITY
         if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE || matdensity_via_kernel_sum[p_rhs.materialId[i]] < 1) {
                 continue;
-        }
-#else
-        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
-                continue;
-        }
+	}
 #endif // INTEGRATE_DENSITY
         tolerance = 0.0;
         int cnt = 0;
@@ -98,9 +94,12 @@ __global__ void calculateDensity(int *interactions) {
             W /= p_rhs.shepard_correction[i];
 #endif
             rho = p.m[i] * W;
-            if (rho == 0.0) {
-                printf("rho is %f W: %e \n", rho, W);
+#if !INTEGRATE_DENSITY
+            if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+		p.rho[i] = rho;
+                continue;
             }
+#endif
             // sph sum for particle i
             for (j = 0; j < p.noi[i]; j++) {
                 interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + j;
