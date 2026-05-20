@@ -36,6 +36,8 @@ int *g_aneos_n_rho;
 int *g_aneos_n_e;
 double *g_aneos_rho_0;
 double *g_aneos_bulk_cs;
+double *g_aneos_molar_mass;
+double *g_aneos_gamma;
 double **g_aneos_rho;
 double **g_aneos_e;
 double ***g_aneos_p;
@@ -221,6 +223,8 @@ void free_aneos_memory()
     free(g_aneos_n_e);
     free(g_aneos_rho_0);
     free(g_aneos_bulk_cs);
+    free(g_aneos_molar_mass);
+    free(g_aneos_gamma);
 }
 
 

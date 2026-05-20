@@ -33,6 +33,8 @@ extern int *g_aneos_n_rho;
 extern int *g_aneos_n_e;
 extern double *g_aneos_rho_0;
 extern double *g_aneos_bulk_cs;
+extern double *g_aneos_molar_mass;   // molar mass for ideal gas vapor fallback (kg/mol)
+extern double *g_aneos_gamma;         // polytropic gamma for ideal gas vapor fallback
 extern double **g_aneos_rho;
 extern double **g_aneos_e;
 extern double ***g_aneos_p;

@@ -103,8 +103,17 @@ __global__ void calculatePressure() {
             /* find array-indices just below the actual values of rho and e */
             i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
             i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
-            /* interpolate (bi)linearly to obtain the pressure */
-            p.p[i] = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], i);
+            if (i_e < 0 && p.e[i] >= aneos_e_c[aneos_e_id_c[matId] + aneos_n_e_c[matId] - 1]) {
+                /* e above table maximum: fully vaporized, use ideal gas fallback */
+                p.p[i] = (aneos_gamma_c[matId] - 1.0) * p.rho[i] * p.e[i];
+            } else if (i_e < 0) {
+                /* e below table minimum: clamp to cold curve */
+                i_e = 0;
+                p.p[i] = bilinear_interpolation_from_linearized(p.rho[i], aneos_e_c[aneos_e_id_c[matId]], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], i);
+            } else {
+                /* interpolate (bi)linearly to obtain the pressure */
+                p.p[i] = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], i);
+            }
 #if SIRONO_POROSITY
         } else if (matEOS[matId] == EOS_TYPE_SIRONO) {
             double K_0 = matporsirono_K_0[matId];
@@ -286,8 +295,19 @@ __global__ void calculatePressure() {
                 /* find array-indices just below the actual values of rho and e */
                 i_rho = array_index(p.alpha_jutzi[i] * p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
                 i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
-                /* interpolate (bi)linearly to obtain the pressure and dp/drho and dp/de */
-                bilinear_interpolation_from_linearized_plus_derivatives(p.alpha_jutzi[i] * p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], &pressure_solid, &(p.delpdelrho[i]), &(p.delpdele[i]), i);
+                if (i_e < 0 && p.e[i] >= aneos_e_c[aneos_e_id_c[matId] + aneos_n_e_c[matId] - 1]) {
+                    /* e above table maximum: ideal gas fallback */
+                    pressure_solid = (aneos_gamma_c[matId] - 1.0) * p.rho[i] * p.alpha_jutzi[i] * p.e[i];
+                    p.delpdelrho[i] = (aneos_gamma_c[matId] - 1.0) * p.e[i];
+                    p.delpdele[i]   = (aneos_gamma_c[matId] - 1.0) * p.rho[i] * p.alpha_jutzi[i];
+                } else if (i_e < 0) {
+                    /* e below table minimum: clamp to cold curve */
+                    i_e = 0;
+                    bilinear_interpolation_from_linearized_plus_derivatives(p.alpha_jutzi[i] * p.rho[i], aneos_e_c[aneos_e_id_c[matId]], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], &pressure_solid, &(p.delpdelrho[i]), &(p.delpdele[i]), i);
+                } else {
+                    /* interpolate (bi)linearly to obtain the pressure and dp/drho and dp/de */
+                    bilinear_interpolation_from_linearized_plus_derivatives(p.alpha_jutzi[i] * p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], &pressure_solid, &(p.delpdelrho[i]), &(p.delpdele[i]), i);
+                }
             }
 
             pressure = pressure_solid / p.alpha_jutzi[i]; /* from the P-alpha model */

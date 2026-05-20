@@ -2161,10 +2161,24 @@ void write_particles_to_file(File file) {
             if( g_eos_is_aneos[j] == TRUE ) {
                 aneos_i_rho = array_index_host(p_host.rho[i], g_aneos_rho[j], g_aneos_n_rho[j]);
                 aneos_i_e = array_index_host(p_host.e[i], g_aneos_e[j], g_aneos_n_e[j]);
-                x_aneos_T[i] = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_T[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
-                x_aneos_cs[i] = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_cs[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
-                x_aneos_entropy[i] = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_entropy[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
-                x_aneos_phase_flag[i] = discrete_value_table_lookup_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_phase_flag[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
+                if (p_host.rho[i] <= 0.0) {
+                    /* isolated particle with no neighbours: set all ANEOS quantities to sentinel */
+                    x_aneos_T[i] = 0.0;
+                    x_aneos_cs[i] = 0.0;
+                    x_aneos_entropy[i] = 0.0;
+                    x_aneos_phase_flag[i] = -1;
+                } else if (aneos_i_e < 0) {
+                    /* e above table maximum: fully vaporized, use ideal gas */
+                    x_aneos_T[i] = (g_aneos_gamma[j] - 1.0) * p_host.e[i] * g_aneos_molar_mass[j] / 8.314;
+                    x_aneos_cs[i] = sqrt(g_aneos_gamma[j] * (g_aneos_gamma[j] - 1.0) * p_host.e[i]);
+                    x_aneos_entropy[i] = 0.0;   // not computed for ideal gas fallback
+                    x_aneos_phase_flag[i] = 2;  // vapor
+                } else {
+                    x_aneos_T[i] = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_T[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
+                    x_aneos_cs[i] = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_cs[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
+                    x_aneos_entropy[i] = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_entropy[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
+                    x_aneos_phase_flag[i] = discrete_value_table_lookup_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_phase_flag[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
+                }
             }
             else {
                 x_aneos_T[i] = -1.0;

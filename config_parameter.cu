@@ -115,6 +115,8 @@ __constant__ double *mat_f_sml_max;
 int *aneos_n_rho_d;
 int *aneos_n_e_d;
 double *aneos_bulk_cs_d;
+double *aneos_molar_mass_d;
+double *aneos_gamma_d;
 double *aneos_rho_d;
 double *aneos_e_d;
 double *aneos_p_d;
@@ -125,6 +127,8 @@ int *aneos_matrix_id_d;
 __constant__ int *aneos_n_rho_c;
 __constant__ int *aneos_n_e_c;
 __constant__ double *aneos_bulk_cs_c;
+__constant__ double *aneos_molar_mass_c;
+__constant__ double *aneos_gamma_c;
 __constant__ double *aneos_rho_c;
 __constant__ double *aneos_e_c;
 __constant__ double *aneos_p_c;
@@ -401,6 +405,8 @@ void transferMaterialsToGPU()
         g_aneos_n_e = (int*)calloc(numberOfElements, sizeof(int));
         g_aneos_rho_0 = (double*)calloc(numberOfElements, sizeof(double));
         g_aneos_bulk_cs = (double*)calloc(numberOfElements, sizeof(double));
+        g_aneos_molar_mass = (double*)calloc(numberOfElements, sizeof(double));
+        g_aneos_gamma = (double*)calloc(numberOfElements, sizeof(double));
         g_aneos_rho = (double**)calloc(numberOfElements, sizeof(double*));
         g_aneos_e = (double**)calloc(numberOfElements, sizeof(double*));
         g_aneos_p = (double***)calloc(numberOfElements, sizeof(double**));
@@ -586,6 +592,10 @@ void transferMaterialsToGPU()
 #endif
             config_setting_lookup_float(subset, "aneos_rho_0", &g_aneos_rho_0[ID]);
             config_setting_lookup_float(subset, "aneos_bulk_cs", &g_aneos_bulk_cs[ID]);
+            if (!config_setting_lookup_float(subset, "aneos_molar_mass", &g_aneos_molar_mass[ID]))
+                fprintf(stdout, "Warning: aneos_molar_mass not set for material %d, ideal gas vapor fallback will use 0.\n  ", ID);
+            if (!config_setting_lookup_float(subset, "aneos_gamma", &g_aneos_gamma[ID]))
+                fprintf(stdout, "Warning: aneos_gamma not set for material %d, ideal gas vapor fallback will use 0.\n  ", ID);
             // end reading ANEOS data from material file to host memory, begin reading ANEOS lookup table to host memory
             if (eos[ID] == EOS_TYPE_ANEOS  ||  eos[ID] == EOS_TYPE_JUTZI_ANEOS) {
                 g_eos_is_aneos[ID] = TRUE;
@@ -844,6 +854,8 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&aneos_n_rho_d, numberOfElements*sizeof(int)));
         cudaVerify(cudaMalloc((void **)&aneos_n_e_d, numberOfElements*sizeof(int)));
         cudaVerify(cudaMalloc((void **)&aneos_bulk_cs_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&aneos_molar_mass_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&aneos_gamma_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&aneos_rho_d, run_aneos_rho_id*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&aneos_e_d, run_aneos_e_id*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&aneos_p_d, run_aneos_matrix_id*sizeof(double)));
@@ -993,6 +1005,8 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpy(aneos_n_rho_d, g_aneos_n_rho, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(aneos_n_e_d, g_aneos_n_e, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(aneos_bulk_cs_d, g_aneos_bulk_cs, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(aneos_molar_mass_d, g_aneos_molar_mass, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(aneos_gamma_d, g_aneos_gamma, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         for (i=0; i<numberOfMaterials; i++) {
             if (eos[i] == EOS_TYPE_ANEOS  ||  eos[i] == EOS_TYPE_JUTZI_ANEOS) {
                 cudaVerify(cudaMemcpy(aneos_rho_d+aneos_rho_id[i], g_aneos_rho[i], g_aneos_n_rho[i]*sizeof(double), cudaMemcpyHostToDevice));
@@ -1011,6 +1025,8 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(aneos_n_rho_c, &aneos_n_rho_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(aneos_n_e_c, &aneos_n_e_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(aneos_bulk_cs_c, &aneos_bulk_cs_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(aneos_molar_mass_c, &aneos_molar_mass_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(aneos_gamma_c, &aneos_gamma_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(aneos_rho_c, &aneos_rho_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(aneos_e_c, &aneos_e_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(aneos_p_c, &aneos_p_d, sizeof(void*)));
@@ -1516,6 +1532,8 @@ void cleanupMaterials()
     cudaVerify(cudaFree(aneos_n_rho_d));
     cudaVerify(cudaFree(aneos_n_e_d));
     cudaVerify(cudaFree(aneos_bulk_cs_d));
+    cudaVerify(cudaFree(aneos_molar_mass_d));
+    cudaVerify(cudaFree(aneos_gamma_d));
     cudaVerify(cudaFree(aneos_rho_d));
     cudaVerify(cudaFree(aneos_e_d));
     cudaVerify(cudaFree(aneos_p_d));
