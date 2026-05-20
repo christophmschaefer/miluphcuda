@@ -348,9 +348,12 @@ void rk2Adaptive()
                 /* last timestep was okay, forward time and continue with new timestep */
                 if (errorSmallEnough_host) {
                     currentTime += dt_host;
-                    if (!param.verbose) {
-                        fprintf(stdout, "time: %e   last timestep: %g   time to next output: %e\n", currentTime, dt_host, endTime-currentTime);
-                    }
+                    //fprintf(stdout, "time: %e   last timestep: %g   time to next output: %e\n", currentTime, dt_host, endTime-currentTime);
+                    double totalEndTime  = startTime + numberOfTimesteps * timePerStep;
+                    double progress      = (currentTime - startTime) / (totalEndTime - startTime) * 100.0;
+                    double t_to_out      = endTime - currentTime;
+                    long   est_steps_rem = (dt_host > 0.0) ? (long)(t_to_out / dt_host) : 0;
+                    fprintf(stdout, ">>> Timestep information system: t=%23.15e  dt=%23.15e  t2out=%23.15e  est.steps=%8ld  step=%5d  acc=%5u  rej=%5u  progress=%6.2f%%\n", currentTime, dt_host, t_to_out, est_steps_rem, nsteps_cnt, ts_no_total_acc + ts_no_substep_acc, ts_no_total_rej + ts_no_substep_rej, progress);
                     cudaVerifyKernel((BoundaryConditionsAfterIntegratorStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(interactions)));
                     cudaVerify(cudaDeviceSynchronize());
                 }

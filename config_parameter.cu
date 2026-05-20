@@ -1301,6 +1301,14 @@ void transferMaterialsToGPU()
                     fprintf(stdout, "\t\t n2 \t\t %e \n", porjutzi_n2[i]);
                     fprintf(stdout, "\t\t cs_porous \t %e \n", cs_porous[i]);
                     fprintf(stdout, "\t\t crushcurve_style \t %d \n", crushcurve_style[i]);
+                    fprintf(stdout, "\t\t ANEOS table_path      \t %s\n",   g_aneos_tab_file[i]);
+                    fprintf(stdout, "\t\t n_rho           \t %d\n",   g_aneos_n_rho[i]);
+                    fprintf(stdout, "\t\t n_e             \t %d\n",   g_aneos_n_e[i]);
+                    fprintf(stdout, "\t\t aneos_rho_0     \t %e\n",   g_aneos_rho_0[i]);
+                    fprintf(stdout, "\t\t aneos_bulk_cs   \t %e\n",   g_aneos_bulk_cs[i]);
+                    fprintf(stdout, "\t\t aneos_gamma     \t %e  (ideal gas fallback)\n", g_aneos_gamma[i]);
+                    fprintf(stdout, "\t\t aneos_molar_mass\t %e kg/mol  (ideal gas fallback, used for T output)\n", g_aneos_molar_mass[i]);
+    break;
                     break;
 #endif
 #if SIRONO_POROSITY
@@ -1333,6 +1341,14 @@ void transferMaterialsToGPU()
                 case (EOS_TYPE_ANEOS):
                     strcpy(eos_type, "              ANEOS");
                     fprintf(stdout, "%s\n", eos_type);
+                    fprintf(stdout, "\t\t aneos_molar_mass \t %e kg/mol  (ideal gas fallback)\n", g_aneos_molar_mass[i]);
+                    fprintf(stdout, "\t\t ANEOS table_path      \t %s\n",   g_aneos_tab_file[i]);
+                    fprintf(stdout, "\t\t n_rho           \t %d\n",   g_aneos_n_rho[i]);
+                    fprintf(stdout, "\t\t n_e             \t %d\n",   g_aneos_n_e[i]);
+                    fprintf(stdout, "\t\t aneos_rho_0     \t %e\n",   g_aneos_rho_0[i]);
+                    fprintf(stdout, "\t\t aneos_bulk_cs   \t %e\n",   g_aneos_bulk_cs[i]);
+                    fprintf(stdout, "\t\t aneos_gamma     \t %e  (ideal gas fallback)\n", g_aneos_gamma[i]);
+                    fprintf(stdout, "\t\t aneos_molar_mass\t %e kg/mol  (ideal gas fallback, used for T output)\n", g_aneos_molar_mass[i]);
                     break;
                 case (EOS_TYPE_IDEAL_GAS):
                     strcpy(eos_type, "          Ideal gas");
