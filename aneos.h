@@ -27,6 +27,20 @@
 #include "parameter.h"
 
 
+
+#define R_GAS 8.314462  /* universal gas constant J/(mol·K) */
+/* Phase flag (KPA) values as defined in ANEOSV.f, Thompson (1990) ANEOS.
+ * Returned by ANEOSD() as output argument KPA. */
+#define ANEOS_PHASE_ONE_PHASE        1   /* single phase (solid or gas/vapor) */
+#define ANEOS_PHASE_TWO_PHASE_LV     2   /* two-phase: liquid/solid + vapor */
+#define ANEOS_PHASE_SOLID            4   /* 1-phase solid (EOS with melt only) */
+#define ANEOS_PHASE_MELT             5   /* 2-phase solid + liquid (EOS with melt only) */
+#define ANEOS_PHASE_LIQUID           6   /* 1-phase liquid (EOS with melt only) */
+#define ANEOS_PHASE_LOW_T_SOLID     -1   /* low-temperature solid, special handling */
+#define ANEOS_PHASE_SPECIAL         -2   /* further special case */
+
+
+
 extern int *g_eos_is_aneos;
 extern const char **g_aneos_tab_file;
 extern int *g_aneos_n_rho;
@@ -143,6 +157,7 @@ double bilinear_interpolation_from_matrix(double x, double y, double** table, do
  */
 int discrete_value_table_lookup_from_matrix(double x, double y, int** table, double* xtab, double* ytab, int ix, int iy, int n_x, int n_y, int pid);
 #endif
+
 
 
 #define ERRORTEXT(x) {fprintf(stderr,x); exit(1);}

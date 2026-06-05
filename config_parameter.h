@@ -263,6 +263,14 @@ extern __constant__ int numNodes;
 extern __constant__ int maxNumFlaws;
 extern __constant__ double theta; // tree theta
 
+
+#if ANEOS_VAPOR_NO_STRENGTH
+extern int    *aneos_phase_flag_d;
+extern __constant__ int *aneos_phase_flag_c;
+#endif
+
+
+
 extern int numberOfMaterials;
 
 extern double grav_const;

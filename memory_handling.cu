@@ -968,6 +968,12 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&p_device.cs_old, memorySizeForParticles));
 #endif
 
+#if ANEOS_VAPOR_NO_STRENGTH
+    cudaVerify(cudaMalloc((void**)&p_device.aneos_phase_flag, memorySizeForInteractions));
+    // set the initial phase flag to 0 (will be overwritten for each rhs anyways in pressure.cu)
+    cudaVerify(cudaMemset(p_device.aneos_phase_flag, 0, memorySizeForInteractions));
+#endif
+
 #if SIRONO_POROSITY
     cudaVerify(cudaMallocHost((void**)&p_host.compressive_strength, memorySizeForParticles));
     cudaVerify(cudaMallocHost((void**)&p_host.tensile_strength, memorySizeForParticles));
@@ -1178,6 +1184,8 @@ int copy_particle_data_to_device()
     cudaVerify(cudaMemcpy(p_device.flag_rho_0prime, p_host.flag_rho_0prime, memorySizeForInteractions, cudaMemcpyHostToDevice));
     cudaVerify(cudaMemcpy(p_device.flag_plastic, p_host.flag_plastic, memorySizeForInteractions, cudaMemcpyHostToDevice));
 #endif
+
+
 #if EPSALPHA_POROSITY
     cudaVerify(cudaMemcpy(p_device.alpha_epspor, p_host.alpha_epspor, memorySizeForParticles, cudaMemcpyHostToDevice));
     cudaVerify(cudaMemcpy(p_device.epsilon_v, p_host.epsilon_v, memorySizeForParticles, cudaMemcpyHostToDevice));
@@ -1489,6 +1497,10 @@ int free_memory()
     cudaVerify(cudaFreeHost(p_host.damage_porjutzi));
     cudaVerify(cudaFreeHost(p_host.ddamage_porjutzidt));
 # endif
+#endif
+
+#if ANEOS_VAPOR_NO_STRENGTH
+    cudaVerify(cudaFree(p_device.aneos_phase_flag));
 #endif
 
 #if SIRONO_POROSITY

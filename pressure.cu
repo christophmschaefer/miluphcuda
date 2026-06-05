@@ -98,21 +98,40 @@ __global__ void calculatePressure() {
         } else if (EOS_TYPE_ANEOS == matEOS[matId]) {
             if (p.rho[i] <= 0.0) {
                 p.p[i] = 0.0;
+#if ANEOS_VAPOR_NO_STRENGTH
+                p_rhs.aneos_phase_flag[i] = ANEOS_PHASE_ONE_PHASE;
+#endif
                 continue;
             }
             /* find array-indices just below the actual values of rho and e */
             i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
+            // care for boundaries, we know that this might be wrong, but we trust the ANEOS tables.... and our users.. 
+            if (i_rho < 0) {
+                i_rho = (p.rho[i] < aneos_rho_c[aneos_rho_id_c[matId]]) ? 0 : aneos_n_rho_c[matId] - 2;
+            }
             i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
             if (i_e < 0 && p.e[i] >= aneos_e_c[aneos_e_id_c[matId] + aneos_n_e_c[matId] - 1]) {
                 /* e above table maximum: fully vaporized, use ideal gas fallback */
                 p.p[i] = (aneos_gamma_c[matId] - 1.0) * p.rho[i] * p.e[i];
+#if DEBUG_PRESSURE
+                printf("ideal gas fallback for particle %d with rho=%g and e=%g\n", i, p.rho[i], p.e[i]);
+#endif
+#if ANEOS_VAPOR_NO_STRENGTH
+                p_rhs.aneos_phase_flag[i] = ANEOS_PHASE_TWO_PHASE_LV;
+#endif
             } else if (i_e < 0) {
                 /* e below table minimum: clamp to cold curve */
                 i_e = 0;
                 p.p[i] = bilinear_interpolation_from_linearized(p.rho[i], aneos_e_c[aneos_e_id_c[matId]], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], i);
+#if ANEOS_VAPOR_NO_STRENGTH
+                p_rhs.aneos_phase_flag[i] = aneos_phase_flag_c[aneos_matrix_id_c[matId] + i_rho * aneos_n_e_c[matId]];
+#endif       
             } else {
                 /* interpolate (bi)linearly to obtain the pressure */
                 p.p[i] = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], i);
+#if ANEOS_VAPOR_NO_STRENGTH
+                p_rhs.aneos_phase_flag[i] = aneos_phase_flag_c[aneos_matrix_id_c[matId] + i_rho * aneos_n_e_c[matId] + i_e];
+#endif
             }
 #if SIRONO_POROSITY
         } else if (matEOS[matId] == EOS_TYPE_SIRONO) {
@@ -290,23 +309,42 @@ __global__ void calculatePressure() {
                     pressure_solid = 0.0;
                     p.delpdelrho[i] = 0.0;
                     p.delpdele[i] = 0.0;
+#if ANEOS_VAPOR_NO_STRENGTH
+                    p_rhs.aneos_phase_flag[i] = ANEOS_PHASE_ONE_PHASE;
+#endif
                     continue;
                 } 
                 /* find array-indices just below the actual values of rho and e */
                 i_rho = array_index(p.alpha_jutzi[i] * p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
+                // check for underflow
+                if (i_rho < 0) {
+                    i_rho = (p.alpha_jutzi[i] * p.rho[i] < aneos_rho_c[aneos_rho_id_c[matId]]) ? 0 : aneos_n_rho_c[matId] - 2;
+                }
                 i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
                 if (i_e < 0 && p.e[i] >= aneos_e_c[aneos_e_id_c[matId] + aneos_n_e_c[matId] - 1]) {
                     /* e above table maximum: ideal gas fallback */
                     pressure_solid = (aneos_gamma_c[matId] - 1.0) * p.rho[i] * p.alpha_jutzi[i] * p.e[i];
                     p.delpdelrho[i] = (aneos_gamma_c[matId] - 1.0) * p.e[i];
                     p.delpdele[i]   = (aneos_gamma_c[matId] - 1.0) * p.rho[i] * p.alpha_jutzi[i];
+#if DEBUG_PRESSURE
+                printf("ideal gas fallback for particle %d with rho=%g and e=%g\n", i, p.rho[i], p.e[i]);
+#endif
+#if ANEOS_VAPOR_NO_STRENGTH
+                    p_rhs.aneos_phase_flag[i] = ANEOS_PHASE_TWO_PHASE_LV;
+#endif
                 } else if (i_e < 0) {
                     /* e below table minimum: clamp to cold curve */
                     i_e = 0;
                     bilinear_interpolation_from_linearized_plus_derivatives(p.alpha_jutzi[i] * p.rho[i], aneos_e_c[aneos_e_id_c[matId]], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], &pressure_solid, &(p.delpdelrho[i]), &(p.delpdele[i]), i);
+#if ANEOS_VAPOR_NO_STRENGTH
+                    p_rhs.aneos_phase_flag[i] = aneos_phase_flag_c[aneos_matrix_id_c[matId] + i_rho * aneos_n_e_c[matId]];
+#endif
                 } else {
                     /* interpolate (bi)linearly to obtain the pressure and dp/drho and dp/de */
                     bilinear_interpolation_from_linearized_plus_derivatives(p.alpha_jutzi[i] * p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], &pressure_solid, &(p.delpdelrho[i]), &(p.delpdele[i]), i);
+#if ANEOS_VAPOR_NO_STRENGTH
+                    p_rhs.aneos_phase_flag[i] = aneos_phase_flag_c[aneos_matrix_id_c[matId] + i_rho * aneos_n_e_c[matId] + i_e];
+#endif
                 }
             }
 

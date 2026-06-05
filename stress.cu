@@ -26,6 +26,9 @@
 #include "miluph.h"
 #include "timeintegration.h"
 #include "linalg.h"
+#include "aneos.h"
+#include "pressure.h"
+#include "config_parameter.h"
 
 #if FRAGMENTATION
 // if 1, then damage reduces the principal stresses
@@ -128,13 +131,28 @@ __global__ void set_stress_tensor(void)
         }
 # endif
 
+// special handling for ANEOS particles that are in vapourized state
+#if ANEOS_VAPOR_NO_STRENGTH
+        if ((matEOS[matId] == EOS_TYPE_ANEOS || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS)
+                && p_rhs.aneos_phase_flag[i] == ANEOS_PHASE_TWO_PHASE_LV) {
+            if (p.p[i] < 0.0) { // vapor has no tensile strength
+                    ptmp = 0.0;
+                    p.p[i] = 0.0;
+            }
+            for (d = 0; d < DIM; d++) {
+                for (e = 0; e < DIM; e++) {
+                    p.S[stressIndex(i,d,e)] = 0.0;
+                    sigma[d][e] = (d == e) ? -ptmp : 0.0;
+                }
+            }
+        }
+#endif
         // remember sigma
         for (d = 0; d < DIM; d++) {
             for (e = 0; e < DIM; e++) {
                 p_rhs.sigma[stressIndex(i,d,e)] = sigma[d][e];
             }
         }
-
     }
 }
 #endif  // SOLID

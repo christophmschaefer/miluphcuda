@@ -33,7 +33,7 @@
 
 // choose one of the following two schemes: either the traditional KGC or the modern weighted one
 #define USE_OLDSCHOOL_KERNEL_GRADIENT_CORRECTION_SCHEME 1
-// Ren et al. weighted kgc scheme
+// Ren et al. weighted kgc scheme // EXPERIMENTAL, DO NOT USE or check your results CAREFULLY.... C-A-R-E-F-U-L-L-Y
 #define USE_WEIGHTED_KERNEL_GRADIENT_CORRECTION_SCHEME 0
 
 
@@ -44,6 +44,7 @@
 // Additional safety: even if the moment matrix is formally full-rank, it can be
 // extremely ill-conditioned near free surfaces/contact, producing a huge inverse
 // and injecting unphysical torque. Clamp overly large correction matrices.
+// 5.0 seems like an appropriate value, but you can play around with this for sure.
 #define MAX_ABS_TENSORIAL_CORRECTION_ENTRY 5.0
 
 
@@ -662,6 +663,7 @@ __global__ void tensorialCorrection(int *interactions)
         for (d = 0; d < DIM*DIM; d++) {
             max_entry = fmax(max_entry, fabs(matrix[d]));
         }
+        // these values are just best practice... change if required and you know what you're doing
         if (fabs(det) < 0.2 || fabs(det) > 5.0 ||  max_entry > MAX_ABS_TENSORIAL_CORRECTION_ENTRY) {
 #if DEBUG_DEVEL
             printf("Warning: tensorial correction matrix for particle %d is ill-conditioned, determinant = %g, rv = %d, max_entry = %lf. Setting to identity.\n", i, det, rv, max_entry);
@@ -693,7 +695,7 @@ __global__ void tensorialCorrection(int *interactions)
                 matrix[d] = (double)(d % (DIM+1) == 0);
         } else {
             // smooth blend: w=1 in bulk (det_A~1), w->0 near surface (det_A->0)
-            // no free parameters needed, experimental do not use!!
+            // no free parameters needed, EXPERIMENTAL DO NOT USE!!
             double w = fmin(1.0, fabs(det_A));
             for (d = 0; d < DIM*DIM; d++) {
                 double identity_val = (double)(d % (DIM+1) == 0);

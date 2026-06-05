@@ -109,6 +109,10 @@ __global__ void calculateSoundSpeed()
             }
             // find array-indices just below the actual values of rho and e
             i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
+            // check for underflow
+            if (i_rho < 0) {
+                i_rho = (p.rho[i] < aneos_rho_c[aneos_rho_id_c[matId]]) ? 0 : aneos_n_rho_c[matId] - 2;
+            }
             i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
             if (i_e < 0 && p.e[i] >= aneos_e_c[aneos_e_id_c[matId] + aneos_n_e_c[matId] - 1]) {
                 // e above table maximum: ideal gas sound speed
@@ -158,6 +162,10 @@ __global__ void calculateSoundSpeed()
             }
             // find array-indices just below the actual values of rho and e
             i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
+            // check for underflow
+            if (i_rho < 0) {
+                i_rho = (p.rho[i] < aneos_rho_c[aneos_rho_id_c[matId]]) ? 0 : aneos_n_rho_c[matId] - 2;
+            }
             i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
             if (i_e < 0 && p.e[i] >= aneos_e_c[aneos_e_id_c[matId] + aneos_n_e_c[matId] - 1]) {
                 // e above table maximum: ideal gas sound speed

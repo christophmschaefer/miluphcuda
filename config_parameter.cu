@@ -121,6 +121,12 @@ double *aneos_rho_d;
 double *aneos_e_d;
 double *aneos_p_d;
 double *aneos_cs_d;
+
+#if ANEOS_VAPOR_NO_STRENGTH
+int    *aneos_phase_flag_d;
+__constant__ int *aneos_phase_flag_c;
+#endif
+
 int *aneos_rho_id_d;
 int *aneos_e_id_d;
 int *aneos_matrix_id_d;
@@ -136,6 +142,7 @@ __constant__ double *aneos_cs_c;
 __constant__ int *aneos_rho_id_c;
 __constant__ int *aneos_e_id_c;
 __constant__ int *aneos_matrix_id_c;
+
 
 // PALPHA_POROSITY device variables
 double *matporjutzi_p_elastic_d;
@@ -411,7 +418,7 @@ void transferMaterialsToGPU()
         g_aneos_e = (double**)calloc(numberOfElements, sizeof(double*));
         g_aneos_p = (double***)calloc(numberOfElements, sizeof(double**));
         g_aneos_cs = (double***)calloc(numberOfElements, sizeof(double**));
-#if MORE_ANEOS_OUTPUT
+#if MORE_ANEOS_OUTPUT || ANEOS_VAPOR_NO_STRENGTH
         g_aneos_T = (double***)calloc(numberOfElements, sizeof(double**));
         g_aneos_entropy = (double***)calloc(numberOfElements, sizeof(double**));
         g_aneos_phase_flag = (int***)calloc(numberOfElements, sizeof(int**));
@@ -620,7 +627,7 @@ void transferMaterialsToGPU()
                 for (j=0; j<g_aneos_n_rho[ID]; j++)
                     if ((g_aneos_cs[ID][j] = (double*)calloc(g_aneos_n_e[ID], sizeof(double))) == NULL)
                         ERRORVAR("ERROR during memory allocation for ANEOS lookup table in '%s'\n", g_aneos_tab_file[ID])
-#if MORE_ANEOS_OUTPUT
+#if MORE_ANEOS_OUTPUT || ANEOS_VAPOR_NO_STRENGTH
                 if ((g_aneos_T[ID] = (double**)calloc(g_aneos_n_rho[ID], sizeof(double*))) == NULL)
                     ERRORVAR("ERROR during memory allocation for ANEOS lookup table in '%s'\n", g_aneos_tab_file[ID])
                 for (j=0; j<g_aneos_n_rho[ID]; j++)
@@ -637,7 +644,7 @@ void transferMaterialsToGPU()
                     if ((g_aneos_phase_flag[ID][j] = (int*)calloc(g_aneos_n_e[ID], sizeof(int))) == NULL)
                         ERRORVAR("ERROR during memory allocation for ANEOS lookup table in '%s'\n", g_aneos_tab_file[ID])
 #endif
-#if MORE_ANEOS_OUTPUT
+#if MORE_ANEOS_OUTPUT || ANEOS_VAPOR_NO_STRENGTH
                 initialize_aneos_eos_full(g_aneos_tab_file[ID], g_aneos_n_rho[ID], g_aneos_n_e[ID], g_aneos_rho[ID], g_aneos_e[ID], g_aneos_p[ID], g_aneos_T[ID], g_aneos_cs[ID], g_aneos_entropy[ID], g_aneos_phase_flag[ID] );
 #else
                 initialize_aneos_eos_basic(g_aneos_tab_file[ID], g_aneos_n_rho[ID], g_aneos_n_e[ID], g_aneos_rho[ID], g_aneos_e[ID], g_aneos_p[ID], g_aneos_cs[ID] );
@@ -863,6 +870,9 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&aneos_rho_id_d, numberOfElements*sizeof(int)));
         cudaVerify(cudaMalloc((void **)&aneos_e_id_d, numberOfElements*sizeof(int)));
         cudaVerify(cudaMalloc((void **)&aneos_matrix_id_d, numberOfElements*sizeof(int)));
+#if ANEOS_VAPOR_NO_STRENGTH
+        cudaVerify(cudaMalloc((void **)&aneos_phase_flag_d, run_aneos_matrix_id*sizeof(int)));
+#endif
         //end of ANEOS allocations in (global) device memory
         cudaVerify(cudaMalloc((void **)&matSml_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matnoi_d, numberOfElements*sizeof(int)));
@@ -1014,10 +1024,16 @@ void transferMaterialsToGPU()
                 for(j=0; j<g_aneos_n_rho[i]; j++) {
                     cudaVerify(cudaMemcpy(aneos_p_d+aneos_matrix_id[i]+j*g_aneos_n_e[i], g_aneos_p[i][j], g_aneos_n_e[i]*sizeof(double), cudaMemcpyHostToDevice));
                     cudaVerify(cudaMemcpy(aneos_cs_d+aneos_matrix_id[i]+j*g_aneos_n_e[i], g_aneos_cs[i][j], g_aneos_n_e[i]*sizeof(double), cudaMemcpyHostToDevice));
+#if ANEOS_VAPOR_NO_STRENGTH
+                    cudaVerify(cudaMemcpy(aneos_phase_flag_d+aneos_matrix_id[i]+j*g_aneos_n_e[i], g_aneos_phase_flag[i][j], g_aneos_n_e[i]*sizeof(int), cudaMemcpyHostToDevice));
+#endif
                 }
             }
         }
         cudaVerify(cudaMemcpy(aneos_rho_id_d, aneos_rho_id, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));
+#if ANEOS_VAPOR_NO_STRENGTH
+        cudaVerify(cudaMemcpyToSymbol(aneos_phase_flag_c, &aneos_phase_flag_d, sizeof(void*)));
+#endif
         cudaVerify(cudaMemcpy(aneos_e_id_d, aneos_e_id, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(aneos_matrix_id_d, aneos_matrix_id, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));
         //end copying ANEOS data from host to (global) device memory, begin copying pointers to constant device memory
@@ -1301,14 +1317,13 @@ void transferMaterialsToGPU()
                     fprintf(stdout, "\t\t n2 \t\t %e \n", porjutzi_n2[i]);
                     fprintf(stdout, "\t\t cs_porous \t %e \n", cs_porous[i]);
                     fprintf(stdout, "\t\t crushcurve_style \t %d \n", crushcurve_style[i]);
-                    fprintf(stdout, "\t\t ANEOS table_path      \t %s\n",   g_aneos_tab_file[i]);
-                    fprintf(stdout, "\t\t n_rho           \t %d\n",   g_aneos_n_rho[i]);
-                    fprintf(stdout, "\t\t n_e             \t %d\n",   g_aneos_n_e[i]);
-                    fprintf(stdout, "\t\t aneos_rho_0     \t %e\n",   g_aneos_rho_0[i]);
-                    fprintf(stdout, "\t\t aneos_bulk_cs   \t %e\n",   g_aneos_bulk_cs[i]);
-                    fprintf(stdout, "\t\t aneos_gamma     \t %e  (ideal gas fallback)\n", g_aneos_gamma[i]);
-                    fprintf(stdout, "\t\t aneos_molar_mass\t %e kg/mol  (ideal gas fallback, used for T output)\n", g_aneos_molar_mass[i]);
-    break;
+                    fprintf(stdout, "\t\t table_path       \t %s\n",   g_aneos_tab_file[i]);
+                    fprintf(stdout, "\t\t n_rho            \t %d\n",   g_aneos_n_rho[i]);
+                    fprintf(stdout, "\t\t n_e              \t %d\n",   g_aneos_n_e[i]);
+                    fprintf(stdout, "\t\t aneos_rho_0      \t %e\n",   g_aneos_rho_0[i]);
+                    fprintf(stdout, "\t\t aneos_bulk_cs    \t %e\n",   g_aneos_bulk_cs[i]);
+                    fprintf(stdout, "\t\t aneos_gamma      \t %e  (ideal gas fallback)\n", g_aneos_gamma[i]);
+                    fprintf(stdout, "\t\t aneos_molar_mass \t %e kg/mol  (ideal gas fallback)\n", g_aneos_molar_mass[i]);
                     break;
 #endif
 #if SIRONO_POROSITY
@@ -1341,14 +1356,14 @@ void transferMaterialsToGPU()
                 case (EOS_TYPE_ANEOS):
                     strcpy(eos_type, "              ANEOS");
                     fprintf(stdout, "%s\n", eos_type);
+                    fprintf(stdout, "\t\t EoS params:\n");
+                    fprintf(stdout, "\t\t table_path       \t %s\n",   g_aneos_tab_file[i]);
+                    fprintf(stdout, "\t\t n_rho            \t %d\n",   g_aneos_n_rho[i]);
+                    fprintf(stdout, "\t\t n_e              \t %d\n",   g_aneos_n_e[i]);
+                    fprintf(stdout, "\t\t aneos_rho_0      \t %e\n",   g_aneos_rho_0[i]);
+                    fprintf(stdout, "\t\t aneos_bulk_cs    \t %e\n",   g_aneos_bulk_cs[i]);
+                    fprintf(stdout, "\t\t aneos_gamma      \t %e  (ideal gas fallback)\n", g_aneos_gamma[i]);
                     fprintf(stdout, "\t\t aneos_molar_mass \t %e kg/mol  (ideal gas fallback)\n", g_aneos_molar_mass[i]);
-                    fprintf(stdout, "\t\t ANEOS table_path      \t %s\n",   g_aneos_tab_file[i]);
-                    fprintf(stdout, "\t\t n_rho           \t %d\n",   g_aneos_n_rho[i]);
-                    fprintf(stdout, "\t\t n_e             \t %d\n",   g_aneos_n_e[i]);
-                    fprintf(stdout, "\t\t aneos_rho_0     \t %e\n",   g_aneos_rho_0[i]);
-                    fprintf(stdout, "\t\t aneos_bulk_cs   \t %e\n",   g_aneos_bulk_cs[i]);
-                    fprintf(stdout, "\t\t aneos_gamma     \t %e  (ideal gas fallback)\n", g_aneos_gamma[i]);
-                    fprintf(stdout, "\t\t aneos_molar_mass\t %e kg/mol  (ideal gas fallback, used for T output)\n", g_aneos_molar_mass[i]);
                     break;
                 case (EOS_TYPE_IDEAL_GAS):
                     strcpy(eos_type, "          Ideal gas");
@@ -1554,6 +1569,9 @@ void cleanupMaterials()
     cudaVerify(cudaFree(aneos_e_d));
     cudaVerify(cudaFree(aneos_p_d));
     cudaVerify(cudaFree(aneos_cs_d));
+#if ANEOS_VAPOR_NO_STRENGTH
+    cudaVerify(cudaFree(aneos_phase_flag_d));
+#endif
     cudaVerify(cudaFree(aneos_rho_id_d));
     cudaVerify(cudaFree(aneos_e_id_d));
     cudaVerify(cudaFree(aneos_matrix_id_d));
