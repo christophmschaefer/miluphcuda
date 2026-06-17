@@ -2179,7 +2179,9 @@ void write_particles_to_file(File file) {
                 } else if (aneos_i_e < 0) {
                     /* e below table minimum: clamp to cold curve */
                     aneos_i_e = 0;
-                    x_aneos_phase_flag[i] = discrete_value_table_lookup_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_phase_flag[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
+                    //x_aneos_phase_flag[i] = discrete_value_table_lookup_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_phase_flag[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
+                    x_aneos_phase_flag[i] = discrete_value_table_lookup_from_matrix(p_host.rho[i], g_aneos_e[j][0], g_aneos_phase_flag[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
+
                 } else {
                     /* normal case: rho and e within table */
                     x_aneos_T[i]       = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_T[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
