@@ -35,8 +35,8 @@ Download the latest version of the code or clone the github repo.
 
 After installation of the required dependencies (see below), compile via the `Makefile`:
 
-1. run `configure.sh` which performs some tests and system-dependent configuration
-2. run `make` to produce the `miluphcuda` executable
+1. If you do not know the compute capability of your GPU, you can try running `configure.sh` which performs some tests and tries to find the GPU using `nvidia-smi`.
+2. Run `make` to produce the `miluphcuda` executable in `build/`.
 
 It may be necessary to make some changes to the `Makefile` even if `configure.sh` succeeds.
 Compiler errors will let you know if that happens.
@@ -60,14 +60,14 @@ To ensure best functionality, install the [latest version](https://hyperrealm.gi
 4. sudo make install
 
 **HDF5**  
-If you want to use HDF5 for input and/or output files, install `libhdf5` and `libhdf5-dev`.
+If you want to use HDF5 for input and/or output files, install `libhdf5` and `libhdf5-dev`. The necessary switch in `parameter.h` is ` HDF5IO`.
 
 
 ## Usage
 
 The basic usage philosophy for miluphcuda is:
 
-* Basic simulation-wide settings, mainly for the material model and numerics, are specified in `parameter.h` at compile-time.  
+* Basic simulation-wide settings, mainly for the material model and numerics, are specified in `include/parameter.h` at compile-time.  
   See comments there for details.
 * Material-specific parameters, mainly for the material model and equation of state, are set
   in a material config file (typically `material.cfg`) and processed at run-time.  
