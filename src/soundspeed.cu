@@ -64,6 +64,15 @@ __global__ void calculateSoundSpeed()
             p.cs[i] = sqrt(matPolytropicGamma[matId] * p.p[i] / p.rho[i]);
         } else if (EOS_TYPE_ISOTHERMAL_GAS == matEOS[matId]) {
             p.cs[i] = matIsothermalSoundSpeed[matId];
+        } else if (EOS_TYPE_MURNAGHAN == matEOS[matId]) {
+        /* p = K_0/n * (eta^n - 1)  =>  c_s^2 = dp/drho = K_0/rho_0 * eta^(n-1) */
+            eta = p.rho[i] / matRho0[matId];
+            cs_sq = matBulkmodulus[matId] / matRho0[matId] * pow(eta, matN[matId] - 1.0);
+            if (cs_sq < matcsLimit[matId]*matcsLimit[matId]) {
+                p.cs[i] = matcsLimit[matId];
+            } else {
+                p.cs[i] = sqrt(cs_sq);
+            }
         } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
             rho = p.rho[i];
             eta = rho / matTillRho0[matId];

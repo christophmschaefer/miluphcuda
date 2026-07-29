@@ -25,6 +25,7 @@
 #include "timeintegration.h"
 #include "parameter.h"
 #include "rhs.h"
+#include "fast_integration.h"
 
 
 extern __device__ double dt;
@@ -155,6 +156,9 @@ void euler()
                     }
                 }
                 while (currentTime < endTime) {
+#if FAST_INTEGRATION_SCHEME
+                        check_fast_scheme();
+#endif
                         fprintf(stdout, "Euler Step # %d\n", ++eulerstep);
                         fprintf(stdout, " currenttime: %e \t endtime: %e, integrating with euler dt: %g\n", currentTime, endTime, param.maxtimestep);
                         rightHandSide();

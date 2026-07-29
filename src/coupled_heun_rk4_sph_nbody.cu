@@ -45,6 +45,7 @@
 #include "rhs.h"
 #include "gravity.h"
 #include "damage.h"
+#include "fast_integration.h"
 #include <float.h>
 
 
@@ -727,6 +728,9 @@ void heun_rk4()
             cudaVerify(cudaMemcpyToSymbol(substep_currentTimeD, &substep_currentTime, sizeof(double)));
 #if GRAVITATING_POINT_MASSES
 	        cudaVerify(cudaMemcpyToSymbol(pointmass, &pointmass_device, sizeof(struct Pointmass)));
+#endif
+#if FAST_INTEGRATION_SCHEME
+            check_fast_scheme();
 #endif
             rightHandSide();
             cudaVerify(cudaDeviceSynchronize());

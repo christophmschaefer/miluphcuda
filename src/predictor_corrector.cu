@@ -32,6 +32,7 @@
 #include "pressure.h"
 #include "rhs.h"
 #include "damage.h"
+#include "fast_integration.h"
 #include <float.h>
 
 /* predictor corrector scheme with an initial step of dt/2 and the corrector step with dt */
@@ -776,6 +777,9 @@ void predictor_corrector()
             cudaVerify(cudaMemcpyFromSymbol(&currentTime, currentTimeD, sizeof(double)));
             substep_currentTime = currentTime;
             cudaVerify(cudaMemcpyToSymbol(substep_currentTimeD, &substep_currentTime, sizeof(double)));
+#if FAST_INTEGRATION_SCHEME
+            check_fast_scheme();
+#endif
             rightHandSide();
             cudaVerify(cudaDeviceSynchronize());
             cudaVerifyKernel((setTimestep<<<numberOfMultiprocessors, NUM_THREADS_LIMITTIMESTEP>>>(

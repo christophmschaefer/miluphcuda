@@ -31,6 +31,7 @@
 #include "pressure.h"
 #include "boundary.h"
 #include "damage.h"
+#include "fast_integration.h"
 #include <float.h>
 
 extern __device__ double endTimeD, currentTimeD;
@@ -194,6 +195,9 @@ void rk2Adaptive()
 
         // loop until end of current output time
         while (currentTime < endTime) {
+#if FAST_INTEGRATION_SCHEME
+            check_fast_scheme();
+#endif
             // set all deactivation flags to zero
             cudaVerifyKernel((BoundaryConditionsBeforeIntegratorStep<<<numberOfMultiprocessors, NUM_THREADS_ERRORCHECK>>>(interactions))); 
             cudaVerify(cudaDeviceSynchronize());

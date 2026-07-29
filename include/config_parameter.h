@@ -116,6 +116,18 @@ extern double *matMeltEnergy_d;
 extern double *matDensityFloor_d;
 extern double *matEnergyFloor_d;
 extern double *matIsothermalSoundSpeed_d;
+
+#if FAST_INTEGRATION_SCHEME
+// fast integration scheme (Raducan & Jutzi 2022): parameters of the low-sound-speed medium
+extern double *matFastTransitionTime_d;
+extern double *matFastBulkmodulus_d;
+extern double *matFastRho0_d;
+extern double *matFastPoissonRatio_d;
+extern double *matFastRhoLimit_d;
+extern int    *matFastSwitched_d;
+#endif
+
+
 // ANEOS device variables
 extern int *aneos_n_rho_d;
 extern int *aneos_n_e_d;
@@ -187,6 +199,16 @@ extern __constant__ double *matTillB;
 extern __constant__ double *matTillAlpha;
 extern __constant__ double *matTillBeta;
 extern __constant__ double *matcsLimit;
+
+#if FAST_INTEGRATION_SCHEME
+extern __constant__ double *matFastTransitionTime;
+extern __constant__ double *matFastBulkmodulus;
+extern __constant__ double *matFastRho0;
+extern __constant__ double *matFastPoissonRatio;
+extern __constant__ double *matFastRhoLimit;
+extern __constant__ int    *matFastSwitched;
+#endif
+
 
 extern __constant__ double *matporjutzi_p_elastic;
 extern __constant__ double *matporjutzi_p_transition;

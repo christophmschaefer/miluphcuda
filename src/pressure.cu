@@ -301,9 +301,15 @@ __global__ void calculatePressure() {
                 double n = matN[matId];
                 double K_0 = matBulkmodulus[matId];
                 double eta = p.rho[i] * p.alpha_jutzi[i] / rho_0;
-                pressure_solid = K_0 / n * (pow(eta, n) - 1.0);
+
+                if (eta < matRhoLimit[matId]) {
+                    pressure_solid = 0.0;
+                    p.delpdelrho[i] = 0.0;
+                } else {
+                    pressure_solid = K_0 / n * (pow(eta, n) - 1.0);
+                    p.delpdelrho[i] = K_0 / rho_0 * (pow(eta, n - 1.0));
+                }
                 p.delpdele[i] = 0.0;
-                p.delpdelrho[i] = K_0 / rho_0 * (pow(eta, n - 1.0));
             } else if (matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
                  if (p.rho[i] <= 0.0) {
                     pressure_solid = 0.0;

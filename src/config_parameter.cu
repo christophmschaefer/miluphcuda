@@ -56,6 +56,17 @@ double *matBeta_d;
 double *matBulkmodulus_d;
 double *matShearmodulus_d;
 double *matYieldStress_d;
+
+#if FAST_INTEGRATION_SCHEME
+double *matFastTransitionTime_d;
+double *matFastBulkmodulus_d;
+double *matFastRho0_d;
+double *matFastPoissonRatio_d;
+double *matFastRhoLimit_d;
+int *matFastSwitched_d;
+#endif
+
+
 double *matInternalFriction_d;
 double *matInternalFrictionDamaged_d;
 double *matRho0_d;
@@ -121,6 +132,7 @@ double *aneos_rho_d;
 double *aneos_e_d;
 double *aneos_p_d;
 double *aneos_cs_d;
+
 
 #if ANEOS_VAPOR_NO_STRENGTH
 int    *aneos_phase_flag_d;
@@ -278,6 +290,18 @@ __constant__ double *matTillB;
 __constant__ double *matTillAlpha;
 __constant__ double *matTillBeta;
 __constant__ double *matcsLimit;
+
+
+#if FAST_INTEGRATION_SCHEME
+__constant__ double *matFastTransitionTime;
+__constant__ double *matFastBulkmodulus;
+__constant__ double *matFastRho0;
+__constant__ double *matFastPoissonRatio;
+__constant__ double *matFastRhoLimit;
+__constant__ int *matFastSwitched;
+#endif
+
+
 __constant__ int *materialId;
 __constant__ double *matRhoLimit;
 __constant__ double *matIsothermalSoundSpeed;
@@ -439,6 +463,23 @@ void transferMaterialsToGPU()
         double *shear_modulus = (double*)calloc(numberOfElements, sizeof(double));
         bulk_modulus = (double*)calloc(numberOfElements, sizeof(double));
         int *density_via_kernel_sum = (int*)calloc(numberOfElements, sizeof(int));
+
+#if FAST_INTEGRATION_SCHEME
+        double *fast_transition_time = (double*)calloc(numberOfElements, sizeof(double));
+        double *fast_bulk_modulus    = (double*)calloc(numberOfElements, sizeof(double));
+        double *fast_rho_0           = (double*)calloc(numberOfElements, sizeof(double));
+        double *fast_poisson_ratio   = (double*)calloc(numberOfElements, sizeof(double));
+        double *fast_rho_limit       = (double*)calloc(numberOfElements, sizeof(double));
+        /* sentinels: negative transition time means 'never switch this material',
+           negative Poisson ratio means 'keep the current one' */
+        for (i = 0; i < numberOfElements; i++) {
+            fast_transition_time[i] = -1.0;
+            fast_poisson_ratio[i]   = -1.0;
+            fast_rho_limit[i]       =  1.0;
+        }
+#endif
+
+
         double *yield_stress = (double*)calloc(numberOfElements, sizeof(double));
         double *internal_friction = (double*)calloc(numberOfElements, sizeof(double));
         double *internal_friction_damaged = (double*)calloc(numberOfElements, sizeof(double));
@@ -799,8 +840,69 @@ void transferMaterialsToGPU()
             }
             
             // read energy_floor or set to -inf
-            if( !config_setting_lookup_float(material, "energy_floor", &energy_floor[ID]) )
+            if (!config_setting_lookup_float(material, "energy_floor", &energy_floor[ID])) {
                 energy_floor[ID] = -1e30;
+#if FAST_INTEGRATION_SCHEME
+                /* Optional block for the fast integration scheme. The sentinels were already set
+                right after the allocation, so we only overwrite them if the block is present. */
+                config_setting_t *fast_set;
+                if ((fast_set = config_setting_get_member(material, "fast_integration"))) {
+                    if (!config_setting_lookup_float(fast_set, "transition_time", &fast_transition_time[ID])) {
+                        fprintf(stderr, "Error. 'fast_integration' for material %d needs 'transition_time'.\n", ID);
+                        exit(EXIT_FAILURE);
+                    }
+                    if (fast_transition_time[ID] < 0.0) {
+                        fprintf(stderr, "Error. 'fast_integration' for material %d: transition_time = %g < 0. "
+                                        "Remove the whole block if this material should not switch.\n",
+                                        ID, fast_transition_time[ID]);
+                        exit(EXIT_FAILURE);
+                    }
+                    if (!config_setting_lookup_float(fast_set, "bulk_modulus", &fast_bulk_modulus[ID])) {
+                        fprintf(stderr, "Error. 'fast_integration' for material %d needs 'bulk_modulus'.\n", ID);
+                        exit(EXIT_FAILURE);
+                    }
+                    if (fast_bulk_modulus[ID] <= 0.0) {
+                        fprintf(stderr, "Error. 'fast_integration' for material %d: bulk_modulus = %g.\n",
+                                        ID, fast_bulk_modulus[ID]);
+                        exit(EXIT_FAILURE);
+                    }
+                    /* optional; sentinels from the allocation remain if absent */
+                    config_setting_lookup_float(fast_set, "poisson_ratio", &fast_poisson_ratio[ID]);
+                    config_setting_lookup_float(fast_set, "rho_limit", &fast_rho_limit[ID]);
+                    if (fast_poisson_ratio[ID] >= 0.5) {
+                        fprintf(stderr, "Error. 'fast_integration' for material %d: poisson_ratio = %g >= 0.5 "
+                                        "(incompressible limit).\n", ID, fast_poisson_ratio[ID]);
+                        exit(EXIT_FAILURE);
+                    }
+                    /* reference density of the linear medium after the switch */
+                    if (!config_setting_lookup_float(fast_set, "rho_0", &fast_rho_0[ID])) {
+                        switch (eos[ID]) {
+                            case EOS_TYPE_TILLOTSON:
+                            case EOS_TYPE_JUTZI:
+                                fast_rho_0[ID] = till_rho_0[ID];
+                                break;
+                            case EOS_TYPE_ANEOS:
+                            case EOS_TYPE_JUTZI_ANEOS:
+                                fast_rho_0[ID] = g_aneos_rho_0[ID];
+                                break;
+                            case EOS_TYPE_MURNAGHAN:
+                            case EOS_TYPE_JUTZI_MURNAGHAN:
+                                fast_rho_0[ID] = rho_0[ID];
+                                break;
+                            default:
+                                fprintf(stderr, "Error. 'fast_integration' for material %d: cannot derive rho_0 "
+                                                "for eos type %d, set it explicitly in the block.\n", ID, eos[ID]);
+                                exit(EXIT_FAILURE);
+                        }
+                    }
+                    if (fast_rho_0[ID] <= 0.0) {
+                        fprintf(stderr, "Error. 'fast_integration' for material %d: derived rho_0 = %g. The "
+                                        "reference density is missing in the eos block.\n", ID, fast_rho_0[ID]);
+                        exit(EXIT_FAILURE);
+                    }
+                }
+#endif
+            }
 
         }  // loop over materials
 
@@ -857,6 +959,20 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matLdwBeta_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matLdwGamma_d, numberOfElements*sizeof(double)));
 #endif
+
+
+#if FAST_INTEGRATION_SCHEME
+        cudaVerify(cudaMalloc((void **)&matFastTransitionTime_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matFastBulkmodulus_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matFastRho0_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matFastPoissonRatio_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matFastRhoLimit_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matFastSwitched_d, numberOfElements*sizeof(int)));
+        /* device-only state, no host counterpart: initialise it right here */
+        cudaVerify(cudaMemset(matFastSwitched_d, 0, numberOfElements*sizeof(int)));
+#endif
+
+
         //begin of ANEOS allocations in (global) device memory (everything linearized)
         cudaVerify(cudaMalloc((void **)&aneos_n_rho_d, numberOfElements*sizeof(int)));
         cudaVerify(cudaMalloc((void **)&aneos_n_e_d, numberOfElements*sizeof(int)));
@@ -910,6 +1026,18 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matMeltEnergy_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matDensityFloor_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matEnergyFloor_d, numberOfElements*sizeof(double)));
+
+
+#if FAST_INTEGRATION_SCHEME
+        cudaVerify(cudaMemcpy(matFastTransitionTime_d, fast_transition_time, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matFastBulkmodulus_d, fast_bulk_modulus, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matFastRho0_d, fast_rho_0, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matFastPoissonRatio_d, fast_poisson_ratio, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matFastRhoLimit_d, fast_rho_limit, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        /* matFastSwitched_d: device-only, already zeroed at allocation */
+#endif
+
+
 #if JC_PLASTICITY
         cudaVerify(cudaMalloc((void **)&matjc_y0_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matjc_B_d, numberOfElements*sizeof(double)));
@@ -1184,6 +1312,18 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(matMeltEnergy, &matMeltEnergy_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matDensityFloor, &matDensityFloor_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matEnergyFloor, &matEnergyFloor_d, sizeof(void*)));
+
+
+#if FAST_INTEGRATION_SCHEME
+        cudaVerify(cudaMemcpyToSymbol(matFastTransitionTime, &matFastTransitionTime_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matFastBulkmodulus, &matFastBulkmodulus_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matFastRho0, &matFastRho0_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matFastPoissonRatio, &matFastPoissonRatio_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matFastRhoLimit, &matFastRhoLimit_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matFastSwitched, &matFastSwitched_d, sizeof(void*)));
+#endif
+
+
 #if JC_PLASTICITY
         cudaVerify(cudaMemcpyToSymbol(matjc_y0, &matjc_y0_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matjc_B, &matjc_B_d, sizeof(void*)));
@@ -1419,6 +1559,84 @@ void transferMaterialsToGPU()
        }
 #endif
 
+
+#if FAST_INTEGRATION_SCHEME
+        fprintf(stdout, "\nFast integration scheme (Raducan & Jutzi 2022):\n");
+        for (i = 0; i < numberOfMaterials; i++) {
+            if (fast_transition_time[i] < 0.0) {
+                fprintf(stdout, "    material %d: no 'fast_integration' block, will not be switched\n", i);
+                continue;
+            }
+            /* bulk modulus of the current material, only needed for the scaling factor */
+            double K_old = 0.0;
+            switch (eos[i]) {
+                case (EOS_TYPE_TILLOTSON):
+                case (EOS_TYPE_JUTZI):
+                    K_old = till_A[i];
+                    break;
+                case (EOS_TYPE_ANEOS):
+                case (EOS_TYPE_JUTZI_ANEOS):
+                    K_old = fast_rho_0[i] * g_aneos_bulk_cs[i] * g_aneos_bulk_cs[i];
+                    break;
+                default:
+                    K_old = bulk_modulus[i];
+                    break;
+            }
+            if (K_old <= 0.0) {
+                fprintf(stderr, "Error. fast_integration for material %d: cannot determine the current bulk modulus (got %g). ANEOS materials need aneos_bulk_cs.\n", i, K_old);
+                exit(EXIT_FAILURE);
+            }
+#if SOLID
+            double nu = fast_poisson_ratio[i];
+            if (nu < 0.0) {
+                nu = (3.0*bulk_modulus[i] - 2.0*shear_modulus[i]) / 2.0 / (3.0*bulk_modulus[i] + shear_modulus[i]);
+            }
+            if (nu <= -1.0 || nu >= 0.5) {
+                fprintf(stderr, "Error. fast_integration for material %d: derived Poisson ratio %g is unusable (bulk_modulus %g, shear_modulus %g). Set poisson_ratio explicitly.\n", i, nu, bulk_modulus[i], shear_modulus[i]);
+                exit(EXIT_FAILURE);
+            }
+#endif
+            double f = fast_bulk_modulus[i] / K_old;
+            double cs_old = sqrt(K_old / fast_rho_0[i]);
+            double cs_new = sqrt(fast_bulk_modulus[i] / fast_rho_0[i]);
+#if SOLID
+            double G_new = 3.0 * fast_bulk_modulus[i] * (1.0 - 2.0*nu) / (2.0 * (1.0 + nu));
+#endif 
+            fprintf(stdout, "    material %d:\n", i);
+            fprintf(stdout, "        transition time      %g s\n", fast_transition_time[i]);
+            fprintf(stdout, "        bulk modulus         %g -> %g Pa (factor %g)\n", K_old, fast_bulk_modulus[i], f);
+#if SOLID
+            fprintf(stdout, "        shear modulus        %g -> %g Pa\n", shear_modulus[i], G_new);
+            fprintf(stdout, "        Poisson's ratio      %g %s\n", nu, fast_poisson_ratio[i] < 0.0 ? "(preserved)" : "(from config)");
+#endif
+            fprintf(stdout, "        sound speed          %g -> %g m/s\n", cs_old, cs_new);
+            fprintf(stdout, "        rho_0 / rho_limit    %g kg/m^3 / %g\n", fast_rho_0[i], fast_rho_limit[i]);
+            fprintf(stdout, "        expected dt speedup  %g\n", 1.0/sqrt(f));
+            if (f >= 1.0) {
+                fprintf(stderr, "    WARNING material %d: the fast bulk modulus is not smaller than the current one (factor %g). Nothing to gain.\n", i, f);
+            }
+#if SOLID
+            if (nu < 0.125) {
+                fprintf(stderr, "    WARNING material %d: Poisson ratio %g < 0.125 means G > K. Shear waves then outrun p.cs, which is the only speed entering the Courant criterion.\n", i, nu);
+            }
+#endif
+#if PALPHA_POROSITY
+            if (eos[i] == EOS_TYPE_JUTZI || eos[i] == EOS_TYPE_JUTZI_ANEOS || eos[i] == EOS_TYPE_JUTZI_MURNAGHAN) {
+                if (porjutzi_p_elastic[i] < 100.0 * fast_bulk_modulus[i]) {
+                    fprintf(stderr, "    WARNING material %d: p_elastic %g Pa is not well above the fast bulk modulus %g Pa. Compaction will not freeze after the switch.\n", i, porjutzi_p_elastic[i], fast_bulk_modulus[i]);
+                }
+                if (crushcurve_style[i] >= 2) {
+                    fprintf(stderr, "    WARNING material %d: crushcurve_style %d uses hardcoded absolute pressure thresholds inside the post-switch pressure range. Not compatible.\n", i, crushcurve_style[i]);
+                }
+            }
+#endif
+        }
+#endif
+
+
+
+
+
 #if GRAVITATING_POINT_MASSES
         fprintf(stdout, "\nFound %d pointmasses in pointmasses input file:\n", numberOfPointmasses);
         for (i = 0; i < numberOfPointmasses; i++) {
@@ -1501,6 +1719,17 @@ void transferMaterialsToGPU()
         free(friction_angle_damaged);
         free(density_floor);
         free(energy_floor);
+
+#if FAST_INTEGRATION_SCHEME
+        free(fast_transition_time);
+        free(fast_bulk_modulus);
+        free(fast_rho_0);
+        free(fast_poisson_ratio);
+        free(fast_rho_limit);
+#endif
+
+
+
 #if SOLID
         free(young_modulus);
 #endif
@@ -1606,6 +1835,17 @@ void cleanupMaterials()
     cudaVerify(cudaFree(matTillEcv_d));
     cudaVerify(cudaFree(matTillEiv_d));
     cudaVerify(cudaFree(matRhoLimit_d));
+
+#if FAST_INTEGRATION_SCHEME
+    cudaVerify(cudaFree(matFastTransitionTime_d));
+    cudaVerify(cudaFree(matFastBulkmodulus_d));
+    cudaVerify(cudaFree(matFastRho0_d));
+    cudaVerify(cudaFree(matFastPoissonRatio_d));
+    cudaVerify(cudaFree(matFastRhoLimit_d));
+    cudaVerify(cudaFree(matFastSwitched_d));
+#endif
+
+
     cudaVerify(cudaFree(matShearmodulus_d));
     cudaVerify(cudaFree(matN_d));
     cudaVerify(cudaFree(matCohesion_d));

@@ -73,6 +73,13 @@
 // or EOS_TYPE_JUTZI_ANEOS.
 #define ANEOS_VAPOR_NO_STRENGTH 0
 
+// Fast integration scheme following Raducan & Jutzi (2022), Jutzi et al. (2022):
+// after a per-material transition time, the EOS is switched to a low-sound-speed
+// linear medium so that the CFL condition allows much larger timesteps.
+// Only meaningful for the late stage of low-velocity granular flow.
+#define FAST_INTEGRATION_SCHEME 1
+
+
 // Choose the SPH representation to solve the momentum and energy equation:
 // SPH_EQU_VERSION 1: original version with HYDRO dv_a/dt ~ - (p_a/rho_a**2 + p_b/rho_b**2)  \nabla_a W_ab
 //                                     SOLID dv_a/dt ~ (sigma_a/rho_a**2 + sigma_b/rho_b**2) \nabla_a W_ab
@@ -170,8 +177,8 @@
 
 // Porosity models:
 // p-alpha model implemented following Jutzi (200x); if in doubt activate both of the following options
-#define PALPHA_POROSITY 0         // pressure depends on distention
-#define STRESS_PALPHA_POROSITY 0  // deviatoric stress is also affected by distention
+#define PALPHA_POROSITY 1         // pressure depends on distention
+#define STRESS_PALPHA_POROSITY 1  // deviatoric stress is also affected by distention
 // Sirono model modified by Geretshauser (2009/10)
 #define SIRONO_POROSITY 0
 // eps-alpha model implemented following Wuennemann
@@ -180,7 +187,7 @@
 // max number of activation thresholds per particle, only required for FRAGMENTATION, otherwise set to 1
 #define MAX_NUM_FLAWS 1
 // maximum number of interactions per particle -> fixed array size
-#define MAX_NUM_INTERACTIONS 512
+#define MAX_NUM_INTERACTIONS 256
 
 // if VARIABLE_SML is set, the smoothing length (sml) is not fixed in time - choose either:
 //   FIXED_NOI for a fixed number of interaction partners, following the ansatz by Hernquist & Katz (1989)
@@ -192,7 +199,7 @@
 #define INTEGRATE_SML 1
 // read sml for each particle from input file (instead of using a single, material-specific one from material.cfg)
 // (if VARIABLE_SML is not set the individual smls remain constant)
-#define READ_INITIAL_SML_FROM_PARTICLE_FILE 0
+#define READ_INITIAL_SML_FROM_PARTICLE_FILE 1
 
 // correction terms for sml calculation (warning: experimental)
 // adds gradient of the smoothing length to continuity equation, equation of motion, energy equation
@@ -206,7 +213,7 @@
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be set to 0
 // and the simulation continues. It will be announced on *stdout* when this happens
 // if set to 0, the simulation stops in such a case unless DEAL_WITH_TOO_MANY_INTERACTIONS is used
-#define TOO_MANY_INTERACTIONS_KILL_PARTICLE 0
+#define TOO_MANY_INTERACTIONS_KILL_PARTICLE 1
 // important switch: if the simulations yields at some point too many interactions for
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be lowered until
 // the interactions are lower than MAX_NUM_INTERACTIONS
@@ -224,7 +231,7 @@
 // IO options
 #define HDF5IO 1    // use HDF5 (needs libhdf5-dev and libhdf5)
 #define MORE_OUTPUT 1   //produce additional output to HDF5 files: p_max, p_min, rho_max, rho_min
-#define MORE_ANEOS_OUTPUT 1 // produce additional output to HDF5 files: T, cs, entropy, phase-flag; set only if you use the ANEOS EoS; currently not supported for porosity + ANEOS
+#define MORE_ANEOS_OUTPUT 0 // produce additional output to HDF5 files: T, cs, entropy, phase-flag; set only if you use the ANEOS EoS; currently not supported for porosity + ANEOS
 #define OUTPUT_GRAV_ENERGY 0    // compute and output gravitational energy (at times when output files are written); of all SPH particles (and also w.r.t. gravitating point masses and between them); direct particle-particle summation, not tree; option exists to control costly computation for high particle numbers
 #define BINARY_INFO 0   // generates additional output file (binary_system.log) with info regarding binary system: semi-major axis, eccentricity if GRAVITATING_POINT_MASSES == 1
 
