@@ -81,7 +81,7 @@ __global__ void calculateSoundSpeed()
             mu = eta - 1.0;
             z = (1.0 - eta)/eta;
             //condensed and expanded cold states
-            if (eta >= 0.0 || p.e[i] < matTillEiv[matId]) {
+            if (eta >= 1.0 || p.e[i] < matTillEiv[matId]) {
                 if (pressure < 0.0 || eta < matRhoLimit[matId]) pressure = 0.0;
                 cs_sq = matTilla[matId]*p.e[i]+(matTillb[matId]*p.e[i])/(omega0*omega0)*(3.0*omega0-2.0) +
                     (matTillA[matId]+2.0*matTillB[matId]*mu)/rho + pressure/(rho*rho)*(matTilla[matId]*rho+matTillb[matId]*rho/(omega0*omega0));
