@@ -179,6 +179,14 @@
 // p-alpha model implemented following Jutzi (200x); if in doubt activate both of the following options
 #define PALPHA_POROSITY 1         // pressure depends on distention
 #define STRESS_PALPHA_POROSITY 1  // deviatoric stress is also affected by distention
+// The factor f (Jutzi et al. 2008, eq. 44) relates the velocity divergence of the matrix to that
+// of the porous material. Jutzi applies it to the whole of Hooke's law, including the Jaumann
+// rotation terms (his eqs. 45/48). Set to 0 to apply f only to the volumetric part, which leaves
+// the rotation terms unscaled and reproduces rigid-body rotation exactly. Keep at 1 for
+// consistency with the implementation according to Jutzi's paper from 2008 (and probably the Bern SPH code)
+// imho setting to 0 is more physically correct since the jaumann rate terms are coefficients and no gradients
+#define PALPHA_F_ACTS_ON_ROTATION 0
+
 // Sirono model modified by Geretshauser (2009/10)
 #define SIRONO_POROSITY 0
 // eps-alpha model implemented following Wuennemann

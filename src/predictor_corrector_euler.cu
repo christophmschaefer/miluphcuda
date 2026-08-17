@@ -180,6 +180,7 @@ __global__ void CorrectorStep_euler()
         // next line, Oli & Christoph personal communication 2019-06-24
         p.p[i] = predictor.p[i];
         p.pold[i] = predictor.pold[i];
+        p.f[i] = predictor.f[i];
         p.alpha_jutzi_old[i] = p.alpha_jutzi_old[i];
 #endif
 #endif

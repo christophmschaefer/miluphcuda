@@ -46,12 +46,12 @@
  *   - use DENSITY_ERROR
  *   - for sims with PALPHA_POROSITY: use LIMIT_ALPHA_CHANGE
  */
-#define RK2_USE_VELOCITY_ERROR 0
+#define RK2_USE_VELOCITY_ERROR 1
 #define RK2_USE_DENSITY_ERROR 1
-#define RK2_USE_ENERGY_ERROR 0
+#define RK2_USE_ENERGY_ERROR 1
 #define RK2_USE_VELOCITY_ERROR_POINTMASSES 0  // use velocity error checking for pointmasses
 #define RK2_LIMIT_PRESSURE_CHANGE 0   // special check for PALPHA_POROSITY for crush curve convergence
-#define RK2_LIMIT_ALPHA_CHANGE 1   // special check for PALPHA_POROSITY for crush curve convergence
+#define RK2_LIMIT_ALPHA_CHANGE 0   // special check for PALPHA_POROSITY for crush curve convergence
 
 /* important parameters
  * recommended:
