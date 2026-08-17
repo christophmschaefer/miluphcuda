@@ -528,6 +528,8 @@ __global__ void limitTimestepCourant(double *courantPerBlock)
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
         // only consider particles that interact
         if (p.noi[i] > 0) {
+		double local_dt = p.h[i] / p.cs[i];
+		courant = min(courant, local_dt);
             courant = min(courant, p.h[i] / p.cs[i]);
         }
     }
@@ -1094,6 +1096,7 @@ __global__ void integrateThirdStep(void)
         p.p[i] = rk[RKSECOND].p[i];
 #if PALPHA_POROSITY
         p.pold[i] = rk[RKSECOND].p[i];
+        p.f[i] = rk[RKSECOND].f[i];
 #endif
 #if SIRONO_POROSITY
         p.rho_0prime[i] = rk[RKSECOND].rho_0prime[i];

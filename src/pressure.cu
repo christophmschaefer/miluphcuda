@@ -61,6 +61,8 @@ __global__ void calculatePressure() {
         } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
             rho = p.rho[i];
             e = p.e[i];
+            // clamp e positive, will be removed when tensile strength is implemented
+            if (e < 0) e = 0;
             eta = rho / matTillRho0[matId];
             mu = eta - 1.0;
             if (eta < matRhoLimit[matId] && e < matTillEcv[matId]) {
@@ -441,6 +443,13 @@ __global__ void calculatePressure() {
             p.dalphadrho[i] = ((pressure / (p.rho[i] * p.rho[i]) * p.delpdele[i] + p.alpha_jutzi[i] * p.delpdelrho[i]) * p.dalphadp[i])
                             / (p.alpha_jutzi[i] + p.dalphadp[i] * (pressure - p.rho[i] * p.delpdelrho[i]));
             p.f[i] = 1.0 + p.dalphadrho[i] * p.rho[i] / p.alpha_jutzi[i];
+
+            /* f = d ln(rho_s) / d ln(rho) <= 1 by construction, since dalpha/drho <= 0.
+               f > 1 can only arise from a sign change of the denominator of dalphadrho above. */
+            if (p.f[i] > 1.0) {
+                p.f[i] = 1.0;
+            }
+
             if (p.alpha_jutzi[i] <= 1.0) {
                 p.f[i] = 1.0;
                 p.alpha_jutzi[i] = 1.0;

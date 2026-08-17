@@ -718,7 +718,10 @@ void transferMaterialsToGPU()
             }
             // set cs_solid for p-alpha + Murnaghan EoS, for all other p-alpha EoS the solid sound speed is computed dynamically
             if (eos[ID] == EOS_TYPE_JUTZI_MURNAGHAN) {
-                cs_solid[ID] = sqrt(bulk_modulus[ID] / rho_0[ID] / porjutzi_alpha_0[ID]);
+                // cs_solid[ID] = sqrt(bulk_modulus[ID] / rho_0[ID] / porjutzi_alpha_0[ID]);
+                /* At frozen alpha, dP/drho = (1/alpha) * dP_s/drho_s * alpha = dP_s/drho_s = K/rho_0,
+                   independent of alpha. rho_0 is the matrix reference density. */
+                cs_solid[ID] = sqrt(bulk_modulus[ID] / rho_0[ID]);
             }
             config_setting_lookup_int(subset, "crushcurve_style", &crushcurve_style[ID]);
 #endif

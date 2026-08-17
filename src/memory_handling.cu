@@ -954,6 +954,7 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMallocHost((void**)&p_host.alpha_jutzi, memorySizeForParticles));
 	cudaVerify(cudaMallocHost((void**)&p_host.alpha_jutzi_old, memorySizeForParticles));
 	cudaVerify(cudaMallocHost((void**)&p_host.pold, memorySizeForParticles));
+	cudaVerify(cudaMallocHost((void**)&p_host.f, memorySizeForParticles));
     cudaVerify(cudaMallocHost((void**)&p_host.dalphadt, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&p_device.pold, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&p_device.alpha_jutzi, memorySizeForParticles));
@@ -1493,6 +1494,7 @@ int free_memory()
 	cudaVerify(cudaFreeHost(p_host.alpha_jutzi_old));
 	cudaVerify(cudaFreeHost(p_host.dalphadt));
 	cudaVerify(cudaFreeHost(p_host.pold));
+	cudaVerify(cudaFreeHost(p_host.f));
 # if FRAGMENTATION
     cudaVerify(cudaFreeHost(p_host.damage_porjutzi));
     cudaVerify(cudaFreeHost(p_host.ddamage_porjutzidt));

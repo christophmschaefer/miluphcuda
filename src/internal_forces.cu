@@ -957,8 +957,17 @@ __global__ void internalForces(int *interactions) {
 
 #endif
                 if (p.dalphadt[i] > 0.0) {
+                    /* Unloading. Since dalpha/dP <= 0 on all crush curves, dalphadt > 0 is
+                       equivalent to dP < 0, so this is Jutzi et al. (2008), eq. (23), with
+                       [dalpha/dP]_elastic = 0. No compaction also means f = 1 by eq. (44).
+                       pressure.cu cannot know the loading direction, so f is corrected here. */
                     p.dalphadt[i] = 0.0;
+                    p.f[i] = 1.0;
                 }
+                // replaced by the lines above to include f=1.0, cms 2026-08-14
+                // if (p.dalphadt[i] > 0.0) {
+                    // p.dalphadt[i] = 0.0;
+                // }
             }
         } else {
             p.dalphadt[i] = 0.0;
@@ -1027,6 +1036,7 @@ __global__ void internalForces(int *interactions) {
         if (matEOS[matId] != EOS_TYPE_REGOLITH && matEOS[matId] != EOS_TYPE_VISCOUS_REGOLITH) {
             for (d = 0; d < DIM; d++) {
                 for (e = 0; e < DIM; e++) {
+                    double dSdt_rot = 0.0;
                     // Hooke's law
                     p.dSdt[stressIndex(i,d,e)] = 2.0 * shear * edot[d][e];
 # if JC_PLASTICITY
@@ -1045,21 +1055,54 @@ __global__ void internalForces(int *interactions) {
                             edotp[d][e] += (-1./3)*(1-p_rhs.plastic_f[i])*edot[f][f];
 # endif
                         }
-                        p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,d,f)] * rdot[e][f];
-                        p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,e,f)] * rdot[d][f];
+                        // p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,d,f)] * rdot[e][f];
+                        // p.dSdt[stressIndex(i,d,e)] += p.S[stressIndex(i,e,f)] * rdot[d][f];
+                        dSdt_rot += p.S[stressIndex(i,d,f)] * rdot[e][f];
+                        dSdt_rot += p.S[stressIndex(i,e,f)] * rdot[d][f];
                     }
+                    // replaced by the lines below, cms 2026-08-14
+// # if PALPHA_POROSITY && STRESS_PALPHA_POROSITY
+//                     if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
+//                         p.dSdt[stressIndex(i,d,e)] = p.f[i] / p.alpha_jutzi[i] * p.dSdt[stressIndex(i,d,e)]
+//                                                             - 1.0 / (p.alpha_jutzi[i]*p.alpha_jutzi[i])
+
+// #  if 0 // FRAGMENTATION && DAMAGE_ACTS_ON_S
+//                                                             * (1-di)*p.S[stressIndex(i,d,e)]
+// #  else
+//                                                             * p.S[stressIndex(i,d,e)]
+// #  endif
+//                                                             * p.dalphadt[i];
+//                     }
+// # endif
 # if PALPHA_POROSITY && STRESS_PALPHA_POROSITY
                     if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
+                        /* Jutzi et al. (2008), eqs. (45) and (49). Note that p.S holds the porous
+                           deviator S/alpha, while eq. (49) is written in terms of the matrix
+                           deviator S = alpha * p.S. Substituting this cancels one factor alpha in
+                           both the rotation and the relaxation term, but not in the Hooke term,
+                           which contains no S. */
+                           /* additional note (cms): no (1-damage) factor here like in a previous version from 2021. p.S holds the undamaged deviator;
+                           damage is applied where S is consumed (stress.cu, dedt). The alpha-dot
+                           term is the product rule for d/dt(S_matrix/alpha) and must use exactly
+                           the integrated variable. */
+#  if PALPHA_F_ACTS_ON_ROTATION
                         p.dSdt[stressIndex(i,d,e)] = p.f[i] / p.alpha_jutzi[i] * p.dSdt[stressIndex(i,d,e)]
-                                                            - 1.0 / (p.alpha_jutzi[i]*p.alpha_jutzi[i])
-
-#  if 0 // FRAGMENTATION && DAMAGE_ACTS_ON_S
-                                                            * (1-di)*p.S[stressIndex(i,d,e)]
+                                                   + p.f[i] * dSdt_rot
+                                                   - 1.0 / p.alpha_jutzi[i] * p.S[stressIndex(i,d,e)] * p.dalphadt[i];
 #  else
-                                                            * p.S[stressIndex(i,d,e)]
+                        /* f scales the volumetric part of the strain rate only. The Hooke term is
+                           traceless, so f drops out of it, and the Jaumann terms are pure kinematics
+                           which must not be scaled at all -- otherwise rigid rotation of a porous
+                           particle is not reproduced. */
+                        p.dSdt[stressIndex(i,d,e)] = 1.0 / p.alpha_jutzi[i] * p.dSdt[stressIndex(i,d,e)]
+                                                   + dSdt_rot
+                                                   - 1.0 / p.alpha_jutzi[i] * p.S[stressIndex(i,d,e)] * p.dalphadt[i];
 #  endif
-                                                            * p.dalphadt[i];
+                    } else {
+                        p.dSdt[stressIndex(i,d,e)] += dSdt_rot;
                     }
+# else
+                    p.dSdt[stressIndex(i,d,e)] += dSdt_rot;
 # endif
                 }
             }

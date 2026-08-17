@@ -1540,6 +1540,7 @@ void write_particles_to_file(File file) {
 #if PALPHA_POROSITY
     hid_t alpha_id;
     hid_t dalphadt_id;
+    hid_t f_id;
 #endif
 
 #if SIRONO_POROSITY
@@ -2755,11 +2756,23 @@ void write_particles_to_file(File file) {
         x = (double *) malloc(sizeof(double) * numberOfParticles);
         // dalphadt_id = H5Dcreate2(file_id, "/dalphadt", H5T_NATIVE_DOUBLE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
         dalphadt_id = create_compressed_dataset(file_id, "/dalphadt", H5T_NATIVE_DOUBLE, dataspace_id, dims, 1);
-        for (i = 0; i < numberOfParticles; i++)
+        for (i = 0; i < numberOfParticles; i++) {
             x[i] = p_host.dalphadt[i];
+        }
 
         status = H5Dwrite(dalphadt_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(dalphadt_id);
+        free(x);
+
+        /* Jutzi's f factor, ratio of matrix to bulk velocity divergence */
+        x = (double *) malloc(sizeof(double) * numberOfParticles);
+        f_id = create_compressed_dataset(file_id, "/f", H5T_NATIVE_DOUBLE, dataspace_id, dims, 1);
+        for (i = 0; i < numberOfParticles; i++) {
+            x[i] = p_host.f[i];
+        }
+
+        status = H5Dwrite(f_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(f_id);
         free(x);
 #endif
 
@@ -3113,6 +3126,7 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
 #endif
 #if PALPHA_POROSITY
     cudaVerify(cudaMemcpy(p_host.pold, p_device.pold, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.f, p_device.f, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.alpha_jutzi, p_device.alpha_jutzi, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.dalphadt, p_device.dalphadt, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.alpha_jutzi_old, p_device.alpha_jutzi_old, memorySizeForParticles, cudaMemcpyDeviceToHost));

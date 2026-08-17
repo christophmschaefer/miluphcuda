@@ -180,11 +180,13 @@ __global__ void calculateSoundSpeed()
                 p.cs[i] = matcsLimit[matId];
                 continue;
             }
+            /* the matrix EOS is evaluated at the matrix density, as in pressure.cu */
+            rho = p.rho[i] * p.alpha_jutzi[i];
             // find array-indices just below the actual values of rho and e
-            i_rho = array_index(p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
+            i_rho = array_index(rho, aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
             // check for underflow
             if (i_rho < 0) {
-                i_rho = (p.rho[i] < aneos_rho_c[aneos_rho_id_c[matId]]) ? 0 : aneos_n_rho_c[matId] - 2;
+                i_rho = (rho < aneos_rho_c[aneos_rho_id_c[matId]]) ? 0 : aneos_n_rho_c[matId] - 2;
             }
             i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
             if (i_e < 0 && p.e[i] >= aneos_e_c[aneos_e_id_c[matId] + aneos_n_e_c[matId] - 1]) {
@@ -193,9 +195,9 @@ __global__ void calculateSoundSpeed()
             } else if (i_e < 0) {
                 // e below table minimum: clamp to cold curve
                 i_e = 0;
-                cs = bilinear_interpolation_from_linearized(p.rho[i], aneos_e_c[aneos_e_id_c[matId]], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], i);
+                cs = bilinear_interpolation_from_linearized(rho, aneos_e_c[aneos_e_id_c[matId]], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], i);
             } else {
-                cs = bilinear_interpolation_from_linearized(p.rho[i], p.e[i], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], i);
+                cs = bilinear_interpolation_from_linearized(rho, p.e[i], aneos_cs_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], i);
             }
             // do interpolation only if computed sound speed is above cs_porous, to capture
             // only compaction process, but not expanded states for example...
@@ -216,10 +218,13 @@ __global__ void calculateSoundSpeed()
             }
 #endif
         } else if (EOS_TYPE_JUTZI == matEOS[matId]) {
-            rho = p.rho[i];
+ //           rho = p.rho[i];
+            /* the matrix EOS is evaluated at the matrix density, as in pressure.cu */
+            rho = p.rho[i] * p.alpha_jutzi[i];
             eta = rho / matTillRho0[matId];
             omega0 = p.e[i]/(matTillE0[matId]*eta*eta) + 1.0;
-            pressure = p.p[i];
+//            pressure = p.p[i];
+            pressure = p.p[i] * p.alpha_jutzi[i];   /* P_s = alpha * P, Jutzi et al. (2008) eq. (4) */
             mu = eta - 1.0;
             z = (1.0 - eta)/eta;
             //condensed and expanded cold states
