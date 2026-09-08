@@ -390,7 +390,7 @@ __global__ void internalForces(int *interactions) {
             //         dWdx_corr_j[d] = dWdx[d];
             //     }
             }
-#if 1
+#if TENSORIAL_CORRECTION_FOR_DRHODT
 // total symmetrized variant of vvnablaW
             vvnablaW = 0.0;
             for (d = 0; d < DIM; d++) {

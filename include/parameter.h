@@ -109,6 +109,13 @@
 // please check the first lines of kernel.cu to choose the approach for linear consistency if your simulation outcomes look strange (USE_OLDSCHOOL_KERNEL_GRADIENT_CORRECTION_SCHEME is the default and should provide the best results, though)
 #define TENSORIAL_CORRECTION 1
 
+// Apply the tensorial correction also to the velocity gradient in the continuity equation.
+// Set to 0 to use the raw kernel gradient for drhodt while keeping the correction in the
+// momentum equation and in dSdt.
+// Has no effect unless TENSORIAL_CORRECTION is 1.
+#define TENSORIAL_CORRECTION_FOR_DRHODT 0
+
+
 
 // Available plastic flow conditions:
 // (if you do not know what this is, choose (1) or nothing)
