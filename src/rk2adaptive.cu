@@ -530,7 +530,11 @@ __global__ void limitTimestepCourant(double *courantPerBlock)
         if (p.noi[i] > 0) {
 		double local_dt = p.h[i] / p.cs[i];
 		courant = min(courant, local_dt);
+#if SOLID
+            courant = min(courant, p.h[i] / sqrt(p.cs[i]*p.cs[i] + 4./3*matShearmodulus[p_rhs.materialId[i]]/p.rho[i]) );
+#else
             courant = min(courant, p.h[i] / p.cs[i]);
+#endif
         }
     }
 
