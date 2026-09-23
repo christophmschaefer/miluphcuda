@@ -154,6 +154,8 @@ __global__ void CorrectorStep()
         }
         p.ep[i] = p.ep[i] + dt * predictor.edotp[i];
         p.edotp[i] = predictor.edotp[i];
+        p.eps_tot[i] = p.eps_tot[i] + dt * predictor.deps_totdt[i];
+        p.deps_totdt[i] = predictor.deps_totdt[i];
 #endif
     }
 }
@@ -255,6 +257,7 @@ __global__ void PredictorStep()
             }
         }
         predictor.ep[i] = p.ep[i] + dt/2 * p.edotp[i];
+        predictor.eps_tot[i] = p.eps_tot[i] + dt/2 * p.deps_totdt[i];
 #endif
     }
 

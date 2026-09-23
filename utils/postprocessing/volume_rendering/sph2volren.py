@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 """
 sph2volren.py -- deposit SPH particles (miluphcuda HDF5 output) onto a regular
-grid and write a CF-compliant NetCDF file that VAPOR and ParaView open
-directly. Volume renderers need gridded data; rendering the particles
-themselves gives points/splats, never a lit, continuous surface.
+grid and write a CF-compliant NetCDF file (VAPOR, ParaView) and optionally a
+VTK .vti file with pre-computed RGBA colours (ParaView, --vti). Volume
+renderers need gridded data; rendering the particles themselves gives
+points/splats, never a lit, continuous surface.
 
 Fields written (float32, dims time,z,y,x, cell-centred coordinates x,y,z):
     rho_total   SPH density  sum_j m_j W(r - r_j, h_j)          [kg/m^3]
@@ -45,68 +46,18 @@ Smoothness
     All three also soften the body surface and crater rim.
 
 -------------------------------------------------------------------------------
-VAPOR (3.10)
+Rendering (details: README.txt)
 -------------------------------------------------------------------------------
-  Import tab -> NetCDF-CF -> select the .nc file(s); several files at once
-  become one dataset with one time step per file.
-  Render tab -> "+" -> Volume renderer:
-    Variables tab : Variable Name = rho_total (opacity),
-                    Color mapped variable = total_plastic_strain
-    Appearance tab: Rendering Method -> Raytracing Algorithm = Regular
-                    (NOT OSPRay, otherwise the next section is hidden)
-                    Ray Tracing -> tick "Color by other variable",
-                    Sampling Rate Multiplier 2x-4x for final images
-                    upper transfer function (rho_total): opacity ~0 below
-                      ~0.01 rho0, low plateau (haze) up to ~0.35 rho0,
-                      steep rise to 1 at ~0.5 rho0
-                    Colormap Transfer Function (strain): gray at 0 -> yellow
-                      at 1 (double-click control points to set colours)
-                    Lighting -> Enabled
-  Annotate tab : untick Axis Annotations / Display Domain Bounds,
-                 Background Color = black, Time Annotation = No annotation
-  Export tab   : TIFF/PNG, Current frame or Time series range,
-                 Output Resolution -> Use Custom Output Size
-  Movie        : File -> Save Session (.vs3), then make_movie.py
-
--------------------------------------------------------------------------------
-ParaView (6.x)
--------------------------------------------------------------------------------
-  Open the .nc file (NetCDF CF reader, Dimensions (z, y, x)) -> Apply.
-  Several impact.*.nc files are grouped as a file series (time steps).
-  Display properties (click the gear icon for advanced properties):
-    Representation            = Volume
-    Coloring                  = total_plastic_strain
-    Use Separate Opacity Array: tick, Volume Opacity Array = rho_total
-    Shade                     : tick (lit surface)
-    Volume Rendering Mode     = GPU Based
-    Scalar Opacity Unit Distance ~ 2-6 grid cells (larger = more transparent)
-  With a separate opacity array ParaView keeps TWO transfer functions:
-    colour  -> lookup table of total_plastic_strain
-    opacity -> opacity function of rho_total (starts at its default, so the
-               ramp has to be set again after ticking the option)
-  Easiest: select the source, View -> Python Shell -> Run Script ->
-  paraview_look.py (sets both on the display's own transfer functions:
-  disp.LookupTable and disp.ScalarOpacityFunction). Set RHO0 there.
-  Gray -> yellow colormap without purple (Python Shell):
-      disp = GetDisplayProperties(GetActiveSource())
-      lut = disp.LookupTable
-      lut.AutomaticRescaleRangeMode = 'Never'
-      lut.ColorSpace = 'RGB'
-      lut.RGBPoints = [0.0, 0.75, 0.75, 0.75,   # gray
-                       0.3, 0.86, 0.84, 0.66,   # pale cream
-                       0.6, 0.96, 0.89, 0.42,   # light yellow
-                       1.0, 1.00, 0.85, 0.10]   # golden yellow (>1 clamps)
-      Render()
-    Use disp.LookupTable, not GetColorTransferFunction(...): if the display
-    uses a separate colour map, the latter changes a table that is not shown.
-  Warning "OpenGL implementation does not support the required texture size
-    of 65536, falling back to 16384": harmless. VTK samples the opacity
-    function finely enough to resolve the closest pair of control points;
-    move near-coincident points apart to silence it. Rescaling rho_total
-    does not help (range and point spacing scale together).
-  Movie: open all .nc files as one series, File -> Save Animation
-    (or pvbatch), then e.g.
-    ffmpeg -framerate 25 -i frame.%04d.png -c:v libx264 -pix_fmt yuv420p out.mp4
+  VAPOR     open the .nc (NetCDF-CF). Volume renderer: Variable = rho_total,
+            Color mapped variable = total_plastic_strain, "Color by other
+            variable" on (Raytracing Algorithm = Regular), Lighting enabled.
+            Frames on a cluster: vapor_frames.py with a saved session.
+  ParaView  use the .vti written with --vti (RGBA: colour from the strain,
+            alpha = density). Colour by "rgba", Map Scalars off, Shade on:
+            paraview_rgba_look.py (GUI), make_frames_paraview_rgba.py (pvbatch).
+            Do NOT use "Use Separate Opacity Array" with Shade: VTK then
+            computes the lighting normals from the colour array (strain),
+            which shows the strain field's internal structure as fake relief.
 """
 import argparse
 import numpy as np
@@ -203,6 +154,70 @@ def read_miluph(fname, names, extra=()):
     return pos, mass, h, v, mat, t, q
 
 
+# ----------------------------------------------------------------------------
+# optional VTK image file with pre-computed RGBA (for ParaView)
+# ----------------------------------------------------------------------------
+GRAY = (0.75, 0.75, 0.75)
+CREAM = (0.86, 0.84, 0.66)
+LIGHT = (0.96, 0.89, 0.42)
+
+
+def rgba_colors(q, s_yellow, s_gray, yellow):
+    """gray -> cream -> light yellow -> yellow as a function of q (RGB in 0..1)"""
+    s0 = max(s_gray, 0.0)
+    xs = [0.0]
+    cs = [GRAY]
+    if s0 > 0.0:
+        xs.append(s0); cs.append(GRAY)
+    xs += [s0 + 0.3 * (s_yellow - s0), s0 + 0.6 * (s_yellow - s0), s_yellow]
+    cs += [CREAM, LIGHT, tuple(yellow)]
+    xs = np.array(xs)
+    rgb = np.empty(q.shape + (3,), dtype=np.float32)
+    for c in range(3):
+        rgb[..., c] = np.interp(q, xs, [cc[c] for cc in cs])   # clamps above s_yellow
+    return rgb
+
+
+def write_vti(fname, origin, dx, fields, rgba, t, field_data):
+    """VTK XML ImageData (raw appended, little endian). fields: name -> (z,y,x)
+    float array, rgba: (z,y,x,4) uint16. Point order x fastest."""
+    nz, ny, nx = rgba.shape[:3]
+    arrays = [("rgba", "UInt16", 4, np.ascontiguousarray(rgba, dtype="<u2"))]
+    for name, arr in fields.items():
+        arrays.append((name, "Float32", 1, np.ascontiguousarray(arr, dtype="<f4")))
+    fdata = [("TimeValue", "Float64", np.array([t], dtype="<f8"))]
+    for name, val in field_data.items():
+        fdata.append((name, "Float64", np.array([val], dtype="<f8")))
+    offset = 0
+    head = []
+    head.append('<?xml version="1.0"?>\n<VTKFile type="ImageData" version="1.0" '
+                'byte_order="LittleEndian" header_type="UInt64">\n')
+    ext = "0 %d 0 %d 0 %d" % (nx - 1, ny - 1, nz - 1)
+    head.append('<ImageData WholeExtent="%s" Origin="%.17g %.17g %.17g" '
+                'Spacing="%.17g %.17g %.17g">\n' % ((ext,) + tuple(origin) + (dx, dx, dx)))
+    blobs = []
+    head.append("<FieldData>\n")
+    for name, typ, arr in fdata:
+        head.append('<DataArray type="%s" Name="%s" NumberOfTuples="1" format="appended" '
+                    'offset="%d"/>\n' % (typ, name, offset))
+        blobs.append(arr.tobytes()); offset += 8 + len(blobs[-1])
+    head.append("</FieldData>\n")
+    head.append('<Piece Extent="%s">\n<PointData Scalars="rgba">\n' % ext)
+    for name, typ, ncomp, arr in arrays:
+        head.append('<DataArray type="%s" Name="%s" NumberOfComponents="%d" '
+                    'format="appended" offset="%d"/>\n' % (typ, name, ncomp, offset))
+        blobs.append(arr.tobytes()); offset += 8 + len(blobs[-1])
+    head.append("</PointData>\n<CellData/>\n</Piece>\n</ImageData>\n"
+                '<AppendedData encoding="raw">\n_')
+    with open(fname, "wb") as f:
+        f.write("".join(head).encode())
+        for b in blobs:
+            f.write(np.uint64(len(b)).astype("<u8").tobytes())
+            f.write(b)
+        f.write(b"\n</AppendedData>\n</VTKFile>\n")
+
+
+
 def write_cf(fname, x, y, z, t, fields, units):
     with netCDF4.Dataset(fname, "w", format="NETCDF4") as nc:
         nc.Conventions = "CF-1.8"
@@ -253,6 +268,21 @@ def main():
     ap.add_argument("--smooth", type=float, default=0.0,
                     help="extra Gaussian smoothing of the gridded fields, sigma in "
                          "grid cells (e.g. 1.0); needs scipy")
+    ap.add_argument("--vti", metavar="FILE.vti",
+                    help="additionally write a VTK image file with a pre-computed "
+                         "RGBA array for ParaView (colour from --rgba-var, alpha "
+                         "from rho_total); see README")
+    ap.add_argument("--rgba-var", help="colour variable for --vti "
+                    "(default: first --color-var)")
+    ap.add_argument("--rgba-yellow-at", type=float, default=1.0,
+                    help="value of --rgba-var that is fully yellow (default 1.0)")
+    ap.add_argument("--rgba-gray-below", type=float, default=0.0,
+                    help="below this value the colour stays gray (default 0)")
+    ap.add_argument("--rgba-yellow", type=float, nargs=3, default=(1.0, 0.85, 0.10),
+                    metavar=("R", "G", "B"))
+    ap.add_argument("--rgba-rho-max", type=float,
+                    help="density mapped to alpha = 65535 (default: max of "
+                         "rho_total). Use the SAME value for all snapshots of a movie")
     ap.add_argument("--time", type=float,
                     help="override snapshot time (if the HDF5 file has no 'time')")
     ap.add_argument("--color-var", nargs="+", default=[],
@@ -354,6 +384,24 @@ def main():
     yc = lo[1] + (np.arange(ny) + 0.5) * dx
     zc = lo[2] + (np.arange(nz) + 0.5) * dx
     write_cf(a.out, xc, yc, zc, t, fields, units)
+
+    if a.vti:
+        cvar = a.rgba_var or (a.color_var[0] if a.color_var else None)
+        if cvar is None or cvar not in fields:
+            raise SystemExit("--vti needs --rgba-var (or --color-var) with a gridded variable")
+        rho_max = a.rgba_rho_max or float(g_tot.max())
+        rgb = rgba_colors(fields[cvar], a.rgba_yellow_at, a.rgba_gray_below, a.rgba_yellow)
+        rgba = np.empty(g_tot.shape + (4,), dtype=np.uint16)
+        rgba[..., :3] = np.round(np.clip(rgb, 0, 1) * 65535)
+        rgba[..., 3] = np.round(np.clip(g_tot / rho_max, 0, 1) * 65535)
+        # pin the colour range to the full 0..65535 in two invisible corner
+        # cells (alpha 0), so no renderer rescales the colours
+        rgba[0, 0, 0] = (0, 0, 0, 0)
+        rgba[-1, -1, -1] = (65535, 65535, 65535, 0)
+        write_vti(a.vti, (xc[0], yc[0], zc[0]), dx, fields, rgba, t,
+                  dict(rgba_rho_max=rho_max, rgba_yellow_at=a.rgba_yellow_at))
+        print(f"  wrote {a.vti}  (rgba: colour from {cvar}, yellow at {a.rgba_yellow_at}; "
+              f"alpha = rho_total / {rho_max:.6g})")
     print(f"  wrote {a.out}  (rho_total max = {g_tot.max():.4g})")
 
 

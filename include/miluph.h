@@ -159,8 +159,10 @@ struct Particle {
     double *S;  ///< the deviatoric stress tensor
     double *dSdt; ///< the time derivative of the deviatoric stress tensor
     double *local_strain; ///< the local strain of a sph particle as required for the Grady-Kipp fragmentation model
-    double *ep; ///< the total strain of a sph particle
-    double *edotp; ///< and its time derivative
+    double *ep; ///< total equivalent plastic strain of a sph particle
+    double *edotp; ///< and its time derivative (only used by JC_PLASTICITY, 0 otherwise)
+    double *eps_tot; ///< total integrated strain (von Mises equivalent of the deviatoric strain)
+    double *deps_totdt; ///< and its time derivative
     double *plastic_f; ///< the plasticity factor (reduce factor of elastic strain to plastic strain
     double *sigma; ///< the stress tensor, \sigma^{\alpha \beta} = -p\delta^{\alpha \beta} + S^{\alpha \beta}
 #endif

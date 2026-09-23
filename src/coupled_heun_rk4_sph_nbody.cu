@@ -175,6 +175,8 @@ __global__ void CorrectorStep_heun()
 #endif
         p.ep[i] = p.ep[i] + dt/2 * (predictor.edotp[i] + p.edotp[i]);
         p.edotp[i] = 0.5*(predictor.edotp[i] + p.edotp[i]);
+        p.eps_tot[i] = p.eps_tot[i] + dt/2 * (predictor.deps_totdt[i] + p.deps_totdt[i]);
+        p.deps_totdt[i] = 0.5*(predictor.deps_totdt[i] + p.deps_totdt[i]);
 #endif
     }
 }
@@ -258,6 +260,7 @@ __global__ void PredictorStep_heun()
 #endif
 #if SOLID
         predictor.ep[i] = p.ep[i] + dt * p.edotp[i];
+        predictor.eps_tot[i] = p.eps_tot[i] + dt * p.deps_totdt[i];
         for (j = 0; j < DIM; j++) {
             for (k = 0; k < DIM; k++) {
                 predictor.S[stressIndex(i,j,k)] = p.S[stressIndex(i,j,k)] + dt * p.dSdt[stressIndex(i,j,k)];

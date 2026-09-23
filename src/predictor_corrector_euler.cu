@@ -169,6 +169,8 @@ __global__ void CorrectorStep_euler()
         }
         p.ep[i] = p.ep[i] + dt/2 * (predictor.edotp[i] + p.edotp[i]);
         p.edotp[i] = 0.5*(predictor.edotp[i] + p.edotp[i]);
+        p.eps_tot[i] = p.eps_tot[i] + dt/2 * (predictor.deps_totdt[i] + p.deps_totdt[i]);
+        p.deps_totdt[i] = 0.5*(predictor.deps_totdt[i] + p.deps_totdt[i]);
 #if PALPHA_POROSITY
         /* check if we have compaction and change alpha accordingly */
 //        if (p.drhodt[i] > 0 && predictor.p[i] > predictor.pold[i]) {
@@ -289,6 +291,7 @@ __global__ void PredictorStep_euler()
             }
         }
         predictor.ep[i] = p.ep[i] + dt * p.edotp[i];
+        predictor.eps_tot[i] = p.eps_tot[i] + dt * p.deps_totdt[i];
 #endif
     }
 

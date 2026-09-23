@@ -102,6 +102,7 @@ __global__ void integrateEuler(void)
                     p.S[i*DIM*DIM+k] += dt * p.dSdt[i*DIM*DIM+k];
             }
             p.ep[i] += dt * p.edotp[i];
+            p.eps_tot[i] += dt * p.deps_totdt[i];
 #endif
             p.x[i] += dt * p.dxdt[i];
 #if DIM > 1

@@ -762,6 +762,7 @@ __global__ void integrateFirstStep(void)
             }
         }
         rk[RKFIRST].ep[i] = rk[RKSTART].ep[i] + dt * B21 * rk[RKSTART].edotp[i];
+        rk[RKFIRST].eps_tot[i] = rk[RKSTART].eps_tot[i] + dt * B21 * rk[RKSTART].deps_totdt[i];
 #endif
 #if JC_PLASTICITY
         rk[RKFIRST].T[i] = rk[RKSTART].T[i] + dt * B21 * rk[RKSTART].dTdt[i];
@@ -883,6 +884,8 @@ __global__ void integrateSecondStep(void)
             rk[RKSECOND].S[i*DIM*DIM+j] = rk[RKSTART].S[i*DIM*DIM+j] + dt * (B31 * rk[RKSTART].dSdt[i*DIM*DIM+j] + B32 * rk[RKFIRST].dSdt[i*DIM*DIM+j]);
         }
         rk[RKSECOND].ep[i] = rk[RKSTART].ep[i] + dt * (B31 * rk[RKSTART].edotp[i] + B32 * rk[RKFIRST].edotp[i]);
+        rk[RKSECOND].eps_tot[i] = rk[RKSTART].eps_tot[i]
+                                  + dt * (B31 * rk[RKSTART].deps_totdt[i] + B32 * rk[RKFIRST].deps_totdt[i]);
 #endif
 
         rk[RKSECOND].vx[i] = rk[RKSTART].vx[i] + dt * (B31 * rk[RKSTART].ax[i] + B32 * rk[RKFIRST].ax[i]);
@@ -1071,6 +1074,12 @@ __global__ void integrateThirdStep(void)
         p.edotp[i] = 1./6. * ( C1 * rk[RKSTART].edotp[i]
                                + C2 * rk[RKFIRST].edotp[i]
                                + C3 * rk[RKSECOND].edotp[i]);
+        p.eps_tot[i] = rk[RKSTART].eps_tot[i] + dt/6.0 * (C1 * rk[RKSTART].deps_totdt[i]
+                                                         + C2 * rk[RKFIRST].deps_totdt[i]
+                                                         + C3 * rk[RKSECOND].deps_totdt[i]);
+        p.deps_totdt[i] = 1./6. * (C1 * rk[RKSTART].deps_totdt[i]
+                                   + C2 * rk[RKFIRST].deps_totdt[i]
+                                   + C3 * rk[RKSECOND].deps_totdt[i]);
 #endif
 
         p.vx[i] = rk[RKSTART].vx[i] + dt/6.0 * (C1 * rk[RKSTART].ax[i] + C2 * rk[RKFIRST].ax[i] + C3 * rk[RKSECOND].ax[i]);

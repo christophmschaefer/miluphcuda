@@ -885,6 +885,40 @@ void read_particles_from_file(File inputFile)
             }
         }
         free(x);
+
+        /* read accumulated strains; optional, since initial conditions usually do not contain them */
+        for (i = 0; i < my_anop; i++) {
+#  if !JC_PLASTICITY
+            p_host.ep[i] = 0.0;
+#  endif
+            p_host.eps_tot[i] = 0.0;
+        }
+#  if !JC_PLASTICITY
+        if (H5Lexists(file_id, "/total_plastic_strain", H5P_DEFAULT) > 0) {
+            hid_t tps_id = H5Dopen(file_id, "/total_plastic_strain", H5P_DEFAULT);
+
+            x = (double *) malloc(sizeof(double) * my_anop);
+            status = H5Dread(tps_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+            status = H5Dclose(tps_id);
+            for (i = 0; i < my_anop; i++)
+                p_host.ep[i] = x[i];
+            free(x);
+        } else if (param.restart) {
+            fprintf(stderr, "Warning: restart, but no /total_plastic_strain in input file. Starting with ep = 0.\n");
+        }
+#  endif
+        if (H5Lexists(file_id, "/total_integrated_strain", H5P_DEFAULT) > 0) {
+            hid_t tis_id = H5Dopen(file_id, "/total_integrated_strain", H5P_DEFAULT);
+
+            x = (double *) malloc(sizeof(double) * my_anop);
+            status = H5Dread(tis_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+            status = H5Dclose(tis_id);
+            for (i = 0; i < my_anop; i++)
+                p_host.eps_tot[i] = x[i];
+            free(x);
+        } else if (param.restart) {
+            fprintf(stderr, "Warning: restart, but no /total_integrated_strain in input file. Starting with eps_tot = 0.\n");
+        }
 # endif
         H5Fclose(file_id);
 
@@ -1021,6 +1055,11 @@ void read_particles_from_file(File inputFile)
 
     if (!param.hdf5input) {
         for (i = 0; i < numberOfParticles; i++) {
+#if SOLID
+            /* accumulated strains are not part of the ASCII format (ep only with JC_PLASTICITY) */
+            p_host.ep[i] = 0.0;
+            p_host.eps_tot[i] = 0.0;
+#endif
             // read in coordinates
             columns = 0;
             if (!fscanf(inputFile.data, "%s", &iotmp))
@@ -1532,6 +1571,7 @@ void write_particles_to_file(File file) {
 #endif
 #if SOLID
     hid_t ep_id;
+    hid_t eps_tot_id;
     hid_t S_id;
     hid_t dSdt_id;
     hid_t local_strain_id;
@@ -2711,6 +2751,16 @@ void write_particles_to_file(File file) {
         status = H5Dwrite(ep_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(ep_id);
         free(x);
+
+        /* total integrated strain */
+        x = (double *) malloc(sizeof(double) * numberOfParticles);
+        eps_tot_id = create_compressed_dataset(file_id, "/total_integrated_strain", H5T_NATIVE_DOUBLE, dataspace_id, dims, 1);
+        for (i = 0; i < numberOfParticles; i++)
+            x[i] = p_host.eps_tot[i];
+
+        status = H5Dwrite(eps_tot_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(eps_tot_id);
+        free(x);
 #endif
 
 #if INTEGRATE_ENERGY
@@ -3163,6 +3213,7 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     cudaVerify(cudaMemcpy(p_host.dSdt, p_device.dSdt, memorySizeForStress, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.local_strain, p_device.local_strain, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.ep, p_device.ep, memorySizeForParticles, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(p_host.eps_tot, p_device.eps_tot, memorySizeForParticles, cudaMemcpyDeviceToHost));
 #endif
 #if FRAGMENTATION
     cudaVerify(cudaMemcpy(p_host.d, p_device.d, memorySizeForParticles, cudaMemcpyDeviceToHost));

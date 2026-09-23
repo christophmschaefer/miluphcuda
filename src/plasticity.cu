@@ -377,6 +377,29 @@ __global__ void plasticityModel(void) {
         if (mises_f < 0) // actually, this should never happen
             mises_f = 0.0;
 
+        /* Equivalent plastic strain increment from the radial return. The deviator removed by
+           the limiter, (1 - f) S_trial, equals 2 G_eff times the plastic strain increment, hence
+               d(ep) = sqrt(2/3) (1 - f) |S_trial| / (2 G_eff) = (1 - f) sqrt(3 J2_trial) / (3 G_eff).
+           G_eff is the modulus with which p.S grows in dSdt (Hooke term). The update is
+           idempotent: on an already limited state f = 1 and nothing is added. Increments made
+           on intermediate integrator stages are discarded, since the integrators rebuild the
+           stage values of ep from the start-of-step value (edotp = 0). */
+        if (mises_f < 1.0) {
+            int mid = p_rhs.materialId[i];
+            double G_eff = matShearmodulus[mid];
+# if SIRONO_POROSITY
+            if (matEOS[mid] == EOS_TYPE_SIRONO)
+                G_eff = 0.5 * p.K[i];
+# endif
+# if PALPHA_POROSITY && STRESS_PALPHA_POROSITY
+            if (matEOS[mid] == EOS_TYPE_JUTZI || matEOS[mid] == EOS_TYPE_JUTZI_MURNAGHAN
+                || matEOS[mid] == EOS_TYPE_JUTZI_ANEOS)
+                G_eff /= p.alpha_jutzi[i];
+# endif
+            if (G_eff > 0.0)
+                p.ep[i] += (1.0 - mises_f) * sqrt(3.0 * J2) / (3.0 * G_eff);
+        }
+
         // remember the plastic lowering factor for later usage
         p_rhs.plastic_f[i] = mises_f;
         for (d = 0; d < DIM; d++) {

@@ -87,6 +87,13 @@ int allocate_particles_memory(struct Particle *a, int allocate_immutables)
 	cudaVerify(cudaMalloc((void**)&a->local_strain, memorySizeForParticles));
     cudaVerify(cudaMalloc((void**)&a->ep, memorySizeForParticles));
     cudaVerify(cudaMalloc((void**)&a->edotp, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&a->eps_tot, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&a->deps_totdt, memorySizeForParticles));
+    /* ghost/boundary slots are integrated but never get rates from internalForces */
+    cudaVerify(cudaMemset(a->ep, 0, memorySizeForParticles));
+    cudaVerify(cudaMemset(a->edotp, 0, memorySizeForParticles));
+    cudaVerify(cudaMemset(a->eps_tot, 0, memorySizeForParticles));
+    cudaVerify(cudaMemset(a->deps_totdt, 0, memorySizeForParticles));
 #endif
 
 #if NAVIER_STOKES
@@ -336,6 +343,7 @@ int copy_particles_derivatives_device_to_device(struct Particle *dst, struct Par
 #if SOLID
     cudaVerify(cudaMemcpy(dst->dSdt, src->dSdt, memorySizeForStress, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy(dst->edotp, src->edotp, memorySizeForParticles, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->deps_totdt, src->deps_totdt, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
 
 #if INVISCID_SPH
@@ -496,6 +504,7 @@ int copy_particles_variables_device_to_device(struct Particle *dst, struct Parti
 #if SOLID
     cudaVerify(cudaMemcpy(dst->S, src->S, memorySizeForStress, cudaMemcpyDeviceToDevice));
     cudaVerify(cudaMemcpy(dst->ep, src->ep, memorySizeForParticles, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->eps_tot, src->eps_tot, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
 #if NAVIER_STOKES
     cudaVerify(cudaMemcpy(dst->Tshear, src->Tshear, memorySizeForStress, cudaMemcpyDeviceToDevice));
@@ -659,6 +668,8 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 	cudaVerify(cudaFree(a->local_strain));
     cudaVerify(cudaFree(a->ep));
     cudaVerify(cudaFree(a->edotp));
+    cudaVerify(cudaFree(a->eps_tot));
+    cudaVerify(cudaFree(a->deps_totdt));
 #endif
 #if NAVIER_STOKES
 	cudaVerify(cudaFree(a->Tshear));
@@ -902,6 +913,17 @@ int init_allocate_memory(void)
     cudaVerify(cudaMallocHost((void**)&p_host.ep, memorySizeForParticles));
     cudaVerify(cudaMalloc((void**)&p_device.ep, memorySizeForParticles));
     cudaVerify(cudaMalloc((void**)&p_device.edotp, memorySizeForParticles));
+    cudaVerify(cudaMallocHost((void**)&p_host.eps_tot, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&p_device.eps_tot, memorySizeForParticles));
+    cudaVerify(cudaMalloc((void**)&p_device.deps_totdt, memorySizeForParticles));
+    /* the whole buffer (maxNumberOfParticles) is copied to the device, but only the first
+       numberOfParticles entries are read from file; ghost/boundary slots must start at zero */
+    memset(p_host.ep, 0, memorySizeForParticles);
+    memset(p_host.eps_tot, 0, memorySizeForParticles);
+    cudaVerify(cudaMemset(p_device.ep, 0, memorySizeForParticles));
+    cudaVerify(cudaMemset(p_device.edotp, 0, memorySizeForParticles));
+    cudaVerify(cudaMemset(p_device.eps_tot, 0, memorySizeForParticles));
+    cudaVerify(cudaMemset(p_device.deps_totdt, 0, memorySizeForParticles));
 #endif
 
 #if NAVIER_STOKES
@@ -1154,6 +1176,7 @@ int copy_particle_data_to_device()
 #if SOLID
 	cudaVerify(cudaMemcpy(p_device.S, p_host.S, memorySizeForStress, cudaMemcpyHostToDevice));
     cudaVerify(cudaMemcpy(p_device.ep, p_host.ep, memorySizeForParticles, cudaMemcpyHostToDevice));
+    cudaVerify(cudaMemcpy(p_device.eps_tot, p_host.eps_tot, memorySizeForParticles, cudaMemcpyHostToDevice));
 #endif
 #if NAVIER_STOKES
 	cudaVerify(cudaMemcpy(p_device.Tshear, p_host.Tshear, memorySizeForStress, cudaMemcpyHostToDevice));
@@ -1377,6 +1400,7 @@ int free_memory()
 #if SOLID
 	cudaVerify(cudaFree(p_device.S));
     cudaVerify(cudaFreeHost(p_host.ep));
+    cudaVerify(cudaFreeHost(p_host.eps_tot));
 	cudaVerify(cudaFree(p_device.dSdt));
 	cudaVerify(cudaFreeHost(p_host.S));
 	cudaVerify(cudaFreeHost(p_host.dSdt));
@@ -1386,6 +1410,8 @@ int free_memory()
 	cudaVerify(cudaFree(p_device.sigma));
     cudaVerify(cudaFree(p_device.ep));
     cudaVerify(cudaFree(p_device.edotp));
+    cudaVerify(cudaFree(p_device.eps_tot));
+    cudaVerify(cudaFree(p_device.deps_totdt));
 #endif
 #if ARTIFICIAL_STRESS
 	cudaVerify(cudaFree(p_device.R));
