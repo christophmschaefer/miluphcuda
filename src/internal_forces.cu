@@ -362,8 +362,8 @@ __global__ void internalForces(int *interactions) {
                 dWdx[e] /= p_rhs.shepard_correction[i];
             }
             dWdr /= p_rhs.shepard_correction[i];
-# endif
-#endif
+# endif // SHEPARD_CORRECTION
+#endif // AVERAGE_KERNELS
 
             dv[0] = dvx = vx - vxj;
 #if DIM > 1
@@ -382,43 +382,24 @@ __global__ void internalForces(int *interactions) {
 #endif
 
 #if TENSORIAL_CORRECTION
-            // Pre-compute corrected gradients for forces
+            // Pre-compute corrected gradients for forces (B * grad W)
             double dWdx_corr_i[DIM];
             double dWdx_corr_j[DIM];
             for (d = 0; d < DIM; d++) {
                 dWdx_corr_i[d] = 0.0;
                 dWdx_corr_j[d] = 0.0;
                 for (dd = 0; dd < DIM; dd++) {
-                     dWdx_corr_i[d] += p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
-                     dWdx_corr_j[d] += p_rhs.tensorialCorrectionMatrix[j*DIM*DIM+d*DIM+dd] * dWdx[dd];
+                     dWdx_corr_i[d] += p_rhs.tensorialCorrectionMatrix[i*DIM*DIM + d*DIM + dd] * dWdx[dd];
+                     dWdx_corr_j[d] += p_rhs.tensorialCorrectionMatrix[j*DIM*DIM + d*DIM + dd] * dWdx[dd];
                 }
-            //     // use original kernel gradient if particle has not enough interactions
-            //     if (p_rhs.noi[i] < 10) {
-            //         dWdx_corr_i[d] = dWdx[d];
-            //     }
-            //     if (p_rhs.noi[j] < 10) {
-            //         dWdx_corr_j[d] = dWdx[d];
-            //     }
             }
-#if TENSORIAL_CORRECTION_FOR_DRHODT
-// total symmetrized variant of vvnablaW
+# if TENSORIAL_CORRECTION_FOR_DRHODT
             vvnablaW = 0.0;
             for (d = 0; d < DIM; d++) {
-                vvnablaW += dv[d] * 0.5*(dWdx_corr_i[d] + dWdx_corr_j[d]);
+                vvnablaW += dv[d] * dWdx_corr_i[d];
             }
-#endif
-
-#if 0
-// the same but without symmetrization. can be more stable
-            vvnablaW = dvx * dWdx_corr_i[0];
-#if DIM > 1
-            vvnablaW += dvy * dWdx_corr_i[1];
-#if DIM > 2
-            vvnablaW += dvz * dWdx_corr_i[2];
-#endif
-#endif
-#endif 
-#endif //TENSORIAL_CORRECTION
+# endif // TENSORIAL_CORRECTION_FOR_DRHODT
+#endif // TENSORIAL_CORRECTION
 
 #if ARTIFICIAL_VISCOSITY || KLEY_VISCOSITY
             rr = 0.0;
@@ -479,20 +460,18 @@ __global__ void internalForces(int *interactions) {
                 //printf("%d\n", boundia);
                 tmp = p.m[j];
 # if TENSORIAL_CORRECTION
+                // non-averaged: use particle i's own correction matrix only,
+                // consistent with reproducing 1st-order velocity gradients at particle i
                 for (e = 0; e < DIM; e++) {
                     for (f = 0; f < DIM; f++) {
-                        double sym_f = 0.5*(dWdx_corr_i[f] + dWdx_corr_j[f]);
-                        double sym_e = 0.5*(dWdx_corr_i[e] + dWdx_corr_j[e]);
-                        edot[e][f] += 0.5 * p.m[j]/p.rho[i] * (sym_f * (-dv[e]) + sym_e * (-dv[f]));
-                        rdot[e][f] += 0.5 * p.m[j]/p.rho[i] * (sym_f * (-dv[e]) - sym_e * (-dv[f]));
-                        //edot[e][f] += 0.5 * p.m[j]/p.rho[i] *
-                         //   (dWdx_corr_i[f] * (-dv[e]) + dWdx_corr_i[e] * (-dv[f]));
-
-                        //rdot[e][f] += 0.5 * p.m[j]/p.rho[i] *
-                        //    (dWdx_corr_i[f] * (-dv[e]) - dWdx_corr_i[e] * (-dv[f]));
+                        edot[e][f] += 0.5 * p.m[j]/p.rho[i] *
+                            (dWdx_corr_i[f] * (-dv[e]) + dWdx_corr_i[e] * (-dv[f]));
+                        rdot[e][f] += 0.5 * p.m[j]/p.rho[i] *
+                            (dWdx_corr_i[f] * (-dv[e]) - dWdx_corr_i[e] * (-dv[f]));
                     }
                 }
-# else
+
+# else // NOT TENSORIAL_CORRECTION
                 tmp = -0.5*tmp/p.rho[i];
                 edot[0][0] += tmp*(dvx*dWdx[0] + dvx*dWdx[0]);
 #  if DIM > 1
@@ -757,15 +736,6 @@ __global__ void internalForces(int *interactions) {
 #endif
 
 # if ARTIFICIAL_VISCOSITY
-#  if TENSORIAL_CORRECTION
-            accels[0] += p.m[j]*(-pij * 0.5)*(dWdx_corr_i[0] + dWdx_corr_j[0]);
-#   if DIM > 1
-            accels[1] += p.m[j]*(-pij * 0.5)*(dWdx_corr_i[1] + dWdx_corr_j[1]);
-#    if DIM > 2
-            accels[2] += p.m[j]*(-pij * 0.5)*(dWdx_corr_i[2] + dWdx_corr_j[2]);
-#    endif
-#   endif
-#  else
             accels[0] += p.m[j]*(-pij)*dWdx[0];
 #   if DIM > 1
             accels[1] += p.m[j]*(-pij)*dWdx[1];
@@ -773,7 +743,6 @@ __global__ void internalForces(int *interactions) {
             accels[2] += p.m[j]*(-pij)*dWdx[2];
 #    endif
 #   endif
-#  endif
 # endif
 
 
@@ -805,26 +774,11 @@ __global__ void internalForces(int *interactions) {
 #if INTEGRATE_ENERGY
 # if ARTIFICIAL_VISCOSITY
             if (!isRelaxationRun) {
-#  if TENSORIAL_CORRECTION
-                double vvnablaW_corr = 0.0;
-                // use average of corrected gradients for symmetry
-                for (d = 0; d < DIM; d++) {
-                    vvnablaW_corr += dv[d] * 0.5 * (dWdx_corr_i[d] + dWdx_corr_j[d]);
-                }
-#  endif
-#  if TENSORIAL_CORRECTION
-#   if SML_CORRECTION
-                dedt += p.m[j] * vvnablaW_corr;
-#   else
-                dedt += 0.5 * p.m[j] * pij * vvnablaW_corr;
-#   endif
-#  else
-#   if SML_CORRECTION
+#  if SML_CORRECTION
                 dedt += p.m[j] * vvnablaW;
-#   else
+#  else
                 dedt += 0.5 * p.m[j] * pij * vvnablaW;
-#   endif // SML_CORRECTION
-#  endif // TENSORIAL_CORRECTION
+#  endif
             }
 # endif
 
