@@ -189,6 +189,7 @@ __device__ int calculate_all_eigenvalues(double M[DIM][DIM], double eigenvalues[
     error = 0;
 
 #define EPS_JACOBI 1e-10
+#define MAX_ITER_JACOBI_EIGENVALUES 100
 
     for (i = 0; i < DIM; i++) {
         for (j = 0; j < DIM; j++) {
@@ -225,15 +226,20 @@ __device__ int calculate_all_eigenvalues(double M[DIM][DIM], double eigenvalues[
             multiply_matrix(v, A, vtmp);
             copy_matrix(vtmp, v);
         }
-    } while (max > EPS_JACOBI);
+    } while (max > EPS_JACOBI && nit < MAX_ITER_JACOBI_EIGENVALUES);
+
+#if DEBUG_DEVEL
+    if (nit >= MAX_ITER_JACOBI_EIGENVALUES && max > EPS_JACOBI) {
+        printf("Warning: Jacobi eigenvalue iteration did not converge after %d iterations, "
+               "residual off-diagonal max = %g.\n", nit, max);
+    }
+#endif
 
     for (i = 0; i < DIM; i++) {
         eigenvalues[i] = diagM[i][i];
     }
     return nit;
 }
-
-
 
 
 
@@ -401,8 +407,7 @@ __device__ int invert_svd(double *m, double *inverted, double threshold_svd) {
         sigma_max = fmax(sigma_max, fabs(eigenvalues[k]));
 
     // relative threshold: discard eigenvalues smaller than eps * sigma_max
-    // 1e-6 means we tolerate a condition number up to 1e6
-    double rel_threshold = 1e-6 * sigma_max;
+    double rel_threshold = threshold_svd * sigma_max;
 
     for (k = 0; k < DIM; k++) {
         double ev = eigenvalues[k];
