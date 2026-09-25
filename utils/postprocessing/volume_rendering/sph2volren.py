@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 sph2volren.py -- deposit SPH particles (miluphcuda HDF5 output) onto a regular
 grid and write a CF-compliant NetCDF file (VAPOR, ParaView) and optionally a
@@ -60,6 +60,9 @@ Rendering (details: README.txt)
             which shows the strain field's internal structure as fake relief.
 """
 import argparse
+import warnings
+# older h5py with NumPy >= 1.25 warns about np.product on every read; harmless
+warnings.filterwarnings("ignore", message=".*product.*deprecated", category=DeprecationWarning)
 import numpy as np
 import h5py
 import netCDF4
@@ -227,7 +230,7 @@ def write_cf(fname, x, y, z, t, fields, units):
         nc.createDimension("y", len(y))
         nc.createDimension("x", len(x))
         vt = nc.createVariable("time", "f8", ("time",))
-        vt.units = "seconds since 2000-01-01 00:00:00"
+        vt.units = "seconds since 2001-01-01 00:00:00"   # VAPOR shows "User time" relative to 2001-01-01
         vt.axis = "T"
         vt[0] = t
         for name, arr, ax in (("x", x, "X"), ("y", y, "Y"), ("z", z, "Z")):
@@ -341,10 +344,18 @@ def main():
           f"({100*mass[~inside].sum()/mass.sum():.3f}% of mass)")
 
     heff = np.maximum(h * a.hscale, a.hmin_cells * dx)
-    frac_floor = np.mean(h * a.hscale < a.hmin_cells * dx)
+    hs = h * a.hscale
+    frac_floor = np.mean(hs < a.hmin_cells * dx)
+    hq = np.percentile(hs, [5, 50, 95])
+    print(f"  kernel support h*hscale: 5% {hq[0]:.4g}, median {hq[1]:.4g}, 95% {hq[2]:.4g}"
+          f"  (= {hq[1]/dx:.2f} dx median); used: max(h*hscale, {a.hmin_cells} dx = "
+          f"{a.hmin_cells*dx:.4g})")
     if frac_floor > 0.5:
-        print(f"  note: {100*frac_floor:.0f}% of particles have h < "
-              f"{a.hmin_cells} dx -- grid is coarser than the SPH resolution (raise --n for more detail)")
+        print(f"  note: {100*frac_floor:.0f}% of particles have h < {a.hmin_cells} dx: the "
+              f"grid, not the SPH resolution, sets the finest detail (~2-3 dx = "
+              f"{2*dx:.3g}-{3*dx:.3g}). Mass is still conserved. For more detail "
+              f"raise --n (or use a smaller --box); median h is reached at "
+              f"--n ~ {int(np.ceil(a.n * a.hmin_cells * dx / max(hq[1], 1e-300)))}")
 
     cols, qnames = [], []
     if is_ej is not None:
