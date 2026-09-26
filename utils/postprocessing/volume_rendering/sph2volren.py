@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 sph2volren.py -- deposit SPH particles (miluphcuda HDF5 output) onto a regular
 grid and write a CF-compliant NetCDF file (VAPOR, ParaView) and optionally a
@@ -41,7 +41,10 @@ Smoothness
     --smooth 1 ... 2     Gaussian filter on the grid, sigma in cells; density
                          and density*quantity are smoothed separately, so the
                          mean strain stays a consistent mass-weighted mean
-    --hmin-cells 2.5     smoother gradients -> fewer lighting artefacts and
+    --adaptive-h 32      kernel >= distance to the 32nd neighbour: sparse ejecta
+                       become a continuous haze instead of separate blobs
+                       (needs scipy; --workers N for the neighbour search)
+  --hmin-cells 2.5     smoother gradients -> fewer lighting artefacts and
                          less moire between particle lattice and grid
     All three also soften the body surface and crater rim.
 
@@ -261,6 +264,12 @@ def main():
                          "(drops far-flung ejecta; default 0.2)")
     ap.add_argument("--hmin-cells", type=float, default=1.5,
                     help="floor for kernel support in units of dx (default 1.5)")
+    ap.add_argument("--adaptive-h", type=int, metavar="K",
+                    help="use at least the distance to the K-th nearest neighbour as "
+                         "kernel support (e.g. 32): sparse ejecta become a continuous "
+                         "haze instead of separate blobs. Needs scipy.")
+    ap.add_argument("--workers", type=int, default=1,
+                    help="threads for the neighbour search of --adaptive-h (default 1)")
     ap.add_argument("--hscale", type=float, default=1.0,
                     help="extra smoothing factor on sml (e.g. 1.5 for sparse ejecta)")
     sel = ap.add_mutually_exclusive_group()
@@ -343,8 +352,29 @@ def main():
     print(f"  particles outside box: {nout} "
           f"({100*mass[~inside].sum()/mass.sum():.3f}% of mass)")
 
-    heff = np.maximum(h * a.hscale, a.hmin_cells * dx)
     hs = h * a.hscale
+    if a.adaptive_h:
+        # adaptive kernel: at least the distance to the K-th neighbour, so that
+        # sparse ejecta overlap into a continuous haze instead of separate blobs
+        from scipy.spatial import cKDTree
+        k = a.adaptive_h
+        print(f"  adaptive h: building tree, distance to neighbour {k} "
+              f"({a.workers} worker(s)) ...", flush=True)
+        tree = cKDTree(pos)
+        margin = hs.max() + a.hmin_cells * dx
+        near = np.where((pos >= lo - margin).all(1) & (pos <= hi + margin).all(1))[0]
+        hk = np.zeros_like(hs)
+        chunk = 500000
+        for c0 in range(0, len(near), chunk):
+            idx = near[c0:c0 + chunk]
+            d, _ = tree.query(pos[idx], k=k + 1, workers=a.workers)
+            hk[idx] = d[:, -1]
+        del tree
+        grown = np.mean(hk[near] > hs[near])
+        print(f"  adaptive h: kernel enlarged for {100*grown:.1f}% of the particles "
+              f"(median d_{k} = {np.median(hk[near]):.4g})")
+        hs = np.maximum(hs, hk)
+    heff = np.maximum(hs, a.hmin_cells * dx)
     frac_floor = np.mean(hs < a.hmin_cells * dx)
     hq = np.percentile(hs, [5, 50, 95])
     print(f"  kernel support h*hscale: 5% {hq[0]:.4g}, median {hq[1]:.4g}, 95% {hq[2]:.4g}"

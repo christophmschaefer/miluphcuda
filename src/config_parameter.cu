@@ -845,6 +845,7 @@ void transferMaterialsToGPU()
             // read energy_floor or set to -inf
             if (!config_setting_lookup_float(material, "energy_floor", &energy_floor[ID])) {
                 energy_floor[ID] = -1e30;
+            }
 #if FAST_INTEGRATION_SCHEME
                 /* Optional block for the fast integration scheme. The sentinels were already set
                 right after the allocation, so we only overwrite them if the block is present. */
@@ -905,7 +906,6 @@ void transferMaterialsToGPU()
                     }
                 }
 #endif
-            }
 
         }  // loop over materials
 
