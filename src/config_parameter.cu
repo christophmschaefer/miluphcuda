@@ -616,7 +616,13 @@ void transferMaterialsToGPU()
                 exit(EXIT_FAILURE);
             }
             config_setting_lookup_float(subset, "polytropic_K", &polytropic_K[ID]);
-            config_setting_lookup_float(subset, "polytropic_gamma", &polytropic_gamma[ID]);
+            if (config_setting_lookup_float(subset, "polytropic_gamma", &polytropic_gamma[ID])
+                    && eos[ID] == EOS_TYPE_TILLOTSON && polytropic_gamma[ID] <= 1.0) {
+                fprintf(stderr, "Error. polytropic_gamma = %e for Tillotson material with ID %d. For Tillotson it "
+                        "enables the ideal gas law for e > 100 till_E_cv and has to be > 1. Remove it to use the "
+                        "Tillotson EOS throughout.\n", polytropic_gamma[ID], ID);
+                exit(EXIT_FAILURE);
+            }
             config_setting_lookup_float(subset, "isothermal_soundspeed", &isothermal_cs[ID]);
             config_setting_lookup_float(subset, "bulk_modulus", &bulk_modulus[ID]);
             config_setting_lookup_float(subset, "shear_modulus", &shear_modulus[ID]);
@@ -1407,6 +1413,11 @@ void transferMaterialsToGPU()
                     fprintf(stdout, "%s\n", eos_type);
                     fprintf(stdout, "\t\t EoS params:\t till_rho_0 \t till_A \t till_B \t till_E_0 \t till_E_iv \t till_E_cv \t till_a \t till_b \t till_alpha \t till_beta \t cs_limit \t rho_limit \n");
                     fprintf(stdout, "\t\t\t\t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e \t %e\n", till_rho_0[i], till_A[i], till_B[i], till_E_0[i], till_E_iv[i], till_E_cv[i], till_a[i], till_b[i], till_alpha[i], till_beta[i], csLimit[i], rho_limit[i]);
+                    if (polytropic_gamma[i] > 1.0)
+                        fprintf(stdout, "\t\t ideal gas law with polytropic_gamma = %e for e > 100 till_E_cv and "
+                                "rho < till_rho_0\n", polytropic_gamma[i]);
+                    else
+                        fprintf(stdout, "\t\t no ideal gas switch (polytropic_gamma not set)\n");
                     break;
 #if PALPHA_POROSITY
                 case (EOS_TYPE_JUTZI):

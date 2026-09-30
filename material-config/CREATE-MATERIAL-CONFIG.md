@@ -266,16 +266,26 @@ and the following parameters:
         eos.till_alpha      float   0.
         eos.till_beta       float   0.
 
-        eos.rho_limit       float   0.9                 for cold (i.e., if e < till_E_cv) expanded states
+        eos.rho_limit       float   0.9                 for cold (i.e., if e <= till_E_iv) expanded states
                                                         with rho/rho_0 < rho_limit the pressure is set to
                                                         zero; intended to avoid unphysically high negative
                                                         pressures where the material would actually
-                                                        fragment or form droplets
+                                                        fragment or form droplets; for till_E_iv < e <
+                                                        till_E_cv only the vapour contribution is kept
 
         eos.cs_limit        float   1% of approx.       lower limit for sound speed (in m/s), default
                                     bulk sound speed    is 1% of sqrt(till_A/till_rho_0); can be used
                                                         to avoid unphysical values, like imaginary sound
                                                         speeds for negative pressures
+
+        eos.polytropic_gamma float  not set             optional; if set (has to be > 1), completely
+                                                        vaporized material (e > 100 till_E_cv and
+                                                        rho < till_rho_0) is treated as ideal gas,
+                                                        p = (polytropic_gamma - 1) rho e; without it the
+                                                        Tillotson EoS is used throughout, which approaches
+                                                        an ideal gas with gamma = till_a + 1 for large e;
+                                                        note that p jumps at e = 100 till_E_cv unless
+                                                        polytropic_gamma is close to till_a + 1
 
 --------------------------------
 

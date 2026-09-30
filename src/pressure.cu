@@ -40,8 +40,8 @@
  *   e >= E_cv:                      expanded form p_e = a rho e + (b rho e/(x + 1) + A mu exp(-beta z)) exp(-alpha z^2)
  *   E_iv < e < E_cv:                p = ((E_cv - e) p_c + (e - E_iv) p_e) / (E_cv - E_iv),
  *                                   with p_c = 0 for eta < rho_limit, so that p is continuous in e
- * For EOS_TYPE_TILLOTSON only, e is clamped to e >= 0, and for e > 100 E_cv and eta < 1 the material is treated as
- * ideal gas with polytropic_gamma from material.cfg.
+ * For EOS_TYPE_TILLOTSON only, e is clamped to e >= 0, and if polytropic_gamma > 1 is set in material.cfg the
+ * material is treated as ideal gas with that gamma for e > 100 E_cv and eta < 1 (see tillotson_ideal_gas()).
  */
 __device__ void tillotson_eos(double rho, double e, int matId, double *pressure, double *dpdrho, double *dpde)
 {
@@ -65,8 +65,8 @@ __device__ void tillotson_eos(double rho, double e, int matId, double *pressure,
         /* clamp e positive, will be removed when tensile strength is implemented */
         if (e < 0.0)
             e = 0.0;
-        /* completely vaporized state: ideal gas, polytropic_gamma has to be set in material.cfg */
-        if (e > 1e2 * E_cv && eta < 1.0) {
+        /* completely vaporized state: ideal gas, only if polytropic_gamma > 1 is set in material.cfg */
+        if (tillotson_ideal_gas(rho, e, matId)) {
             double gamma = matPolytropicGamma[matId];
 #if DEBUG_PRESSURE
             printf("complete vaporized state with e = %e and eta = %e, using ideal gas with gamma = %e\n",
@@ -132,6 +132,17 @@ __device__ void tillotson_eos(double rho, double e, int matId, double *pressure,
     /* only reached for e = NaN */
     printf("\n\nDeep trouble in tillotson_eos.\nmaterial %d: e = %e, eta = %e, E_iv = %e, E_cv = %e\n\n",
             matId, e, eta, E_iv, E_cv);
+}
+
+/*
+ * EOS_TYPE_TILLOTSON only: completely vaporized material (e > 100 E_cv, eta < 1) is treated as ideal gas with
+ * polytropic_gamma from material.cfg, if polytropic_gamma > 1 is set there. Without it, the Tillotson EOS is used
+ * throughout; its expanded form approaches an ideal gas with gamma = till_a + 1 for e -> infinity anyway.
+ */
+__device__ int tillotson_ideal_gas(double rho, double e, int matId)
+{
+    return EOS_TYPE_TILLOTSON == matEOS[matId] && matPolytropicGamma[matId] > 1.0
+        && e > 1e2 * matTillEcv[matId] && rho / matTillRho0[matId] < 1.0;
 }
 
 __global__ void calculatePressure() {

@@ -63,4 +63,11 @@ __global__ void calculatePressure(void);
  */
 __device__ void tillotson_eos(double rho, double e, int matId, double *pressure, double *dpdrho, double *dpde);
 
+/**
+ * @brief True if a particle of an EOS_TYPE_TILLOTSON material is treated as ideal gas (completely vaporized).
+ *
+ * @details Only if polytropic_gamma > 1 is set in material.cfg, for e > 100 E_cv and rho < till_rho_0.
+ */
+__device__ int tillotson_ideal_gas(double rho, double e, int matId);
+
 #endif

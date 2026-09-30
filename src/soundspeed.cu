@@ -34,7 +34,8 @@
  * c_s^2 is bounded from below by (a + 1) p/rho, the value for the ideal gas the expanded form approaches for
  * e -> infinity. This lower bound matters where the expanded Tillotson form has dp/drho < 0 (e.g. ice, water,
  * polycarbonate at eta ~ 0.55-0.85), which is thermodynamically unstable and has no real sound speed; it is a
- * numerical safeguard for the time step and the artificial viscosity at high pressures, not physics.
+ * numerical safeguard for the time step and the artificial viscosity at high pressures, not physics. It is not
+ * applied to completely vaporized material treated as ideal gas (tillotson_ideal_gas()), where c_s^2 is well defined.
  */
 __device__ static double tillotson_cs_sq(double rho, double e, int matId)
 {
@@ -43,6 +44,8 @@ __device__ static double tillotson_cs_sq(double rho, double e, int matId)
     tillotson_eos(rho, e, matId, &p_eos, &dpdrho, &dpde);
     p_eos = fmax(p_eos, 0.0);
     cs_sq = dpdrho + p_eos / (rho * rho) * dpde;
+    if (tillotson_ideal_gas(rho, e, matId))
+        return cs_sq;
     cs_sq_min = (matTilla[matId] + 1.0) * p_eos / rho;
     return fmax(cs_sq, cs_sq_min);
 }
