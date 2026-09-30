@@ -28,13 +28,33 @@
 #include "aneos.h"
 
 
+/*
+ * Squared sound speed for the Tillotson EOS, c_s^2 = dp/drho + p/rho^2 * dp/de, from the same EOS as the pressure
+ * (tillotson_eos() in pressure.cu); negative pressures do not reduce c_s.
+ * c_s^2 is bounded from below by (a + 1) p/rho, the value for the ideal gas the expanded form approaches for
+ * e -> infinity. This lower bound matters where the expanded Tillotson form has dp/drho < 0 (e.g. ice, water,
+ * polycarbonate at eta ~ 0.55-0.85), which is thermodynamically unstable and has no real sound speed; it is a
+ * numerical safeguard for the time step and the artificial viscosity at high pressures, not physics.
+ */
+__device__ static double tillotson_cs_sq(double rho, double e, int matId)
+{
+    double p_eos, dpdrho, dpde, cs_sq, cs_sq_min;
+
+    tillotson_eos(rho, e, matId, &p_eos, &dpdrho, &dpde);
+    p_eos = fmax(p_eos, 0.0);
+    cs_sq = dpdrho + p_eos / (rho * rho) * dpde;
+    cs_sq_min = (matTilla[matId] + 1.0) * p_eos / rho;
+    return fmax(cs_sq, cs_sq_min);
+}
+
+
 __global__ void calculateSoundSpeed()
 {
     register int i, inc, matId;
     int d;
     int j;
     double m_com;
-    register double cs, rho, pressure, eta, omega0, z, cs_sq,  cs_c_sq, cs_e_sq, Gamma_e, mu, y; //Gamma_c;
+    register double cs, rho, eta, cs_sq;
     int i_rho, i_e;
 
     inc = blockDim.x * gridDim.x;
@@ -74,53 +94,12 @@ __global__ void calculateSoundSpeed()
                 p.cs[i] = sqrt(cs_sq);
             }
         } else if (EOS_TYPE_TILLOTSON == matEOS[matId]) {
-            rho = p.rho[i];
-            eta = rho / matTillRho0[matId];
-            mu = eta - 1.0;
-
-            // Mirrors the bypass in pressure.cu (line 66): below rho_limit
-            // the Tillotson formula is no longer considered valid.
-            // omega0 = e/(E0*eta^2)+1 can pass through zero here, causing a
-            // singularity in the 1/omega0^2 terms. Don't evaluate the
-            // formula in that regime; fall back to the material's lower
-            // sound-speed limit instead.
-            if (eta < matRhoLimit[matId] && p.e[i] < matTillEcv[matId]) {
+            cs_sq = tillotson_cs_sq(p.rho[i], p.e[i], matId);
+            // set to >= lower limit
+            if (cs_sq < matcsLimit[matId]*matcsLimit[matId]) {
                 p.cs[i] = matcsLimit[matId];
             } else {
-                omega0 = p.e[i]/(matTillE0[matId]*eta*eta) + 1.0;
-                pressure = p.p[i];
-                z = (1.0 - eta)/eta;
-                //condensed and expanded cold states
-                if (eta >= 1.0 || p.e[i] < matTillEiv[matId]) {   // was: eta >= 0.0 — fixed to match pressure.cu
-                    if (pressure < 0.0 || eta < matRhoLimit[matId]) pressure = 0.0;
-                    cs_sq = matTilla[matId]*p.e[i]+(matTillb[matId]*p.e[i])/(omega0*omega0)*(3.0*omega0-2.0) +
-                        (matTillA[matId]+2.0*matTillB[matId]*mu)/rho + pressure/(rho*rho)*(matTilla[matId]*rho+matTillb[matId]*rho/(omega0*omega0));
-                }
-                //expanded hot states
-                else if (p.e[i] > matTillEcv[matId]) {
-                    Gamma_e = matTilla[matId] + matTillb[matId]/omega0*exp(-matTillBeta[matId]*z*z);
-                    cs_sq = (Gamma_e+1.0)*pressure/rho+matTillA[matId]/rho*exp(-(matTillAlpha[matId]*z+matTillBeta[matId]*z*z))*(1.0+mu)/(eta*eta)*(matTillAlpha[matId]+2.0*matTillBeta[matId]*z-eta)
-                        + matTillb[matId]*rho*p.e[i]/(omega0*omega0*eta*eta)
-                        *exp(-matTillBeta[matId]*z*z)*(2.0*matTillBeta[matId]*z*omega0/matTillRho0[matId] + 1.0)/(matTillE0[matId]*rho)*(2.0*p.e[i]-pressure/rho);
-                }
-                //intermediate states
-                else {
-                    Gamma_e = matTilla[matId] + matTillb[matId]/omega0*exp(-matTillBeta[matId]*z*z);
-                    cs_e_sq = (Gamma_e+1.0)*pressure/rho+matTillA[matId]/rho*exp(-(matTillAlpha[matId]*z+matTillBeta[matId]*z*z))*(1.0+mu)/(eta*eta)*(matTillAlpha[matId]+2.0*matTillBeta[matId]*z-eta)
-                        + matTillb[matId]*rho*p.e[i]/(omega0*omega0*eta*eta)
-                        *exp(-matTillBeta[matId]*z*z)*(2.0*matTillBeta[matId]*z*omega0/matTillRho0[matId] + 1.0)/(matTillE0[matId]*rho)*(2.0*p.e[i]-pressure/rho);
-                    if (pressure < 0.0 || eta < matRhoLimit[matId]) pressure = 0.0;  //set pressure to zero only for condensed state
-                    cs_c_sq = matTilla[matId]*p.e[i]+(matTillb[matId]*p.e[i])/(omega0*omega0)*(3.0*omega0-2.0) +
-                        (matTillA[matId]+2.0*matTillB[matId]*mu)/rho + pressure/(rho*rho)*(matTilla[matId]*rho+matTillb[matId]*rho/(omega0*omega0));
-                    y = (p.e[i]-matTillEiv[matId])/(matTillEcv[matId]-matTillEiv[matId]);
-                    cs_sq = cs_e_sq*(1.0-y)+cs_c_sq*y;
-                }
-                // set to >= lower limit
-                if (cs_sq < matcsLimit[matId]*matcsLimit[matId]){
-                    p.cs[i] = matcsLimit[matId];
-                } else {
-                    p.cs[i] = sqrt(cs_sq);
-                }
+                p.cs[i] = sqrt(cs_sq);
             }
         } else if (EOS_TYPE_ANEOS == matEOS[matId]) {
             if (p.rho[i] <= 0.0) {
@@ -218,41 +197,9 @@ __global__ void calculateSoundSpeed()
             }
 #endif
         } else if (EOS_TYPE_JUTZI == matEOS[matId]) {
- //           rho = p.rho[i];
-            /* the matrix EOS is evaluated at the matrix density, as in pressure.cu */
-            rho = p.rho[i] * p.alpha_jutzi[i];
-            eta = rho / matTillRho0[matId];
-            omega0 = p.e[i]/(matTillE0[matId]*eta*eta) + 1.0;
-//            pressure = p.p[i];
-            pressure = p.p[i] * p.alpha_jutzi[i];   /* P_s = alpha * P, Jutzi et al. (2008) eq. (4) */
-            mu = eta - 1.0;
-            z = (1.0 - eta)/eta;
-            //condensed and expanded cold states
-            if (eta >= 0.0 || p.e[i] < matTillEiv[matId]) {
-                if (pressure < 0.0 || eta < matRhoLimit[matId])
-                    pressure = 0.0;
-                cs_sq = matTilla[matId]*p.e[i]+(matTillb[matId]*p.e[i])/(omega0*omega0)*(3.0*omega0-2.0) +
-                    (matTillA[matId]+2.0*matTillB[matId]*mu)/rho + pressure/(rho*rho)*(matTilla[matId]*rho+matTillb[matId]*rho/(omega0*omega0));
-            }
-            //expanded hot states
-            else if (p.e[i] > matTillEcv[matId]) {
-                Gamma_e = matTilla[matId] + matTillb[matId]/omega0*exp(-matTillBeta[matId]*z*z);
-                cs_sq = (Gamma_e+1.0)*pressure/rho+matTillA[matId]/rho*exp(-(matTillAlpha[matId]*z+matTillBeta[matId]*z*z))*(1.0+mu)/(eta*eta)*(matTillAlpha[matId]+2.0*matTillBeta[matId]*z-eta)
-                    + matTillb[matId]*rho*p.e[i]/(omega0*omega0*eta*eta)
-                    *exp(-matTillBeta[matId]*z*z)*(2.0*matTillBeta[matId]*z*omega0/matTillRho0[matId] + 1.0)/(matTillE0[matId]*rho)*(2.0*p.e[i]-pressure/rho);
-            }
-            //intermediate states
-            else {
-                Gamma_e = matTilla[matId] + matTillb[matId]/omega0*exp(-matTillBeta[matId]*z*z);
-                cs_e_sq = (Gamma_e+1.0)*pressure/rho+matTillA[matId]/rho*exp(-(matTillAlpha[matId]*z+matTillBeta[matId]*z*z))*(1.0+mu)/(eta*eta)*(matTillAlpha[matId]+2.0*matTillBeta[matId]*z-eta)
-                    + matTillb[matId]*rho*p.e[i]/(omega0*omega0*eta*eta)
-                    *exp(-matTillBeta[matId]*z*z)*(2.0*matTillBeta[matId]*z*omega0/matTillRho0[matId] + 1.0)/(matTillE0[matId]*rho)*(2.0*p.e[i]-pressure/rho);
-                if (pressure < 0.0 || eta < matRhoLimit[matId]) pressure = 0.0;  //set pressure to zero only for condensed state
-                cs_c_sq = matTilla[matId]*p.e[i]+(matTillb[matId]*p.e[i])/(omega0*omega0)*(3.0*omega0-2.0) +
-                    (matTillA[matId]+2.0*matTillB[matId]*mu)/rho + pressure/(rho*rho)*(matTilla[matId]*rho+matTillb[matId]*rho/(omega0*omega0));
-                y = (p.e[i]-matTillEiv[matId])/(matTillEcv[matId]-matTillEiv[matId]);
-                cs_sq = cs_e_sq*(1.0-y)+cs_c_sq*y;
-            }
+            /* sound speed of the matrix material, with the matrix EOS evaluated at the matrix density
+             * alpha * rho as in pressure.cu */
+            cs_sq = tillotson_cs_sq(p.rho[i] * p.alpha_jutzi[i], p.e[i], matId);
             // do interpolation only if computed sound speed is above cs_porous, to capture
             // only compaction process, but not expanded states for example...
             if( cs_sq > matcs_porous[matId]*matcs_porous[matId] ) {

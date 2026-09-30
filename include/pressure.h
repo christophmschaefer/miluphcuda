@@ -55,4 +55,12 @@ enum EquationOfStates {
  */
 __global__ void calculatePressure(void);
 
+/**
+ * @brief Tillotson EOS: pressure and its partial derivatives dp/drho (at const e) and dp/de (at const rho).
+ *
+ * @details Used for EOS_TYPE_TILLOTSON and, with rho being the matrix density, for EOS_TYPE_JUTZI and
+ * EOS_TYPE_EPSILON. The adiabatic sound speed follows from c_s^2 = dp/drho + p/rho^2 * dp/de.
+ */
+__device__ void tillotson_eos(double rho, double e, int matId, double *pressure, double *dpdrho, double *dpde);
+
 #endif
