@@ -189,7 +189,7 @@ __device__ int calculate_all_eigenvalues(double M[DIM][DIM], double eigenvalues[
     error = 0;
 
 #define EPS_JACOBI 1e-10
-#define MAX_ITER_JACOBI_EIGENVALUES 100
+#define MAX_ITER_JACOBI_EIGENVALUES 10
 
     for (i = 0; i < DIM; i++) {
         for (j = 0; j < DIM; j++) {
