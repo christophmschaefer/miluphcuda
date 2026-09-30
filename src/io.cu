@@ -64,6 +64,9 @@ File inputFile;
 void loadConfigFromFile(char *configFile)
 {
     config_init(&param.config);
+    /* accept integer literals for float parameters (e.g. n = 4 instead of n = 4.0), which would otherwise be
+     * ignored silently and replaced by the default value; float values for integer parameters are truncated */
+    config_set_auto_convert(&param.config, CONFIG_TRUE);
 
     if (!config_read_file(&param.config, configFile)) {
         fprintf(stderr, "Error reading config file %s.\n", configFile);
