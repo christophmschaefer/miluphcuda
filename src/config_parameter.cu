@@ -85,6 +85,7 @@ double *matRhoLimit_d;
 double *matN_d;
 double *matCohesion_d;
 double *matCohesionDamaged_d;
+double *matTensilePressureLimit_d;
 double *matFrictionAngle_d;
 double *matFrictionAngleDamaged_d;
 double *matAlphaPhi_d;
@@ -308,6 +309,7 @@ __constant__ double *matIsothermalSoundSpeed;
 __constant__ double *matN;
 __constant__ double *matCohesion;
 __constant__ double *matCohesionDamaged;
+__constant__ double *matTensilePressureLimit;
 __constant__ double *matFrictionAngle;
 __constant__ double *matFrictionAngleDamaged;
 __constant__ double *matAlphaPhi;
@@ -485,6 +487,7 @@ void transferMaterialsToGPU()
         double *internal_friction_damaged = (double*)calloc(numberOfElements, sizeof(double));
         double *cohesion = (double*)calloc(numberOfElements, sizeof(double));
         double *cohesion_damaged = (double*)calloc(numberOfElements, sizeof(double));
+        double *tensile_pressure_limit = (double*)calloc(numberOfElements, sizeof(double));
         double *friction_angle = (double*)calloc(numberOfElements, sizeof(double));
         double *friction_angle_damaged = (double*)calloc(numberOfElements, sizeof(double));
         double *alpha_phi = (double*)calloc(numberOfElements, sizeof(double));
@@ -774,6 +777,14 @@ void transferMaterialsToGPU()
             }
             config_setting_lookup_float(subset, "cohesion", &cohesion[ID]);
             config_setting_lookup_float(subset, "cohesion_damaged", &cohesion_damaged[ID]);
+            /* optional: residual tensile strength (max. negative pressure) of damaged material, independent of
+             * the yield strength; default 0 -> negative pressure of damaged material capped at -cohesion_damaged */
+            if (!config_setting_lookup_float(subset, "tensile_pressure_limit", &tensile_pressure_limit[ID]))
+                tensile_pressure_limit[ID] = 0.0;
+            if (tensile_pressure_limit[ID] < 0.0) {
+                fprintf(stderr, "Error: tensile_pressure_limit must be >= 0 (a magnitude in Pa), material %d.\n", ID);
+                exit(1);
+            }
             config_setting_lookup_float(subset, "friction_angle", &friction_angle[ID]);
             config_setting_lookup_float(subset, "friction_angle_damaged", &friction_angle_damaged[ID]);
             config_setting_lookup_float(subset, "melt_energy", &melt_energy[ID]);
@@ -1028,6 +1039,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matN_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matCohesion_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matCohesionDamaged_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matTensilePressureLimit_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matFrictionAngle_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matFrictionAngleDamaged_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matAlphaPhi_d, numberOfElements*sizeof(double)));
@@ -1141,6 +1153,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpy(matN_d, n, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matCohesion_d, cohesion, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matCohesionDamaged_d, cohesion_damaged, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matTensilePressureLimit_d, tensile_pressure_limit, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matFrictionAngle_d, friction_angle, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matFrictionAngleDamaged_d, friction_angle_damaged, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matAlphaPhi_d, alpha_phi, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
@@ -1314,6 +1327,7 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(matN, &matN_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matCohesion, &matCohesion_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matCohesionDamaged, &matCohesionDamaged_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matTensilePressureLimit, &matTensilePressureLimit_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matFrictionAngle, &matFrictionAngle_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matFrictionAngleDamaged, &matFrictionAngleDamaged_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matAlphaPhi, &matAlphaPhi_d, sizeof(void*)));
@@ -1377,6 +1391,11 @@ void transferMaterialsToGPU()
         for (i = 0; i < numberOfMaterials; i++) {
             fprintf(stdout, "    %12d    %12g    %12g    %16g    %14g    %22g    %11g\n",
                     i, yield_stress[i], cohesion[i], cohesion_damaged[i], friction_angle[i], friction_angle_damaged[i], melt_energy[i]);
+        }
+        for (i = 0; i < numberOfMaterials; i++) {
+            if (tensile_pressure_limit[i] > 0.0)
+                fprintf(stdout, "    material %d: tensile_pressure_limit = %g Pa (damaged material holds tension down to -max(cohesion_damaged, tensile_pressure_limit))\n",
+                        i, tensile_pressure_limit[i]);
         }
 #endif
 #if LOW_DENSITY_WEAKENING
@@ -1727,6 +1746,7 @@ void transferMaterialsToGPU()
         free(yield_stress);
         free(cohesion);
         free(cohesion_damaged);
+        free(tensile_pressure_limit);
         free(cohesion_coefficient);
         free(melt_energy);
         free(friction_angle);
@@ -1864,6 +1884,7 @@ void cleanupMaterials()
     cudaVerify(cudaFree(matN_d));
     cudaVerify(cudaFree(matCohesion_d));
     cudaVerify(cudaFree(matCohesionDamaged_d));
+    cudaVerify(cudaFree(matTensilePressureLimit_d));
     cudaVerify(cudaFree(matCohesionCoefficient_d));
     cudaVerify(cudaFree(matMeltEnergy_d));
     cudaVerify(cudaFree(matFrictionAngle_d));

@@ -293,13 +293,19 @@ __global__ void plasticityModel(void) {
 
         // here we apply a "cap on negative pressure release by damage"
         // negative pressure is foremost released by (1-damage), in line with the Grady-Kipp model, but only
-        // up to the residual tensile strength the material retains even when fully damaged, assumed to be -y_0_d
+        // up to the residual tensile strength the material retains even when fully damaged, assumed to be
+        // p_t = max(y_0_d, tensile_pressure_limit). tensile_pressure_limit (material.cfg, default 0) lets damaged
+        // material hold isotropic tension without shear strength (y_d stays 0 for p <= -y_0_d), e.g. to mimic
+        // a minimum (negative) pressure of the porous matrix as in Bern SPH.
         // note: modification by (1-damage) must be done only once (here), otherwise it would be cumulative
-        if( p.p[i] < -y_0_d ) {
-            if( (1.0-damage)*p.p[i] > -y_0_d ) {
-                p.p[i] = -y_0_d;
-            } else {
-                p.p[i] = (1.0-damage)*p.p[i];
+        {
+            double p_t = fmax(y_0_d, matTensilePressureLimit[p_rhs.materialId[i]]);
+            if( p.p[i] < -p_t ) {
+                if( (1.0-damage)*p.p[i] > -p_t ) {
+                    p.p[i] = -p_t;
+                } else {
+                    p.p[i] = (1.0-damage)*p.p[i];
+                }
             }
         }
 # else

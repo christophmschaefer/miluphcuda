@@ -294,9 +294,11 @@ __global__ void CorrectorStepPorous()
 
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i+= blockDim.x * gridDim.x) {
         predictor.x[i] = p.x[i] + dt * predictor.dxdt[i];
-        predictor.y[i] = p.y[i] + dt * predictor.dydt[i];
         predictor.vx[i] = p.vx[i] + dt * predictor.ax[i];
+#if DIM > 1
+        predictor.y[i] = p.y[i] + dt * predictor.dydt[i];
         predictor.vy[i] = p.vy[i] + dt * predictor.ay[i];
+#endif
 #if DIM == 3
         predictor.z[i] = p.z[i] + dt * predictor.dzdt[i];
         predictor.vz[i] = p.vz[i] + dt * predictor.az[i];
