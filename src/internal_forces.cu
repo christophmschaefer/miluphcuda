@@ -783,21 +783,21 @@ __global__ void internalForces(int *interactions) {
 # endif
 
 # if SOLID
-# if 1 // activated pairwise for conservation
+# if 1 // activated pairwise for conservation (sign fixed 2026-10-08: du_i/dt = -1/2 sum_j a_ij . v_ij, dv = v_i - v_j)
 // new implementation cms 2019-05-23
             for (d = 0; d < DIM; d++) {
                 for (dd = 0; dd < DIM; dd++) {
 #  if (SPH_EQU_VERSION == 1)
 #   if TENSORIAL_CORRECTION
-                    dedt += 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i]) * dWdx_corr_i[dd] + p_rhs.sigma[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j]) * dWdx_corr_j[dd]) * dv[d];
+                    dedt -= 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i]) * dWdx_corr_i[dd] + p_rhs.sigma[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j]) * dWdx_corr_j[dd]) * dv[d];
 #   else
-                    dedt += 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i]) + p_rhs.sigma[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j])) * dv[d] * dWdx[dd];
+                    dedt -= 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)]/(p.rho[i]*p.rho[i]) + p_rhs.sigma[stressIndex(j,d,dd)]/(p.rho[j]*p.rho[j])) * dv[d] * dWdx[dd];
 #   endif
 #  elif (SPH_EQU_VERSION == 2)
 #   if TENSORIAL_CORRECTION
-                    dedt += 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)] + p_rhs.sigma[stressIndex(j,d,dd)])/(p.rho[i]*p.rho[j]) * dv[d] * 0.5 * (dWdx_corr_i[dd] + dWdx_corr_j[dd]);
+                    dedt -= 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)] + p_rhs.sigma[stressIndex(j,d,dd)])/(p.rho[i]*p.rho[j]) * dv[d] * 0.5 * (dWdx_corr_i[dd] + dWdx_corr_j[dd]);
 #   else
-                    dedt += 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)] + p_rhs.sigma[stressIndex(j,d,dd)])/(p.rho[i]*p.rho[j]) * dv[d] * dWdx[dd];
+                    dedt -= 0.5 * p.m[j] * (p_rhs.sigma[stressIndex(i,d,dd)] + p_rhs.sigma[stressIndex(j,d,dd)])/(p.rho[i]*p.rho[j]) * dv[d] * dWdx[dd];
 #   endif
 #endif
 #if DEBUG_MISC
