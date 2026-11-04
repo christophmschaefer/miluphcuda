@@ -453,6 +453,8 @@ __global__ void internalForces(int *interactions) {
             // calculate rotation rate and strain rate
             // tensor
             // see Benz (1995) or Libersky (1993)
+            // without TENSORIAL_CORRECTION: Benz & Asphaug (1995), Eq. (18), weight m_j/rho_i
+            // with TENSORIAL_CORRECTION: Randles & Libersky (1996), weight m_j/rho_j (see below)
             // Warning: Benz has typos in his paper....
             // edot_ab = 0.5 * (d_b v_a + d_a v_b)
             // rdot_ab = 0.5 * (d_b v_a - d_a v_b)
@@ -460,13 +462,16 @@ __global__ void internalForces(int *interactions) {
                 //printf("%d\n", boundia);
                 tmp = p.m[j];
 # if TENSORIAL_CORRECTION
-                // non-averaged: use particle i's own correction matrix only,
-                // consistent with reproducing 1st-order velocity gradients at particle i
+                // non-averaged: use particle i's own correction matrix only.
+                // The weight has to be m_j/rho_j, the same weight as in the moment matrix in kernel.cu
+                // (Randles & Libersky 1996). Then the velocity gradient at particle i is exact for linear
+                // velocity fields, also for non-uniform density (unless the matrix was reset to identity).
+                // The Benz weight m_j/rho_i would require a moment matrix built with m_j/rho_i, too.
                 for (e = 0; e < DIM; e++) {
                     for (f = 0; f < DIM; f++) {
-                        edot[e][f] += 0.5 * p.m[j]/p.rho[i] *
+                        edot[e][f] += 0.5 * p.m[j]/p.rho[j] *
                             (dWdx_corr_i[f] * (-dv[e]) + dWdx_corr_i[e] * (-dv[f]));
-                        rdot[e][f] += 0.5 * p.m[j]/p.rho[i] *
+                        rdot[e][f] += 0.5 * p.m[j]/p.rho[j] *
                             (dWdx_corr_i[f] * (-dv[e]) - dWdx_corr_i[e] * (-dv[f]));
                     }
                 }

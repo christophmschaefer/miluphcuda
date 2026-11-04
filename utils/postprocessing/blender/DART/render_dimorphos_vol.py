@@ -10,6 +10,16 @@ Ejecta : particles faster than --vcut (relative to the bulk) -> density grid
          speed grid (nearest particle, smoothed). Rendered as a real volume:
          sunlit dust (forward scattering) + optional speed-coloured glow.
 
+Ejecta kernel (vol-11): if the frames contain rk (k-th neighbour distance,
+precomputed by sph2blender.py on all particles), it sets the adaptive splat
+radius; otherwise the k-neighbour search runs here (slow, ejecta only).
+
+Time-dependent look (vol-10): --vcut-end, --ej-density-end, --ej-gamma-end and
+--target-end are interpolated along the film's time axis (position u = 0..1 on
+the --timemap axis): vcut and ej-density geometrically, ej-gamma linearly in u,
+the target with the same easing as the camera. Without the *-end options
+everything stays constant as before.
+
 Everything is built with Blender's grid nodes, no OpenVDB-Python needed.
 
 Usage
@@ -17,7 +27,7 @@ Usage
           --frames 1 --samples 64 --res 1280 720 --save-blend dart_vol.blend
   blender -b -P render_dimorphos_vol.py -- --data blender_frames --out renders \
           --frames 300 --timemap log --samples 128 --timestamp
-  # still of one dump (exact dump time), camera as in the film:
+  # still of one dump (exact dump time), camera and look as in the film:
   blender -b -P render_dimorphos_vol.py -- --data blender_frames --out stills \
           --dump 270 --samples 128 --timestamp
   ffmpeg -framerate 30 -i renders/frame_%04d.png -c:v libx264 -crf 16 -pix_fmt yuv420p dart.mp4
@@ -33,7 +43,7 @@ import functools
 import bpy
 import numpy as np
 
-VERSION = "vol-9"
+VERSION = "vol-11"
 print = functools.partial(print, flush=True)   # Blender -b may drop buffered stdout
 from mathutils import Vector
 
@@ -54,7 +64,7 @@ ap.add_argument("--range", type=int, nargs=2, metavar=("F0", "F1"),
 ap.add_argument("--dump", nargs="+", metavar="N",
                 help="render still(s) of these dumps instead of the film, e.g. --dump 270 "
                      "or --dump impact.0270.h5 (exact dump time, no interpolation); "
-                     "camera as in the film at that time (same --frames/--timemap/--cam)")
+                     "camera and look as in the film at that time (same --frames/--timemap/--cam)")
 ap.add_argument("--time", type=float, nargs="+", metavar="T",
                 help="render still(s) at these simulation times [s] (interpolated)")
 ap.add_argument("--timemap", choices=["linear", "log"], default="log")
@@ -73,6 +83,9 @@ g.add_argument("--body-smooth", type=int, default=3, help="SDF mean-filter itera
 g.add_argument("--body-width", type=int, default=2, help="SDF mean-filter half width [voxels]")
 g.add_argument("--vcut", type=float, default=0.5,
                help="speed [m/s] rel. to bulk above which material is ejecta (volume)")
+g.add_argument("--vcut-end", type=float,
+               help="vcut at the end of the film, geometric interpolation along the film "
+                    "time axis (default: constant --vcut)")
 g.add_argument("--ej-radius", type=float, help="splat radius [m] (default 0.9*spacing)")
 g.add_argument("--ej-voxel", type=float, help="ejecta voxel size [m] (default 0.6*spacing)")
 g.add_argument("--ej-maxdist", type=float,
@@ -81,7 +94,10 @@ g.add_argument("--ej-maxdist", type=float,
 g.add_argument("--ej-rmax", type=float,
                help="max. adaptive splat radius [m] for thin ejecta (default 8*spacing)")
 g.add_argument("--ej-k", type=int, default=8,
-               help="neighbour number for the adaptive radius (SPH-like smoothing length)")
+               help="neighbour number for the adaptive radius (SPH-like smoothing length); "
+                    "only used for frames without rk, otherwise k is the --knn-k of sph2blender.py")
+g.add_argument("--no-rk", action="store_true",
+               help="ignore rk in the frames and search neighbours here (old behaviour)")
 g.add_argument("--show-projectile", action="store_true",
                help="render the projectile particles (41 SPH particles, ~4-6 km/s backwards after impact)")
 g.add_argument("--ej-vmax", type=float, default=0.0,
@@ -91,8 +107,12 @@ g.add_argument("--ej-blur", type=int, default=1, help="extra smoothing of the ej
 s = ap.add_argument_group("look")
 s.add_argument("--color", choices=["rock", "damage", "compaction"], default="rock")
 s.add_argument("--ej-density", type=float, default=0.3, help="ejecta extinction [1/m] at full density")
+s.add_argument("--ej-density-end", type=float,
+               help="ej-density at the end of the film, geometric interpolation (default: constant)")
 s.add_argument("--ej-gamma", type=float, default=0.6,
                help="density exponent (<1 lifts thin ejecta, 1 = linear)")
+s.add_argument("--ej-gamma-end", type=float,
+               help="ej-gamma at the end of the film, linear interpolation (default: constant)")
 s.add_argument("--ej-albedo", type=float, default=0.8)
 s.add_argument("--ej-aniso", type=float, default=0.45, help="forward scattering (-1..1)")
 s.add_argument("--glow", type=float, default=0.8, help="emission of ejecta (0 = only sunlit dust)")
@@ -100,6 +120,9 @@ s.add_argument("--vcmap", type=float, nargs=2, default=[0.4, 40.0], metavar=("VM
                help="speed range [m/s] of the glow colormap (log)")
 s.add_argument("--bump", type=float, default=0.25, help="regolith micro bump strength")
 s.add_argument("--target", type=float, nargs=3, default=[-4.0, -75.0, -8.0])
+s.add_argument("--target-end", type=float, nargs=3,
+               help="camera target at the end of the film, moves with the camera easing "
+                    "(default: fixed --target)")
 s.add_argument("--cam", type=float, nargs=3, default=[-35.0, 14.0, 420.0], metavar=("AZ", "EL", "DIST"))
 s.add_argument("--cam-end", type=float, nargs=3, metavar=("AZ", "EL", "DIST"))
 s.add_argument("--lens", type=float, default=50.0)
@@ -124,6 +147,12 @@ A.ej_radius = A.ej_radius or 0.9 * a
 A.ej_voxel = A.ej_voxel or 0.6 * a
 A.ej_maxdist = A.ej_maxdist or 5000.0 * A.ej_voxel
 A.ej_rmax = A.ej_rmax or 8.0 * a
+# start values of the time-dependent parameters (A.* holds the current frame's value)
+V0, D0, G0, T0 = A.vcut, A.ej_density, A.ej_gamma, tuple(A.target)
+for name, val in (("--vcut", V0), ("--vcut-end", A.vcut_end),
+                  ("--ej-density", D0), ("--ej-density-end", A.ej_density_end)):
+    if val is not None and val <= 0:
+        raise SystemExit(f"{name} must be > 0 (geometric interpolation)")
 
 BODY, EJECTA = "SPH_Body", "SPH_Ejecta"
 
@@ -145,12 +174,18 @@ def load(k):
     return _cache[k]
 
 
+def get_rk(z, sel=slice(None)):
+    if A.no_rk or "rk" not in z:
+        return None
+    return z["rk"][sel].astype(np.float32)
+
+
 def state_at(t):
     k = int(np.clip(np.searchsorted(TIMES, t, side="right") - 1, 0, len(TIMES) - 1))
     a_ = load(k)
     if k == len(TIMES) - 1 or t <= TIMES[k] or INDEX["N"][k] != INDEX["N"][k + 1]:
         return dict(x=a_["x"].astype(np.float64), v=a_["v"].astype(np.float32), mat=a_["mat"],
-                    dmg=a_["dmg"] / 255.0, comp=a_["comp"] / 255.0)
+                    dmg=a_["dmg"] / 255.0, comp=a_["comp"] / 255.0, rk=get_rk(a_))
     b = load(k + 1)
     _, ia, ib = np.intersect1d(a_["ids"], b["ids"], assume_unique=True, return_indices=True)
     dt = TIMES[k + 1] - TIMES[k]
@@ -165,7 +200,13 @@ def state_at(t):
     x[bad] = lin[bad]
     v = (1 - s_) * v0 + s_ * v1
     lerp = lambda q: ((1 - s_) * a_[q][ia] + s_ * b[q][ib]) / 255.0
-    return dict(x=x, v=v.astype(np.float32), mat=a_["mat"][ia], dmg=lerp("dmg"), comp=lerp("comp"))
+    ra, rb = get_rk(a_, ia), get_rk(b, ib)
+    rk = None
+    if ra is not None and rb is not None:
+        # 0 = not computed (slow particle) in that dump: take the other value
+        rk = np.where((ra > 0) & (rb > 0), (1 - s_) * ra + s_ * rb, np.maximum(ra, rb))
+    return dict(x=x, v=v.astype(np.float32), mat=a_["mat"][ia], dmg=lerp("dmg"), comp=lerp("comp"),
+                rk=rk)
 
 
 def film_time(f):
@@ -208,6 +249,35 @@ def find_dump(spec):
 
 
 # ----------------------------------------------------------------------------
+# time-dependent look
+# ----------------------------------------------------------------------------
+def lerp_geo(a0, a1, u):
+    return a0 if a1 is None else math.exp((1 - u) * math.log(a0) + u * math.log(a1))
+
+
+def apply_params(u):
+    """Set vcut, ej-density and ej-gamma for film position u (0..1)."""
+    A.vcut = lerp_geo(V0, A.vcut_end, u)
+    A.ej_density = lerp_geo(D0, A.ej_density_end, u)
+    A.ej_gamma = G0 if A.ej_gamma_end is None else (1 - u) * G0 + u * A.ej_gamma_end
+    for m in bpy.data.materials:
+        nt = getattr(m, "node_tree", None)
+        if nt is None:
+            continue
+        nd, ngm = nt.nodes.get("EJ_DENS"), nt.nodes.get("EJ_GAMMA")
+        if nd is not None:
+            nd.inputs[1].default_value = A.ej_density
+        if ngm is not None:
+            ngm.inputs[1].default_value = A.ej_gamma
+
+
+def target_at(e):
+    if A.target_end is None:
+        return Vector(T0)
+    return Vector(T0).lerp(Vector(A.target_end), e)
+
+
+# ----------------------------------------------------------------------------
 # colours (linear RGB)
 # ----------------------------------------------------------------------------
 INFERNO = np.array([[0, 0, 4], [40, 11, 84], [101, 21, 110], [159, 42, 99], [212, 72, 66],
@@ -232,7 +302,7 @@ def diagnose(xe, spd_e, t):
     """Print how dense the ejecta are relative to the splat kernel."""
     n = len(xe)
     if n == 0:
-        print(f"[diag] t={t:.3f}s: no ejecta above vcut={A.vcut} m/s")
+        print(f"[diag] t={t:.3f}s: no ejecta above vcut={A.vcut:.3g} m/s")
         return
     from mathutils.kdtree import KDTree
     rng = np.random.default_rng(0)
@@ -255,13 +325,28 @@ def diagnose(xe, spd_e, t):
               f"(~{0.8*med:.1f}) and/or --ej-density, or use --ej-gamma 0.5")
 
 
-def adaptive_kernel(xe):
+_kernel_note = set()
+
+
+def adaptive_kernel(xe, rk=None):
     """SPH-like: radius grows with the local particle spacing (k-th neighbour),
-    weight (r0/r)^3 keeps the column density (mass) right."""
+    weight (r0/r)^3 keeps the column density (mass) right. rk: k-th neighbour
+    distance precomputed by sph2blender.py (0 = not computed -> lattice spacing)."""
     n = len(xe)
     r0 = A.ej_radius
+    if rk is not None:
+        if "rk" not in _kernel_note:
+            print("[info] ejecta kernel from rk in the frames (sph2blender.py)")
+            _kernel_note.add("rk")
+        dk = np.where(rk > 0, rk, A.spacing).astype(np.float64)
+        r = np.clip(r0 * dk / A.spacing, r0, A.ej_rmax)
+        return r.astype(np.float32), ((r0 / r) ** 3).astype(np.float32)
     if n <= A.ej_k:
         return np.full(n, r0, np.float32), np.ones(n, np.float32)
+    if "search" not in _kernel_note:
+        print(f"[info] ejecta kernel from a neighbour search here (k = {A.ej_k}); "
+              "convert with the new sph2blender.py to get rk")
+        _kernel_note.add("search")
     from mathutils.kdtree import KDTree
     kd = KDTree(n)
     for i, p in enumerate(xe):
@@ -275,7 +360,7 @@ def adaptive_kernel(xe):
     return r.astype(np.float32), w.astype(np.float32)
 
 
-def split_and_shade(st):
+def split_and_shade(st, target):
     v = st["v"].astype(np.float64)
     spd = np.linalg.norm(v - np.median(v, axis=0), axis=1)
     mat = st["mat"].astype(int)
@@ -291,7 +376,7 @@ def split_and_shade(st):
             ej &= ~fast
     # Cycles silently drops a volume whose index range gets too large (a few
     # particles kilometres away are enough), so far-flung ejecta are left out.
-    far = ej & (np.linalg.norm(st["x"] - np.array(A.target), axis=1) > A.ej_maxdist)
+    far = ej & (np.linalg.norm(st["x"] - np.array(target), axis=1) > A.ej_maxdist)
     if far.any():
         print(f"[info] {far.sum()} ejecta particles beyond {A.ej_maxdist:.0f} m from the target "
               "are not rendered (--ej-maxdist)")
@@ -315,7 +400,8 @@ def split_and_shade(st):
     u = np.clip((np.log10(np.maximum(spd[ej], 1e-6)) - lo) / (hi - lo), 0, 1)
     if A.diag:
         diagnose(st["x"][ej], spd[ej], st.get("t", float("nan")))
-    rad, wgt = adaptive_kernel(st["x"][ej])
+    rk = st.get("rk")
+    rad, wgt = adaptive_kernel(st["x"][ej], None if rk is None else rk[ej])
     return (st["x"][body], rgba), (st["x"][ej], u.astype(np.float32), rad, wgt)
 
 
@@ -442,9 +528,11 @@ def ejecta_material():
     clamp.inputs[1].default_value = 0.0
     L(nt, dn.outputs["Fac"], clamp.inputs[0])
     pw = N(nt, "ShaderNodeMath", (0, 100), operation="POWER")
+    pw.name = "EJ_GAMMA"
     pw.inputs[1].default_value = A.ej_gamma
     L(nt, clamp.outputs[0], pw.inputs[0])
     dens = N(nt, "ShaderNodeMath", (200, 150), operation="MULTIPLY")
+    dens.name = "EJ_DENS"
     dens.inputs[1].default_value = A.ej_density
     L(nt, pw.outputs[0], dens.inputs[0])
     L(nt, dens.outputs[0], vol.inputs["Density"])
@@ -604,7 +692,7 @@ def build_lights_camera(scene):
     fill.rotation_euler = (-Vector(A.sun)).normalized().to_track_quat("Z", "Y").to_euler()
     scene.collection.objects.link(fill)
     tgt = bpy.data.objects.new("CamTarget", None)
-    tgt.location = A.target
+    tgt.location = T0
     scene.collection.objects.link(tgt)
     cam = bpy.data.objects.new("Camera", bpy.data.cameras.new("Camera"))
     cam.data.lens = A.lens
@@ -748,13 +836,21 @@ def set_points(obj, x, *attrs):
     mesh.update()
 
 
+def cam_easing(u):
+    return u * u * (3 - 2 * u)
+
+
 def place_camera(scene, u):
     az0, el0, d0 = A.cam
     az1, el1, d1 = A.cam_end if A.cam_end else (az0 + 25.0, el0 + 4.0, d0 * 1.6)
-    e = u * u * (3 - 2 * u)
+    e = cam_easing(u)
     az, el, d = (math.radians(az0 + e * (az1 - az0)), math.radians(el0 + e * (el1 - el0)),
                  d0 + e * (d1 - d0))
-    scene.camera.location = Vector(A.target) + d * Vector(
+    tgt = target_at(e)
+    t_obj = bpy.data.objects.get("CamTarget")
+    if t_obj is not None:
+        t_obj.location = tgt
+    scene.camera.location = tgt + d * Vector(
         (math.cos(el) * math.cos(az), math.cos(el) * math.sin(az), math.sin(el)))
 
 
@@ -769,7 +865,7 @@ def main():
     body, ejecta = bpy.data.objects[BODY], bpy.data.objects[EJECTA]
     os.makedirs(A.out, exist_ok=True)
     scene.frame_start, scene.frame_end = 0, A.frames - 1
-    # jobs: (blender frame, simulation time, camera position 0..1, output file, skip if exists)
+    # jobs: (blender frame, simulation time, film position 0..1, output file, skip if exists)
     jobs = []
     if A.dump or A.time:
         for spec in A.dump or []:
@@ -788,9 +884,11 @@ def main():
         path = os.path.abspath(os.path.join(A.out, fname))
         if skip and os.path.exists(path) and not (A.save_blend or A.no_render or A.diag):
             continue
+        apply_params(u)
+        tgt = target_at(cam_easing(u))
         st = state_at(t)
         st["t"] = t
-        (xb, cb), (xe, ue, re, we) = split_and_shade(st)
+        (xb, cb), (xe, ue, re, we) = split_and_shade(st, tgt)
         set_points(body, xb, ("col", "FLOAT_COLOR", "color", cb))
         set_points(ejecta, xe, ("speed", "FLOAT", "value", ue),
                    ("kernel_r", "FLOAT", "value", re), ("weight", "FLOAT", "value", we))
@@ -807,7 +905,9 @@ def main():
             break
         scene.render.filepath = path
         bpy.ops.render.render(write_still=True)
-        print(f"{fname}  t = {t:8.4f} s  body {len(xb)}  ejecta {len(xe)}  -> {path}", flush=True)
+        print(f"{fname}  t = {t:8.4f} s  u = {u:.3f}  vcut = {A.vcut:.3g}  "
+              f"ej-density = {A.ej_density:.3g}  ej-gamma = {A.ej_gamma:.3g}  "
+              f"body {len(xb)}  ejecta {len(xe)}  -> {path}", flush=True)
 
 
 main()

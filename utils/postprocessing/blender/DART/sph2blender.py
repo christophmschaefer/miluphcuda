@@ -14,8 +14,16 @@ What it does
     i-1, i, i+1, so Blender can interpolate between consecutive dumps
     without particles popping in and out.
   * writes frame_NNNN.npz (float32 x, float16 v, uint32 ids, uint8 mat,
-    dmg, comp) + index.json. NNNN is the dump number of the input file
-    (impact.0050.h5 -> frame_0050.npz).
+    dmg, comp, float16 rk, sml) + index.json. NNNN is the dump number of the
+    input file (impact.0050.h5 -> frame_0050.npz).
+  * rk = distance to the k-th neighbour (--knn-k) among ALL target particles
+    (before culling), for every kept particle faster than --knn-vmin; 0 for
+    the others. The renderer uses it as the local smoothing length of the
+    ejecta volume (miluphcuda's own sml is capped and freezes for isolated
+    particles, so it is not usable for the thin plume). Needs scipy; without
+    scipy rk is not written and the renderer falls back to its own search.
+  * sml (miluphcuda smoothing length, full kernel support) is stored as well
+    if the dump has it.
 
 Incremental runs
   An existing index.json in the output directory is extended, not replaced:
@@ -44,6 +52,11 @@ import time as _time
 
 import numpy as np
 import h5py
+
+try:
+    from scipy.spatial import cKDTree
+except ImportError:          # rk is then not written, the renderer searches itself
+    cKDTree = None
 
 DIM = 3
 
@@ -101,6 +114,20 @@ def visible_mask(x, inplane, box_lo, box_hi, cell, nerode, never_cull):
     return keep & ~hidden
 
 
+def knn_distance(xa, va, mat, ids, k, vmin, projmat):
+    """Distance to the k-th neighbour among all target particles, for the kept
+    particles (ids) faster than vmin rel. to the bulk; 0 for the others."""
+    rk = np.zeros(len(ids), np.float16)
+    tgt = mat != projmat
+    spd = np.linalg.norm(va - np.median(va[tgt], axis=0), axis=1)
+    cand = (tgt & (spd > vmin))[ids]
+    if cand.any():
+        tree = cKDTree(xa[tgt], balanced_tree=False, compact_nodes=False)
+        d, _ = tree.query(xa[ids[cand]], k=k + 1, workers=-1)   # +1: the particle itself
+        rk[cand] = np.minimum(d[:, -1], 6.0e4).astype(np.float16)
+    return rk, int(cand.sum())
+
+
 def dump_label(fn):
     """Dump number from the file name: last digit group (impact.0050.h5 -> '0050')."""
     stem = os.path.basename(fn)
@@ -122,6 +149,12 @@ def load_old_index(path, a):
         if key in I and I[key] != val:
             sys.exit(f"existing {path} was made with {key} = {I[key]}, this run uses {val}; "
                      "use the same options, another -o, or --fresh")
+    want = (a.knn_k, a.knn_vmin) if cKDTree is not None and a.knn_k > 0 else None
+    have = (I.get("knn_k"), I.get("knn_vmin")) if I.get("knn_k") else None
+    if want != have:
+        print(f"WARNING: frames in {path} were written with rk settings {have}, this run "
+              f"uses {want}. Old frames are only updated at the seams; for a consistent "
+              "series convert everything again with --fresh.")
     n = len(I["files"])
     src = I.get("source") or [None] * n
     out = [dict(time=float(I["times"][k]), file=I["files"][k], N=int(I["N"][k]),
@@ -159,7 +192,14 @@ def main():
                     help="never cull particles faster than this [m/s] rel. to the bulk")
     ap.add_argument("--stride", type=int, default=1, help="keep every n-th particle (tests)")
     ap.add_argument("--projectile-mat", type=int, default=2)
+    ap.add_argument("--knn-k", type=int, default=16,
+                    help="neighbour number for the ejecta smoothing length rk; 0 = do not write rk")
+    ap.add_argument("--knn-vmin", type=float, default=0.05,
+                    help="rk is computed for particles faster than this [m/s] rel. to the bulk "
+                         "(must be below the smallest --vcut used for rendering)")
     a = ap.parse_args()
+    if a.knn_k > 0 and cKDTree is None:
+        print("WARNING: scipy not found, rk is not written (renderer falls back to its own search)")
 
     files = []
     for pat in a.files:
@@ -325,10 +365,20 @@ def main():
             if 0 <= j < nE and ent[j]["N"] == e["N"] and "mask" in ent[j]:
                 keep |= unpack(j)
         ids = np.nonzero(keep)[0].astype(np.uint32)
+        extra, ncand = {}, 0
         with h5py.File(fn, "r") as f:
-            x = np.asarray(f["x"][()], np.float32)[::a.stride][ids]
-            v = np.asarray(f["v"][()], np.float32)[::a.stride][ids]
-            mt = np.asarray(f["material_type"][()]).ravel()[::a.stride][ids]
+            xa = np.asarray(f["x"][()], np.float32)[::a.stride]
+            va = np.asarray(f["v"][()], np.float32)[::a.stride]
+            ma = np.asarray(f["material_type"][()]).ravel()[::a.stride]
+            x, v, mt = xa[ids], va[ids], ma[ids]
+            if "sml" in f:
+                extra["sml"] = np.asarray(f["sml"][()], np.float32).ravel()[::a.stride][ids] \
+                    .astype(np.float16)
+            if a.knn_k > 0 and cKDTree is not None:
+                extra["rk"], ncand = knn_distance(xa, va, ma, ids, a.knn_k, a.knn_vmin,
+                                                  a.projectile_mat)
+                extra["knn_k"] = np.int64(a.knn_k)
+            del xa, va, ma
             dmg = read_damage(f, f["x"].shape[0])[::a.stride][ids]
             if alpha0 is not None and "alpha_jutzi" in f and e["N"] == N0:
                 al = np.asarray(f["alpha_jutzi"][()], np.float32).ravel()[::a.stride][ids]
@@ -341,17 +391,20 @@ def main():
                  x=x, v=v.astype(np.float16),
                  mat=np.clip(mt, 0, 255).astype(np.uint8),
                  dmg=np.round(dmg * 255).astype(np.uint8),
-                 comp=np.round(np.clip(comp, 0, 1) * 255).astype(np.uint8))
+                 comp=np.round(np.clip(comp, 0, 1) * 255).astype(np.uint8), **extra)
         nw += 1
         tag = "" if e["new"] else "  (seam, updated)"
+        rkinfo = f"  rk for {ncand}" if "rk" in extra else ""
         print(f"[2/2] {e['final']}  t = {e['time']:9.4f} s  "
-              f"kept {len(ids)} / {e['N']}  ({os.path.getsize(out)/1e6:.0f} MB){tag}")
+              f"kept {len(ids)} / {e['N']}{rkinfo}  ({os.path.getsize(out)/1e6:.0f} MB){tag}")
 
     index = {"times": [e["time"] for e in ent], "files": [e["final"] for e in ent],
              "N": [e["N"] for e in ent], "stride": a.stride, "clip": a.clip,
              "depth": a.depth, "cell": a.cell,
              "box": [float(q) for q in np.concatenate([box_lo, box_hi])],
              "source": [e["source"] for e in ent]}
+    if a.knn_k > 0 and cKDTree is not None:
+        index["knn_k"], index["knn_vmin"] = a.knn_k, a.knn_vmin
     tmp = idx_path + ".tmp"
     with open(tmp, "w") as f:
         json.dump(index, f, indent=1)
