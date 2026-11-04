@@ -143,17 +143,23 @@ __global__ void calculate_shear_stress_tensor(int *interactions)
 
 
 #if TENSORIAL_CORRECTION
+            // contribution of particle j to div v at particle i, with the corrected kernel gradient
+            double trace = 0;
+            for (e = 0; e < DIM; e++) {
+                for (g = 0; g < DIM; g++) {
+                    trace += p.m[j]/p.rho[j] * p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+e*DIM+g]
+                        * (-dv[e]) * dr[g] * dWdr/r;
+                }
+            }
+
             for (e = 0; e < DIM; e++) {
                 for (f = 0; f < DIM; f++) {
                     for (g = 0; g < DIM; g++) {
                         p.Tshear[i*DIM*DIM+e*DIM+f] += p.m[j]/p.rho[j] * (p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+f*DIM+g] * (-dv[e]) * dr[g] * dWdr/r + p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+e*DIM+g] * (-dv[f]) * dr[g] * dWdr/r);
                     }
-                    // traceless
+                    // traceless: subtract 2/3 div v on the diagonal (not 2/3 d_e v_e)
                     if (e == f) {
-                        for (g = 0; g < DIM; g++) {
-                            p.Tshear[i*DIM*DIM+e*DIM+f] -= 2./3 * p.m[j]/p.rho[j] * (p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+e*DIM+g] * (-dv[e]) * dr[g] * dWdr/r);
-                        }
-
+                        p.Tshear[i*DIM*DIM+e*DIM+f] -= 2./3 * trace;
                     }
                 }
             }
