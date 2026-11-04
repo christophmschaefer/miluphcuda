@@ -45,7 +45,6 @@
 extern int flag_force_gravity_calc;
 extern int gravity_index;
 extern __device__ int movingparticles;
-extern __device__ int reset_movingparticles;
 
 extern __device__ volatile int maxNodeIndex;
 
@@ -769,7 +768,6 @@ void rightHandSide()
 #endif
         if (changefraction > 1e-3) {
             flag_force_gravity_calc = 1;
-            cudaMemcpyToSymbol(reset_movingparticles, &flag_force_gravity_calc, sizeof(int));
         }
         /* free mem */
         cudaVerify(cudaFree(movingparticlesPerBlock));
@@ -795,7 +793,6 @@ void rightHandSide()
 #endif
             cudaVerifyKernel((selfgravity<<<16*numberOfMultiprocessors, NUM_THREADS_SELFGRAVITY>>>()));
             flag_force_gravity_calc = 0;
-            cudaMemcpyToSymbol(reset_movingparticles, &flag_force_gravity_calc, sizeof(int));
         } else {
 #if DEBUG_GRAVITY
             printf("skipping calculation of self-gravity, using values from last timestep\n");

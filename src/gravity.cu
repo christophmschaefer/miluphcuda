@@ -495,5 +495,16 @@ __global__ void selfgravity()
 		p.g_az[i] = az;
 #endif
 #endif
+		/* reference position and leaf size at the time gravity was computed,
+		 * used by measureTreeChange() to decide when gravity has to be recomputed */
+		p_rhs.g_x[i] = px;
+#if DIM > 1
+		p_rhs.g_y[i] = py;
+#if DIM == 3
+		p_rhs.g_z[i] = pz;
+#endif
+#endif
+		f = pow(0.5, p.depth[i]) * radius;
+		p_rhs.g_local_cellsize[i] = f*f;
 	}
 }

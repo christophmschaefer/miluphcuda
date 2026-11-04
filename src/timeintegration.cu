@@ -50,7 +50,6 @@ double L_ini = 0.0;
 __device__ double maxPosAbsError;
 __device__ double maxVelAbsError;
 __device__ int movingparticles = 0;
-__device__ int reset_movingparticles = 1;
 __device__ double dtNewErrorCheck = 0.0;
 #if INTEGRATE_DENSITY
 __device__ double maxDensityAbsError;

@@ -48,7 +48,6 @@ extern __device__ double miny, maxy;
 extern __device__ double minz, maxz;
 #endif
 extern __device__ int movingparticles;
-extern __device__ int reset_movingparticles;
 extern __constant__ volatile int *childList;
 
 
@@ -314,38 +313,23 @@ __global__ void measureTreeChange(int * movingparticlesPerBlock)
 {
 	register int i, j, k, m;
 	__shared__ volatile int sharedmovingparticles[NUM_THREADS_TREECHANGE];
-    double nodesize = 0;
     double distance = 0;
 
     blockCount = 0;
 
     int localmovingparticles = 0;
-    int localdepth = 0;
 
 	for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += blockDim.x * gridDim.x) {
-        localdepth = p.depth[i];
-        nodesize = pow(0.5, localdepth) * radius;
-
-// algorithm: determine if particle has moved more than 10% of cellsize of its original cell
-        if (reset_movingparticles) {
-            p_rhs.g_x[i] = p.x[i];
-            p_rhs.g_local_cellsize[i] = nodesize*nodesize;
+        /* algorithm: count particles that moved more than half the edge length of the leaf they were
+         * located in when gravity was computed last; reference positions and squared half edge
+         * lengths are stored by selfgravity() */
+        distance = (p.x[i] - p_rhs.g_x[i])*(p.x[i] - p_rhs.g_x[i]);
 #if DIM > 1
-            p_rhs.g_y[i] = p.y[i];
+        distance += (p.y[i] - p_rhs.g_y[i])*(p.y[i] - p_rhs.g_y[i]);
 #if DIM > 2
-            p_rhs.g_z[i] = p.z[i];
+        distance += (p.z[i] - p_rhs.g_z[i])*(p.z[i] - p_rhs.g_z[i]);
 #endif
 #endif
-            distance = 0;
-        } else {
-            distance = (p.x[i] - p_rhs.g_x[i])*(p.x[i] - p_rhs.g_x[i]);
-#if DIM > 1
-            distance += (p.y[i] - p_rhs.g_y[i])*(p.y[i] - p_rhs.g_y[i]);
-#if DIM > 2
-            distance += (p.z[i] - p_rhs.g_z[i])*(p.z[i] - p_rhs.g_z[i]);
-#endif
-#endif
-        }
         if (distance > p_rhs.g_local_cellsize[i]) {
             localmovingparticles++;
         }
