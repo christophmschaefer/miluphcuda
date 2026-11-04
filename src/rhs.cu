@@ -470,21 +470,6 @@ void rightHandSide()
 #endif
 */
 
-    if (param.selfgravity) {
-#if DEBUG_RHS_RUNTIMES
-        cudaEventRecord(start, 0);
-#endif
-        cudaVerifyKernel((calculateCentersOfMass<<<1, NUM_THREADS_CALC_CENTER_OF_MASS>>>()));
-        cudaVerify(cudaDeviceSynchronize());
-#if DEBUG_RHS_RUNTIMES
-        cudaEventRecord(stop, 0);
-        cudaEventSynchronize(stop);
-        cudaEventElapsedTime(&time[timerCounter], start, stop);
-        printf("duration calc center of mass: %.7f ms\n", time[timerCounter]);
-        totalTime += time[timerCounter++];
-#endif
-    }
-
 #if INVISCID_SPH
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
@@ -791,6 +776,10 @@ void rightHandSide()
 #if DEBUG_GRAVITY
             fprintf(stdout, "calculating self-gravity using new tree\n");
 #endif
+            /* node masses and centres of mass are only needed for the tree walk, so skip them
+             * together with it; this overwrites the geometric node centres from buildTree() */
+            cudaVerifyKernel((calculateCentersOfMass<<<1, NUM_THREADS_CALC_CENTER_OF_MASS>>>()));
+            cudaVerify(cudaDeviceSynchronize());
             cudaVerifyKernel((selfgravity<<<16*numberOfMultiprocessors, NUM_THREADS_SELFGRAVITY>>>()));
             flag_force_gravity_calc = 0;
         } else {
