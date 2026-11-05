@@ -130,10 +130,10 @@ __global__ void calculateDensity(int *interactions) {
 #if AVERAGE_KERNELS
                 kernel(&W, dWdx, &dWdr, dx, p.h[i]);
                 Wj = 0;
-                kernel(&Wj, dWdx, &dWdr, dx, p.h[j]);
+                kernel(&Wj, dWdx, &dWdr, dx, p.h[ip]);
 # if SHEPARD_CORRECTION
                 W /= p_rhs.shepard_correction[i];
-                Wj /= p_rhs.shepard_correction[j];
+                Wj /= p_rhs.shepard_correction[ip];
 # endif
                 W = 0.5 * (W + Wj);
 #else
