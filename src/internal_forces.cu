@@ -347,13 +347,13 @@ __global__ void internalForces(int *interactions) {
             }
             dWdr /= p_rhs.shepard_correction[i];
             dWdrj /= p_rhs.shepard_correction[j];
+# endif // SHEPARD_CORRECTION
 
             W = 0.5 * (W + Wj);
             dWdr = 0.5 * (dWdr + dWdrj);
             for (e = 0; e < DIM; e++) {
                 dWdx[e] = 0.5 * (dWdx[e] + dWdxj[e]);
             }
-# endif // SHEPARD_CORRECTION
 #else
             kernel(&W, dWdx, &dWdr, dr, sml);
 # if SHEPARD_CORRECTION
@@ -1361,13 +1361,13 @@ __global__ void calculatedeviatoricStress(int *interactions)
             }
             dWdr /= p_rhs.shepard_correction[i];
             dWdrj /= p_rhs.shepard_correction[j];
+# endif // SHEPARD_CORRECTION
 
             W = 0.5 * (W + Wj);
             dWdr = 0.5 * (dWdr + dWdrj);
             for (e = 0; e < DIM; e++) {
                 dWdx[e] = 0.5 * (dWdx[e] + dWdxj[e]);
             }
-# endif // SHEPARD_CORRECTION
 #else
             kernel(&W, dWdx, &dWdr, dr, sml);
 # if SHEPARD_CORRECTION

@@ -634,7 +634,13 @@ __global__ void tensorialCorrection(int *interactions)
                 dWdx[d] = 0.5 * (dWdx[d] + dWdxj[d]);
             }
 #else
-            kernel(&W, dWdx, &dWdr, dr, p.h[i]);
+            // use the same smoothing length as the force loops in internal_forces.cu and viscosity.cu,
+            // otherwise B_i * grad W_ij is not exact for linear fields where h_i != h_j
+            h = p.h[i];
+# if (VARIABLE_SML || INTEGRATE_SML || DEAL_WITH_TOO_MANY_INTERACTIONS)
+            h = 0.5*(p.h[i] + p.h[j]);
+# endif
+            kernel(&W, dWdx, &dWdr, dr, h);
 #endif
 
             for (d = 0; d < DIM; d++) {
