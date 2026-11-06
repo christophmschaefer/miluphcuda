@@ -30,6 +30,15 @@
 #endif
 
 
+// density in the weight m_j/rho of the moment matrix of the tensorial correction and of all velocity
+// gradients at particle i that use the corrected kernel gradient (see parameter.h)
+#if TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM
+# define TC_RHO(i, j) (p.rho[i])
+#else
+# define TC_RHO(i, j) (p.rho[j])
+#endif
+
+
 // basic checks
 #if (!SOLID && !HYDRO) || (SOLID && HYDRO)
 # error Choose either SOLID or HYDRO in parameter.h.
@@ -71,6 +80,18 @@
 
 #if COLLINS_PLASTICITY && DAMAGE_ACTS_ON_S
 # error You chose COLLINS_PLASTICITY and also DAMAGE_ACTS_ON_S in parameter.h. Not a good idea.
+#endif
+
+#if TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM && !TENSORIAL_CORRECTION
+# error TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM requires TENSORIAL_CORRECTION.
+#endif
+
+#if TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM && SPH_EQU_VERSION != 1
+# error TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM works only with SPH_EQU_VERSION 1.
+#endif
+
+#if TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM && SHEPARD_CORRECTION
+# error TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM does not work with SHEPARD_CORRECTION.
 #endif
 
 #if VISCOUS_REGOLITH && !SOLID

@@ -47,6 +47,10 @@
 // 5.0 seems like an appropriate value, but you can play around with this for sure.
 #define MAX_ABS_TENSORIAL_CORRECTION_ENTRY 5.0
 
+#if TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM && !USE_OLDSCHOOL_KERNEL_GRADIENT_CORRECTION_SCHEME
+# error TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM is implemented for the old school correction scheme only.
+#endif
+
 
 
 
@@ -448,7 +452,8 @@ __global__ void CalcDivvandCurlv(int *interactions)
             for (d = 0; d < DIM; d++) {
 #if TENSORIAL_CORRECTION
                 for (dd = 0; dd < DIM; dd++) {
-                    divv += p.m[j]/p.rho[j] * (vj[d] - vi[d]) * p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
+                    divv += p.m[j]/TC_RHO(i, j) * (vj[d] - vi[d])
+                        * p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+d*DIM+dd] * dWdx[dd];
                 }
 #else
                 divv += p.m[j]/p.rho[j] * (vj[d] - vi[d]) * dWdx[d];
@@ -596,9 +601,16 @@ __global__ void tensorialCorrection(int *interactions)
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         register double corrmatrix[DIM*DIM];
         register double matrix[DIM*DIM];
+#if TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM
+        // moment matrix with the weight m_j/rho_j, only used to judge the conditioning
+        double geomatrix[DIM*DIM];
+#endif
         for (d = 0; d < DIM*DIM; d++) {
             corrmatrix[d] = 0;
             matrix[d] = 0;
+#if TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM
+            geomatrix[d] = 0;
+#endif
         }
         if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
                continue;
@@ -645,14 +657,23 @@ __global__ void tensorialCorrection(int *interactions)
 
             for (d = 0; d < DIM; d++) {
                 for (dd = 0; dd < DIM; dd++) {
-                    corrmatrix[d*DIM+dd] -= p.m[j]/p.rho[j] * dr[d] * dWdx[dd];
+                    corrmatrix[d*DIM+dd] -= p.m[j]/TC_RHO(i, j) * dr[d] * dWdx[dd];
+#if TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM
+                    geomatrix[d*DIM+dd] -= p.m[j]/p.rho[j] * dr[d] * dWdx[dd];
+#endif
                 }
             }
         } // end loop over interaction partners
 
 #if USE_OLDSCHOOL_KERNEL_GRADIENT_CORRECTION_SCHEME
+# if TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM
+        // judge the conditioning with the m_j/rho_j matrix, as without TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM,
+        // so that a pure density contrast (e.g. at material interfaces) does not reset the matrix
+        rv = invert_svd(geomatrix, matrix, 1e-8);
+# else
         // invert the moment matrix (corrmatrix) into matrix
         rv = invert_svd(corrmatrix, matrix, 1e-8);
+# endif
 
 
         // revert to identity if matrix is ill-conditioned
@@ -676,6 +697,11 @@ __global__ void tensorialCorrection(int *interactions)
 #endif
             for (d = 0; d < DIM*DIM; d++)
                 matrix[d] = (double)(d % (DIM+1) == 0); // identity
+# if TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM
+        } else {
+            // well-conditioned: invert the moment matrix with the weight m_j/rho_i
+            rv = invert_svd(corrmatrix, matrix, 1e-8);
+# endif
         }
 
 #elif USE_WEIGHTED_KERNEL_GRADIENT_CORRECTION_SCHEME // following Ren et al. https://arxiv.org/abs/2304.14865

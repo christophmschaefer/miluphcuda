@@ -463,15 +463,16 @@ __global__ void internalForces(int *interactions) {
                 tmp = p.m[j];
 # if TENSORIAL_CORRECTION
                 // non-averaged: use particle i's own correction matrix only.
-                // The weight has to be m_j/rho_j, the same weight as in the moment matrix in kernel.cu
-                // (Randles & Libersky 1996). Then the velocity gradient at particle i is exact for linear
-                // velocity fields, also for non-uniform density (unless the matrix was reset to identity).
-                // The Benz weight m_j/rho_i would require a moment matrix built with m_j/rho_i, too.
+                // The weight has to be the same as in the moment matrix in kernel.cu: m_j/rho_j (Randles &
+                // Libersky 1996) or, with TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM, m_j/rho_i (Benz &
+                // Asphaug 1995).
+                // Then the velocity gradient at particle i is exact for linear velocity fields, also for
+                // non-uniform density (unless the matrix was reset to identity).
                 for (e = 0; e < DIM; e++) {
                     for (f = 0; f < DIM; f++) {
-                        edot[e][f] += 0.5 * p.m[j]/p.rho[j] *
+                        edot[e][f] += 0.5 * p.m[j]/TC_RHO(i, j) *
                             (dWdx_corr_i[f] * (-dv[e]) + dWdx_corr_i[e] * (-dv[f]));
-                        rdot[e][f] += 0.5 * p.m[j]/p.rho[j] *
+                        rdot[e][f] += 0.5 * p.m[j]/TC_RHO(i, j) *
                             (dWdx_corr_i[f] * (-dv[e]) - dWdx_corr_i[e] * (-dv[f]));
                     }
                 }
@@ -758,11 +759,18 @@ __global__ void internalForces(int *interactions) {
             // see Frank Ott's thesis for details
             //drhodt += p.m[i]*vvnablaW;
             // Randles and Libersky's version (1996)
+# if TENSORIAL_CORRECTION && TENSORIAL_CORRECTION_FOR_DRHODT
+            // corrected velocity divergence: same weight as the moment matrix
+            drhodt += p.rho[i]/TC_RHO(i, j) * p.m[j] * vvnablaW;
+# else
             drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
+# endif
 
 #else // HYDRO now
 # if SML_CORRECTION 
             drhodt += p.m[j]*vvnablaW;
+# elif TENSORIAL_CORRECTION && TENSORIAL_CORRECTION_FOR_DRHODT
+            drhodt += p.rho[i]/TC_RHO(i, j) * p.m[j] * vvnablaW;
 # else
             drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
 # endif // SML_CORRECTION
@@ -772,7 +780,11 @@ __global__ void internalForces(int *interactions) {
 #if INTEGRATE_SML
             // minus since vvnablaW is v_i - v_j \nabla W_ij
 # if !SML_CORRECTION
+#  if TENSORIAL_CORRECTION && TENSORIAL_CORRECTION_FOR_DRHODT
+            p.dhdt[i] -= 1./DIM * p.h[i] * p.m[j]/TC_RHO(i, j) * vvnablaW;
+#  else
             p.dhdt[i] -= 1./DIM * p.h[i] * p.m[j]/p.rho[j] * vvnablaW;
+#  endif
 # endif // SML_CORRECTION
 #endif // INTEGRATE_SML
 
@@ -1399,7 +1411,7 @@ __global__ void calculatedeviatoricStress(int *interactions)
             for (e = 0; e < DIM; e++) {
                 for (f = 0; f < DIM; f++) {
                     for (kk = 0; kk < DIM; kk++) {
-                        edot[e][f] += 0.5 * p.m[j]/p.rho[j] *
+                        edot[e][f] += 0.5 * p.m[j]/TC_RHO(i, j) *
                             (p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+f*DIM+kk] *
                               (-dv[e]) * dr[kk] * dWdr/r
                               + p_rhs.tensorialCorrectionMatrix[i*DIM*DIM+e*DIM+kk] *
