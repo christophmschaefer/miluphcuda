@@ -10,6 +10,8 @@ For an overview and quick start guide continue reading, for further details see 
 [documentation](https://christophmschaefer.github.io/miluphcuda/index.html).
 
 
+If you want to use the version with the latest features (most of them experimental) go for branch `cms_devel`.
+
 ## Main features
 
 * hydro and solid body modeling
