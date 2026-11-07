@@ -146,6 +146,7 @@
 #define PALPHA_F_ACTS_ON_ROTATION 0
 #define PALPHA_ELASTIC_RELOADING 1
 #define PALPHA_ELASTIC_RELOADING_TOL 1e-6
+#define PALPHA_RETURN_MAPPING 0
 //
 //
 // Sirono model modified by Geretshauser 2009/10
