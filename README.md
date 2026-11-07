@@ -9,6 +9,10 @@ impact processes. It supports several rheology models for elasto-plastic solid b
 For an overview and quick start guide continue reading, for further details see the
 [documentation](https://christophmschaefer.github.io/miluphcuda/index.html).
 
+If you want to use the version with the latest features (most of them experimental) go for branch
+`cms_devel`.
+
+
 
 ## Main features
 
