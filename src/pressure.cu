@@ -151,7 +151,7 @@ __device__ int tillotson_ideal_gas(double rho, double e, int matId)
  * Crush curve alpha_cc(P) of the p-alpha model, i.e. the distention of material matId after quasi-static
  * compaction up to the bulk pressure P. These are the antiderivatives of the dalphadp expressions for the
  * crushcurve_styles in calculatePressure(), with alpha_cc(p_elastic) = alpha_0 for styles 0 and 1 -- keep both
- * in sync. Below the validity range of the experimental curves (styles 2-4) DBL_MAX is returned (no compaction).
+ * in sync. Below the validity range of the experimental curves (styles 2 and 4) DBL_MAX is returned (no compaction).
  * An unknown style returns 1.0, so that the elastic-reloading check in calculatePressure() never applies.
  */
 __device__ double crushcurve_alpha(double pressure, int matId)
@@ -196,11 +196,6 @@ __device__ double crushcurve_alpha(double pressure, int matId)
         if (pressure <= 1e0)
             return DBL_MAX;
         return pow(P0/pressure + a, 1/x + b/x*pressure) + 1/phi_max;
-    } else if (matcrushcurve_style[matId] == 3) {
-        /* Malamud 2023, filling factor phi = 0.084 log10(P) - 0.064 and alpha = 1/phi (phi > 0 for P > 5.8 Pa) */
-        if (pressure <= 1e2)
-            return DBL_MAX;
-        return 1.0 / (0.084 * log10(pressure) - 0.064);
     } else if (matcrushcurve_style[matId] == 4) {
         /* Malamud 2023, blue curve in fig. 2c, VFF = a*P^b with P in MPa and alpha = 1/VFF */
         const double a = 0.41;
@@ -484,19 +479,6 @@ __global__ void calculatePressure() {
                     printf("ISINF in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
                 }
                 // printf("p.dalphadp %lf pressure %lf", p.dalphadp[i], pressure);
-            } else if (crushcurve_style == 3) {  // Malamud 2023 experimental crush curve
-                // if (pressure > 6e0) { // valid for pressures > 6 Pa ...
-                if (pressure > 1e2) { // elastic pressure is given by the initial alpha0, see uri_crush_curve_plot.py
-                    // dalpha / dp = - 0.084 * ln(10) / (-P * (0.084 * ln(P) - 0.064 * ln(10))**2)
-                    p.dalphadp[i] = - 0.19341714781149988/(-pressure * (pow((0.084 * log(pressure) - 0.14736544595161893),2)));
-                }
-                if (isnan(p.dalphadp[i])) {
-                    printf("ISNAN in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
-                }
-                if (isinf(p.dalphadp[i])) {
-                    printf("ISINF in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
-                }
-
             } else if (crushcurve_style == 4) {  // Malamud 2023 experimental crush curve, blue curve in figure 2-c
                 // if (pressure > 6e0) { // valid for pressures > 6 Pa ...
                 //if (pressure > 1e4) { // elastic pressure is given by the initial alpha0, see blue_curve_fig2c.py

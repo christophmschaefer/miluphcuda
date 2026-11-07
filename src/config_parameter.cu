@@ -733,6 +733,15 @@ void transferMaterialsToGPU()
                 cs_solid[ID] = sqrt(bulk_modulus[ID] / rho_0[ID]);
             }
             config_setting_lookup_int(subset, "crushcurve_style", &crushcurve_style[ID]);
+            /* style 3 (experimental Malamud 2023 curve) has been removed, an unknown style would silently
+               disable compaction in calculatePressure() */
+            if ((eos[ID] == EOS_TYPE_JUTZI || eos[ID] == EOS_TYPE_JUTZI_MURNAGHAN || eos[ID] == EOS_TYPE_JUTZI_ANEOS)
+                    && crushcurve_style[ID] != 0 && crushcurve_style[ID] != 1 && crushcurve_style[ID] != 2
+                    && crushcurve_style[ID] != 4) {
+                fprintf(stderr, "Error. Material %d: crushcurve_style %d does not exist (available: 0, 1, 2, 4).\n",
+                        ID, crushcurve_style[ID]);
+                exit(1);
+            }
 #endif
 #if SIRONO_POROSITY
             config_setting_lookup_float(subset, "porsirono_K_0", &porsirono_K_0[ID]);

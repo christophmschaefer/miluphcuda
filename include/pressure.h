@@ -74,7 +74,7 @@ __device__ int tillotson_ideal_gas(double rho, double e, int matId);
  * @brief Crush curve of the p-alpha model: distention alpha_cc(P) of material matId compacted up to bulk pressure P.
  *
  * @details Antiderivatives of the dalphadp expressions in calculatePressure() for all crushcurve_styles.
- * Returns DBL_MAX below the validity range of the experimental crush curves (styles 2-4), i.e. no compaction,
+ * Returns DBL_MAX below the validity range of the experimental crush curves (styles 2 and 4), i.e. no compaction,
  * and 1.0 for an unknown crushcurve_style, so that the elastic-reloading check never applies there.
  */
 __device__ double crushcurve_alpha(double pressure, int matId);
