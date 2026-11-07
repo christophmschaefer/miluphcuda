@@ -945,6 +945,11 @@ __global__ void internalForces(int *interactions) {
                     p.dalphadt[i] = 0.0;
                     p.f[i] = 1.0;
                 }
+#if PALPHA_RETURN_MAPPING
+                /* alpha follows from palphaReturnMapping() in porosity.cu, which also applies the resulting changes
+                   of S and damage_porjutzi; dalphadt is only needed for the decision on f above */
+                p.dalphadt[i] = 0.0;
+#endif
                 // replaced by the lines above to include f=1.0, cms 2026-08-14
                 // if (p.dalphadt[i] > 0.0) {
                     // p.dalphadt[i] = 0.0;

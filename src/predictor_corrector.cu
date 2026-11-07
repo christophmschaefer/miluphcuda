@@ -29,6 +29,7 @@
 #include "parameter.h"
 #include "memory_handling.h"
 #include "miluph.h"
+#include "porosity.h"
 #include "pressure.h"
 #include "rhs.h"
 #include "damage.h"
@@ -830,6 +831,11 @@ void predictor_corrector()
 				cudaVerify(cudaMemcpyToSymbol(p, &predictor_device, sizeof(struct Particle)));
 #if GRAVITATING_POINT_MASSES
 	        	cudaVerify(cudaMemcpyToSymbol(pointmass, &pointmass_device, sizeof(struct Pointmass)));
+#endif
+#if PALPHA_RETURN_MAPPING
+                /* alpha is kept constant during the step, the distention of this state follows from the return
+                   mapping (no commit, the step is not accepted yet) */
+                palpha_return_mapping(FALSE);
 #endif
 				cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
     			cudaVerify(cudaDeviceSynchronize());

@@ -232,6 +232,9 @@ struct Particle {
     double *delpdelrho; ///< the partial derivative of the pressure with respect to the density
     double *delpdele; ///< the partial derivative of the pressure with respect to the specific internal energy
 	double *cs_old; ///< the sound speed after the last successful timestep
+# if PALPHA_RETURN_MAPPING
+    double *alpha_jutzi_hist; ///< alpha after the last accepted step, bound for the return mapping, p_rhs only
+# endif
 #endif
 
 #if SIRONO_POROSITY

@@ -213,6 +213,16 @@
 // A particle counts as below the crush curve only if alpha < alpha_cc(P) - PALPHA_ELASTIC_RELOADING_TOL.
 // This only guards the tie alpha == alpha_cc(P) of a particle on the crush curve against round-off.
 #define PALPHA_ELASTIC_RELOADING_TOL 1e-6
+// Determination of the distention alpha. With 0, alpha is integrated in time with dalpha/dt from the crush curve
+// (Jutzi et al. 2008, eq. 25), and so are the resulting changes of S and of the porous damage.
+// With 1, alpha is determined from the current density and specific internal energy instead (return mapping):
+// alpha = alpha_cc(P) with P = P_s(alpha*rho, e)/alpha if the particle is compressed beyond the crush curve, and
+// otherwise the distention after the last accepted time step (elastic, see PALPHA_ELASTIC_RELOADING). alpha then
+// follows the crush curve exactly, independent of the time step and the integrator, and the changes of S and of the
+// porous damage are applied exactly. dalphadt is 0 in the output, so the time step limits from the change of alpha
+// (dalphadt, RK2_LIMIT_ALPHA_CHANGE) have no effect; the pressure change checks remain.
+// Requires PALPHA_ELASTIC_RELOADING 1.
+#define PALPHA_RETURN_MAPPING 0
 
 // Sirono model modified by Geretshauser (2009/10)
 #define SIRONO_POROSITY 0

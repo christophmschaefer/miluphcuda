@@ -187,6 +187,14 @@
 # error You set STRESS_PALPHA_POROSITY but not PALPHA_POROSITY in parameter.h.
 #endif
 
+#if PALPHA_RETURN_MAPPING && !PALPHA_POROSITY
+# error You set PALPHA_RETURN_MAPPING but not PALPHA_POROSITY in parameter.h.
+#endif
+
+#if PALPHA_RETURN_MAPPING && !PALPHA_ELASTIC_RELOADING
+# error PALPHA_RETURN_MAPPING requires PALPHA_ELASTIC_RELOADING 1 in parameter.h.
+#endif
+
 #if (MORE_OUTPUT || MORE_ANEOS_OUTPUT) && !HDF5IO
 # error You need to set HDF5IO if you want MORE_OUTPUT or MORE_ANEOS_OUTPUT in parameter.h.
 #endif

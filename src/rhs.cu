@@ -391,6 +391,13 @@ void rightHandSide()
     //cudaVerifyKernel((printTensorialCorrectionMatrix<<<1,1>>>( interactions)));
 #endif
 
+#if PALPHA_POROSITY && PALPHA_RETURN_MAPPING
+    /* distention of the current state, needs the density from above and has to precede all uses of alpha (sound
+       speed, plasticity, pressure). The first rhs after an accepted step commits it as history, see porosity.cu. */
+    palpha_return_mapping(palpha_commit_pending);
+    palpha_commit_pending = FALSE;
+#endif
+
 #if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
 #endif

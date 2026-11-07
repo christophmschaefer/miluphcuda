@@ -27,6 +27,7 @@
 #include "timeintegration.h"
 #include "config_parameter.h"
 #include "pressure.h"
+#include "porosity.h"
 #include <libconfig.h>
 #include <float.h>
 #include "aneos.h"
@@ -3102,7 +3103,22 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     fprintf(stdout, "calling pressure for i/o\n");
 #endif
     cudaVerify(cudaDeviceSynchronize());
+#if PALPHA_POROSITY && PALPHA_RETURN_MAPPING
+    {
+        /* alpha is kept constant during a step, so the distention of the output state follows from the return
+           mapping, on p_device from which the output is taken (p may point to a copy of the integrator) */
+        struct Particle p_current;
+
+        cudaVerify(cudaMemcpyFromSymbol(&p_current, p, sizeof(struct Particle)));
+        cudaVerify(cudaMemcpyToSymbol(p, &p_device, sizeof(struct Particle)));
+        palpha_return_mapping(FALSE);
+        cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
+        cudaVerify(cudaDeviceSynchronize());
+        cudaVerify(cudaMemcpyToSymbol(p, &p_current, sizeof(struct Particle)));
+    }
+#else
 	cudaVerifyKernel((calculatePressure<<<numberOfMultiprocessors * 4, NUM_THREADS_PRESSURE>>>()));
+#endif
 
 
     /* copy particle data back to host */

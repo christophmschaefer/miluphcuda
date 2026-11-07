@@ -202,6 +202,13 @@ void initIntegration()
     cudaVerify(cudaMemcpyToSymbol(pointmass, &pointmass_device, sizeof(struct Pointmass)));
     cudaVerify(cudaMemcpyToSymbol(pointmass_rhs, &pointmass_device, sizeof(struct Pointmass)));
 
+#if PALPHA_POROSITY && PALPHA_RETURN_MAPPING
+    /* history of the return mapping, the distention of the initial state, committed by the first rhs */
+    cudaVerify(cudaMemcpy(p_device.alpha_jutzi_hist, p_device.alpha_jutzi, memorySizeForParticles,
+                cudaMemcpyDeviceToDevice));
+    palpha_commit_pending = TRUE;
+#endif
+
     cudaVerifyKernel((initializeSoundspeed<<<numberOfMultiprocessors*4, NUM_THREADS_512>>>()));
 }
 
@@ -209,6 +216,10 @@ void initIntegration()
 //this function is called after every successful integration (not only when ouput is generated)
 void afterIntegrationStep(void)
 {
+#if PALPHA_POROSITY && PALPHA_RETURN_MAPPING
+    /* the next rhs evaluates the accepted state and commits its distention as history of the return mapping */
+    palpha_commit_pending = TRUE;
+#endif
 #if PARTICLE_ACCRETION
     cudaVerifyKernel((ParticleSinking<<<numberOfMultiprocessors*4, NUM_THREADS_PRESSURE>>>()));
 #endif

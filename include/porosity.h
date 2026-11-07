@@ -25,9 +25,26 @@
 #ifndef _POROSITY_H
 #define _POROSITY_H
 
+#include "parameter.h"
 
 
 __global__ void calculateDistensionChange();
+#if PALPHA_POROSITY && PALPHA_RETURN_MAPPING
+/// TRUE if the next call of rightHandSide() evaluates an accepted state and commits its distention as history
+extern int palpha_commit_pending;
+/**
+ * @brief Return mapping of the p-alpha model: the distention of the current state from the crush curve.
+ *
+ * @details For the particles in p, alpha = alpha_cc(P_s(alpha*rho, e)/alpha) if the particle is compressed beyond
+ * the crush curve, otherwise the distention after the last accepted step. S and damage_porjutzi are changed
+ * accordingly. With commit, alpha is stored as history (p_rhs.alpha_jutzi_hist). numCompacted (may be NULL) counts
+ * the particles that lie above the crush curve by more than PALPHA_ELASTIC_RELOADING_TOL.
+ */
+__global__ void palphaReturnMapping(int commit, int *numCompacted);
+/// host wrapper for palphaReturnMapping(), warns once if the initial state lies above the crush curve
+void palpha_return_mapping(int commit);
+#endif
+
 __global__ void calculateCompressiveStrength(void);
 __global__ void calculateTensileStrength(void);
 

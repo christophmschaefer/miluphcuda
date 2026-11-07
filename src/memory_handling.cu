@@ -989,6 +989,9 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&p_device.delpdelrho, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&p_device.delpdele, memorySizeForParticles));
 	cudaVerify(cudaMalloc((void**)&p_device.cs_old, memorySizeForParticles));
+# if PALPHA_RETURN_MAPPING
+    cudaVerify(cudaMalloc((void**)&p_device.alpha_jutzi_hist, memorySizeForParticles));
+# endif
 #endif
 
 #if ANEOS_VAPOR_NO_STRENGTH
@@ -1450,6 +1453,9 @@ int free_memory()
 #if PALPHA_POROSITY
 	cudaVerify(cudaFree(p_device.alpha_jutzi));
 	cudaVerify(cudaFree(p_device.alpha_jutzi_old));
+# if PALPHA_RETURN_MAPPING
+    cudaVerify(cudaFree(p_device.alpha_jutzi_hist));
+# endif
 	cudaVerify(cudaFree(p_device.pold));
 	cudaVerify(cudaFree(p_device.dalphadt));
 	cudaVerify(cudaFree(p_device.dalphadp));
