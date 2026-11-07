@@ -201,11 +201,14 @@
 // consistency with the implementation according to Jutzi's paper from 2008 (and probably the Bern SPH code)
 // imho setting to 0 is more physically correct since the jaumann rate terms are coefficients and no gradients
 #define PALPHA_F_ACTS_ON_ROTATION 0
-// Elastic reloading in the p-alpha model (Herrmann 1969, Jutzi et al. 2008): the distention is a history
-// variable, alpha = alpha_cc(P_max). A particle that has been unloaded lies below the crush curve,
-// alpha < alpha_cc(P), and reloads elastically until its pressure reaches the crush curve again.
-// Set to 0 for the old behaviour, which compacts on every pressure increase above p_elastic, irrespective of
-// whether the particle is on the crush curve (ratcheting under oscillating pressure).
+// Reloading in the p-alpha model. Jutzi et al. (2008, Icarus 198, eqs. 22-23) treat only unloading as elastic:
+// every pressure increase above p_elastic compacts, also when a particle reloads below the maximum pressure it has
+// already experienced. The compaction then depends on the sum of all pressure increases, including numerical
+// pressure noise, and not on the maximum pressure (ratcheting under oscillating pressure).
+// With 1, the distention keeps the memory of the maximum pressure, alpha = alpha_cc(P_max): a particle that has
+// been unloaded lies below the crush curve, alpha < alpha_cc(P), and reloads elastically until its pressure
+// reaches the crush curve again.
+// Set to 0 for the formulation of Jutzi et al. (2008), e.g. for comparisons with the Bern SPH code.
 #define PALPHA_ELASTIC_RELOADING 1
 // A particle counts as below the crush curve only if alpha < alpha_cc(P) - PALPHA_ELASTIC_RELOADING_TOL.
 // This only guards the tie alpha == alpha_cc(P) of a particle on the crush curve against round-off.

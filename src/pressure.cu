@@ -498,10 +498,11 @@ __global__ void calculatePressure() {
                 }
             }
 #if PALPHA_ELASTIC_RELOADING
-            /* The branches above select dalphadp from the pressure alone. A particle that has been unloaded
-               lies below the crush curve, alpha < alpha_cc(P), and has to reload elastically until P reaches
-               the crush curve again (Herrmann 1969, Jutzi et al. 2008). With dalphadp = dalphadp_elastic = 0,
-               dalphadrho = 0 and thus f = 1 below, and dalphadt = 0 in internal_forces.cu. */
+            /* The branches above select dalphadp from the pressure alone, as in Jutzi et al. (2008), eqs. (22)-(23),
+               where only unloading is elastic. Here a particle that has been unloaded lies below the crush curve,
+               alpha < alpha_cc(P), and reloads elastically until P reaches the crush curve again, see
+               PALPHA_ELASTIC_RELOADING in parameter.h. With dalphadp = dalphadp_elastic = 0, dalphadrho = 0 and
+               thus f = 1 below, and dalphadt = 0 in internal_forces.cu. */
             if (p.alpha_jutzi[i] < crushcurve_alpha(pressure, matId) - PALPHA_ELASTIC_RELOADING_TOL) {
                 p.dalphadp[i] = dalphadp_elastic;
             }
