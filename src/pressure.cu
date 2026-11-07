@@ -27,6 +27,7 @@
 #include "config_parameter.h"
 #include "miluph.h"
 #include "aneos.h"
+#include <float.h>
 
 /*
  * Tillotson EOS (notation as in Melosh 1989, "Impact Cratering") for density rho and specific internal energy e
@@ -144,6 +145,74 @@ __device__ int tillotson_ideal_gas(double rho, double e, int matId)
     return EOS_TYPE_TILLOTSON == matEOS[matId] && matPolytropicGamma[matId] > 1.0
         && e > 1e2 * matTillEcv[matId] && rho / matTillRho0[matId] < 1.0;
 }
+
+#if PALPHA_POROSITY
+/*
+ * Crush curve alpha_cc(P) of the p-alpha model, i.e. the distention of material matId after quasi-static
+ * compaction up to the bulk pressure P. These are the antiderivatives of the dalphadp expressions for the
+ * crushcurve_styles in calculatePressure(), with alpha_cc(p_elastic) = alpha_0 for styles 0 and 1 -- keep both
+ * in sync. Below the validity range of the experimental curves (styles 2-4) DBL_MAX is returned (no compaction).
+ * An unknown style returns 1.0, so that the elastic-reloading check in calculatePressure() never applies.
+ */
+__device__ double crushcurve_alpha(double pressure, int matId)
+{
+    double p_e = matporjutzi_p_elastic[matId];
+    double p_s = matporjutzi_p_compacted[matId];
+    double alpha_0 = matporjutzi_alpha_0[matId];
+
+    if (matcrushcurve_style[matId] == 0) {
+        /* quadratic crush curve */
+        if (pressure <= p_e)
+            return alpha_0;
+        if (pressure >= p_s)
+            return 1.0;
+        return 1.0 + (alpha_0 - 1.0) * (p_s - pressure) * (p_s - pressure) / ((p_s - p_e) * (p_s - p_e));
+    } else if (matcrushcurve_style[matId] == 1) {
+        /* real/steep crush curve, rescaled by (alpha_0 - 1)/(alpha_e - 1) such that alpha_cc(p_e) = alpha_0 */
+        double p_t = matporjutzi_p_transition[matId];
+        double alpha_e = matporjutzi_alpha_e[matId];
+        double alpha_t = matporjutzi_alpha_t[matId];
+        double n1 = matporjutzi_n1[matId];
+        double n2 = matporjutzi_n2[matId];
+        double scale = (alpha_0 - 1.0) / (alpha_e - 1.0);
+        double alpha;
+
+        if (pressure <= p_e)
+            return alpha_0;
+        if (pressure >= p_s)
+            return 1.0;
+        alpha = 1.0 + scale * (alpha_t - 1.0) * pow((p_s - pressure) / (p_s - p_e), n2);
+        if (pressure < p_t)
+            alpha += scale * (alpha_e - alpha_t) * pow((p_t - pressure) / (p_t - p_e), n1);
+        return alpha;
+    } else if (matcrushcurve_style[matId] == 2) {
+        /* Blum et al. 2023, same constants as in calculatePressure() */
+        const double P0 = 0.044*1e6;
+        const double phi_max = 0.875;
+        const double x = 8.915;
+        const double a = 0;
+        const double b = 7e-4*1e-6;
+
+        if (pressure <= 1e0)
+            return DBL_MAX;
+        return pow(P0/pressure + a, 1/x + b/x*pressure) + 1/phi_max;
+    } else if (matcrushcurve_style[matId] == 3) {
+        /* Malamud 2023, filling factor phi = 0.084 log10(P) - 0.064 and alpha = 1/phi (phi > 0 for P > 5.8 Pa) */
+        if (pressure <= 1e2)
+            return DBL_MAX;
+        return 1.0 / (0.084 * log10(pressure) - 0.064);
+    } else if (matcrushcurve_style[matId] == 4) {
+        /* Malamud 2023, blue curve in fig. 2c, VFF = a*P^b with P in MPa and alpha = 1/VFF */
+        const double a = 0.41;
+        const double b = 0.09;
+
+        if (pressure <= 0.0)
+            return DBL_MAX;
+        return 1.0 / (a * pow(pressure * 1e-6, b));
+    }
+    return 1.0;
+}
+#endif
 
 __global__ void calculatePressure() {
     register int i, inc, matId;
@@ -446,6 +515,15 @@ __global__ void calculatePressure() {
                     printf("ISINF in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
                 }
             }
+#if PALPHA_ELASTIC_RELOADING
+            /* The branches above select dalphadp from the pressure alone. A particle that has been unloaded
+               lies below the crush curve, alpha < alpha_cc(P), and has to reload elastically until P reaches
+               the crush curve again (Herrmann 1969, Jutzi et al. 2008). With dalphadp = dalphadp_elastic = 0,
+               dalphadrho = 0 and thus f = 1 below, and dalphadt = 0 in internal_forces.cu. */
+            if (p.alpha_jutzi[i] < crushcurve_alpha(pressure, matId) - PALPHA_ELASTIC_RELOADING_TOL) {
+                p.dalphadp[i] = dalphadp_elastic;
+            }
+#endif
             p.dalphadrho[i] = ((pressure / (p.rho[i] * p.rho[i]) * p.delpdele[i] + p.alpha_jutzi[i] * p.delpdelrho[i]) * p.dalphadp[i])
                             / (p.alpha_jutzi[i] + p.dalphadp[i] * (pressure - p.rho[i] * p.delpdelrho[i]));
             p.f[i] = 1.0 + p.dalphadrho[i] * p.rho[i] / p.alpha_jutzi[i];
