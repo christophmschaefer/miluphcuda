@@ -135,6 +135,10 @@
 // p-alpha model implemented following Jutzi (200x)
 #define PALPHA_POROSITY 0          // pressure depends on distention
 #define STRESS_PALPHA_POROSITY 0 // deviatoric stress is also affected by distention
+// p-alpha options, see include/parameter.h for details
+#define PALPHA_F_ACTS_ON_ROTATION 0
+#define PALPHA_ELASTIC_RELOADING 1
+#define PALPHA_ELASTIC_RELOADING_TOL 1e-6
 // Sirono model modified by Geretshauser (2009/10)
 #define SIRONO_POROSITY 0
 // Epsilon-Alpha model implemented following Wuennemann
