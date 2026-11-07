@@ -207,6 +207,175 @@ __device__ double crushcurve_alpha(double pressure, int matId)
     }
     return 1.0;
 }
+
+/*
+ * Matrix EOS of the p-alpha model (EOS_TYPE_JUTZI: Tillotson, EOS_TYPE_JUTZI_MURNAGHAN: Murnaghan,
+ * EOS_TYPE_JUTZI_ANEOS: ANEOS table) for material matId: pressure P_s of the matrix material and its partial
+ * derivatives dP_s/drho_s and dP_s/de, evaluated at the matrix density rho_s = alpha * rho for the bulk density rho
+ * and the distention alpha. Used by calculatePressure() and by the return mapping in porosity.cu, so that both
+ * see exactly the same P_s. For EOS_TYPE_JUTZI_ANEOS and ANEOS_VAPOR_NO_STRENGTH, the ANEOS phase is stored in
+ * *phase_flag unless phase_flag is NULL. Returns 1 for EOS_TYPE_JUTZI_ANEOS with rho <= 0 (P_s and its derivatives
+ * are set to 0, calculatePressure() then leaves the particle alone), otherwise 0. i is the particle index, only
+ * used for diagnostic output.
+ */
+__device__ int palpha_matrix_eos(double rho, double alpha, double e, int matId, double *pressure_solid,
+        double *dpdrho_s, double *dpde, int *phase_flag, int i)
+{
+    int i_rho, i_e;
+
+    if (matEOS[matId] == EOS_TYPE_JUTZI) {
+        tillotson_eos(rho * alpha, e, matId, pressure_solid, dpdrho_s, dpde);
+    } else if (matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN) {
+        double rho_0 = matRho0[matId];
+        double n = matN[matId];
+        double K_0 = matBulkmodulus[matId];
+        double eta = rho * alpha / rho_0;
+
+        if (eta < matRhoLimit[matId]) {
+            *pressure_solid = 0.0;
+            *dpdrho_s = 0.0;
+        } else {
+            *pressure_solid = K_0 / n * (pow(eta, n) - 1.0);
+            *dpdrho_s = K_0 / rho_0 * (pow(eta, n - 1.0));
+        }
+        *dpde = 0.0;
+    } else if (matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
+        if (rho <= 0.0) {
+            *pressure_solid = 0.0;
+            *dpdrho_s = 0.0;
+            *dpde = 0.0;
+#if ANEOS_VAPOR_NO_STRENGTH
+            if (phase_flag != NULL)
+                *phase_flag = ANEOS_PHASE_ONE_PHASE;
+#endif
+            return 1;
+        }
+        /* find array-indices just below the actual values of rho and e */
+        i_rho = array_index(alpha * rho, aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
+        // check for underflow
+        if (i_rho < 0) {
+            i_rho = (alpha * rho < aneos_rho_c[aneos_rho_id_c[matId]]) ? 0 : aneos_n_rho_c[matId] - 2;
+        }
+        i_e = array_index(e, aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
+        if (i_e < 0 && e >= aneos_e_c[aneos_e_id_c[matId] + aneos_n_e_c[matId] - 1]) {
+            /* e above table maximum: ideal gas fallback */
+            *pressure_solid = (aneos_gamma_c[matId] - 1.0) * rho * alpha * e;
+            *dpdrho_s = (aneos_gamma_c[matId] - 1.0) * e;
+            *dpde = (aneos_gamma_c[matId] - 1.0) * rho * alpha;
+#if DEBUG_PRESSURE
+            printf("ideal gas fallback for particle %d with rho=%g and e=%g\n", i, rho, e);
+#endif
+#if ANEOS_VAPOR_NO_STRENGTH
+            if (phase_flag != NULL)
+                *phase_flag = ANEOS_PHASE_TWO_PHASE_LV;
+#endif
+        } else if (i_e < 0) {
+            /* e below table minimum: clamp to cold curve */
+            i_e = 0;
+            bilinear_interpolation_from_linearized_plus_derivatives(alpha * rho, aneos_e_c[aneos_e_id_c[matId]], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], pressure_solid, dpdrho_s, dpde, i);
+#if ANEOS_VAPOR_NO_STRENGTH
+            if (phase_flag != NULL)
+                *phase_flag = aneos_phase_flag_c[aneos_matrix_id_c[matId] + i_rho * aneos_n_e_c[matId]];
+#endif
+        } else {
+            /* interpolate (bi)linearly to obtain the pressure and dp/drho and dp/de */
+            bilinear_interpolation_from_linearized_plus_derivatives(alpha * rho, e, aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], pressure_solid, dpdrho_s, dpde, i);
+#if ANEOS_VAPOR_NO_STRENGTH
+            if (phase_flag != NULL)
+                *phase_flag = aneos_phase_flag_c[aneos_matrix_id_c[matId] + i_rho * aneos_n_e_c[matId] + i_e];
+#endif
+        }
+    }
+    return 0;
+}
+
+/*
+ * Slope dalpha/dP of the crush curve of material matId at the bulk pressure P for all crushcurve_styles, i.e. the
+ * derivative of crushcurve_alpha() above the elastic pressure (keep both in sync), and dalphadp_elastic = 0 in the
+ * elastic regime. Used by calculatePressure() and by the return mapping in porosity.cu. i is the particle index,
+ * only used for diagnostic output.
+ */
+__device__ double crushcurve_dalphadp(double pressure, int matId, int i)
+{
+    double p_e = matporjutzi_p_elastic[matId];      /* pressure at which the material becomes plastic */
+    double p_t = matporjutzi_p_transition[matId];   /* pressure indicating a transition */
+    double p_s = matporjutzi_p_compacted[matId];    /* pressure at which all pores are compacted (alpha = 1) */
+    double alpha_0 = matporjutzi_alpha_0[matId];    /* distention at which the material becomes plastic */
+    double alpha_t = matporjutzi_alpha_t[matId];    /* distention indicating a transition */
+    double n1 = matporjutzi_n1[matId];              /* individual slope */
+    double n2 = matporjutzi_n2[matId];              /* individual slope */
+    double alpha_e = matporjutzi_alpha_e[matId];    /* simplified otherwise alpha_e = alpha(p_e) */
+    /* crushcurve_style from material.cfg -> 0 is the quadratic crush curve, 1 is the real/steep crush curve by jutzi */
+    int crushcurve_style = matcrushcurve_style[matId];
+    double dalphadp = 0.0;
+    double dalphadp_elastic = 0.0;
+    // double c_0 = 5350.0; /* If dalpha_dp_elastic is NOT Zero then you need values for c_0 and c_e */
+    // double c_e = 4110.0;
+    // double h = 1 + (p.alpha_jutzi[i] - 1.0) * (c_e - c_0) / (c_0 * (alpha_e - 1.0));	  	/* needs to have c_e and c_0 set */
+    // dalphadp_elastic = p.alpha_jutzi[i] * p.alpha_jutzi[i] / (c_0 * c_0 * rho_0) * (1.0 - (1.0 / (h * h)));
+    if (crushcurve_style == 0) {   // quadratic crush curve
+        if (pressure <= p_e) {
+            dalphadp = dalphadp_elastic;
+        } else if (pressure > p_e && pressure < p_s) {
+            dalphadp = - 2.0 * (alpha_0 - 1.0) * (p_s - pressure) / (pow((p_s - p_e), 2));
+        } else if (pressure >= p_s) {
+            dalphadp = 0.0;
+        }
+    } else if (crushcurve_style == 1) {   // real/steep crush curve
+        if (pressure <= p_e) {
+            dalphadp = dalphadp_elastic;
+        } else if (pressure > p_e && pressure < p_t) {
+            dalphadp = - ((alpha_0 - 1.0) / (alpha_e - 1.0)) * (alpha_e - alpha_t) * n1 * (pow(p_t - pressure, n1 - 1.0) / pow(p_t - p_e, n1))
+                - ((alpha_0 - 1.0) / (alpha_e - 1.0)) * (alpha_t - 1.0) * n2 * (pow(p_s - pressure, n2 - 1.0) / pow(p_s - p_e, n2));
+        } else if (pressure >= p_t && pressure < p_s) {
+            dalphadp = - ((alpha_0 - 1.0) / (alpha_e - 1.0)) * (alpha_t - 1.0) * n2 * (pow(p_s - pressure, n2 - 1.0) / pow(p_s - p_e, n2));
+        } else if (pressure >= p_s) {
+            dalphadp = 0.0;
+        }
+    } else if (crushcurve_style == 2) {  // Blum et al. 2023 experimental crush curve
+        // values will go to material.cfg eventually
+        // constants from Max rescaled from MPa to Pa
+        const double P0 = 0.044*1e6;
+        const double phi_max = 0.875;
+        const double x = 8.915;
+        const double a = 0;
+        const double b = 7e-4*1e-6;
+        // see doc/papers_and_models/porosity_models/crush_curve_Blum2023
+        // alpha = (P0/P+a)**(1/x+b/x*P) + 1/phi_max
+        // dalphadp = (P0/P + a)**(1/x+b/x*P) * (b/x*np.log(P0/P+a) - P0*(1/x+b/x*P)/(P**2*(P0/P)+a))
+        dalphadp = 0.0;
+        //if (pressure > 0.0) {
+        if (pressure > 1e0) {
+            dalphadp = pow((P0/pressure + a), (1/x+b/x*pressure)) * (b/x*log(P0/pressure+a) -
+                        P0*(1/x+b/x*pressure)/(P0*pressure+a*pressure*pressure));
+        }
+        if (isnan(dalphadp)) {
+            printf("ISNAN in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, dalphadp, pressure);
+        }
+        if (isinf(dalphadp)) {
+            printf("ISINF in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, dalphadp, pressure);
+        }
+        // printf("p.dalphadp %lf pressure %lf", dalphadp, pressure);
+    } else if (crushcurve_style == 4) {  // Malamud 2023 experimental crush curve, blue curve in figure 2-c
+        // if (pressure > 6e0) { // valid for pressures > 6 Pa ...
+        //if (pressure > 1e4) { // elastic pressure is given by the initial alpha0, see blue_curve_fig2c.py
+        const double a = 0.41;
+        const double b = 0.09;
+        const double pelastic_uri = 1e6 * pow(1/(a*alpha_0), 1./b);
+        //printf("pelastic uri: %le\n\n", pelastic_uri);
+        if (pressure > pelastic_uri) { // elastic pressure is given by the initial alpha0, see blue_curve_fig2c.py
+        // from VFF = a*p**b with a=0.41 and b=0.09 and p in MPa
+            dalphadp = -0.7611296717250695*pow(pressure, -1.09);
+        }
+        if (isnan(dalphadp)) {
+            printf("ISNAN in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, dalphadp, pressure);
+        }
+        if (isinf(dalphadp)) {
+            printf("ISINF in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, dalphadp, pressure);
+        }
+    }
+    return dalphadp;
+}
 #endif
 
 __global__ void calculatePressure() {
@@ -351,154 +520,24 @@ __global__ void calculatePressure() {
 #if PALPHA_POROSITY
         } else if (matEOS[matId] == EOS_TYPE_JUTZI || matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN || matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
             double pressure_solid = 0.0;
-            double p_e = matporjutzi_p_elastic[matId];  	/* pressure at which the material switches from elastic to plastic */
-            double p_t = matporjutzi_p_transition[matId]; /* pressure indicating a transition */
-            double p_s = matporjutzi_p_compacted[matId];  /* pressure at which all pores are compacted (alpha = 1) */
-            double alpha_0 = matporjutzi_alpha_0[matId];  /* distention at which the material switches from elastic to plastic */
-            double alpha_t = matporjutzi_alpha_t[matId];  /* distention indicating a transition */
-            double n1 = matporjutzi_n1[matId];			/* individual slope */
-            double n2 = matporjutzi_n2[matId];			/* individual slope */
-            double alpha_e = matporjutzi_alpha_e[matId];	/* simplified otherwise alpha_e = alpha(p_e) */
-//            p.alpha_jutzi_old[i] = p.alpha_jutzi[i];	/* saving the unchanged alpha value */
-            int flag_alpha_quad;	/* if this flag is set -> alpha gets calculated by a quadradic equation and not via the crush curve */
-            double dp; 			/* pressure change for the calculation of dalphadp */
-            int crushcurve_style = matcrushcurve_style[matId]; /* crushcurve_style from material.cfg -> 0 is the quadratic crush curve, 1 is the real/steep crush curve by jutzi */
-            if (matEOS[matId] == EOS_TYPE_JUTZI) {
-                /* pressure of the matrix material and its derivatives del p / del rho and del p / del e,
-                 * the matrix EOS is evaluated at the matrix density alpha * rho */
-                tillotson_eos(p.rho[i] * p.alpha_jutzi[i], p.e[i], matId, &pressure_solid,
-                        &p.delpdelrho[i], &p.delpdele[i]);
-            } else if (matEOS[matId] == EOS_TYPE_JUTZI_MURNAGHAN) {
-                double rho_0 = matRho0[matId];
-                double n = matN[matId];
-                double K_0 = matBulkmodulus[matId];
-                double eta = p.rho[i] * p.alpha_jutzi[i] / rho_0;
+            double dalphadp_elastic = 0.0;     /* as in crushcurve_dalphadp() */
+#if ANEOS_VAPOR_NO_STRENGTH
+            int *phase_flag = &p_rhs.aneos_phase_flag[i];
+#else
+            int *phase_flag = NULL;
+#endif
 
-                if (eta < matRhoLimit[matId]) {
-                    pressure_solid = 0.0;
-                    p.delpdelrho[i] = 0.0;
-                } else {
-                    pressure_solid = K_0 / n * (pow(eta, n) - 1.0);
-                    p.delpdelrho[i] = K_0 / rho_0 * (pow(eta, n - 1.0));
-                }
-                p.delpdele[i] = 0.0;
-            } else if (matEOS[matId] == EOS_TYPE_JUTZI_ANEOS) {
-                 if (p.rho[i] <= 0.0) {
-                    pressure_solid = 0.0;
-                    p.delpdelrho[i] = 0.0;
-                    p.delpdele[i] = 0.0;
-#if ANEOS_VAPOR_NO_STRENGTH
-                    p_rhs.aneos_phase_flag[i] = ANEOS_PHASE_ONE_PHASE;
-#endif
-                    continue;
-                } 
-                /* find array-indices just below the actual values of rho and e */
-                i_rho = array_index(p.alpha_jutzi[i] * p.rho[i], aneos_rho_c+aneos_rho_id_c[matId], aneos_n_rho_c[matId]);
-                // check for underflow
-                if (i_rho < 0) {
-                    i_rho = (p.alpha_jutzi[i] * p.rho[i] < aneos_rho_c[aneos_rho_id_c[matId]]) ? 0 : aneos_n_rho_c[matId] - 2;
-                }
-                i_e = array_index(p.e[i], aneos_e_c+aneos_e_id_c[matId], aneos_n_e_c[matId]);
-                if (i_e < 0 && p.e[i] >= aneos_e_c[aneos_e_id_c[matId] + aneos_n_e_c[matId] - 1]) {
-                    /* e above table maximum: ideal gas fallback */
-                    pressure_solid = (aneos_gamma_c[matId] - 1.0) * p.rho[i] * p.alpha_jutzi[i] * p.e[i];
-                    p.delpdelrho[i] = (aneos_gamma_c[matId] - 1.0) * p.e[i];
-                    p.delpdele[i]   = (aneos_gamma_c[matId] - 1.0) * p.rho[i] * p.alpha_jutzi[i];
-#if DEBUG_PRESSURE
-                printf("ideal gas fallback for particle %d with rho=%g and e=%g\n", i, p.rho[i], p.e[i]);
-#endif
-#if ANEOS_VAPOR_NO_STRENGTH
-                    p_rhs.aneos_phase_flag[i] = ANEOS_PHASE_TWO_PHASE_LV;
-#endif
-                } else if (i_e < 0) {
-                    /* e below table minimum: clamp to cold curve */
-                    i_e = 0;
-                    bilinear_interpolation_from_linearized_plus_derivatives(p.alpha_jutzi[i] * p.rho[i], aneos_e_c[aneos_e_id_c[matId]], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], &pressure_solid, &(p.delpdelrho[i]), &(p.delpdele[i]), i);
-#if ANEOS_VAPOR_NO_STRENGTH
-                    p_rhs.aneos_phase_flag[i] = aneos_phase_flag_c[aneos_matrix_id_c[matId] + i_rho * aneos_n_e_c[matId]];
-#endif
-                } else {
-                    /* interpolate (bi)linearly to obtain the pressure and dp/drho and dp/de */
-                    bilinear_interpolation_from_linearized_plus_derivatives(p.alpha_jutzi[i] * p.rho[i], p.e[i], aneos_p_c+aneos_matrix_id_c[matId], aneos_rho_c+aneos_rho_id_c[matId], aneos_e_c+aneos_e_id_c[matId], i_rho, i_e, aneos_n_rho_c[matId], aneos_n_e_c[matId], &pressure_solid, &(p.delpdelrho[i]), &(p.delpdele[i]), i);
-#if ANEOS_VAPOR_NO_STRENGTH
-                    p_rhs.aneos_phase_flag[i] = aneos_phase_flag_c[aneos_matrix_id_c[matId] + i_rho * aneos_n_e_c[matId] + i_e];
-#endif
-                }
+            /* pressure of the matrix material and its derivatives del p / del rho and del p / del e,
+             * the matrix EOS is evaluated at the matrix density alpha * rho */
+            if (palpha_matrix_eos(p.rho[i], p.alpha_jutzi[i], p.e[i], matId, &pressure_solid, &p.delpdelrho[i],
+                        &p.delpdele[i], phase_flag, i)) {
+                continue;
             }
-
             pressure = pressure_solid / p.alpha_jutzi[i]; /* from the P-alpha model */
             /* calculate the derivative dalpha / dpressure */
-            double dalphadp_elastic = 0.0;
-            // double c_0 = 5350.0; /* If dalpha_dp_elastic is NOT Zero then you need values for c_0 and c_e */
-            // double c_e = 4110.0;
-            // double h = 1 + (p.alpha_jutzi[i] - 1.0) * (c_e - c_0) / (c_0 * (alpha_e - 1.0));	  	/* needs to have c_e and c_0 set */
-            // dalphadp_elastic = p.alpha_jutzi[i] * p.alpha_jutzi[i] / (c_0 * c_0 * rho_0) * (1.0 - (1.0 / (h * h)));
-            p.dalphadp[i] = 0.0;
-            if (crushcurve_style == 0) {   // quadratic crush curve
-                if (pressure <= p_e) {
-                    p.dalphadp[i] = dalphadp_elastic;
-                } else if (pressure > p_e && pressure < p_s) {
-                    p.dalphadp[i] = - 2.0 * (alpha_0 - 1.0) * (p_s - pressure) / (pow((p_s - p_e), 2));
-                } else if (pressure >= p_s) {
-                    p.dalphadp[i] = 0.0;
-//                    p.alpha_jutzi[i] = 1.0;
-				}
-            } else if (crushcurve_style == 1) {   // real/steep crush curve
-                if (pressure <= p_e) {
-                    p.dalphadp[i] = dalphadp_elastic;
-                } else if (pressure > p_e && pressure < p_t) {
-                    p.dalphadp[i] = - ((alpha_0 - 1.0) / (alpha_e - 1.0)) * (alpha_e - alpha_t) * n1 * (pow(p_t - pressure, n1 - 1.0) / pow(p_t - p_e, n1))
-                                  - ((alpha_0 - 1.0) / (alpha_e - 1.0)) * (alpha_t - 1.0) * n2 * (pow(p_s - pressure, n2 - 1.0) / pow(p_s - p_e, n2));
-                } else if (pressure >= p_t && pressure < p_s) {
-                    p.dalphadp[i] = - ((alpha_0 - 1.0) / (alpha_e - 1.0)) * (alpha_t - 1.0) * n2 * (pow(p_s - pressure, n2 - 1.0) / pow(p_s - p_e, n2));
-                } else if (pressure >= p_s) {
-                    p.dalphadp[i] = 0.0;
-//                    p.alpha_jutzi[i] = 1.0;
-                }
-            } else if (crushcurve_style == 2) {  // Blum et al. 2023 experimental crush curve
-                // values will go to material.cfg eventually
-                // constants from Max rescaled from MPa to Pa
-                const double P0 = 0.044*1e6;
-                const double phi_max = 0.875;
-                const double x = 8.915;
-                const double a = 0;
-                const double b = 7e-4*1e-6;
-                // see doc/papers_and_models/porosity_models/crush_curve_Blum2023
-                // alpha = (P0/P+a)**(1/x+b/x*P) + 1/phi_max
-                // dalphadp = (P0/P + a)**(1/x+b/x*P) * (b/x*np.log(P0/P+a) - P0*(1/x+b/x*P)/(P**2*(P0/P)+a))
-                p.dalphadp[i] = 0.0;
-                //if (pressure > 0.0) {
-                if (pressure > 1e0) {
-                    p.dalphadp[i] = pow((P0/pressure + a), (1/x+b/x*pressure)) * (b/x*log(P0/pressure+a) -
-                                P0*(1/x+b/x*pressure)/(P0*pressure+a*pressure*pressure));
-                }
-                if (isnan(p.dalphadp[i])) {
-                    printf("ISNAN in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
-                }
-                if (isinf(p.dalphadp[i])) {
-                    printf("ISINF in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
-                }
-                // printf("p.dalphadp %lf pressure %lf", p.dalphadp[i], pressure);
-            } else if (crushcurve_style == 4) {  // Malamud 2023 experimental crush curve, blue curve in figure 2-c
-                // if (pressure > 6e0) { // valid for pressures > 6 Pa ...
-                //if (pressure > 1e4) { // elastic pressure is given by the initial alpha0, see blue_curve_fig2c.py
-                const double a = 0.41;
-                const double b = 0.09;
-                const double pelastic_uri = 1e6 * pow(1/(a*alpha_0), 1./b);
-                //printf("pelastic uri: %le\n\n", pelastic_uri);
-                if (pressure > pelastic_uri) { // elastic pressure is given by the initial alpha0, see blue_curve_fig2c.py
-                // from VFF = a*p**b with a=0.41 and b=0.09 and p in MPa
-                    p.dalphadp[i] = -0.7611296717250695*pow(pressure, -1.09);
-                }
-                if (isnan(p.dalphadp[i])) {
-                    printf("ISNAN in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
-                }
-                if (isinf(p.dalphadp[i])) {
-                    printf("ISINF in pressure.cu: particle no. %d is killing the day.... with: p.dalphadp: %lf pressure: %.17lf\n", i, p.dalphadp[i], pressure);
-                }
-            }
+            p.dalphadp[i] = crushcurve_dalphadp(pressure, matId, i);
 #if PALPHA_ELASTIC_RELOADING
-            /* The branches above select dalphadp from the pressure alone, as in Jutzi et al. (2008), eqs. (22)-(23),
+            /* crushcurve_dalphadp() selects dalphadp from the pressure alone, as in Jutzi et al. (2008), eqs. (22)-(23),
                where only unloading is elastic. Here a particle that has been unloaded lies below the crush curve,
                alpha < alpha_cc(P), and reloads elastically until P reaches the crush curve again, see
                PALPHA_ELASTIC_RELOADING in parameter.h. With dalphadp = dalphadp_elastic = 0, dalphadrho = 0 and

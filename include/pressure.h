@@ -79,4 +79,22 @@ __device__ int tillotson_ideal_gas(double rho, double e, int matId);
  */
 __device__ double crushcurve_alpha(double pressure, int matId);
 
+/**
+ * @brief Matrix EOS of the p-alpha model: P_s and its derivatives dP_s/drho_s, dP_s/de at rho_s = alpha * rho.
+ *
+ * @details For EOS_TYPE_JUTZI, EOS_TYPE_JUTZI_MURNAGHAN and EOS_TYPE_JUTZI_ANEOS. Stores the ANEOS phase in
+ * *phase_flag (with ANEOS_VAPOR_NO_STRENGTH, unless NULL). Returns 1 for EOS_TYPE_JUTZI_ANEOS with rho <= 0,
+ * otherwise 0. i is the particle index, only used for diagnostic output.
+ */
+__device__ int palpha_matrix_eos(double rho, double alpha, double e, int matId, double *pressure_solid,
+        double *dpdrho_s, double *dpde, int *phase_flag, int i);
+
+/**
+ * @brief Slope dalpha/dP of the crush curve of material matId at the bulk pressure P, 0 in the elastic regime.
+ *
+ * @details Derivative of crushcurve_alpha() for all crushcurve_styles. i is the particle index, only used for
+ * diagnostic output.
+ */
+__device__ double crushcurve_dalphadp(double pressure, int matId, int i);
+
 #endif
