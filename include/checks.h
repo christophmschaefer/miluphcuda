@@ -145,6 +145,13 @@
 #endif
 
 
+// With AVERAGE_KERNELS the pair support is max(h_i, h_j) (SML_PAIR_SUPPORT in tree.h): reducing h_i does not
+// remove partners with a larger sml, so nearNeighbourSearch_modify_sml cannot bring the number of interactions
+// below MAX_NUM_INTERACTIONS by reducing h_i.
+#if AVERAGE_KERNELS && DEAL_WITH_TOO_MANY_INTERACTIONS
+# error DEAL_WITH_TOO_MANY_INTERACTIONS does not work with AVERAGE_KERNELS. Set AVERAGE_KERNELS to 0.
+#endif
+
 // checks for variable sml
 #if VARIABLE_SML
 # if FIXED_NOI && INTEGRATE_SML
