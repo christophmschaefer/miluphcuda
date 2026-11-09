@@ -34,7 +34,8 @@
  * where the rhs at the start of a step modifies the state from which the step starts.
  *
  * The derivatives of the end of a step are those of the start of the next step (first same as last), so one
- * rhs per step remains. Positions are changed only by the drift.
+ * rhs per step remains. For the second kick, the derivatives of the start of the step are copied to kdk_old,
+ * which holds only these arrays. Positions are changed only by the drift.
  */
 
 #include "kdk.h"
@@ -42,13 +43,13 @@
 #include "timeintegration.h"
 #include "config_parameter.h"
 #include "parameter.h"
-#include "memory_handling.h"
 #include "porosity.h"
 #include "pressure.h"
 #include "rhs.h"
 #include "damage.h"
 #include "fast_integration.h"
 #include <float.h>
+#include <string.h>
 
 extern __device__ double endTimeD, currentTimeD;
 extern __device__ double substep_currentTimeD;
@@ -56,7 +57,8 @@ extern __device__ double dt;
 
 extern double L_ini;
 
-/* derivatives at the start of the step, for the second kick */
+/* derivatives at the start of the step, for the second kick. Only the arrays listed in kdk_old_arrays() are
+   allocated, all other pointers of the structs are NULL. */
 __constant__ struct Particle kdk_old;
 struct Particle kdk_old_device;
 #if GRAVITATING_POINT_MASSES
@@ -343,6 +345,99 @@ static double kdk_timestep(double *limitsPerBlock_d, double *limitsPerBlock, dou
 
 
 
+enum {
+    KDK_OLD_ALLOCATE,
+    KDK_OLD_COPY,
+    KDK_OLD_FREE
+};
+
+/* allocates, fills (from p_device and pointmass_device) or frees the arrays of kdk_old_device and
+   kdk_old_pointmass_device. The list has to contain exactly the derivatives used by kdkKick(). */
+static void kdk_old_arrays(int op)
+{
+#define KDK_OLD_ARRAY(dst, src, field, size) \
+    do { \
+        if (op == KDK_OLD_ALLOCATE) \
+            cudaVerify(cudaMalloc((void**)&(dst).field, size)); \
+        else if (op == KDK_OLD_COPY) \
+            cudaVerify(cudaMemcpy((dst).field, (src).field, size, cudaMemcpyDeviceToDevice)); \
+        else \
+            cudaVerify(cudaFree((dst).field)); \
+    } while (0)
+#define KDK_OLD(field, size) KDK_OLD_ARRAY(kdk_old_device, p_device, field, size)
+
+    if (op == KDK_OLD_ALLOCATE) {
+        memset(&kdk_old_device, 0, sizeof(struct Particle));
+    }
+    KDK_OLD(ax, memorySizeForParticles);
+#if DIM > 1
+    KDK_OLD(ay, memorySizeForParticles);
+#endif
+#if DIM > 2
+    KDK_OLD(az, memorySizeForParticles);
+#endif
+#if INTEGRATE_DENSITY
+    KDK_OLD(drhodt, memorySizeForParticles);
+#endif
+#if INTEGRATE_ENERGY
+    KDK_OLD(dedt, memorySizeForParticles);
+#endif
+#if INTEGRATE_SML
+    KDK_OLD(dhdt, memorySizeForParticles);
+#endif
+#if PALPHA_POROSITY
+    KDK_OLD(dalphadt, memorySizeForParticles);
+#endif
+#if FRAGMENTATION
+    KDK_OLD(dddt, memorySizeForParticles);
+# if PALPHA_POROSITY
+    KDK_OLD(ddamage_porjutzidt, memorySizeForParticles);
+# endif
+#endif
+#if JC_PLASTICITY
+    KDK_OLD(dTdt, memorySizeForParticles);
+#endif
+#if INVISCID_SPH
+    KDK_OLD(dbetadt, memorySizeForParticles);
+#endif
+#if EPSALPHA_POROSITY
+    KDK_OLD(dalpha_epspordt, memorySizeForParticles);
+    KDK_OLD(depsilon_vdt, memorySizeForParticles);
+#endif
+#if SOLID
+    KDK_OLD(dSdt, memorySizeForStress);
+    KDK_OLD(edotp, memorySizeForParticles);
+    KDK_OLD(deps_totdt, memorySizeForParticles);
+#endif
+
+#if GRAVITATING_POINT_MASSES
+# define KDK_OLD_PM(field) KDK_OLD_ARRAY(kdk_old_pointmass_device, pointmass_device, field, memorySizeForPointmasses)
+    if (op == KDK_OLD_ALLOCATE) {
+        memset(&kdk_old_pointmass_device, 0, sizeof(struct Pointmass));
+    }
+    KDK_OLD_PM(ax);
+# if DIM > 1
+    KDK_OLD_PM(ay);
+# endif
+# if DIM > 2
+    KDK_OLD_PM(az);
+# endif
+# undef KDK_OLD_PM
+#endif
+
+#undef KDK_OLD
+#undef KDK_OLD_ARRAY
+
+    if (op == KDK_OLD_ALLOCATE) {
+        cudaVerify(cudaMemcpyToSymbol(kdk_old, &kdk_old_device, sizeof(struct Particle)));
+#if GRAVITATING_POINT_MASSES
+        cudaVerify(cudaMemcpyToSymbol(kdk_old_pointmass, &kdk_old_pointmass_device, sizeof(struct Pointmass)));
+#endif
+    }
+}
+
+
+
 #if FAST_INTEGRATION_SCHEME
 /* check_fast_scheme(), returns the number of materials that switched */
 static int kdk_check_fast_scheme(void)
@@ -386,12 +481,7 @@ void kdk(void)
     assert(limitsPerBlock != NULL);
 
     /* memory for the derivatives at the start of a step */
-    allocate_particles_memory(&kdk_old_device, FALSE);
-    cudaVerify(cudaMemcpyToSymbol(kdk_old, &kdk_old_device, sizeof(struct Particle)));
-#if GRAVITATING_POINT_MASSES
-    allocate_pointmass_memory(&kdk_old_pointmass_device, FALSE);
-    cudaVerify(cudaMemcpyToSymbol(kdk_old_pointmass, &kdk_old_pointmass_device, sizeof(struct Pointmass)));
-#endif
+    kdk_old_arrays(KDK_OLD_ALLOCATE);
 
     /* the rhs is always evaluated on p_device */
     cudaVerify(cudaMemcpyToSymbol(p, &p_device, sizeof(struct Particle)));
@@ -464,10 +554,7 @@ void kdk(void)
             cudaVerify(cudaMemcpyToSymbol(dt, &dt_host, sizeof(double)));
 
             /* first kick, drift, and prediction of the end of the step */
-            copy_particles_derivatives_device_to_device(&kdk_old_device, &p_device);
-#if GRAVITATING_POINT_MASSES
-            copy_pointmass_derivatives_device_to_device(&kdk_old_pointmass_device, &pointmass_device);
-#endif
+            kdk_old_arrays(KDK_OLD_COPY);
             cudaVerifyKernel((kdkKickDriftPredict<<<numberOfMultiprocessors * 4, NUM_THREADS_KDK_INTEGRATOR>>>()));
             cudaVerify(cudaDeviceSynchronize());
 
@@ -517,10 +604,7 @@ void kdk(void)
         copyToHostAndWriteToFile(timestep, lastTimestep);
     }
 
-    free_particles_memory(&kdk_old_device, FALSE);
-#if GRAVITATING_POINT_MASSES
-    free_pointmass_memory(&kdk_old_pointmass_device, FALSE);
-#endif
+    kdk_old_arrays(KDK_OLD_FREE);
     cudaVerify(cudaFree(limitsPerBlock_d));
     free(limitsPerBlock);
 }
