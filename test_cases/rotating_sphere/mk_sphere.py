@@ -40,7 +40,7 @@ for i in x:
     for j in y:
         for k in z:
             Rsq = i**2 + j**2 + k**2
-        #     x y z vx vy vz m rho e mt S00 S01 S02 S10 S11 S12 S20 S21 S22
+        #     x y z vx vy vz m rho mt S00 S01 S02 S10 S11 S12 S20 S21 S22  (no e: INTEGRATE_ENERGY is 0 in parameter.h)
             if Rsq < Rmax**2:
                 rho = rho0
                 mass = mass0
@@ -63,5 +63,6 @@ for i in x:
                 xj = j
                 xk = k
 
-            print("%g %g %g 0.0 %g %g %g %g 0.0 %d 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0" % (xi, xj, xk, xi*omega, xi*omega, mass, rho, material_type))
+            # rigid rotation about the z axis, v = omega x r
+            print("%g %g %g %g %g 0.0 %g %g %d 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0" % (xi, xj, xk, -xj*omega, xi*omega, mass, rho, material_type))
 
