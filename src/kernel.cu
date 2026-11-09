@@ -46,6 +46,9 @@
 // and injecting unphysical torque. Clamp overly large correction matrices.
 // 5.0 seems like an appropriate value, but you can play around with this for sure.
 #define MAX_ABS_TENSORIAL_CORRECTION_ENTRY 5.0
+// admissible range of the determinant of the correction matrix
+#define MIN_DET_TENSORIAL_CORRECTION 0.2
+#define MAX_DET_TENSORIAL_CORRECTION 5.0
 
 #if TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM && !USE_OLDSCHOOL_KERNEL_GRADIENT_CORRECTION_SCHEME
 # error TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM is implemented for the old school correction scheme only.
@@ -690,19 +693,59 @@ __global__ void tensorialCorrection(int *interactions)
         for (d = 0; d < DIM*DIM; d++) {
             max_entry = fmax(max_entry, fabs(matrix[d]));
         }
-        // these values are just best practice... change if required and you know what you're doing
-        if (fabs(det) < 0.2 || fabs(det) > 5.0 ||  max_entry > MAX_ABS_TENSORIAL_CORRECTION_ENTRY) {
-#if DEBUG_DEVEL
-            printf("Warning: tensorial correction matrix for particle %d is ill-conditioned, determinant = %g, rv = %d, max_entry = %lf. Setting to identity.\n", i, det, rv, max_entry);
-#endif
+# if TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM
+        // The torque that the stress sigma_i exerts through all pairs ij is proportional to eps : (sigma_i A_i^T) with
+        // A_i = sum_j m_j/rho_i r_ij (x) C_i grad W_ij. For C_i = M_i^-1 (M_i symmetric) A_i is the identity, and the
+        // torque vanishes for symmetric sigma_i. The identity C_i = I gives A_i ~ M_i, which is anisotropic at free
+        // surfaces, and the deviatoric stress exerts a net torque there. Hence an ill-conditioned matrix is not
+        // reset but scaled, C_i = s M_i^-1: A_i = s I is still torque-free. The gradient keeps its direction and is
+        // too short or too long by the factor s only. s brings the determinant into the admissible range and the
+        // largest entry down to MAX_ABS_TENSORIAL_CORRECTION_ENTRY, both judged with the m_j/rho_j matrix as above.
+        // Only a rank-deficient matrix is still reset to the identity.
+        if (rv < DIM || !(det > 0.0) || !isfinite(max_entry)) {
+#  if DEBUG_DEVEL
+            printf("Warning: tensorial correction matrix for particle %d is rank-deficient, determinant = %g, "
+                   "rv = %d, max_entry = %lf. Setting to identity.\n", i, det, rv, max_entry);
+#  endif
             for (d = 0; d < DIM*DIM; d++)
                 matrix[d] = (double)(d % (DIM+1) == 0); // identity
-# if TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM
         } else {
-            // well-conditioned: invert the moment matrix with the weight m_j/rho_i
+            double s = 1.0;
+            if (det < MIN_DET_TENSORIAL_CORRECTION)
+                s = pow(MIN_DET_TENSORIAL_CORRECTION/det, 1.0/DIM);
+            else if (det > MAX_DET_TENSORIAL_CORRECTION)
+                s = pow(MAX_DET_TENSORIAL_CORRECTION/det, 1.0/DIM);
+            if (s*max_entry > MAX_ABS_TENSORIAL_CORRECTION_ENTRY)
+                s = MAX_ABS_TENSORIAL_CORRECTION_ENTRY/max_entry;
+            // invert the moment matrix with the weight m_j/rho_i
             rv = invert_svd(corrmatrix, matrix, 1e-8);
-# endif
+            if (rv < DIM) {
+#  if DEBUG_DEVEL
+                printf("Warning: tensorial correction matrix for particle %d is rank-deficient, rv = %d. "
+                       "Setting to identity.\n", i, rv);
+#  endif
+                for (d = 0; d < DIM*DIM; d++)
+                    matrix[d] = (double)(d % (DIM+1) == 0); // identity
+            } else if (s != 1.0) {
+#  if DEBUG_DEVEL
+                printf("Warning: tensorial correction matrix for particle %d is ill-conditioned, determinant = %g, "
+                       "max_entry = %lf. Scaling with %g.\n", i, det, max_entry, s);
+#  endif
+                for (d = 0; d < DIM*DIM; d++)
+                    matrix[d] *= s;
+            }
         }
+# else
+        // these values are just best practice... change if required and you know what you're doing
+        if (fabs(det) < MIN_DET_TENSORIAL_CORRECTION || fabs(det) > MAX_DET_TENSORIAL_CORRECTION
+                || max_entry > MAX_ABS_TENSORIAL_CORRECTION_ENTRY) {
+#  if DEBUG_DEVEL
+            printf("Warning: tensorial correction matrix for particle %d is ill-conditioned, determinant = %g, rv = %d, max_entry = %lf. Setting to identity.\n", i, det, rv, max_entry);
+#  endif
+            for (d = 0; d < DIM*DIM; d++)
+                matrix[d] = (double)(d % (DIM+1) == 0); // identity
+        }
+# endif
 
 #elif USE_WEIGHTED_KERNEL_GRADIENT_CORRECTION_SCHEME // following Ren et al. https://arxiv.org/abs/2304.14865
         // invert the moment matrix (corrmatrix) into matrix
