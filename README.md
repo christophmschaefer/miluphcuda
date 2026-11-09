@@ -7,7 +7,7 @@ impact processes. It supports several rheology models for elasto-plastic solid b
 * miluphcuda runs on single Nvidia GPUs with compute capability 5.0 and higher.
 
 For an overview and quick start guide continue reading, for further details see the
-[documentation](https://christophmschaefer.github.io/miluphcuda/index.html).
+[documentation](doc/README.md) in `doc/`.
 
 
 If you want to use the version with the latest features (most of them experimental) go for branch `cms_devel`.
@@ -19,6 +19,8 @@ If you want to use the version with the latest features (most of them experiment
 * several material strength models for elasto-plastic flow
 * fragmentation model for brittle-failure (Grady-Kipp)
 * porosity models (P-alpha, epsilon-alpha, Sirono)
+* tensorial correction for first-order consistency and angular momentum conservation
+* fast integration scheme for the late stage of granular flow
 * self-gravity (via Barnes-Hut tree)
 * various equations of state including tabulated (e.g., ANEOS)
 
@@ -37,7 +39,8 @@ Download the latest version of the code or clone the github repo.
 
 After installation of the required dependencies (see below), compile via the `Makefile`:
 
-1. If you do not know the compute capability of your GPU, you can try running `configure.sh` which performs some tests and tries to find the GPU using `nvidia-smi`.
+1. Set `CUDA_DIR` and the compute capability `GPU_ARCH` of your GPU in the `Makefile` (see `doc/installation.md`).
+   `configure.sh` performs some tests and tries to find the GPU using `nvidia-smi`.
 2. Run `make` to produce the `miluphcuda` executable in `build/`.
 
 It may be necessary to make some changes to the `Makefile` even if `configure.sh` succeeds.
@@ -75,7 +78,8 @@ The basic usage philosophy for miluphcuda is:
   in a material config file (typically `material.cfg`) and processed at run-time.  
   See `material-config/CREATE-MATERIAL-CONFIG.md` for details on the file structure and available settings.  
   A collection of parameters for various materials is available in `material-config/material_data/`.
-* All other main options are controlled via cmd-line flags. Check `./miluphcuda -h` once compiled.
+* All other main options are controlled via cmd-line flags. Check `./miluphcuda -h` once compiled,
+  and `doc/running.md`.
 
 For each simulation, you need:
 

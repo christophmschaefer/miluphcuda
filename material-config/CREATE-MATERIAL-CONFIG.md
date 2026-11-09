@@ -1,10 +1,9 @@
 How to set up the material config file for miluphcuda
 =====================================================
 
-last updated: 19/Apr/2022
+last updated: 09/Nov/2026 (state of branch `cms_devel`)
 
-Christoph Burger, Christoph Schäfer  
-christoph.burger@uni-tuebingen.de
+Christoph Burger, Christoph Schäfer
 
 ----------------------------------------------------------------
 
@@ -22,8 +21,8 @@ Check http://hyperrealm.github.io/libconfig/ for the latest version and document
 
 **Note**: This file is one of three places where you configure miluphcuda settings. The other two are:
 
-* *parameter.h* (at compile time)
-* *cmd-line flags*
+* *parameter.h* (at compile time), see `doc/compile-time-options.md`
+* *cmd-line flags*, see `doc/running.md`
 
 The config file is passed to miluphcuda by the `-m` cmd-line option.
 
@@ -55,33 +54,18 @@ The basic file structure, containing *n* different materials, looks like:
                 eos = {
                     type = ...
                     ...
-                    ...
                 }
             },
             {
                 ID = 1
-                name = ...
                 ...
-
-                eos = {
-                    type = ...
-                    ...
-                    ...
-                }
             },
             .
             .
             .
             {
                 ID = n-1
-                name = ...
                 ...
-
-                eos = {
-                    type = ...
-                    ...
-                    ...
-                }
             }
         );
 
@@ -95,8 +79,8 @@ Include directives can also be nested.
 
 The `material.cfg` file in this directory contains an example setup, comprising several materials and material models.
 
-Note that, for now, the `eos = {...}` group regularly contains not only equation-of-state-specific entries,
-but also further parameters related to the material model.
+Note that, for now, the `eos = {...}` group contains not only equation-of-state-specific entries,
+but also most other parameters of the material model (elastic constants, strength, porosity).
 
 ----------------------------------------------------------------
 
@@ -114,20 +98,20 @@ Where to find material parameters?
 Good to know...
 ---------------
 
-* The entries in the config file have to match their data type. For example, the ID tag has to be
-  an integer value whereas the value for the cohesion has to be given in floating point notation:
-
-        cohesion = 1000
-
-  will not work but
+* The entries in the config file should match their data type. Integer keys (e.g. `ID`, `eos.type`,
+  `crushcurve_style`) need integer values. For float keys, write the value in floating point notation,
 
         cohesion = 1000.0   or   cohesion = 1.0e3
 
-  are valid entries. The libconfig specs indicate that a period is *always* mandatory for floats...
+  libconfig requires a period or an exponent for floats; miluphcuda switches on the libconfig auto-conversion,
+  so that `cohesion = 1000` is converted to a float as well, but older versions of the code did not.
 
-* The code prints out all read material parameters if the verbose flag `-v` is used.
+* The code prints out all read material parameters if the verbose flag `-v` is used. Check them.
 
-* If values are ommitted, default values are assumed (see below). In most cases, these default values are not what you want.
+* If values are omitted, default values are assumed (see below). In most cases, these default values are not what you want.
+
+* Keys that are not listed here are ignored (e.g. `aneos_e_norm` in some files in `material_data/`, which is used by
+  external tools for initial conditions).
 
 ----------------------------------------------------------------
 
@@ -143,6 +127,44 @@ The group *global* (see file structure above) contains options affecting all mat
         c_gravity   float   6.67408e-11     grav. constant, determining code units (default is SI),
                                             check material_data/grav-const.cfg for some options
 
+The optional group *disk* is only needed for the locally isothermal gas (EOS type 12) and the Shakura-Sunyaev
+viscosity:
+
+        Key                 Type    Default     Details
+        _______________________________________________
+
+        disk.scale_height   float   none        H/r of the disc; c_s = v_kep * scale_height
+
+----------------------------------------------------------------
+
+
+Equations of state
+------------------
+
+The EOS of a material is set by `eos.type`. The numbers correspond to `enum EquationOfStates` in
+`include/pressure.h`:
+
+        type    name                                parameters (in group eos)
+        ________________________________________________________________________________
+
+        -1      EOS_TYPE_IGNORE                     particle is ignored (deactivated)
+         0      EOS_TYPE_POLYTROPIC_GAS             polytropic_K, polytropic_gamma        p = K rho^gamma
+         1      EOS_TYPE_MURNAGHAN                  rho_0, bulk_modulus, n
+         2      EOS_TYPE_TILLOTSON                  till_*, see below
+         3      EOS_TYPE_ISOTHERMAL_GAS             isothermal_soundspeed                 p = c_s^2 rho
+         4      EOS_TYPE_REGOLITH                   Bui et al. (2008) soil model (experimental), p = -tr(sigma)/3
+         5      EOS_TYPE_JUTZI                      p-alpha porosity + Tillotson matrix
+         6      EOS_TYPE_JUTZI_MURNAGHAN            p-alpha porosity + Murnaghan matrix
+         7      EOS_TYPE_ANEOS                      ANEOS (or other tabulated EOS in that format)
+         8      EOS_TYPE_VISCOUS_REGOLITH           experimental, do not use
+         9      EOS_TYPE_IDEAL_GAS                  polytropic_gamma                      p = (gamma-1) rho e
+        10      EOS_TYPE_SIRONO                     Sirono porosity model
+        11      EOS_TYPE_EPSILON                    eps-alpha porosity + Tillotson matrix
+        12      EOS_TYPE_LOCALLY_ISOTHERMAL_GAS     disk.scale_height and point masses    p = c_s^2 rho
+        13      EOS_TYPE_JUTZI_ANEOS                p-alpha porosity + ANEOS matrix
+
+The equations are given in the PDF documentation (`doc/miluphcuda_documentation.pdf`).
+
 ----------------------------------------------------------------
 
 
@@ -154,9 +176,8 @@ equation of state. For the keys in the following lists, the top level is assumed
 and subgroups within materials are denoted by dot syntax. For example, *ID* is on the top level of some material,
 and *eos.type* is the key *type* in the subgroup *eos*. (See above for the overall file structure.)
 
-All units are SI, unless noted otherwise.
-
-This list is currently not exhaustive.
+All units are SI, unless noted otherwise (strictly: the units are those of your initial conditions and of
+`c_gravity`).
 
 
 **Always mandatory**
@@ -167,9 +188,7 @@ This list is currently not exhaustive.
         ID          int     none        material ID, has to fit SPH particles' material-type
                                         in input file, IDs have to be 0, 1, 2,...
 
-        eos.type    int     none        set equation of state for material, for a complete list see
-                                        https://christophmschaefer.github.io/miluphcuda/pressure_8h.html
-                                        or look directly into pressure.h
+        eos.type    int     none        equation of state, see table above
 
 --------------------------------
 
@@ -181,12 +200,28 @@ This list is currently not exhaustive.
         name            str     none                                name of material, currently not
                                                                     processed by miluphcuda
 
-        density_floor   float   1% of bulk/reference density, or    minimum density (absolute value)
-                                1% of matrix if porous, or          allowed for material
+        density_floor   float   1% of the reference density         minimum density (absolute value)
+                                (matrix density if porous), or      allowed for material
                                 0. for gases
 
-        energy_floor    float   none                                minimum energy (absolute value)
+        energy_floor    float   -1e30 (i.e., none)                  minimum specific internal energy
                                                                     allowed for material
+
+--------------------------------
+
+**Smoothing length**
+
+        Key                 Type    Default     Details
+        _______________________________________________
+
+        sml                 float   0.          smoothing length (= radius of the kernel support); only used
+                                                if READ_INITIAL_SML_FROM_PARTICLE_FILE is not set in parameter.h
+        interactions        int     -           wanted number of interaction partners, only for
+                                                VARIABLE_SML + FIXED_NOI
+        factor_sml_min      float   1.          with VARIABLE_SML: sml is kept >= factor_sml_min * sml
+        factor_sml_max      float   1.          with VARIABLE_SML: sml is kept <= factor_sml_max * sml
+
+Note: with VARIABLE_SML the defaults of 1. for both factors keep the smoothing length constant.
 
 --------------------------------
 
@@ -202,7 +237,18 @@ The bulk modulus may be required for sound speed estimates, the Grady-Kipp fragm
         eos.bulk_modulus    float     0.
         eos.shear_modulus   float     0.
 
-Note: The other two elastic constants (Young's modulus and Poisson's ratio) are computed from them as needed.
+Note: Young's modulus is computed from them, E = 9 K mu / (3 K + mu).
+
+--------------------------------
+
+**Density via kernel sum**
+
+        Key                         Type    Default     Details
+        _______________________________________________________
+
+        eos.density_via_kernel_sum  int     0           with INTEGRATE_DENSITY: 1 computes the density of this
+                                                        material via the kernel sum instead of the continuity
+                                                        equation
 
 --------------------------------
 
@@ -217,6 +263,34 @@ You need to set `ARTIFICIAL_VISCOSITY` in parameter.h (at compile time), and in 
 
         artificial_viscosity.alpha      float     1.
         artificial_viscosity.beta       float     2.
+
+--------------------------------
+
+**Artificial stress**
+
+Needed (mandatory group) if `ARTIFICIAL_STRESS` is set in parameter.h:
+
+        Key                                     Type    Default     Details
+        ___________________________________________________________________
+
+        artificial_stress.exponent_tensor       float   0.          exponent n of (W_ij/W(Delta p))^n
+        artificial_stress.epsilon_stress        float   0.          factor epsilon of the artificial stress
+        artificial_stress.mean_particle_distance float  0.          Delta p, the initial particle spacing
+
+--------------------------------
+
+**Physical viscosity (Navier-Stokes)**
+
+Needed (mandatory group) if `NAVIER_STOKES` is set in parameter.h:
+
+        Key                                 Type    Default     Details
+        _______________________________________________________________
+
+        physical_viscosity.nu               float   0.          kinematic viscosity, for
+                                                                CONSTANT_KINEMATIC_VISCOSITY
+        physical_viscosity.alpha_shakura    float   0.          alpha, for SHAKURA_SUNYAEV_ALPHA
+        physical_viscosity.eta              float   0.          shear viscosity
+        physical_viscosity.zeta             float   0.          bulk viscosity
 
 --------------------------------
 
@@ -239,6 +313,8 @@ and the following parameters:
                                                         to zero; intended to avoid unphysically high
                                                         negative pressures where the material would
                                                         actually fragment or form droplets
+
+        eos.cs_limit        float   0.                  lower limit for sound speed (in m/s)
 
 Note: For n=1 the Murnaghan EoS reduces to the simple *liquid EoS*.
 
@@ -287,6 +363,49 @@ and the following parameters:
                                                         note that p jumps at e = 100 till_E_cv unless
                                                         polytropic_gamma is close to till_a + 1
 
+Note: for type 2, negative specific internal energies are set to zero in the EoS.
+
+--------------------------------
+
+**EoS: ANEOS (tabulated)**
+
+To use a tabulated EoS (generated with ANEOS, or any table in the same format), set
+
+        eos.type = 7
+
+and the following parameters:
+
+        Key                     Type    Default             Details
+        ___________________________________________________________
+
+        eos.table_path          str     none                path to the table file
+        eos.n_rho               int     0                   number of density points in the table
+        eos.n_e                 int     0                   number of energy points in the table
+        eos.aneos_rho_0         float   0.                  reference density
+        eos.aneos_bulk_cs       float   0.                  bulk sound speed (for defaults of cs_limit,
+                                                            cs_porous)
+        eos.aneos_molar_mass    float   0. (warning)        molar mass (kg/mol), for the ideal gas fallback
+        eos.aneos_gamma         float   0. (warning)        adiabatic index of the ideal gas fallback, used
+                                                            for e above the table maximum
+        eos.cs_limit            float   1% of aneos_bulk_cs lower limit for sound speed (in m/s)
+
+Pressure and sound speed are interpolated bilinearly in the table. Energies below the table minimum are clamped to
+the cold curve, energies above the maximum use the ideal gas fallback p = (aneos_gamma - 1) rho e.
+The tables can be generated externally, e.g. with the *miluphANEOS* project.
+With `MORE_ANEOS_OUTPUT` or `ANEOS_VAPOR_NO_STRENGTH`, temperature, entropy and the phase flag are read from the
+table as well.
+
+--------------------------------
+
+**EoS: gases**
+
+        Key                         Type    Default     Details
+        _______________________________________________________
+
+        eos.polytropic_K            float   0.          type 0
+        eos.polytropic_gamma        float   0.          types 0 and 9
+        eos.isothermal_soundspeed   float   0.          type 3
+
 --------------------------------
 
 **Plasticity model: von Mises**
@@ -312,11 +431,16 @@ You need to set `COLLINS_PLASTICITY` in parameter.h (at compile time), and in th
         Key                             Type    Default     Details
         ___________________________________________________________
 
-        eos.cohesion                    float   0.
+        eos.cohesion                    float   0.          strength at p = 0 of intact material
         eos.friction_angle              float   0.          in rad
-        eos.cohesion_damaged            float   0.
+        eos.cohesion_damaged            float   0.          strength at p = 0 of damaged material
         eos.friction_angle_damaged      float   0.          in rad
-        eos.yield_stress                float   0.
+        eos.yield_stress                float   0.          limit of the intact strength for p -> infinity
+
+        eos.tensile_pressure_limit      float   0.          optional, >= 0; residual tensile strength of fully
+                                                            damaged material: negative pressure is reduced by
+                                                            (1-damage), but not beyond
+                                                            -max(cohesion_damaged, tensile_pressure_limit)
 
         eos.melt_energy                 float   0.          to use this you need to additionally set
                                                             COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
@@ -348,7 +472,7 @@ You need to set `DRUCKER_PRAGER_PLASTICITY` in parameter.h (at compile time), an
 
         Key                     Type    Default     Details
         ___________________________________________________
-        
+
         eos.cohesion            float   0.
         eos.friction_angle      float   0.          in rad
 
@@ -362,7 +486,7 @@ You need to set `DRUCKER_PRAGER_PLASTICITY` in parameter.h (at compile time), an
 
 This is a linear dependence of the yield strength on pressure, intended for granular-like materials,
 therefore the yield strength decreases to zero for p < 0.
-Note that for p < 0 the slope is not set by the friction coefficient, but = 1 (i.e., the zero is at -cohesion).  
+Note that for p < 0 the slope is not set by the friction coefficient, but = 1 (i.e., the zero is at -cohesion).
 A negative-pressure cap is applied: negative pressures are limited to zero of yield strength curve (at -cohesion).
 
 You need to set `MOHR_COULOMB_PLASTICITY` in parameter.h (at compile time), and in the material config file:
@@ -379,13 +503,21 @@ You need to set `MOHR_COULOMB_PLASTICITY` in parameter.h (at compile time), and 
 
 --------------------------------
 
+**Plasticity model: Johnson-Cook (experimental)**
+
+For `JC_PLASTICITY`: `eos.jc_y0`, `eos.jc_B`, `eos.jc_n`, `eos.jc_m`, `eos.jc_edot0`, `eos.jc_C`, `eos.jc_Tref`,
+`eos.jc_Tmelt`, `eos.Cp`, `eos.CV`. This model will be removed.
+
+--------------------------------
+
 **Fragmentation model: Grady-Kipp**
 
 To activate the full Grady-Kipp model set `FRAGMENTATION` and `DAMAGE_ACTS_ON_S` in parameter.h (at compile time).
 This is currently only possible globally for all materials at once.
 Whether you want `DAMAGE_ACTS_ON_S` depends mainly on the desired interaction with the plasticity model (see comments in parameter.h).
 
-The following parameters are currently only needed for some pre-processing tools.
+The flaw distribution (activation thresholds) is part of the input file. The following parameters are only needed
+for pre-processing tools that generate it:
 
         Key                         Type    Default     Details
         _______________________________________________________
@@ -400,12 +532,13 @@ The following parameters are currently only needed for some pre-processing tools
 Additional strength reduction for low-density states (below the reference density).
 
 For most plasticity models, this is done by reducing the cohesion, and by that the whole yield envelope.
-For COLLINS_PLASTICITY only the damaged cohesion is reduced, vor VON_MISES_PLASTICITY all (constant) yield strength is reduced.
+For COLLINS_PLASTICITY only the damaged cohesion is reduced, for VON_MISES_PLASTICITY all (constant) yield strength is reduced.
 
 Strength reduction increases with decreasing density, where the functional form is set by the parameters below.
 It drops from 1 to gamma between rho0 and eta_limit, with slope alpha, then it drops further from gamma to zero
-between eta_limit and rho=0, with slope beta.  
+between eta_limit and rho=0, with slope beta.
 When combined with porosity, all densities are matrix densities.
+Implemented for EoS types 1, 2 and 5.
 
 You need to set `LOW_DENSITY_WEAKENING` in parameter.h (at compile time), and in the material config file:
 
@@ -427,6 +560,8 @@ Note: The defaults simply disable all low-density weakening for the respective m
 
 **Porosity model: P-alpha**
 
+See `doc/porosity.md` for a practical guide.
+
 The P-alpha porosity model can be used together with several EoS, which all have a distinct *eos.type*
 when used together with the P-alpha model:
 
@@ -434,19 +569,24 @@ when used together with the P-alpha model:
 * *eos.type = 6* ... P-alpha + Murnaghan EoS
 * *eos.type = 13* ... P-alpha + ANEOS
 
-In addition to the parameters for the respective EoS, you need the following:
+The parameters of the respective EoS refer to the matrix material (e.g., `till_rho_0` is the matrix density).
+In addition, you need the following:
 
         Key                         Type    Default             Details
         _______________________________________________________________
 
-        eos.crushcurve_style        int     0                   0 ... simple quadratic crush curve
-                                                                1 ... realistic crush curve
-        eos.porjutzi_p_elastic      float   0.
+        eos.crushcurve_style        int     0                   0 ... quadratic crush curve
+                                                                1 ... steep crush curve (Jutzi et al. 2008)
+                                                                2 ... experimental (Blum et al. 2023), constants
+                                                                      hard-coded in pressure.cu
+                                                                4 ... experimental (Malamud 2023), constants
+                                                                      hard-coded in pressure.cu
+        eos.porjutzi_p_elastic      float   0.                  pressure where compaction starts
         eos.porjutzi_p_transition   float   0.                  only required for crush curve style 1
-        eos.porjutzi_p_compacted    float   0.
+        eos.porjutzi_p_compacted    float   0.                  pressure of full compaction
 
-        eos.porjutzi_alpha_0        float   1.
-        eos.porjutzi_alpha_e        float   1.
+        eos.porjutzi_alpha_0        float   1.                  distention on the crush curve at p_elastic
+        eos.porjutzi_alpha_e        float   1.                  only required for crush curve style 1
         eos.porjutzi_alpha_t        float   1.                  only required for crush curve style 1
 
         eos.porjutzi_n1             float   0.                  only required for crush curve style 1
@@ -462,12 +602,54 @@ In addition to the parameters for the respective EoS, you need the following:
 
 **Porosity model: eps-alpha**
 
-...
+For `EPSALPHA_POROSITY` and *eos.type = 11* (Tillotson matrix):
+
+        Key                         Type    Default     Details
+        _______________________________________________________
+
+        eos.porepsilon_kappa        float   0.          exponent kappa of the exponential compaction regime
+        eos.porepsilon_alpha_0      float   0.          initial distention
+        eos.porepsilon_epsilon_e    float   0.          volumetric strain at the elastic limit
+        eos.porepsilon_epsilon_x    float   0.          volumetric strain at the transition to the power-law
+                                                        regime
+        eos.porepsilon_epsilon_c    float   0.          volumetric strain of full compaction
 
 --------------------------------
 
 **Porosity model: Sirono**
 
-...
+For `SIRONO_POROSITY` and *eos.type = 10*: `eos.porsirono_K_0`, `eos.porsirono_rho_0`, `eos.porsirono_rho_s`,
+`eos.porsirono_gamma_K`, `eos.porsirono_alpha`, `eos.porsirono_pm`, `eos.porsirono_phimax`, `eos.porsirono_phi0`,
+`eos.porsirono_delta`. See `src/porosity.cu` and `src/pressure.cu`.
 
+--------------------------------
 
+**Fast integration scheme**
+
+With `FAST_INTEGRATION_SCHEME` set in parameter.h, a material that contains the (optional) group
+`fast_integration` is switched at `transition_time` to a linear elastic medium with a low sound speed
+(Raducan & Jutzi 2022, Jutzi et al. 2022), allowing much larger time steps in the late, low-velocity stage.
+Supported EoS types: 1, 2, 7 (become type 1 with n = 1) and 5, 6, 13 (become type 6 with n = 1). Materials without
+the group are never switched.
+
+        Key                                 Type    Default             Details
+        _______________________________________________________________________
+
+        fast_integration.transition_time    float   none (mandatory)    simulation time of the switch, >= 0
+        fast_integration.bulk_modulus       float   none (mandatory)    bulk modulus K of the new medium, > 0
+        fast_integration.poisson_ratio      float   keep current        Poisson ratio nu of the new medium;
+                                                                        the shear modulus becomes
+                                                                        3K(1-2nu)/(2(1+nu)); the deviatoric
+                                                                        stress is rescaled with the ratio of
+                                                                        the shear moduli
+        fast_integration.rho_0              float   reference density   reference density of the new medium
+                                                    of the EoS
+        fast_integration.rho_limit          float   1.                  rho_limit of the new medium (no
+                                                                        tension below rho_0 with the default)
+
+The sound speed after the switch is sqrt(K/rho_0). Example (regolith target):
+
+        fast_integration = {
+            transition_time = 2.0
+            bulk_modulus = 7.8e5
+        };

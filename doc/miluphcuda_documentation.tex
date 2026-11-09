@@ -1,999 +1,743 @@
 \documentclass[10pt,fleqn,twoside]{article}
 
-%%%% USE ARIAL FONT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\usepackage{helvet}
-\renewcommand\familydefault{phv}
-%%%% INCLUDE NECESSARY PACKAGES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{palatino}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{fancyhdr}
 \usepackage{natbib}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{nicefrac}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{journals}
 \usepackage[colorlinks=true]{hyperref}
 \setcitestyle{authoryear, open={(},close={)}}
-\usepackage{xcolor}
-\usepackage{ae,aecompl}
-\usepackage{graphicx}
-\usepackage{palatino}
-\usepackage{colortbl}
-\usepackage{nicefrac}
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
-\usepackage{rotating}
-\usepackage{epsf}
-\usepackage{setspace}
-\usepackage{tikz}
- \usetikzlibrary{patterns}
-\usepackage{siunitx}
-\usepackage{mathabx}
-\usepackage{multibib}
-\usepackage{journals}
-\usepackage{wrapfig}
-\usepackage{listings}
-\usepackage{booktabs}
-% bibliography for own papers
-%\usepackage{sfmath}
 
-%%%% PAGE LAYOUT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \setlength{\textheight}{22cm}
 \setlength{\topmargin}{-1.2cm}
 \setlength{\textwidth}{15.6cm}
 \setlength{\oddsidemargin}{0.0cm}
 \setlength{\evensidemargin}{0.0cm}
-\setlength{\mathindent}{1.5cm}
+\setlength{\mathindent}{1.0cm}
 \setlength{\parindent}{0.0cm}
-\setlength{\parskip}{0.08cm}
+\setlength{\parskip}{0.12cm}
 \def\bibfont{\small}
 
-%%%% PAGE HEADER %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\definecolor{unirot}{RGB}{165,30,55}
+\definecolor{unigold}{RGB}{180,160,105}
+\newcommand\crule[3][black]{\textcolor{#1}{\rule{#2}{#3}}}
+
 \pagestyle{fancy}
-\fancyhead[RE,RO]{}
-\fancyfoot[RO]{ \thepage}
-\fancyfoot[LE]{ \thepage}
+\fancyhead[RE,RO]{\crule[unigold]{0.7em}{0.5em}~~~\nouppercase\leftmark}
+\fancyhead[LO,LE]{\crule[unirot]{0.7em}{0.5em}~~~miluphcuda}
 \fancyfoot[CE,CO]{}
-
-%%% FONTS FOR THE TITLE PAGE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newfont{\tpfonta}{cmssbx10 scaled 1600}
-\newfont{\tpfontb}{cmssbx10 scaled 3200}
-
-%%%% EURO SIGN %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newcommand\euro{{\sffamily C%
-\makebox[0pt][l]{\kern-.70em\mbox{--}}%
-\makebox[0pt][l]{\kern-.68em\raisebox{.25ex}{--}}}}
-\newcommand\keuro{k{\sffamily C%
-\makebox[0pt][l]{\kern-.70em\mbox{--}}%
-\makebox[0pt][l]{\kern-.68em\raisebox{.25ex}{--}}}}
-
-%%%% COLOR DEFINITIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\definecolor{blue} {rgb} {0.25,0.25,0.75}
-
-\definecolor{LightCyan}{rgb}{0.9,0.9,0.9}
-\definecolor{DarkCyan}{rgb}{0.8,0.8,0.8}
-
-%%%% ADDITONAL EMPHASIS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newcommand{\cem}{\color{black}}
-\newcommand{\eem}{\sl\color{black}}
-
-%%%% SET THE COLOR OF THE (SUB-) SECTION TITLES %%%%%%%%%%%
-\newcommand{\Tcol}{\color{black}}
-
-%%%% SET THE COLOR OF THE TITLE BOX BACKGROUND %%%%%%%%%%%%
-\definecolor{Background}{rgb} {0.62,0.75,0.5}
-
-%%%% REFERENCE SECTION NAME %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\renewcommand\refname{\Tcol 9. Bibliography}
+\fancyfoot[RO,LE]{\thepage}
 
 \renewcommand{\vec}[1]{{\mathbf #1}}
-\newcommand{\vect}[1]{{\mathbf #1}}
-
-
-%%%% COLOR THE SECTION NUMBERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\makeatletter
-\renewcommand\@seccntformat[1]{\color{black} {\csname the#1\endcsname}\hspace{0.5em}}
-\makeatother
-\renewcommand\thesection{\arabic{section}.}
-\renewcommand\thesubsection{\arabic{section}.\arabic{subsection}}
-
-%%%% CHANGE THE APPEARANCE OF THE \PARAGRAPH COMMAND  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\makeatletter
-\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
-            {-2.5ex\@plus -1ex \@minus -.25ex}%
-            {1.25ex \@plus .25ex}%
-            {\normalfont\normalsize\bfseries}}
-\makeatother
-\setcounter{secnumdepth}{4}     % how many sectioning levels to assign numbers to
-\setcounter{tocdepth}{4}        % how many sectioning levels to show in ToC
-
-
-
-\newcommand{\todo}[1]{{\color{red} #1}}
-\newcommand{\fixme}[1]{{\color{red} #1}}
-
-\usepackage{array}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\sw}[1]{\texttt{#1}}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\gradW}{\nabla_{\!i} W_{ij}}
+\renewcommand{\arraystretch}{1.25}
 \newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{2}
 
-\renewcommand{\arraystretch}{1.3}
-
-\title{ {\Large \textbf{Documentation miluphCUDA}
-    }\\[0.2cm] \crule[unirot]{0.5em}{0.5em}~~~\crule[blue]{0.5em}{0.5em}~~~\crule[unigold]{0.5em}{0.5em}\\[0.2cm]
-\centering\includegraphics[width=0.5\textwidth]{pic/IMG_1058.jpg}\\
-%\crule[unigold]{1em}{1em}~~~\crule[blue]{1em}{1em}~~~\crule[unirot]{1em}{1em}\\
-\vfill \normalsize
-{\large Version: \today}\\[0.8cm]
-written by \\
-Christoph Burger, Christoph Schäfer, Oliver Wandel \\ Institut für Astronomie und
-Astrophysik \\ Eberhard-Karls-Universität Tübingen}
-\date{\vspace{-5ex}}
-\pagestyle{fancy}
-\fancyhead[RE,RO]{\crule[unigold]{0.7em}{0.5em} ~~~ \nouppercase \leftmark}
-\fancyhead[LO]{\crule[unirot]{0.7em}{0.5em}~~~ miluphCUDA}
-\fancyhead[LE]{\crule[blue]{0.7em}{0.5em}~~~ miluphCUDA}
-
-\usepackage{xcolor}
-\newcommand\crule[3][black]{\textcolor{#1}{\rule{#2}{#3}}}
-\definecolor{unirot}{RGB}{165,30,55} %rote Farbe
-\definecolor{unigrau}{RGB}{195,195,195} %graue Farbe
-\definecolor{unigold}{RGB}{180,160,105} %goldene Farbe
-\begin{document}
-
-\sisetup{
- range-units = single
-}
-
-% hyperlink colors:
 \hypersetup{
- pdftitle={Documentation miluphCUDA},    % title
- pdfauthor={Christoph Schäfer},     % author
- pdfcreator={Christoph Schäfer},   % creator of the document
- colorlinks = {true},
- citecolor = {unirot},
- linkcolor = {unirot},
- %citebordercolor = {red},
- urlcolor = {unirot},
- %linkbordercolor = {red},
- %urlbordercolor = {white}
+ pdftitle={miluphcuda: physical model and numerics},
+ pdfauthor={Christoph M. Sch\"afer},
+ citecolor={unirot}, linkcolor={unirot}, urlcolor={unirot}
 }
-%%%% TITLE PAGE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{{\Large\textbf{miluphcuda}}\\[0.2cm]
+{\large Physical model and numerical methods}\\[0.2cm]
+\crule[unirot]{0.5em}{0.5em}~~~\crule[blue]{0.5em}{0.5em}~~~\crule[unigold]{0.5em}{0.5em}}
+\author{Christoph M. Sch\"afer, Christoph Burger, Oliver Wandel, and the miluphcuda developers\\
+Institut f\"ur Astronomie und Astrophysik, Eberhard Karls Universit\"at T\"ubingen}
+\date{Version of \today, branch \code{cms\_devel}}
+
+\begin{document}
+\sloppy
+\renewcommand{\_}{\textunderscore\allowbreak}
+
 \maketitle
 \thispagestyle{empty}
-\newpage
+
+\begin{abstract}
+\noindent This document describes the equations solved by miluphcuda and their discretization: the governing
+equations of hydrodynamics and continuum mechanics, the equations of state, the strength, fragmentation and porosity
+models, the SPH discretization including the tensorial correction, the time integrators and the self-gravity. The
+compile-time switches that select the individual parts are given in \code{typewriter} font; they are listed in
+\code{doc/compile-time-options.md}. How to install and run the code, the command-line options, the file formats, and
+the material config file are described in the Markdown files in \code{doc/} and in
+\code{material-config/CREATE-MATERIAL-CONFIG.md}.
+\end{abstract}
+
 \tableofcontents
 \newpage
-\setcounter{page}{1}
 
 
-
-
+%==============================================================================
 \section{Introduction}
-\emph{miluphCUDA} was originally the CUDA port of the code \emph{miluph} (see \url{http://www.tat.physik.uni-tuebingen.de/~schaefer/miluph.html}).
-It's a Smooth Particle Hydrodynamics (SPH) code for the simulation of fluids as well as solid and porous bodies.
-\emph{miluphCUDA} is capable of using various different equation of state (see Sect.~\ref{section:eos}) and the material strength model and a damage model introduced by Benz \& Asphaug for the simulation of brittle solid materials (see Sect.~\ref{section:damage_model}). Self-gravity can be included and is solved using a Barnes-Hut tree (see Sect.~\ref{section:self-gravity}). The code can be used for the simulation of high-velocity impacts and/or self gravitating astrophysical objects or mixed hydro-solid simulations.
+%==============================================================================
 
-The code and its numerics are well described in the publication:
+miluphcuda is a smoothed particle hydrodynamics (SPH) code for fluids and for solid and porous bodies, mainly developed
+for the simulation of impacts and collisions of solid, self-gravitating bodies in planetary science. It is the CUDA
+port of the code miluph and runs on a single Nvidia GPU. The code and its numerics are described in
+\citet{schaefer2016} and \citet{schaefer2020}; please cite both papers and the ASCL record (ascl:1911.023) if you use
+the code.
 
-\emph{Schäfer, C.; Riecker, S.; Maindl, T.; Speith, R.; Scherrer, S.; Kley, W.: A Smooth Particle Hydrodynamics Code to Model Collisions Between Solid, Self-Gravitating Objects},
+The code solves either the Euler equations (\sw{HYDRO}) or the equations of continuum mechanics with deviatoric
+stress (\sw{SOLID}) in one, two or three dimensions (\sw{DIM}). An arbitrary number of materials with different
+equations of state and material models can interact. Self-gravity is computed with a Barnes-Hut tree.
 
-published in Astronomy \& Astrophysics.
+\paragraph{Authors.} Christoph Sch\"afer and Sven Riecker wrote the basic version. Later additions, among others:
+soil model (Samuel Scherrer), Johnson-Cook model (Janka Werner), porosity models (Oliver Wandel), ANEOS support,
+Collins and Mohr-Coulomb strength models, low-density weakening, rk2 integrator settings (Christoph Burger),
+Drucker-Prager model, Navier-Stokes equation, tensorial correction, fast integration scheme, return mapping of the
+p-alpha model, kick-drift-kick integrator (Christoph Sch\"afer). See \code{README.md} for the list of developers.
 
-Please cite this paper when using our code.
-
-
-\paragraph*{Copyright and Authors}
-Christoph Schäfer and Sven Riecker wrote the basic version of \emph{miluphCUDA}.
-
-Later additions (chronologically):
-\begin{itemize}
- \item Soil material model: Samuel Scherrer
- \item Johnson-Cook material model: Janka Werner
- \item Porosity model: Oliver Wandel
- \item ANEOS support: Christoph Burger
- \item Drucker-Prager and Mohr-Coulomb material model: Christoph Schäfer
- \item Navier-Stokes equation: Christoph Schäfer
-\end{itemize}
-
-Authors of some additional tools in \verb|test_cases/| or \verb|utils/|:
-\begin{itemize}
- \item Christoph Burger
- \item Thomas I. Maindl
-\end{itemize}
+\paragraph{Notation.} Particles are labelled $i$ and $j$, Greek indices denote spatial coordinates and run from 1 to
+$D$ (the dimension), and the Einstein summation convention applies to them. $\vec x_{ij} = \vec x_i - \vec x_j$,
+$\vec v_{ij} = \vec v_i - \vec v_j$, $r_{ij} = |\vec x_{ij}|$, and $\gradW = \partial W(r_{ij}, h)/\partial
+\vec x_i$. $e$ is the specific internal energy. In miluphcuda the smoothing length $h$ is the radius of the kernel
+support, i.e.\ $W(r, h) = 0$ for $r \geq h$.
 
 
+%==============================================================================
+\section{Governing equations}
+%==============================================================================
 
-
-
-
-
-\section{Quick Start Guide}
-\subsection{Installation steps}
-\begin{enumerate}
- \item Install CUDA, e.g., from \url{https://developer.nvidia.com/cuda-downloads}
- \item Check out \emph{miluphCUDA} from the git repo, e.g.,\\ \verb|git clone  https://github.com/christophmschaefer/miluphcuda.git  |\\
- \item Install \emph{libconfig}: Download\\
-       \verb|http://www.hyperrealm.com/libconfig/libconfig-1.4.9.tar.gz|\\
-       (or a newer version) and
-       \begin{itemize}
-        \item \verb|sudo ./configure|
-        \item \verb|sudo make|
-        \item \verb|sudo make install|
-       \end{itemize}
-       or\\
-       \verb|apt-get install libconfig9-dev|\\
-       on Ubuntu/Debian
- \item If you want to use HDF5, you need to install \emph{libhdf5} and \emph{libhdf5-dev}
- \item Make relevant changes to \emph{parameter.h} to specify all compile-time options
- \item Make relevant changes to the \emph{Makefile}: Change the \verb|CUDA_DIR| variable according to your CUDA version. Make sure to use the correct \verb|GPU_ARCH| corresponding to your Nvidia-GPU model. Otherwise the code will \emph{not} work and crash or give wrong results!
-       Tested CUDA versions with Nvidia-driver versions are given in Tab.~\ref{tab:cuda_driver}.
-
-
-       Also change the compiler and linker flags in the Makefile according to your system (e.g., \verb|-L| and \verb|-I| for \emph{libhdf5} and \emph{libconfig}).
-\end{enumerate}
-
-\begin{table}
- \begin{center}
-  \begin{tabular}[h]{p{5cm} l} \toprule
-   CUDA version & Nvidia driver                   \\ \midrule
-   6.0          & 331.113                         \\
-   6.5          &                                 \\
-   7.0          & 346.46                          \\
-   7.5          & 352.39, 367.27                  \\
-   8.0          & 375.26, 375.66, 384.111, 390.67 \\
-   9.0          & 390.67                          \\
-   10.0         & 430.14                          \\  \bottomrule
-  \end{tabular}
-  \caption{Tested CUDA versions with Nvidia-driver versions}
- \end{center}
- Unsupported cuda versions so far: $<= 5.0$. \newline
- We have one case of an user reporting that the combination of gcc- 4.4.7 and CUDA devkit 7.5 on K20 cards fails to run the SOLID version of the code. If you happen to provide access to one of these cards for us, please contact us.
- \label{tab:cuda_driver}
-\end{table}
-
-
-\subsection{Usage of the code}
-The code and its numerics are comprehensively described in the publication:
-
-\emph{Schäfer, C.; Riecker, S.; Maindl, T.; Speith, R.; Scherrer, S.; Kley, W.: A Smooth Particle Hydrodynamics Code to Model Collisions Between Solid, Self-Gravitating Objects},
-
-which is published in Astronomy \& Astrophysics.
-
-Please cite this paper when using our code.
-
-
-\paragraph*{Compile time options}
-The number of threads for some CUDA kernels can be set as compile time options in \emph{timeintegration.h}. You may need to change (if so then probably lower) some values depending on your hardware.
-
-All compile time options related to the physical model have to be set in \emph{parameter.h}!
-Please edit and check \emph{parameter.h}. There are comments for each \texttt{\#define}.
-
-
-\paragraph*{Command line options}
-A lot of important settings have to be provided at the command line (see Tab.~\ref{tab:cmd-line-options}, and also \\
-\verb|./miluphcuda --help|)
-
-\begin{table}
- \centering
- \caption{Available command line options.}
- \begin{tabular}[b]{p{5cm} p{9cm}}
-  \hline
-  Option                  & Purpose                                                                                                                                                                                                  \\
-  \hline
-  \verb|-h, --help| & print help message                                                                                                                                                                                       \\
-  \verb|-G, --information| & print information about detected Nvidia GPUs on this host                                                                                                                                                \\
-  \verb|-d, --device_id <int>| & try to use GPU device with id \verb|<int>| for computation (default: 0)                                                                                                                       \\
-  \verb|-Y, --format| & print information about input and output format of the data files                                                                                                                                        \\
-  \verb|-v, --verbose| & be talkative (stdout)                                                                                                                                                                                    \\
-  \verb|-I, --integrator| & available Integrators are \verb|euler| (1st order), \verb|euler_pc| and \verb|monaghan_pc| (2nd order), \verb|rk2_adaptive| (2nd order with adaptive time step), \verb|kdk| (2nd order kick-drift-kick, conserves angular momentum for torque-free forces) \\
-  \verb|-Q, --precision| & precision of the \verb|rk2_adaptive| integrator (default: 1e-5)                                                                                                                                      \\
-  \verb|-n, --num| & number of simulation steps                                                                                                                                                                               \\
-  \verb|-H, --hdf5_output| & write HDF5 output files (default is no)                                                                                                                                                                  \\
-  \verb|-X, --hdf5_input| & use HDF5 file for input (default is no), file \emph{<string>.XXXX.h5} will be opened (i.e. to open e.g., \emph{impact.0123.h5} pass \verb|impact.0123| to option \verb|-f|)           \\
-  \verb|-A, --no_ascii_output| & disable ASCII output files (not set by default)                                                                                                                                                          \\
-  \verb|-a, --theta| & Theta Criterion for Barnes-Hut Tree (default: 0.5)                                                                                                                                                       \\
-  \verb|-t, --timeperstep| & time for one simulation step (for writing to output files for adaptive integrators)                                                                                                                      \\
-  \verb|-M, --maxtimestep| & upper limit for the timestep (\verb|rk2_adaptive|), or timestep size for \verb|euler|, respectively                                                                                       \\
-  \verb|-T, --starttime| & start time of the simulation                                                                                                                                                                             \\
-  \verb|-f, --filename| & name of input data file (default: \emph{disk.0000}); input file name format is something like \emph{<string>.XXXX}, where \emph{XXXX} means runlevel and zeros                                           \\
-  \verb|-r, --restart| & assume that ASCII input file is old output file                                                                                                                                                          \\
-  \verb|-m, --materialconfig| & name of file containing material parameters for all materials in the simulation                                                                                                                          \\
-  \verb|-k, --kernel| & specify the kernel function, available are \verb|wendlandc2|, \verb|wendlandc4|, \verb|wendlandc6|, \verb|cubic_spline|, \verb|quartic_spline|, default: \verb|cubic_spline| \\
-  \verb|-s, --selfgravity| & include self-gravity                                                                                                                                                                                     \\
-  \verb|-D, --directselfgravity| & Calculate selfgravity using direct particle-particle force and not the tree (slower)                                                                                                                     \\
-  \verb|-L VALUE| & Check for conservation of angular momentum. (default: off)
-  Simulations stops once the relative difference between current angular momentum and initial
-  angular momentum is larger than VALUE.                                                                                                                                                                                             \\
-  \verb|-g, --decouplegravity| & decouple hydro time scale from gravitational time scale                                                                                                                                                  \\
-  \verb|-b, --boundary_ratio| & ratio of additional ghost boundary particles (default: 0)                                                                                                                                                \\
-  \hline
- \end{tabular}
- \label{tab:cmd-line-options}
-\end{table}
-
-One of the most important switches is \verb|--verbose|, which provides much more helpful output.
-
-
-\paragraph*{Input file}
-In order to run a simulation, you need a simulation input file, that includes at least the coordinates and masses of your initial SPH particle distribution (in case of a HYDRO simulation, for SOLID simulations more columns in the input file are required).
-Please use\\
-\verb|./miluphcuda --format|\\
-to determine the correct input file format, and to display the output file format.
-
-
-\paragraph*{Material parameter file}
-The required material parameters are set in the file \emph{material.cfg}, which is passed via the command line argument \verb|-m|. Refer to the available materials in \verb|material_data/| and the examples in \verb|test_cases/| for the different needed material parameters.
-
-
-\paragraph*{Usage example}
-Example of miluphCUDA invocation (from the colliding rubber rings example in
-
-\verb|test_cases/colliding_rings/|):
-
-\begin{verbatim}
-# set the correct LD_LIBRARY_PATH to the cuda libs
-export LD_LIBRARY_PATH=/usr/local/cuda-7.5/lib64
-# invoke miluphCUDA: use the rk2_adaptive integrator, use HDF5
-# output and write 500 output files at simulation times
-1.0
-2.0
-3.0
-(...)
-500.0
-# the files will be named
-rings.0001
-rings.0002
-rings.0003
-(...)
-rings.0500
-# the used miluphCUDA command line is
-./miluphcuda -v -I rk2_adaptive -n 500 -H -t 1.0 -f rings.0000 -m material.cfg
-\end{verbatim}
-
-
-
-\paragraph*{Porosity usage}
-If you want to model one or more materials which are porous, you have to change some things--(*) marked points need to be done for simulations with at least 1 porous material, while (**) marked points need to be done if the regarded material is porous.
-
-In \emph{parameter.h}:
-\begin{itemize}
- \item (*) you have to switch on \verb|PALPHA_POROSITY|
-\end{itemize}
-
-In \emph{material.cfg}:
-\begin{itemize}
- \item (**) porosity uses \verb|EOS_TYPE_JUTZI| which is \emph{type = 5} for the use of the Tillotson eos (recommended), or \verb|EOS_TYPE_JUTZI_MURNAGHAN| which is \emph{type = 6} for the use of the Murnaghan eos
- \item (**) this needs to be added to the eos (it defines the crush-curve and was fitted for porous pumice):
-       \begin{verbatim}
-            porjutzi_p_elastic = 1.0e6;
-            porjutzi_p_transition = 6.80e7;
-            porjutzi_p_compacted = 2.13e8;
-            porjutzi_alpha_0 = 3.0;
-            porjutzi_alpha_e = 4.64;
-            porjutzi_alpha_t = 1.90;
-            porjutzi_n1 = 12.0;
-            porjutzi_n2 = 3.0;
-\end{verbatim}
-       The value \verb|porjutzi_alpha_0| needs to be set to the initial distention at the start of the simulation. In this case it is 3.0 which translates to a porosity of Phi = 1 - 1/alpha\_0 = 1 - 1/3.0 = 66.6\%.
- \item (**) the value of \verb|till_rho_0| needs to be set to the matrix density of the regarded material
-\end{itemize}
-
-In your input file:
-\begin{itemize}
- \item (*) At the very end of your input file and before you weibull the file the last two variables are \verb|alpha_jutzi| and \verb|p| (the data format can also be checked using the cmd-line option \verb|-Y|, see Tab.~\ref{tab:cmd-line-options}). \verb|alpha_jutzi| is the initial distention at the start of the simulation (the same as in the \emph{material.cfg} file) and \verb|p| needs to be set to 0 so that there isn't any pressure at the start. \verb|p| is needed since dP = P\_new - P\_old is being calculated in the code.
- \item (**) The initial density rho (porous density) needs to be set so that rho * alpha\_jutzi = rho\_s (rho\_s is the matrix density which is set in \emph{material.cfg} as till\_rho\_0). This has to match exactly!
- \item (**) The mass of the particles also needs to be adjusted to being porous. Normally if you calculate the mass using the density then the mass is already the mass for the porous particle.
-\end{itemize}
-Please note: for the time beeing, you will also have to set the flag \texttt{flag\_alpha\_quad} in \texttt{pressure.cu} directly
-\begin{verbatim}
-int flag_alpha_quad;   /* if this flag is set -> alpha gets
-            calculated by a quadradic equation and not via the crush curve */
-\end{verbatim}
-
-
-\subsection{A last note}
-We do NOT support the use of the code for military purposes.
-
-
-
-
-\section{Code structure}
-If you want to add some changes to the code, read and understand \emph{CodingStyle.txt}.
-
-\subsection{Data structure}
-We use the struct \verb|Particle| (from \emph{miluph.h}) for storing all information about a SPH particle. The struct depends on the
-settings in \emph{parameter.h}.
-
-\subsection{List of files and directory structure}
-Table~\ref{tab:file-list} contains a list of the files that are part of the \emph{miluphCUDA} project.
-
-There are additional subdirectories\\
-\verb|utils/|\\
-\verb|test_cases/|\\
-\verb|material_data/|\\
-\verb|doc/|\\
-that include pre and postprocessing utilities, test-cases, material parameters for \emph{material.cfg}, and this documentation.
-
-\begin{table}
- \centering
- \caption{List of files in \emph{miluphCUDA}.}
- \small
- \begin{tabular}[b]{p{6cm} p{9cm}}
-  \hline
-  Filename                                                      & Purpose                                                                                                                                                                                                                                                                                                                                                    \\
-  \hline
-  aneos.cu, aneos.h                                             & functions for initializing and running ANEOS                                                                                                                                                                                                                                                                                                               \\
-  artificial\_stress.cu, artificial\_stress.h                   & functions for artificial stress (see Gray, Monaghan, Swift 2001)                                                                                                                                                                                                                                                                                           \\
-  boundary.cu, boundary.h                                       & special treatment of boundaries                                                                                                                                                                                                                                                                                                                            \\
-  checks.h                                                      & consistency checks of compile time options                                                                                                                                                                                                                                                                                                                 \\
-  cuda\_utils.h                                                 & CUDA specific functions                                                                                                                                                                                                                                                                                                                                    \\
-  damage.cu, damage.h                                           & functions for the fragmentation and damage models                                                                                                                                                                                                                                                                                                          \\
-  density.cu, density.h                                         & calculate density or time derivative of density                                                                                                                                                                                                                                                                                                            \\
-  device\_tools.cu, device\_tools.h                             &                                                                                                                                                                                                                                                                                                                                                            \\
-  euler.cu, euler.h                                             & Euler integrator; stress tensor (regolith) and/or deviatoric stress tensor (all other solid materials)                                                                                                                                                                                                                                                     \\
-  gravity.cu, gravity.h                                         & functions for the calculation of self gravity                                                                                                                                                                                                                                                                                                              \\
-  internal\_forces.cu, internal\_forces.h                       & compute the change of stress tensor (regolith) and/or deviatoric stress tensor (all other solid materials)                                                                                                                                                                                                                                                 \\
-  io.cu, io.h                                                   & functions for input/output, ASCII and HDF5                                                                                                                                                                                                                                                                                                                 \\
-  kernel.cu, kernel.h                                           & calculate SPH kernel values                                                                                                                                                                                                                                                                                                                                \\
-  kdk.cu, kdk.h                                                 & kick-drift-kick (leapfrog) integrator, conserves angular momentum for torque-free forces \\
-  linalg.cu, linalg.h                                           & helping functions for matrix operations etcpp.                                                                                                                                                                                                                                                                                                             \\
-  little\_helpers.cu, little\_helpers.h                         &                                                                                                                                                                                                                                                                                                                                                            \\
-  Makefile                                                      & Makefile for GNU Make. You'll need to make changes according to your CUDA version and your GPU architecture in this file                                                                                                                                                                                                                                   \\
-  material.cfg                                                  & In this file, you define the material parameters for each materialID that your simulation includes.                                                                                                                                                                                                                                                        \\
-  memory\_handling.cu, memory\_handling.h                       & functions for memory allocation and copying between host and device                                                                                                                                                                                                                                                                                        \\
-  miluph.cu                                                     & main                                                                                                                                                                                                                                                                                                                                                       \\
-  miluph.h                                                      & header file with \verb|Particle| structure definition                                                                                                                                                                                                                                                                                              \\
-  parameter.h                                                   & this file includes all relevant compile time options. You will need to make changes here in order to define your physical model (HYDRO, SOLID, w/o FRAGMENTATION, DIMENSION, ...)                                                                                                                                                                          \\
-  pc\_values.dat                                                & mininum absolute values, which are needed for the predictor-corrector integration schemes                                                                                                                                                                                                                                                                  \\
-  plasticity.cu, plasticity.h                                   & material models (rheology): Drucker-Prager, Johnson-Cook, von Mises                                                                                                                                                                                                                                                                                        \\
-  porosity.cu, porosity.h                                       & porosity model following Jutzi et al. (200x)                                                                                                                                                                                                                                                                                                               \\
-  predictor\_corrector.cu, predictor\_corrector.h               & Predictor-Corrector integrator with predictor step dt/2, following Monaghan (1983)                                                                                                                                                                                                                                                                         \\
-  predictor\_corrector\_euler.cu, predictor\_corrector\_euler.h & Predictor-Corrector integrator with predictor step dt                                                                                                                                                                                                                                                                                                      \\
-  pressure.cu, pressure.h                                       & calculation of the pressure according to the chosen eos; currently there is, for solids: Tillotson eos, Murnaghan eos, Regolith eos (Drucker-Prager model), ANEOS; for porous solids: Jutzi eos (this is Tillotson eos with alpha), Jutzi-Murnaghan eos (this is Murnaghan eos with alpha); for gas: Ideal gas eos, Polytropic gas eos, Isothermal gas eos \\
-  rhs.cu, rhs.h                                                 & right-hand sides                                                                                                                                                                                                                                                                                                                                           \\
-  rk2adaptive.cu, rk2adaptive.h                                 & RK2 integrator with adaptive time step                                                                                                                                                                                                                                                                                                                     \\
-  soundspeed.cu, soundspeed.h                                   & calculation of the soundspeed                                                                                                                                                                                                                                                                                                                              \\
-  stress.cu, stress.h                                           & calculation of the stress tensor                                                                                                                                                                                                                                                                                                                           \\
-  timeintegration.cu, timeintegration.h                         & calculation of all internal forces of the solid or fluid; calculation of artificial viscosity and artificial stress if defined in \emph{parameter.h}                                                                                                                                                                                                       \\
-  tree.cu, tree.h                                               & calculation of self gravity using a Barnes-Hut Tree (no quadrupoles!)                                                                                                                                                                                                                                                                                      \\
-  velocity.cu, velocity.h                                       & calculate velocities                                                                                                                                                                                                                                                                                                                                       \\
-  viscosity.cu, viscosity.h                                     & functions for INVISCID==1. the viscosity ansatz by Cullen \& Dehnen (2010)                                                                                                                                                                                                                                                                                 \\
-                                                                & and Navier-Stokes equation                                                                                                                                                                                                                                                                                                                                 \\
-  xsph.cu, xsph.h                                               & functions for the XSPH algorithm                                                                                                                                                                                                                                                                                                                           \\
-  \hline
- \end{tabular}
- \label{tab:file-list}
-\end{table}
-
-
-
-\section{Physical model}
-In this section, we present the set of partial differential equations from continuum mechanics in Cartesian coordinates
-that we apply to model gas and solid bodies.
-Throughout this documentation, the Einstein summation rule is used, Greek indices denote spatial coordinates and run from 1 to
-3.
-\subsection{Mass conservation}
-The equation of continuity is the equation of the conservation of mass. It is given in Lagrangian form by
+\subsection{Conservation equations}
+The continuity equation, the momentum equation and the energy equation in Lagrangian form are
+\begin{align}
+ \frac{\dd \varrho}{\dd t} &= - \varrho \frac{\partial v^\alpha}{\partial x^\alpha}, \label{eq:continuity}\\
+ \frac{\dd v^\alpha}{\dd t} &= \frac{1}{\varrho}\frac{\partial \sigma^{\alpha\beta}}{\partial x^\beta},
+  \label{eq:momentum}\\
+ \frac{\dd e}{\dd t} &= \frac{1}{\varrho}\,\sigma^{\alpha\beta}\dot\varepsilon^{\alpha\beta}
+  = -\frac{p}{\varrho}\frac{\partial v^\alpha}{\partial x^\alpha}
+    + \frac{1}{\varrho} S^{\alpha\beta}\dot\varepsilon^{\alpha\beta}, \label{eq:energy}
+\end{align}
+with the stress tensor
 \begin{equation}
- \label{eq:conservation_of_mass}
- \frac{\mathrm{d} \varrho}{\mathrm{d}t} + \varrho \frac{\partial v^\alpha}{\partial x^\alpha} = 0,
+ \sigma^{\alpha\beta} = -p\,\delta^{\alpha\beta} + S^{\alpha\beta},
 \end{equation}
-where $\varrho$ denotes the density and $\vect{v}$ the velocity of the solid body or fluid.
-\subsection{Conservation of momentum}
-The equation of the conservation of momentum in continuum mechanics for a solid body reads in Lagrangian formulation
+the pressure $p$, the deviatoric stress $S^{\alpha\beta}$ (zero for \sw{HYDRO}), and the strain rate tensor
 \begin{equation}
- \label{eq:conservation_of_momentum}
- \frac{\mathrm{d} {v^\alpha}}{\mathrm{d}t} =  \frac{1}{\varrho}  \frac{\partial \sigma^{\alpha
-   \beta} }{\partial x_\beta},
+ \dot\varepsilon^{\alpha\beta} = \frac{1}{2}\left(\frac{\partial v^\alpha}{\partial x^\beta}
+  + \frac{\partial v^\beta}{\partial x^\alpha}\right).
 \end{equation}
-where $\sigma^{\alpha\beta}$ is the stress tensor given by the pressure $p$ and the deviatoric stress tensor
-${S}^{\alpha \beta}$
-\begin{equation}
- \sigma^{\alpha \beta} = -p \delta^{\alpha \beta} + S^{\alpha \beta},
-\end{equation}
-with the Kronecker delta $\delta^{\alpha \beta}$.
-For a liquid or gas, the deviatoric stress tensor vanishes and the conservation of momentum is given by the Euler
-equation
-\begin{equation}
- \frac{\mathrm{d} {v^\alpha}}{\mathrm{d}t} =  - \frac{1}{\varrho}  \frac{\partial}{\partial x_\beta} p \delta^{\alpha \beta}.
-\end{equation}
-\subsection{Conservation of internal energy}
-The equation of the conservation of the specific internal energy $u$ for an elastic body is given in Lagrangian formulation by
-\begin{equation}
- \label{eq:conservation_internal_energy}
- \frac{\mathrm{d} u }{\mathrm{d} t} = - \frac{p}{\varrho} \frac{\partial v ^\alpha}{\partial x^\alpha} + \frac{1}{\varrho}
- S^{\alpha \beta} \dot{\varepsilon}^{\alpha \beta},
-\end{equation}
-with the strain rate tensor $\dot{\varepsilon}^{\alpha \beta}$ given by eq.~(\ref{eq:strain_rate_tensor}).
+The continuity equation is integrated if \sw{INTEGRATE\_DENSITY} is set; otherwise the density is computed as the
+kernel sum $\varrho_i = \sum_j m_j W_{ij}$. With \sw{INTEGRATE\_DENSITY}, individual materials can still use the
+kernel sum (\code{density\_via\_kernel\_sum} in the material config). The energy equation is integrated if
+\sw{INTEGRATE\_ENERGY} is set.
+
 \subsection{Constitutive equations}
-In contrast to fluid dynamics, the set
-(\ref{eq:conservation_of_mass};\ref{eq:conservation_of_momentum};\ref{eq:conservation_internal_energy}) of partial
-differential equations is not sufficient to describe the dynamics of an elastic solid body, since the time evolution of
-the deviatoric stress tensor $S^{\alpha \beta}$ is not yet specified. For the elastic behavior of a solid body, the
-constitutive equation is based on Hooke's law. Extended to three dimensional deformations, it reads
-%
+For an elastic solid, the deviatoric stress evolves according to Hooke's law in rate form, made frame-indifferent
+with the Jaumann rate,
 \begin{equation}
- S^{\alpha \beta} \sim 2 \mu \left( \varepsilon^{\alpha \beta} - \frac{1}{3} \delta^{\alpha \beta} \varepsilon^{\gamma
-  \gamma} \right).
+ \label{eq:dSdt}
+ \frac{\dd S^{\alpha\beta}}{\dd t} = 2\mu\left(\dot\varepsilon^{\alpha\beta}
+   - \frac{1}{3}\delta^{\alpha\beta}\dot\varepsilon^{\gamma\gamma}\right)
+   + S^{\alpha\gamma} R^{\beta\gamma} + S^{\beta\gamma} R^{\alpha\gamma},
 \end{equation}
-%
-Here, $\mu$ denotes the material dependent shear modulus and $\epsilon^{\alpha \beta}$ is the strain tensor.
-%
-For the time evolution, it follows (for small deformations)
-%
+with the shear modulus $\mu$ and the rotation rate tensor
+\begin{equation}
+ R^{\alpha\beta} = \frac{1}{2}\left(\frac{\partial v^\alpha}{\partial x^\beta}
+  - \frac{\partial v^\beta}{\partial x^\alpha}\right).
+\end{equation}
+The pressure follows from the equation of state (Sect.~\ref{sec:eos}). The deviatoric stress is limited by the
+plasticity models (Sect.~\ref{sec:plasticity}) and reduced by damage (Sect.~\ref{sec:damage}).
+
+\subsection{Physical viscosity}
+With \sw{NAVIER\_STOKES}, a viscous stress tensor
+\begin{equation}
+ T^{\alpha\beta} = \eta\left(\frac{\partial v^\alpha}{\partial x^\beta} + \frac{\partial v^\beta}{\partial x^\alpha}
+ - \frac{2}{3}\delta^{\alpha\beta}\frac{\partial v^\gamma}{\partial x^\gamma}\right)
+\end{equation}
+is added to the momentum equation, with $\eta = \varrho\nu$ and either a constant kinematic viscosity $\nu$
+(\sw{CONSTANT\_KINEMATIC\_VISCOSITY}) or $\nu$ from the $\alpha$ prescription of Shakura \& Sunyaev
+(\sw{SHAKURA\_SUNYAEV\_ALPHA}), using the disc scale height from the material config. \sw{KLEY\_VISCOSITY} adds the
+artificial bulk viscosity of \citet{2004A&A...418..325S}.
+
+
+%==============================================================================
+\section{Equations of state}
+\label{sec:eos}
+%==============================================================================
+
+The equation of state (EOS) of each material is set by \code{eos.type} in the material config file. The following
+types are available (\code{include/pressure.h}).
+
+\begin{center}
+\small
+\begin{tabular}{r l L{8.0cm}}
+\toprule
+type & name & description \\
+\midrule
+$-1$ & \code{EOS\_TYPE\_IGNORE} & particle is deactivated \\
+0 & \code{EOS\_TYPE\_POLYTROPIC\_GAS} & $p = K\varrho^\gamma$ \\
+1 & \code{EOS\_TYPE\_MURNAGHAN} & Murnaghan, Sect.~\ref{sec:murnaghan} \\
+2 & \code{EOS\_TYPE\_TILLOTSON} & Tillotson, Sect.~\ref{sec:tillotson} \\
+3 & \code{EOS\_TYPE\_ISOTHERMAL\_GAS} & $p = c_\mathrm{s}^2\varrho$, constant $c_\mathrm{s}$ \\
+4 & \code{EOS\_TYPE\_REGOLITH} & soil model of \citet{bui2008}, experimental \\
+5 & \code{EOS\_TYPE\_JUTZI} & p-alpha porosity, Tillotson matrix, Sect.~\ref{sec:palpha} \\
+6 & \code{EOS\_TYPE\_JUTZI\_MURNAGHAN} & p-alpha porosity, Murnaghan matrix \\
+7 & \code{EOS\_TYPE\_ANEOS} & tabulated EOS (ANEOS), Sect.~\ref{sec:aneos} \\
+8 & \code{EOS\_TYPE\_VISCOUS\_REGOLITH} & experimental, do not use \\
+9 & \code{EOS\_TYPE\_IDEAL\_GAS} & $p = (\gamma-1)\varrho e$ \\
+10 & \code{EOS\_TYPE\_SIRONO} & Sirono porosity model \\
+11 & \code{EOS\_TYPE\_EPSILON} & $\varepsilon$-$\alpha$ porosity, Tillotson matrix \\
+12 & \code{EOS\_TYPE\_LOCALLY\_ISOTHERMAL\_GAS} & $p = c_\mathrm{s}^2\varrho$, $c_\mathrm{s} = v_\mathrm{K}(r)\,H/r$
+  for discs around point masses \\
+13 & \code{EOS\_TYPE\_JUTZI\_ANEOS} & p-alpha porosity, ANEOS matrix \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Murnaghan}
+\label{sec:murnaghan}
+\begin{equation}
+ p = \frac{K_0}{n}\left[\left(\frac{\varrho}{\varrho_0}\right)^n - 1\right], \qquad
+ c_\mathrm{s}^2 = \frac{K_0}{\varrho_0}\left(\frac{\varrho}{\varrho_0}\right)^{n-1},
+\end{equation}
+with the bulk modulus $K_0$ and the reference density $\varrho_0$ \citep{melosh1996impact}. For $n = 1$ this is the
+liquid EOS $p = c_\mathrm{s}^2(\varrho-\varrho_0)$. For $\varrho/\varrho_0 < \eta_\mathrm{limit}$
+(\code{rho\_limit}, default 0.9) the pressure is set to zero, since the material would fragment or form droplets
+instead of sustaining large tension. The sound speed is limited from below by \code{cs\_limit}.
+
+\subsection{Tillotson}
+\label{sec:tillotson}
+The Tillotson EOS \citep{til62,melosh1996impact} uses $\eta = \varrho/\varrho_0$, $\chi = \eta - 1$,
+$z = \varrho_0/\varrho - 1$ and $x = e/(E_0\eta^2)$. In the compressed state the pressure is
+\begin{equation}
+ \label{eq:tillo_c}
+ p_\mathrm{c} = \left(a + \frac{b}{x+1}\right)\varrho e + A\chi + B\chi^2,
+\end{equation}
+in the expanded state
+\begin{equation}
+ \label{eq:tillo_e}
+ p_\mathrm{e} = a\varrho e + \left(\frac{b\varrho e}{x+1} + A\chi\,\mathrm{e}^{-\beta z}\right)
+   \mathrm{e}^{-\alpha z^2}.
+\end{equation}
+The regimes are
+\begin{itemize}
+ \item $\eta < \eta_\mathrm{limit}$ and $e \leq E_\mathrm{iv}$ (cold, expanded, fragmented): $p = 0$;
+ \item $\eta \geq 1$ or $e \leq E_\mathrm{iv}$: $p = p_\mathrm{c}$;
+ \item $e \geq E_\mathrm{cv}$ (and $\eta < 1$): $p = p_\mathrm{e}$;
+ \item $E_\mathrm{iv} < e < E_\mathrm{cv}$ (and $\eta < 1$): linear interpolation in $e$,
+   $p = [(E_\mathrm{cv}-e)\,p_\mathrm{c} + (e-E_\mathrm{iv})\,p_\mathrm{e}]/(E_\mathrm{cv}-E_\mathrm{iv})$, where
+   $p_\mathrm{c}$ is set to zero for $\eta < \eta_\mathrm{limit}$, so that $p$ is continuous in $e$.
+\end{itemize}
+The sound speed is computed consistently from the analytic derivatives,
+$c_\mathrm{s}^2 = \partial p/\partial\varrho|_e + (p/\varrho^2)\,\partial p/\partial e|_\varrho$, and limited from
+below by \code{cs\_limit} (default 1\,\% of $\sqrt{A/\varrho_0}$). For type 2, $e$ is clamped to $e \geq 0$ in the
+EOS. If \code{polytropic\_gamma} $> 1$ is set, completely vaporized material ($e > 100 E_\mathrm{cv}$ and $\eta < 1$)
+is treated as an ideal gas, $p = (\gamma-1)\varrho e$.
+
+\subsection{ANEOS and tabulated EOS}
+\label{sec:aneos}
+For type 7 (and as matrix EOS for type 13) pressure and sound speed are interpolated bilinearly in a table
+$p(\varrho, e)$, $c_\mathrm{s}(\varrho, e)$, which is typically generated with ANEOS (e.g.\ with the external project
+miluphANEOS). Energies below the table are clamped to the lowest table energy (cold curve). Above the table maximum the
+ideal-gas fallback $p = (\gamma_\mathrm{A} - 1)\varrho e$ with \code{aneos\_gamma} is used. With
+\sw{MORE\_ANEOS\_OUTPUT} or \sw{ANEOS\_VAPOR\_NO\_STRENGTH}, the tables of temperature, entropy and the ANEOS phase
+flag are read as well.
+
+\paragraph{Vapour without strength.} With \sw{ANEOS\_VAPOR\_NO\_STRENGTH}, particles of ANEOS materials whose phase
+flag is \code{ANEOS\_PHASE\_TWO\_PHASE\_LV} (two-phase liquid/vapour, also assigned in the ideal-gas fallback) get
+$S^{\alpha\beta} = 0$ and $p \geq 0$ when the stress tensor is assembled (\code{src/stress.cu}). Since the stored
+deviatoric stress is set to zero as well, a particle that leaves the two-phase region starts with zero deviatoric
+stress.
+
+\subsection{Gases}
+The ideal gas (type 9), the polytropic gas (type 0), and the isothermal gases (types 3, 12) are listed in the table
+above; the sound speed of the ideal gas is $c_\mathrm{s} = \sqrt{\gamma p/\varrho}$.
+With \sw{REAL\_HYDRO}, negative pressures are set to zero for all materials.
+
+
+%==============================================================================
+\section{Strength models}
+\label{sec:plasticity}
+%==============================================================================
+
+The plasticity models limit the deviatoric stress after each evaluation of the right-hand side. With the second
+invariant $J_2 = \frac{1}{2}S^{\alpha\beta}S^{\alpha\beta}$ and the yield strength $Y$, the deviatoric stress is
+scaled by
+\begin{equation}
+ S^{\alpha\beta} \rightarrow f\,S^{\alpha\beta},\qquad
+ f = \min\left(\frac{Y}{\sqrt{J_2}}, 1\right)
+\end{equation}
+for the pressure-dependent models (Drucker-Prager, Mohr-Coulomb, Collins), and by
+\begin{equation}
+ f = \min\left(\frac{Y^2}{3 J_2}, 1\right)
+\end{equation}
+for the von Mises model \citep{vonmises1913,benz:1995}. The pressure-dependent models compare $Y$ with $\sqrt{J_2}$,
+i.e.\ $Y$ is the yield strength in shear.
+
+\subsection{Von Mises}
+$Y = Y_0$ (\code{yield\_stress}) is constant. \sw{VON\_MISES\_PLASTICITY} can additionally be combined with
+Drucker-Prager or Mohr-Coulomb, in which case $Y_0$ is an upper limit, $Y \rightarrow \min(Y, Y_0)$.
+
+\subsection{Drucker-Prager}
+\begin{equation}
+ Y = A + 3Bp, \qquad
+ A = \frac{6\,c\cos\phi}{\sqrt{3}\,(3-\sin\phi)}, \qquad B = \frac{2\sin\phi}{\sqrt{3}\,(3-\sin\phi)},
+\end{equation}
+with the cohesion $c$ and the angle of internal friction $\phi$, and $Y \geq 0$. Negative pressures are not capped.
+
+\subsection{Mohr-Coulomb}
+With the coefficient of internal friction $\mu_\mathrm{i} = \tan\phi$,
+\begin{equation}
+ Y = \begin{cases} c + \mu_\mathrm{i} p & p > 0,\\ c + p & -c < p \leq 0,\\ 0 & p \leq -c, \end{cases}
+\end{equation}
+and negative pressures are capped at $p \geq -c$.
+
+\subsection{Collins}
+Following \citet{collins2004} and the implementation of \citet{2015P&SS..107....3J}, the yield strength of intact
+material follows the Lundborg curve \citep{lundborg1968},
+\begin{equation}
+ Y_\mathrm{i} = c + \frac{\mu_\mathrm{i} p}{1 + \mu_\mathrm{i} p/(Y_\mathrm{M} - c)} \quad (p > 0), \qquad
+ Y_\mathrm{i} = c \quad (p \leq 0),
+\end{equation}
+with the limit $Y_\mathrm{M}$ (\code{yield\_stress}) for $p \to \infty$. With
+\sw{COLLINS\_PLASTICITY\_INCLUDE\_MELT\_ENERGY}, $Y_\mathrm{i}$ is multiplied by $(1 - e/e_\mathrm{melt})$ (and zero
+for $e \geq e_\mathrm{melt}$). With \sw{FRAGMENTATION}, the strength of damaged material is
+\begin{equation}
+ Y_\mathrm{d} = \begin{cases} c_\mathrm{d} + \mu_\mathrm{d}p & p > 0,\\ c_\mathrm{d} + p & -c_\mathrm{d} < p \leq 0,\\
+ 0 & p \leq -c_\mathrm{d}, \end{cases}
+\end{equation}
+and the yield strength is $Y = \min[(1-D)Y_\mathrm{i} + D\,Y_\mathrm{d},\, Y_\mathrm{i}]$ with the damage $D$.
+Negative pressure is released by damage, $p \rightarrow (1-D)p$, but only down to the residual tensile strength
+$p_\mathrm{t} = \max(c_\mathrm{d}, p_\mathrm{tl})$ of fully damaged material ($p_\mathrm{tl}$:
+\code{tensile\_pressure\_limit}): for $p < -p_\mathrm{t}$, $p$ is replaced by $\min[(1-D)p, -p_\mathrm{t}]$; pressures
+$p \geq -p_\mathrm{t}$ are not changed.
+
+\subsection{Collins simple}
+\sw{COLLINS\_PLASTICITY\_SIMPLE} uses only the Lundborg curve for $p > 0$, $Y = c + p$ for $-c < p \leq 0$, $Y = 0$
+below, and caps negative pressures at $p \geq -c$. It is not combined with the damage model.
+
+\subsection{Low-density weakening}
+With \sw{LOW\_DENSITY\_WEAKENING}, the cohesion (for von Mises: the yield strength; for Collins: the damaged cohesion)
+is multiplied by
+\begin{equation}
+ f_\mathrm{ldw} = \begin{cases}
+  1 & \eta \geq 1,\\
+  \left(\dfrac{\eta-\eta_\mathrm{l}}{1-\eta_\mathrm{l}}\right)^{a}(1-\gamma) + \gamma & \eta_\mathrm{l} < \eta < 1,\\[2ex]
+  \left(\dfrac{\eta}{\eta_\mathrm{l}}\right)^{b}\gamma & \eta \leq \eta_\mathrm{l},
+ \end{cases}
+\end{equation}
+with $\eta = \varrho/\varrho_0$ (matrix density for porous materials) and the parameters $\eta_\mathrm{l}$, $a$, $b$,
+$\gamma$ of the group \code{low\_density\_weakening}.
+
+\subsection{Plastic strain and total strain}
+For the standard models, the equivalent plastic strain is accumulated from the radial return,
+\begin{equation}
+ \Delta\varepsilon_\mathrm{p} = (1-f)\,\frac{\sqrt{3J_2}}{3G_\mathrm{eff}},
+\end{equation}
+with $J_2$ of the trial stress and the shear modulus $G_\mathrm{eff}$ with which $S$ grows in eq.~(\ref{eq:dSdt})
+($\mu/\alpha$ for p-alpha materials). Independently of the plasticity model, the total integrated strain
+\begin{equation}
+ \frac{\dd\varepsilon_\mathrm{tot}}{\dd t} = \sqrt{\frac{2}{3}\,\dot\varepsilon'^{\alpha\beta}\dot\varepsilon'^{\alpha\beta}},
+ \qquad \dot\varepsilon'^{\alpha\beta} = \dot\varepsilon^{\alpha\beta}
+   - \frac{1}{3}\delta^{\alpha\beta}\dot\varepsilon^{\gamma\gamma},
+\end{equation}
+is integrated for \sw{SOLID} (HDF5 output \code{/total\_integrated\_strain}).
+
+\subsection{Experimental models}
+\sw{JC\_PLASTICITY} (Johnson-Cook), \sw{PURE\_REGOLITH} \citep{bui2008} and \sw{VISCOUS\_REGOLITH} are
+experimental and not described here.
+
+
+%==============================================================================
+\section{Fragmentation}
+\label{sec:damage}
+%==============================================================================
+
+With \sw{FRAGMENTATION}, brittle failure under tension is modelled with the Grady-Kipp model \citep{grady:1980} as
+implemented by \citet{benz:1995}. The scalar damage $0 \leq D \leq 1$ parametrizes the influence of cracks:
+$D = 0$ is intact, $D = 1$ fully damaged material that cannot sustain tension. Damage reduces the stress,
+\begin{equation}
+ \sigma^{\alpha\beta} = -\hat p\,\delta^{\alpha\beta} + (1-D)\,S^{\alpha\beta},\qquad
+ \hat p = \begin{cases} p & p \geq 0,\\ (1-D)\,p & p < 0,\end{cases}
+\end{equation}
+where the reduction of $S^{\alpha\beta}$ is applied only with \sw{DAMAGE\_ACTS\_ON\_S} and the reduction of negative
+pressure is done in the plasticity model for \sw{COLLINS\_PLASTICITY}. The stored $S^{\alpha\beta}$ is the undamaged
+deviator; damage is applied where the stress is assembled.
+
+The number of flaws per unit volume with activation strains below $\varepsilon$ follows the Weibull distribution
+$n(\varepsilon) = k\varepsilon^m$ \citep{weibull:1939}. The flaws are distributed among the particles in a
+preprocessing step \citep{benz:1995}: for flaw $j = 1, \ldots, N_\mathrm{flaw}$ a random particle gets the activation
+threshold $\varepsilon_j = [j/(kV)]^{1/m}$ until each particle has at least one flaw, with the volume $V$ of the
+brittle body; on average $N_\mathrm{flaw} = N\ln N$. The thresholds are part of the input file.
+
+The local scalar strain is computed from the largest principal stress $\sigma_\mathrm{max}$ of the (damage-reduced)
+stress tensor,
+\begin{equation}
+ \varepsilon = \frac{\sigma_\mathrm{max}}{(1-D)\,E}, \qquad E = \frac{9K\mu}{3K+\mu}.
+\end{equation}
+All flaws with thresholds below $\varepsilon$ are active, and the damage grows as
+\begin{equation}
+ \frac{\dd D^{1/D_\mathrm{dim}}}{\dd t} = n_\mathrm{act}\,\frac{c_\mathrm{g}}{h},\qquad
+ c_\mathrm{g} = 0.4\sqrt{\frac{K + \nicefrac{4}{3}(1-D)\,\mu}{\varrho}},
+\end{equation}
+where $n_\mathrm{act}$ is the number of active flaws, $D_\mathrm{dim}$ the dimension, and $c_\mathrm{g}$ the crack
+growth speed (40\,\% of the longitudinal wave speed in the damaged material). The integrated variable is
+$D^{1/D_\mathrm{dim}}$. It is limited by $(n_\mathrm{act}/n_\mathrm{tot})^{1/D_\mathrm{dim}}$, so that a particle can
+only be fully damaged if all its flaws are active. For porous materials, the porous damage $D_\mathrm{p}$
+(Sect.~\ref{sec:palpha}) is added: $D = \min(1, D_\mathrm{t} + D_\mathrm{p})$ with the tensile damage $D_\mathrm{t}$.
+
+
+%==============================================================================
+\section{Porosity}
+\label{sec:porosity}
+%==============================================================================
+
+\subsection{The p-alpha model}
+\label{sec:palpha}
+The p-alpha model \citep{herrmann1969} as formulated for SPH by \citet{2008Icar..198..242J} describes a porous
+material by the distention $\alpha = \varrho_\mathrm{s}/\varrho \geq 1$, with the matrix density
+$\varrho_\mathrm{s}$ and the bulk density $\varrho$. The pressure is
+\begin{equation}
+ P = \frac{1}{\alpha}\,P_\mathrm{s}(\alpha\varrho, e),
+\end{equation}
+where $P_\mathrm{s}$ is the matrix EOS: Tillotson (type 5), Murnaghan (type 6) or ANEOS (type 13), evaluated at the
+matrix density.
+
+\paragraph{Crush curves.} Compaction follows the crush curve $\alpha_\mathrm{cc}(P)$ with $\alpha_\mathrm{cc} =
+\alpha_0$ for $P \leq p_\mathrm{e}$ and $\alpha_\mathrm{cc} = 1$ for $P \geq p_\mathrm{s}$. In between,
 \begin{align}
- \label{eq:stresstensor_evolution}
- \frac{\mathrm{d}}{\mathrm{d}t}S^{\alpha \beta} =  2\mu \left( \dot{\varepsilon}^{\alpha \beta} - \frac{1}{3}
- \delta^{\alpha \beta} \dot{\varepsilon}^{\gamma \gamma} \right) & \\  & +  \mathrm{rotation~terms,} \nonumber
+ \text{style 0:}\quad \alpha_\mathrm{cc}(P) &= 1 + (\alpha_0-1)\frac{(p_\mathrm{s}-P)^2}{(p_\mathrm{s}-p_\mathrm{e})^2},\\
+ \text{style 1:}\quad \alpha_\mathrm{cc}(P) &= 1 + s(\alpha_\mathrm{t}-1)\left(\frac{p_\mathrm{s}-P}{p_\mathrm{s}-p_\mathrm{e}}\right)^{n_2}
+   + s(\alpha_\mathrm{e}-\alpha_\mathrm{t})\left(\frac{p_\mathrm{t}-P}{p_\mathrm{t}-p_\mathrm{e}}\right)^{n_1}\Theta(p_\mathrm{t}-P),
 \end{align}
-%
-%
-where $\dot{\varepsilon}^{\alpha \beta}$ denotes the strain rate tensor, given by
-\begin{equation}
- \label{eq:strain_rate_tensor}
- \dot{\varepsilon}^{\alpha \beta} = \frac{1}{2} \left( \frac{\partial v^\alpha}{\partial x^\beta} + \frac{\partial
-  v^\beta}{\partial x^\alpha} \right).
-\end{equation}
-%
-The rotation terms in eq.~(\ref{eq:stresstensor_evolution}) are needed since the constitutive equations have to be
-independent from the material frame of reference. There are various possibilities to achieve this. The usual approach
-for particle codes is the Jaumann rate form. The rotation terms
-of the Jaumann rate form are
-%
-\begin{equation}
- \label{eq:rotation_terms}
- S^{\alpha \gamma} R^{\gamma \beta} - R^{\alpha \gamma} S^{\gamma \beta},
-\end{equation}
-%
-with the rotation rate tensor
-%
-\begin{equation}
- R^{\alpha \beta} = \frac{1}{2} \left( \frac{\partial v^\alpha}{\partial x^\beta} - \frac{\partial v^\beta}{\partial x^\alpha}
- \right).
-\end{equation}
-%
-Together, eqs.~(\ref{eq:stresstensor_evolution}) and (\ref{eq:rotation_terms}) determine the change of deviatoric
-stress due to deformation of the solid body.
-%
-\subsection{Equation of state}
-\label{section:eos}
-The equation of state relates the thermodynamic variables density $\varrho$, pressure $p$, and specific internal energy
-$u$. We provide a short description about the equation of states that are implemented in the code.
-%
-\subsubsection{Liquid equation of state}
-For small compressions and expansions of a liquid, the pressure depends linearly on the change of density.
-Assume $\varrho_0$ is the initial density of the uncompressed liquid. Then, the liquid equation of state reads
-%
-\begin{equation}
- p = c_\mathrm{s}^2 ( \varrho - \varrho_0 ).
-\end{equation}
-%
-Here, $c_\mathrm{s}$ denotes the bulk sound speed of the liquid, which is related to the bulk modulus $K_0$ and the initial
-density by
-%
-\begin{equation}
- c_\mathrm{s}^2 = \frac{K_0}{\varrho_0}.
-\end{equation}
-%
-If the density $\varrho$ falls strongly beyond the value of the initial density $\varrho_0$, the liquid equation of
-state fails because the liquid forms droplets and attracting forces vanish. To account for this
-behavior, the pressure is set to zero as
-soon as the ratio $\varrho/ \varrho_0$ drops below $0.8-0.95$ \citep{melosh1996impact}.
-%
-\subsubsection{Murnaghan equation of state}
-The Murnaghan equation of state is an extension of the liquid equation of state (see, e.g.,\ \citealt{melosh1996impact}). In contrast to the liquid equation of
-state, the pressure now depends nonlinearly on the density
-%
-\begin{equation}
- p = \frac{K_0}{n_M} \left[ \left( \frac{\varrho}{\varrho_0}\right)^{n_M} -1  \right],
-\end{equation}
-%
-with the zero pressure bulk modulus $K_0$ and the constant $n_M$. The Murnaghan equation of state is limited to
-isothermal compression. Parameters for various materials can be found in the literature, e.g.,\ \cite{melosh1996impact}.
-%
-%
-\subsubsection{Tillotson equation of state}
-\label{section:tillotson}
-The Tillotson equation of state was originally derived for high-velocity impact simulations \citep{til62}.
-There are two domains depending upon the material specific energy density $u$. In the case of compressed regions ($\varrho \geq
- \varrho_0$) and $u$ lower than the energy of incipient vaporization $E_\mathrm{iv}$ the equation of state reads
-%
-\begin{align}\label{eq:tillo1}
- p = \left[ a_T + \frac{b_T}{1+u/(E_0 \eta^2)} \right]\varrho u + A_T\chi + B_T\chi^2,
-\end{align}
-%
-with $\eta = \varrho / \varrho_0$ and $\chi = \eta-1$.
-In case of expanded material ($u$ greater than the energy of complete vaporization $E_\mathrm{cv}$) the
-equation of state takes the form
-%
-\begin{align}\label{eq:tillo2}
- p = & a_T\varrho u +  \left[ \frac{b_T\varrho u}{1+u/(E_0 \eta^2)} \right. \nonumber                              \\
-     & \; + \left. A_T\chi \exp \left\{-\beta_T \left(\frac{\varrho_0}{\varrho}-1\right)\right\} \right] \nonumber \\ & \qquad \qquad
- \times  \exp
- \left\{-\alpha_T\left(\frac{\varrho_0}{\varrho}-1\right)^2\right\}.
-\end{align}
-%
-The symbols $\varrho_0$, $A_T$, $B_T$, $E_0$, $a_T$, $b_T$, $\alpha_T$, and $\beta_T$ are material dependent
-parameters.
+with $s = (\alpha_0-1)/(\alpha_\mathrm{e}-1)$, which rescales the curve of \citet{2008Icar..198..242J} such that
+$\alpha_\mathrm{cc}(p_\mathrm{e}) = \alpha_0$. Styles 2 and 4 are experimental crush curves with hard-coded
+constants (\code{src/pressure.cu}).
 
-In the partial vaporization $E_\mathrm{iv} < u < E_\mathrm{cv}$, $p$ is linearly interpolated between the pressures
-obtained via (\ref{eq:tillo1}) and (\ref{eq:tillo2}), respectively. For a more detailed description see
-\cite{melosh1996impact}.
+\paragraph{Time evolution of $\alpha$.} On the crush curve,
+$\dot\alpha = (\dd\alpha/\dd P)\,\dot P$ with $P = P_\mathrm{s}(\alpha\varrho, e)/\alpha$, which gives
+\citep[eq.~25]{2008Icar..198..242J}
+\begin{equation}
+ \label{eq:dalphadt}
+ \frac{\dd\alpha}{\dd t} = \frac{\left(\dot e\,\dfrac{\partial P_\mathrm{s}}{\partial e}
+   + \alpha\,\dot\varrho\,\dfrac{\partial P_\mathrm{s}}{\partial\varrho_\mathrm{s}}\right)\dfrac{\dd\alpha}{\dd P}}
+   {\alpha + \dfrac{\dd\alpha}{\dd P}\left(P - \varrho\,\dfrac{\partial P_\mathrm{s}}{\partial\varrho_\mathrm{s}}\right)}.
+\end{equation}
+Unloading is elastic: if eq.~(\ref{eq:dalphadt}) gives $\dot\alpha > 0$ (pressure decreasing), $\dot\alpha = 0$.
+With \sw{PALPHA\_ELASTIC\_RELOADING}, reloading below the crush curve is elastic as well: for
+$\alpha < \alpha_\mathrm{cc}(P) - \epsilon_\mathrm{tol}$, $\dd\alpha/\dd P = 0$. Then $\alpha =
+\alpha_\mathrm{cc}(P_\mathrm{max})$ keeps the memory of the maximum pressure. Without it, every pressure increase
+above $p_\mathrm{e}$ compacts \citep[eqs.~22--23]{2008Icar..198..242J}.
 
-The Tillotson equation of state has the advantage of being computational very simple, while sophisticated enough for the
-application over a wide regime of physical conditions, such as high-velocity collisions and impact cratering.
+\paragraph{Return mapping.} With \sw{PALPHA\_RETURN\_MAPPING}, $\alpha$ is not integrated. For each evaluated state,
+$\alpha$ is determined from $\varrho$ and $e$ with the distention $\alpha_\mathrm{h}$ after the last accepted step:
+if $g(\alpha_\mathrm{h}) > 0$ with
+\begin{equation}
+ g(\alpha) = \alpha - \alpha_\mathrm{cc}\!\left(P_\mathrm{s}(\alpha\varrho, e)/\alpha\right),
+\end{equation}
+the state is compressed beyond the crush curve and $\alpha$ is the root of $g$ in $[1, \alpha_\mathrm{h}]$ (Newton
+iteration safeguarded by bisection); otherwise $\alpha = \alpha_\mathrm{h}$. Since $\alpha\,\dd g/\dd\alpha$ is the
+denominator of eq.~(\ref{eq:dalphadt}), $g$ is increasing and the root unique wherever the time integration of
+$\alpha$ is well defined. $\alpha$ then follows the crush curve independently of the time step. The changes of the
+deviatoric stress and of the porous damage that the integration of $\dot\alpha$ would cause are applied in closed form.
 
-\subsubsection{ANEOS}
-If you want to use the tabulated ANEOS eos for some material you need three things:
-\begin{enumerate}
- \item A file containing the ANEOS lookup-table data. These files can be generated externally with the aid of the external project \emph{miluphANEOS}, a Fortran code that calls ANEOS subroutines directly. See there for further instructions.
- \item Suitable entries in \emph{material.cfg} for that material. See the available materials in \verb|material_data/|.
- \item Consistent initial conditions. For setting up homogeneous bodies you can use \verb|aneos_rho_0| and \verb|aneos_e_norm| initially (see \emph{material.cfg}). This, and also the direct generation of equilibrated (large) bodies, can be done by the initial conditions code in the external project \emph{Relaxation}.
-\end{enumerate}
-\subsubsection{Locally-isothermal gas}
-\texttt{EOS\_TYPE\_LOCALLY\_ISOTHERMAL\_GAS}
+\paragraph{Deviatoric stress.} With \sw{STRESS\_PALPHA\_POROSITY}, the code integrates the porous deviator
+$\hat S^{\alpha\beta} = S^{\alpha\beta}/\alpha$ with the matrix deviator $S^{\alpha\beta}$
+\citep[eqs.~45, 49]{2008Icar..198..242J},
+\begin{equation}
+ \frac{\dd\hat S^{\alpha\beta}}{\dd t} = \frac{f_\mathrm{r}}{\alpha}\,2\mu\left(\dot\varepsilon^{\alpha\beta}
+   - \frac{1}{3}\delta^{\alpha\beta}\dot\varepsilon^{\gamma\gamma}\right)
+   + f_\mathrm{r}\left(\hat S^{\alpha\gamma}R^{\beta\gamma} + \hat S^{\beta\gamma}R^{\alpha\gamma}\right)
+   - \frac{\hat S^{\alpha\beta}}{\alpha}\frac{\dd\alpha}{\dd t},
+\end{equation}
+with $f_\mathrm{r} = f$ for \sw{PALPHA\_F\_ACTS\_ON\_ROTATION} = 1 (as in \citealt{2008Icar..198..242J}) and
+$f_\mathrm{r} = 1$ otherwise. The factor
+\begin{equation}
+ f = 1 + \frac{\varrho}{\alpha}\frac{\dd\alpha}{\dd\varrho}, \qquad
+ \frac{\dd\alpha}{\dd\varrho} = \frac{\left(\dfrac{P}{\varrho^2}\dfrac{\partial P_\mathrm{s}}{\partial e}
+   + \alpha\dfrac{\partial P_\mathrm{s}}{\partial\varrho_\mathrm{s}}\right)\dfrac{\dd\alpha}{\dd P}}
+   {\alpha + \dfrac{\dd\alpha}{\dd P}\left(P - \varrho\,\dfrac{\partial P_\mathrm{s}}{\partial\varrho_\mathrm{s}}\right)},
+\end{equation}
+relates the volumetric strain rate of the matrix to that of the bulk material; $f \leq 1$, and $f = 1$ for elastic
+states. Physically, $f$ belongs only to the volumetric part of the strain rate, which drops out of the traceless Hooke
+term; therefore \sw{PALPHA\_F\_ACTS\_ON\_ROTATION} = 0 ($f_\mathrm{r} = 1$) is recommended. It leaves the Jaumann
+terms, which are pure kinematics, unscaled and reproduces the rigid rotation of a porous particle exactly.
+
+\paragraph{Porous damage.} With \sw{FRAGMENTATION}, compaction produces damage
+\citep[eq.~57]{2008Icar..198..242J},
+\begin{equation}
+ D_\mathrm{p}^{1/D_\mathrm{dim}} = \frac{\left(1 - \dfrac{\alpha-1}{\alpha_0-1} + \delta\right)^{1/D_\mathrm{dim}}
+   - \delta^{1/D_\mathrm{dim}}}{(1+\delta)^{1/D_\mathrm{dim}} - \delta^{1/D_\mathrm{dim}}}, \qquad \delta = 0.01,
+\end{equation}
+which is integrated in time along with $\alpha$ (or applied exactly with the return mapping).
+
+\paragraph{Sound speed.} The sound speed is interpolated linearly in $\alpha$ between the sound speed of the matrix
+($\alpha = 1$) and $c_\mathrm{porous}$ (\code{cs\_porous}, $\alpha = \alpha_0$).
+
+\subsection{The $\varepsilon$-$\alpha$ model}
+With \sw{EPSALPHA\_POROSITY} (type 11), the distention is a function of the volumetric strain $\varepsilon_V$
+\citep{2006Icar..180..514W}: elastic for $\varepsilon_V \geq \varepsilon_\mathrm{e}$, exponential compaction
+$\dd\alpha/\dd\varepsilon_V = \alpha_0\kappa\,\mathrm{e}^{\kappa(\varepsilon_V-\varepsilon_\mathrm{e})}$ for
+$\varepsilon_\mathrm{x} \leq \varepsilon_V < \varepsilon_\mathrm{e}$, a power law down to full compaction at
+$\varepsilon_\mathrm{c}$. The pressure is $P = P_\mathrm{s}(\alpha\varrho, e)/\alpha$ with the Tillotson EOS.
+
+\subsection{The Sirono model}
+With \sw{SIRONO\_POROSITY} (type 10), the modified Sirono model of \citet{gerspe11} for highly porous dust aggregates
+is used, with density-dependent compressive, tensile and shear strength.
+
+
+%==============================================================================
+\section{SPH discretization}
+%==============================================================================
+
+\subsection{Kernels}
+The kernel is chosen at run time with \code{-k}. With $q = r/h$ and $(\cdot)_+ = \max(0,\cdot)$:
+
+\paragraph{Cubic spline} \citep{1985A&A...149..135M}, \code{cubic\_spline} (default),
+\begin{equation}
+ W = \frac{\sigma}{h^D}\begin{cases} 6q^3 - 6q^2 + 1 & 0 \leq q < \frac{1}{2},\\
+ 2(1-q)^3 & \frac{1}{2} \leq q \leq 1, \end{cases}
+ \qquad \sigma = \tfrac{4}{3},\ \tfrac{40}{7\pi},\ \tfrac{8}{\pi}.
+\end{equation}
+
+\paragraph{Quintic spline}, \code{quintic\_spline},
+\begin{equation}
+ W = \frac{\sigma}{h^D}\left[(3-3q)_+^5 - 6(2-3q)_+^5 + 15(1-3q)_+^5\right],
+ \qquad \sigma = \tfrac{1}{40},\ \tfrac{63}{478\pi},\ \tfrac{9}{40\pi}.
+\end{equation}
+
+\paragraph{Wendland kernels} \citep{2012MNRAS.425.1068D}, \code{wendlandc2}, \code{wendlandc4}, \code{wendlandc6}, in
+2D and 3D
 \begin{align}
- p & = c_s^2 \varrho
+ W_\mathrm{C2} &= \frac{\sigma}{h^D}(1-q)_+^4(1+4q), & \sigma &= \tfrac{7}{\pi},\ \tfrac{21}{2\pi},\\
+ W_\mathrm{C4} &= \frac{\sigma}{h^D}(1-q)_+^6\left(1+6q+\tfrac{35}{3}q^2\right), & \sigma &= \tfrac{9}{\pi},\ \tfrac{495}{32\pi},\\
+ W_\mathrm{C6} &= \frac{\sigma}{h^D}(1-q)_+^8(1+8q+25q^2+32q^3), & \sigma &= \tfrac{78}{7\pi},\ \tfrac{1365}{64\pi},
 \end{align}
-\subsubsection{Perfect gas equation}
-\texttt{EOS\_TYPE\_IDEAL\_GAS}
+and in 1D $(1-q)_+^3(1+3q)$, $(1-q)_+^5(1+5q+8q^2)$, $(1-q)_+^7(1+7q+19q^2+21q^3)$ with $\sigma = \frac{5}{4},
+\frac{3}{2}, \frac{55}{32}$.
+
+\paragraph{Spiky kernel} \citep{desbrun1996}, \code{spiky}, $W = \sigma h^{-D}(1-q)_+^3$ with
+$\sigma = \frac{10}{\pi}, \frac{15}{\pi}$ in 2D and 3D.
+
+The normalization constants are given for $D = 1, 2, 3$ unless noted otherwise.
+
+\subsection{Smoothing length and neighbours}
+For an interaction of particles $i$ and $j$, the kernel is evaluated with $h_{ij} = (h_i+h_j)/2$, or as
+$W_{ij} = [W(r_{ij}, h_i) + W(r_{ij}, h_j)]/2$ with \sw{AVERAGE\_KERNELS}. The smoothing length is constant unless
+\sw{VARIABLE\_SML} is set, in which case either the number of interaction partners is kept fixed
+(\sw{FIXED\_NOI}, \citealt{hernquist:1989}) or
+\begin{equation}
+ \frac{\dd h_i}{\dd t} = \frac{h_i}{D}\,\nabla\cdot\vec v_i
+   = -\frac{h_i}{D}\sum_j \frac{m_j}{\varrho_j}\,\vec v_{ij}\cdot\gradW
+\end{equation}
+is integrated (\sw{INTEGRATE\_SML}), with $h$ limited to
+$[f_\mathrm{min} h_0, f_\mathrm{max} h_0]$ (\code{factor\_sml\_min}, \code{factor\_sml\_max}). The interaction
+partners are found with the Barnes-Hut tree; their number is limited by \sw{MAX\_NUM\_INTERACTIONS}.
+
+\subsection{Continuity equation}
+\begin{equation}
+ \frac{\dd\varrho_i}{\dd t} = \sum_j m_j\frac{\varrho_i}{\varrho_j}\,\vec v_{ij}\cdot\gradW
+\end{equation}
+\citep{randles:1996}. With \sw{TENSORIAL\_CORRECTION\_FOR\_DRHODT}, $\gradW$ is replaced by the corrected gradient
+$\mathsf{B}_i\gradW$ (Sect.~\ref{sec:tc}), and $\varrho_j$ by $\tilde\varrho_{ij}$, eq.~(\ref{eq:tcrho}).
+
+\subsection{Momentum equation}
+\label{sec:momentum}
+Two SPH representations are available (\sw{SPH\_EQU\_VERSION}),
 \begin{align}
- p & = (\gamma-1) \varrho e
+ \text{1:}\quad \frac{\dd v_i^\alpha}{\dd t} &= \sum_j m_j\left(\frac{\sigma_i^{\alpha\beta}}{\varrho_i^2}\,G_{i}^\beta
+   + \frac{\sigma_j^{\alpha\beta}}{\varrho_j^2}\,G_{j}^\beta\right) - \sum_j m_j\Pi_{ij}\,\partial_{i,\alpha}W_{ij},\\
+ \text{2:}\quad \frac{\dd v_i^\alpha}{\dd t} &= \sum_j m_j\,\frac{\sigma_i^{\alpha\beta} + \sigma_j^{\alpha\beta}}{\varrho_i\varrho_j}\,
+   \frac{G_{i}^\beta + G_{j}^\beta}{2} - \sum_j m_j\Pi_{ij}\,\partial_{i,\alpha}W_{ij},
 \end{align}
-\subsubsection{Polytropic Gas}
-\texttt{EOS\_TYPE\_POLYTROPIC\_GAS}
+where $\vec G_{i} = \mathsf B_i\gradW$ and $\vec G_{j} = \mathsf B_j\gradW$ are the corrected kernel gradients with the
+correction matrices of particles $i$ and $j$ (Sect.~\ref{sec:tc}), or $\vec G_{i} = \vec G_{j} = \gradW$ without
+\sw{TENSORIAL\_CORRECTION}, and $\Pi_{ij}$ is the artificial viscosity. For \sw{HYDRO}, $\sigma^{\alpha\beta} =
+-p\,\delta^{\alpha\beta}$. The stress tensor includes the reduction by damage. With \sw{ARTIFICIAL\_STRESS}, the term
+$m_j f_{ij}^n (R_i^{\alpha\beta}/\varrho_i^2 G_i^\beta + R_j^{\alpha\beta}/\varrho_j^2 G_j^\beta)$ with
+$f_{ij} = W(r_{ij})/W(\Delta p)$ is added \citep{monaghan:2000,gray:2001}.
+
+\subsection{Energy equation}
+The energy equation is discretized pairwise, consistent with the momentum equation: with the acceleration
+$\vec a_{ij}$ of particle $i$ due to particle $j$ (the summand of the momentum equation without the artificial
+viscosity),
+\begin{equation}
+ \frac{\dd e_i}{\dd t} = -\frac{1}{2}\sum_j \vec v_{ij}\cdot\vec a_{ij}
+   + \frac{1}{2}\sum_j m_j\Pi_{ij}\,\vec v_{ij}\cdot\gradW.
+\end{equation}
+For \sw{SPH\_EQU\_VERSION} 1 and \sw{HYDRO} this is the standard
+$\dot e_i = \frac{1}{2}\sum_j m_j (p_i/\varrho_i^2 + p_j/\varrho_j^2)\,\vec v_{ij}\cdot\gradW + \ldots$. Together with
+the momentum equation the total energy is conserved.
+
+\subsection{Velocity gradient}
+The strain rate and rotation rate tensors are computed from the velocity gradient. Without tensorial correction
+\citep{benz:1995},
+\begin{equation}
+ \frac{\partial v_i^\alpha}{\partial x^\beta} = -\frac{1}{\varrho_i}\sum_j m_j\,v_{ij}^\alpha\,\partial_{i,\beta} W_{ij},
+\end{equation}
+and with tensorial correction
+\begin{equation}
+ \frac{\partial v_i^\alpha}{\partial x^\beta} = -\sum_j \frac{m_j}{\tilde\varrho_{ij}}\,v_{ij}^\alpha\,
+   \left(\mathsf B_i\gradW\right)^\beta,
+\end{equation}
+which is exact for linear velocity fields. $\dot\varepsilon$ and $R$ are the symmetric and antisymmetric parts.
+
+\subsection{Artificial viscosity}
+With \sw{ARTIFICIAL\_VISCOSITY} \citep{Monaghan85a},
+\begin{equation}
+ \Pi_{ij} = \begin{cases} \dfrac{-\alpha\,\bar c_{ij}\mu_{ij} + \beta\mu_{ij}^2}{\bar\varrho_{ij}} &
+  \vec v_{ij}\cdot\vec x_{ij} < 0,\\[1.5ex] 0 & \text{otherwise,}\end{cases}
+ \qquad \mu_{ij} = \frac{\bar h_{ij}\,\vec v_{ij}\cdot\vec x_{ij}}{r_{ij}^2 + \epsilon\bar h_{ij}^2},
+\end{equation}
+with the means $\bar c_{ij}$, $\bar\varrho_{ij}$, $\bar h_{ij}$ of the sound speeds, densities and smoothing lengths,
+$\epsilon = 0.01$, and the material parameters $\alpha$, $\beta$ (default 1 and 2). With \sw{BALSARA\_SWITCH}
+\citep{balsara1995}, $\mu_{ij}$ is multiplied by $(f_i+f_j)/2$,
+$f_i = |\nabla\cdot\vec v_i|/(|\nabla\cdot\vec v_i| + |\nabla\times\vec v_i| + 10^{-4}c_i/h_i)$.
+\sw{INVISCID\_SPH} uses time-dependent coefficients \citep{cullen2010}.
+
+\subsection{XSPH and Shepard correction}
+With \sw{XSPH} the particles move with the smoothed velocity $\dot{\vec x}_i = \vec v_i + \frac{1}{2}
+\sum_j m_j/\bar\varrho_{ij}\,(\vec v_j - \vec v_i)W_{ij}$ \citep{monaghan:1989}. \sw{SHEPARD\_CORRECTION} normalizes
+the kernel to zeroth-order consistency.
+
+\subsection{Tensorial correction}
+\label{sec:tc}
+Standard SPH kernel gradients do not reproduce the gradient of a linear field, and solid bodies cannot rotate rigidly
+without spurious stress. With \sw{TENSORIAL\_CORRECTION} \citep{randles:1996}, each particle gets the correction matrix
+$\mathsf B_i = \mathsf M_i^{-1}$ with the (symmetric) moment matrix
+\begin{equation}
+ M_i^{\alpha\beta} = \sum_j \frac{m_j}{\tilde\varrho_{ij}}\,x_{ji}^\alpha\,\partial_{i,\beta}W_{ij},
+ \qquad x_{ji}^\alpha = x_j^\alpha - x_i^\alpha,
+\end{equation}
+computed with the same kernel and smoothing length as the force loops, and the weight
+\begin{equation}
+ \label{eq:tcrho}
+ \tilde\varrho_{ij} = \begin{cases} \varrho_j & \text{default \citep{randles:1996}},\\
+ \varrho_i & \text{\sw{TENSORIAL\_CORRECTION\_CONSERVE\_ANGULAR\_MOMENTUM}.} \end{cases}
+\end{equation}
+The corrected gradient $\mathsf B_i\gradW$ makes the velocity gradient exact for linear fields. Close to free surfaces
+and contact zones the moment matrix becomes ill-conditioned. With the default (``old-school'') scheme in
+\code{src/kernel.cu}, the identity is used instead of $\mathsf B_i$ if $|\det\mathsf B_i| < 0.2$ or $> 5$, or if
+an entry of $\mathsf B_i$ exceeds \code{MAX\_ABS\_TENSORIAL\_CORRECTION\_ENTRY} (5). With
+\sw{TENSORIAL\_CORRECTION\_CONSERVE\_ANGULAR\_MOMENTUM}, the conditioning is judged on the matrix with weight
+$\varrho_j$, so that a pure density contrast (e.g.\ at material interfaces) does not reset the correction.
+
+\paragraph{Angular momentum.} With weight $\varrho_i$ and \sw{SPH\_EQU\_VERSION} 1, the pair forces of the momentum
+equation are torque-free also with deviatoric stress, variable density and variable smoothing length (wherever
+$\mathsf B$ is not reset to the identity), so the total angular momentum is conserved exactly by the spatial
+discretization; with the \code{kdk} integrator also in time (up to round-off).
+
+\paragraph{Continuity equation.} The correction is used in the momentum and energy equations and in the velocity
+gradient for $\dot\varepsilon$ and $R$, but by default not in the continuity equation and in $\dot h$
+(\sw{TENSORIAL\_CORRECTION\_FOR\_DRHODT} = 0): with the corrected divergence the density can decouple from the
+particle geometry, which leads to a collapse of the time step.
+
+
+%==============================================================================
+\section{Time integration}
+%==============================================================================
+
+\subsection{Integrators}
+The integrator is chosen with \code{-I}. All integrators advance positions, velocities, density, energy, smoothing
+length, deviatoric stress, damage, distention, and plastic and total strain.
+
+\paragraph{\code{rk2\_adaptive}} (default). Each step uses three right-hand side evaluations
+$k_1 = f(y_n)$, $k_2 = f(y_n + \frac{\Delta t}{2}k_1)$, $k_3 = f(y_n - \Delta t\,k_1 + 2\Delta t\,k_2)$ and
+advances with the third-order combination $y_{n+1} = y_n + \frac{\Delta t}{6}(k_1 + 4k_2 + k_3)$. The difference to
+the second-order midpoint solution $y_n + \Delta t\,k_2$ is the error estimate. The maximum relative error of the
+positions (relative to $\max(|\Delta\vec x|, 0.1\,h)$), velocities, densities and energies, divided by the accuracy
+$\epsilon$ (\code{-Q}), decides whether the step is accepted. The new step is
+$\Delta t_\mathrm{new} = 0.9\,\Delta t\,E^{-0.3}$ after an accepted and $\max(0.1, 0.9E^{-0.25})\Delta t$ after a
+rejected step, with $E$ the normalized error, and is additionally limited by the Courant condition and by the damage
+change (and optionally by the accelerations, the pressure change and the change of $\alpha$), see
+\code{include/rk2adaptive.h}.
+
+\paragraph{\code{kdk}} (kick-drift-kick, leapfrog). With one right-hand side evaluation per step,
 \begin{align}
- p & = K \varrho^\gamma
+ \vec v^{n+1/2} &= \vec v^n + \frac{\Delta t}{2}\vec a^n, \qquad \vec x^{n+1} = \vec x^n + \Delta t\,\vec v^{n+1/2},\\
+ \vec a^{n+1} &= \vec a\left(\vec x^{n+1}, \vec v^n + \Delta t\,\vec a^n, Q^n + \Delta t\,\dot Q^n\right),\qquad
+ \vec v^{n+1} = \vec v^{n+1/2} + \frac{\Delta t}{2}\vec a^{n+1},
 \end{align}
-\subsection{Plastic material equations}
-Together with the equation of state, the set of equations
-(\ref{eq:conservation_of_mass};\ref{eq:conservation_of_momentum};\ref{eq:conservation_internal_energy}) can be used to
-describe the dynamics of a solid body in the elastic regime. We apply the von Mises yield
-criterion \citep{vonmises1913} to model plasticity. The deviatoric stress is
-limited by
-%
+and the same kicks for all other integrated quantities $Q$. The right-hand side at the end of the step is evaluated at
+the predicted state, as in Phantom \citep{price2018}. Since the drift uses the velocity of the kicks, the total angular
+momentum is conserved to round-off for every step size if the forces are torque-free
+(\sw{TENSORIAL\_CORRECTION\_CONSERVE\_ANGULAR\_MOMENTUM}, no XSPH, no boundaries, no tree gravity). The time step is set
+before each step from the Courant condition and optional limits (\code{include/kdk.h}); there is no error control.
+
+\paragraph{Fixed-order schemes.} \code{euler} (first order, fixed $\Delta t$ given with \code{-M}),
+\code{euler\_pc} and \code{monaghan\_pc} (predictor-corrector schemes of second order with predictor step $\Delta t$
+and $\Delta t/2$), and \code{heun\_rk4} (Heun scheme for the SPH particles coupled with a fourth-order Runge-Kutta
+scheme for gravitating point masses). The predictor-corrector and Heun schemes limit the step by the Courant condition
+and the accelerations.
+
+\subsection{Courant condition}
 \begin{equation}
- S^{\alpha \beta} \rightarrow f_Y S^{\alpha \beta},
+ \Delta t \leq C\,\min_i \frac{h_i}{\sqrt{c_{\mathrm{s},i}^2 + \frac{4}{3}\mu/\varrho_i}},
 \end{equation}
-where the factor $f_Y$ is computed from
+with $C$ = \code{COURANT\_FACT} = 0.4 (note that $h$ is the full support radius) and the shear term only for
+\sw{SOLID}. The force limit is $\Delta t \leq F\min_i\sqrt{h_i/|\vec a_i|}$ with $F$ = \code{FORCES\_FACT}.
+
+\subsection{Fast integration scheme}
+With \sw{FAST\_INTEGRATION\_SCHEME} \citep{raducan2022,jutzi2022}, the late, low-velocity stage of granular flow,
+where the time step is set by the high sound speed of the material although the flow is slow, can be computed with
+much larger time steps. At the transition time $t_\mathrm{f}$ of a material (group \code{fast\_integration} in the
+material config), its EOS is replaced by a linear medium with a low bulk modulus $K_\mathrm{f}$,
 \begin{equation}
- f_Y = \mathrm{min} \left[ Y_0^2/3J_2, 1 \right],
+ p = K_\mathrm{f}\left(\frac{\varrho_\mathrm{s}}{\varrho_{0,\mathrm{f}}} - 1\right)
+  \quad\text{(Murnaghan with $n = 1$)},\qquad c_\mathrm{s} = \sqrt{K_\mathrm{f}/\varrho_{0,\mathrm{f}}},
 \end{equation}
-with the second invariant of the deviatoric stress tensor $J_2$ given by
-%
+with $\varrho_\mathrm{s} = \varrho$ for non-porous (types 1, 2, 7 $\to$ 1) and $\varrho_\mathrm{s} = \alpha\varrho$
+for p-alpha materials (types 5, 6, 13 $\to$ 6, $p = K_\mathrm{f}(\alpha\varrho/\varrho_{0,\mathrm{f}} - 1)/\alpha$).
+The shear modulus becomes $\mu_\mathrm{f} = 3K_\mathrm{f}(1-2\nu)/[2(1+\nu)]$ with the given or the current Poisson
+ratio $\nu$, and the deviatoric stress is rescaled by $\mu_\mathrm{f}/\mu$ so that the elastic strain is unchanged.
+The tension cut-off \code{rho\_limit} of the new medium defaults to 1 (no tension below $\varrho_{0,\mathrm{f}}$).
+The strength model is unchanged. The scheme is valid only if the flow is slow compared to the new sound speed.
+
+
+%==============================================================================
+\section{Self-gravity}
+\label{sec:self-gravity}
+%==============================================================================
+
+Self-gravity (\code{-s}) is computed with a Barnes-Hut tree \citep{1986Natur.324..446B} following the GPU algorithms
+of \citet{burtscher:2011}. The same tree is used to find the SPH interaction partners \citep{hernquist:1989}.
+
+\subsection{Tree construction}
+The hierarchical decomposition is stored in an octree (quadtree in 2D). Since pointers are inconvenient on the GPU, one
+index array \code{childList} holds all particles and tree nodes; up to $\lceil 2.5N\rceil$ nodes with $2^D$ children
+each are allocated. The root node is the cube enclosing all particles. The particles are inserted in parallel: each
+thread descends from the root to the leaf where its particle belongs and locks the child entry with
+\code{atomicCAS} (status $-2$, ``locked''; $-1$ means ``empty''). If the entry is occupied by another particle, new
+inner nodes with half the edge length are created until both particles reside in different leaves; then the lock is
+released. Afterwards, the masses and centres of mass of all inner nodes (pseudo-particles) are computed bottom-up.
+
+\subsection{Gravitational force}
+For each particle the tree is walked from the root. A node of edge length $s$ at distance $r$ is used as a whole if
 \begin{equation}
- J_2 = \frac{1}{2} S^{\alpha \beta} S_{\alpha \beta},
+ s/r < \vartheta,
 \end{equation}
-and the material dependent yield stress is $Y_0$.
-%
-\subsection{Damage model for brittle material}
-\label{section:damage_model}
-Since one major application of the newly developed code includes the simulation of the collision between
-brittle planetesimals, we included a fragmentation model. Physically, fracture is related to the
-failure of atomic or molecular bonds. If an applied force on a solid brittle body is large enough to break the atomic
-bonds, the material begins to fracture and develop cracks. A successful continuum model for fragmentation was
-derived by \cite{grady:1980} and first implemented in a SPH code by \cite{benz:1995}. The model is based on
-two assumptions: brittle materials contain so-called flaws that are sources of weakness leading to activation and
-growth under tensile loading, and dynamic fracture depends on the rate of tensile loading. In other words, material that
-is slowly pulled apart develops fewer cracks than material that experiences higher strain rates, since one single
-crack cannot relieve the higher tensile stress, and hence more flaws get activated leading to more cracks and
-consequently more damage.
+otherwise its children are opened. The acceleration from a pseudo-particle of mass $m_p$ at $\vec x_p$ is
+$\vec a_i = -G m_p\,(\vec x_i - \vec x_p)/r^3$, with a smoothed distance to avoid singularities. Only monopoles are
+used; therefore $\vartheta \leq 0.5$ (\code{-a}, default 0.5) is recommended \citep{1989ApJS...70..389B}. Direct
+summation is available with \code{-D}.
 
-The scalar parameter damage $d$ parametrizes the influence of cracks on a given volume
-\begin{equation}
- 0 \leq d \leq 1,
-\end{equation}
-and is defined in a way that $d=0$ represents an undamaged, intact material and $d=1$ a fully damaged material that
-cannot undergo any tension or deviatoric stress. In this manner, a material with $d=0.5$ experiences half the stress and
-tension of undamaged material with $d=0$.
+\subsection{Decoupled gravity}
+With \code{-g}, the tree gravity is not recomputed in every right-hand side evaluation. It is recomputed every tenth
+evaluation, or earlier if more than 0.1\,\% of the particles have changed their tree node since the last computation;
+in between, the stored gravitational accelerations are reused. This saves time if the hydrodynamic time step is much
+shorter than the gravitational time scale. The criterion is under revision.
 
+\subsection{Point masses}
+With \sw{GRAVITATING\_POINT\_MASSES}, point masses interact gravitationally with each other and with the SPH particles
+(including the back reaction). SPH particles closer than $r_\mathrm{min}$ or farther than $r_\mathrm{max}$ are removed,
+or accreted with \sw{PARTICLE\_ACCRETION} and \sw{UPDATE\_SINK\_VALUES}.
 
-Damage reduces the strength under tensile loading and the elastic stress $\sigma^{\alpha \beta}$ is decreased
-by the factor $(1-d)$, or in more detail
-%
-\begin{equation}
- \sigma^{\alpha \beta}_d = -\hat{p} \delta^{\alpha \beta} + (1-d) S^{\alpha \beta},
-\end{equation}
-with
-\begin{equation}
- \hat{p} = \left\{ \begin{array}{ll} p  & \mathrm{for} \ p \geq 0 \\
-  (1-d) p & \mathrm{for} \ p < 0\end{array} \right. .
-\end{equation}
-%
-The number of flaws per unit volume in a brittle body with failure strains that are lower than $\varepsilon$, is given by
-the Weibull distribution \citep{weibull:1939}
-%
-\begin{equation}
- n(\varepsilon) = k \varepsilon^m,
-\end{equation}
-with the two Weibull parameters $k$ and $m$. Typical values for basalt are $m=16$, $k=\SI{1e61}{\per
-  \cubic\metre}$ \citep{2007JGRE..112.2001N}.
-
-As soon as a spherical volume $V= \nicefrac{4}{3} \, \pi R_s^3$ undergoes a strain greater than its lowest activation threshold
-strain, damage starts to grow according to
-%
-\begin{equation}
- \label{eq:damage_growth}
- \frac{\mathrm{d}}{\mathrm{d}t} d^{\nicefrac{1}{3}} = \frac{c_\mathrm{g}}{R_s},
-\end{equation}
-%
-with the constant crack growth velocity $c_\mathrm{g}$. The crack growth velocity is chosen to be 40\% of the velocity of
-a longitudinal elastic wave in the damaged material
-%
-\begin{equation}
- c_\mathrm{g} = \num{0.4} \frac{1}{\varrho} \sqrt{ K_0 + \nicefrac{4}{3} (1-d) \mu}.
-\end{equation}
-%
-The fracture model requires the distribution of activation threshold strains (flaws) among the brittle body's SPH particles as a preprocessing step to the simulations.
-%
-
-We apply the algorithm introduced by \cite{benz:1995} with the following approach: Flaws
-are distributed randomly among the brittle particles until each particle has been assigned with at least one activation
-threshold. We let $N_\mathrm{flaw}$ be the number of totally distributed activation flaws. For each flaw $j$, $1\leq j \leq
- N_\mathrm{flaw}$, a particle $a$ is chosen randomly and assigned with the activation threshold strain derived from the
-Weibull distribution $\varepsilon_{a,j}$,
-%
-\begin{equation}
- \varepsilon_{a,j} = \left[ \frac{j}{kV} \right]^{\nicefrac{1}{m}},
-\end{equation}
-%
-where $V$ is the volume of the brittle material and $k$ and $m$ are the material dependent Weibull parameters. Using
-this procedure, each particle gets at least one flaw and on average a total of $N_\mathrm{flaws} = N_p \ln N_p$ flaws
-are distributed. This number of flaws has to be stored in the memory during the simulation and is the
-main memory consumer in simulations with brittle materials.
-
-
-During the simulation, once a particle undergoes a strain greater than its lowest activation threshold strain, damage
-grows according to a modified version of eq.~(\ref{eq:damage_growth})
-%
-\begin{equation}
- \frac{\mathrm{d}}{\mathrm{d} t} d^{\nicefrac{1}{3}} = n_\mathrm{act} \frac{c_\mathrm{g}}{R_s},
-\end{equation}
-%
-where $n_\mathrm{act}$ is the number of activated flaws of the particle. This modification accounts for the accumulation
-of cracks.
-
-Additionally, a damage limiter is included in the model. Since a particle has in general more than only one activation
-threshold, its behavior under tensile loading would be given by the flaw with the lowest activation threshold.  To
-prevent this, the damage of the particle is limited by the ratio between the number of activated flaws $n_\mathrm{act}$
-and the number of total flaws $n_\mathrm{tot}$ of this particle
-%
-\begin{equation}
- d_\mathrm{max} = \frac{n_\mathrm{act}}{n_\mathrm{tot}}.
-\end{equation}
-%
-In other words, a particle can only be totally damaged if all of its flaws are activated.
-
-In order to determine if a particle exceeds one of its threshold strains during the simulation, we need to derive the
-local scalar strain from the three-dimensional stress. \cite{benz:1995} suggest computing the local scalar strain
-$\varepsilon$ from the maximum tensile stress $\sigma_\mathrm{max} = \max [\sigma_1, \sigma_2, \sigma_3 ]$, where
-$\sigma_\gamma$ are the principal stresses determined by a principal axis transformation of the stress tensor
-$\sigma^{\alpha \beta}$, which is already reduced by damage and yield strength
-%
-\begin{equation}
- \varepsilon = \frac{\sigma_\mathrm{max}}{(1-d) E}.
-\end{equation}
-The Young's modulus $E$ of the intact material given by the bulk and shear moduli is written as
-\begin{equation}
- E = \frac{9 K \mu}{3K+\mu}.
-\end{equation}
-%
-%
-\section{Self-gravity with Barnes-Hut Tree}
-\label{section:self-gravity}
-%
-We have implemented the efficient routines for Barnes-Hut tree builds and calculation of the gravitational forces for GPUs introduced by \cite{burtscher:2011}. The algorithm
-for the tree generation is explained at the end of this section.
-
-\cite{1986Natur.324..446B} were the first to use a hierarchical tree to calculate the gravitational forces between N
-bodies. Their approximation algorithm uses a tree-structured hierarchical subdivision of space into cubic cells, each of
-which is divided into $2^D$ subcells. The algorithm has the order ${\cal O}(N \log N)$ compared to the ${\cal O}(N^2)$
-algorithm of the direct sum. The basic idea is that only nearby particles have to be treated individually during the
-calculation of the gravitational force on a specific particle. Distant nodes of the tree can be seen as one single
-particle sitting at the center of mass of the specific tree node and carrying the mass of all the particles that reside
-in this node. Although different algorithms for the computation of self-gravitational forces exist, the hierarchical
-tree method is specially suited for the use in combination with SPH. As a side product of the computation of the
-gravitational forces, the hierarchical tree is constructed for each individual time step and hence, a geometrical hierarchy
-of the SPH particles (leaves of the tree) is available at all time of the computation. It can be used to determine the
-interaction partners for the SPH algorithm by performing a tree walk for each individual particle \citep{hernquist:1989}. Although the tree
-walks may take longer than the search through a helping grid, the interaction partner search may be faster because, in
-any case the tree build needs to be carried out in simulations with self-gravity.
-
-We calculate the center of mass and total mass of every node in the tree to calculate the gravitational force exerted on the SPH particles. We call these objects pseudo-particles in the following. Now, for each SPH
-particle, we perform a tree walk over all nodes.
-With the use of the
-$\vartheta$ criterion, we identify whether a pseudo-particle sitting in the node may be used for the calculation of the
-gravitational force acting on our particle or whether we have to descend further down in the tree. The $\vartheta$ criterion is given by
-%
-\begin{equation}
- \frac{s_{d_t}}{r_{pp}} < \vartheta,
-\end{equation}
-%
-where $s_{d_t}$ denotes the edge length of the tree node containing the pseudo-particle and $r_{pp}$ is the distance
-between the SPH particle and the pseudo-particle.
-The gravitational force from the pseudo-particle acting on the particle $a$ is then given by
-%
-\begin{equation}
- \label{eq:gravitational_force}
- \vect{F_a} = \frac{Gm_a m_p}{r_{pp}^3} \left( \vect{x_a} - \vect{x_p} \right),
-\end{equation}
-where $\vect{x_p}$ and $m_p$ denote the location and the mass of the pseudo-particle, respectively.
-To avoid numerical instabilities, the distance between the pseudo-particle and the particle is smoothed.
-
-\cite{1989ApJS...70..389B} present a detailed error analysis for their tree algorithm. They find consistent accuracies
-of the algorithm for $\vartheta=0.3$  with the consideration of the monopoles of the tree compared to $\vartheta=0.7$
-and the additional calculation of the quadrupoles for each tree node. The error scales with $\vartheta^2$ and $\sqrt{N_p}$. For the sake of memory saving, we calculate only the monopoles of the tree and use
-$\vartheta \leq 0.5$ in our simulations including self-gravity instead of the usual value of $0.8$.
-%
-
-
-We have implemented the Barnes-Hut tree strictly following the efficient implementation for N-body calculations with
-CUDA by \cite{burtscher:2011}. The hierarchical decomposition is recorded in an octree. Since CUDA does not allow the
-use of pointers, which is convenient for the handling of trees, e.g.,\ allows for recursive programming of tree walks, we
-use one large index array for all SPH particles and all tree nodes, which we call {\tt childList}. This memory is
-allocated dynamically at the start of the simulation run. The maximum
-number of tree nodes is given by $\mathrm{ceil}[2.5 \times N_p]$, where $N_p$ is the number of SPH particles in the
-simulation. For each tree node there are $N_\mathrm{children}$ entries in {\tt childList}, where $N_\mathrm{children}$
-is simply given by the dimension
-\begin{equation}
- N_\mathrm{children} = 2^D.
-\end{equation}
-The tree is constructed in a way that the $N_p$ particles reside in $N_p$ leaves in the end.
-At first, the root of the tree is constructed from the geometry of the particle distribution. The computational domain
-(in three dimensions) is given by the cube, which encloses all SPH particles. This cube has the edge length
-\begin{equation}
- s_0 = \max_{\alpha \in D}  \left[ \max_{a,b \in N_p} \left[ x_a^\alpha - x_b^\alpha \right] \right]
-\end{equation}
-and defines the edge length of the root node.
-The edge length of a tree node of depth $d_t$ is given by
-\begin{equation}
- s_{d_t} = \left[ \frac{1}{2}\right]^{d_t} s_0.
-\end{equation}
-Starting from the root node, the particles are inserted into the tree in the following way. In the beginning, all but
-one (the root node) entry in {\tt childList} are $-1$, corresponding to the status "no kid".  All particles are
-distributed among the threads on the GPU.  Now $N_\mathrm{threads}$ threads on the GPU start to compare the locations of their
-SPH particles with the position of the root node to determine the childindex. Since there are many more threads than
-children (especially in the beginning of the algorithm), we need to avoid race conditions actively. To accomplish this, we add the
-status $-2$ or "locked" to the {\tt childList} and use the CUDA\-function "atomic compare and save" {\tt atomicCAS} to
-lock an entry in the {\tt childList}. This functions checks first if the specific index is already locked. If the index
-in {\tt childList} is already locked, the thread waits for the other threads to finish and restarts its attempt. If the
-index is not locked, the threads read the index value, which may be $-1$ in the beginning or a different node index,
-and saves it. Now, the second round starts and the children of the root node are already filled with SPH particles that
-were sorted there. Since leaves or particles cannot have children by definition, new inner tree nodes have to be
-generated. A new inner tree node has half of the edge length from its parent. New inner tree nodes are added until both
-particles, the new particle and the particle in the parent node, can be sorted into two different leaves. As soon as
-both particles reside in different leaves, the thread writes and cancels the lock.
-
-When we want to calculate the gravitational forces between the SPH particles, we have to calculate the positions
-and locations of the pseudo-particles in the tree. We use the algorithm presented by \cite{burtscher:2011} in the
-following manner to determine the pseudo-particle in a specific node: For each inner node, we start in parallel for
-$N_\mathrm{threads}$ a CUDA kernel that picks the last $N_\mathrm{threads}$ added inner nodes, for which we
-calculate the center of mass and total mass at first. If the inner nodes are not leaves, the thread looking at these
-nodes and has to wait for all other threads to end beforce continuing because it needs the location and mass of the
-pseudo-particles in these nodes. This is again done by the use of $-1$ as the initial mass of a pseudo-particle. When the
-thread finishes the calculation for its node, it moves up one tree depth and continues with the next node. The
-implementation of Burtscher is especially designed for CUDA, regarding memory access and parallelization.
-%
-%
-
-
-\section{SPH representation of the equations}
-\subsection{Settings in \texttt{parameter.h}}
-The code allows to choose between two different SPH representations of the conservation of momentum
-and internal energy equation. In the following for \texttt{SOLID==1}.
-\subsubsection{\texttt{SPHEQUATIONS == SPH\_VERSION1}}
-The acceleration for particle $a$ is given by
-\begin{align}
- \frac{\mathrm{d} v^\alpha_a}{\mathrm{d} t} = \sum_b m_b \left( \frac{\sigma^{\alpha
-   \beta}_a}{\varrho_a^2} + \frac{\sigma^{\alpha \beta}_b}{\varrho_b^2} \right ) \frac{\partial
-  W_{ab}}{\partial x_a^\beta}.
-\end{align}
-\subsubsection{\texttt{SPHEQUATIONS == SPH\_VERSION2}}
-The acceleration for particle $a$ is given by
-\begin{align}
- \frac{\mathrm{d} v^\alpha_a}{\mathrm{d} t} = \sum_b m_b \left( \frac{\sigma^{\alpha
-   \beta}_a + \sigma^{\alpha \beta}_b}{\varrho_a  \varrho_b} \right ) \frac{\partial
-  W_{ab}}{\partial x_a^\beta}.
-\end{align}
-
-\section{Kernel Function}
-Several kernel functions are available via command line parameter \texttt{-k/-{}-kernel}. Information about
-which kernel is implemented is provided by the standard \texttt{miluphCUDA} help option \texttt{-h/-{}-help}.
-In the following sections, $h$ denotes the smoothing length, $q$ is the ratio between distance and
-smoothing length, $q=\frac{x_{ab}}{h}$, where $x_{ab}=\left|{\mathbf{x}_a -
- \mathbf{x}_b}\right|$ is the distance between particle $a$ and $b$. Please note, that in contrast to
-the original definition of the smoothing length, the interaction radius in \texttt{miluphCUDA} is
-given by $h$, not $2h$.
-
-\subsection{variable and fixed smoothing length}
-The code supports variable and fixed smoothing lengths. Please set \texttt{VARIABLE\_SML} to $1$ in \texttt{parameter.h}
-if you want a variable smoothing length. You can additionally choose between a fixed number of interaction partners by setting
-\texttt{FIXED\_NOI} to $1$ or the code integrates the time evolution of the smoothing length via
-\begin{equation}
- \frac{\mathrm{d} h}{\mathrm{d}t} = \frac{h}{d} \nabla \cdot \vec{v},
-\end{equation}
-where $d$ denotes the dimension if you set \texttt{INTEGRATE\_SML}. Additionally, please set two factors for the minium and maximum allowed smoothing length
-in \texttt{material.cfg}, namely \texttt{factor\_sml\_min} and \texttt{factor\_sml\_max}. The minimum  (maximum) allowed
-smoothing length is then given by \texttt{factor\_sml\_min * sml} (\texttt{factor\_sml\_max * sml}).
-\subsection{spline kernels}
-\subsubsection{cubic spline}
-Standard cubic spline kernel by \cite{1985A&A...149..135M}, chosen by command line option \texttt{-k
- cubic\_spline}.
-\begin{align}
- W(q) = \frac{\sigma}{h^d} \left\{
- \begin{array}{ll}
-  ( 6 q^3 - 6q^2  + 1 ) & \quad \mbox{for} \quad 0 \leq q < \frac{1}{2}    \\
-  2(1 - q)^3            & \quad \mbox{for} \quad \frac{1}{2} \leq q \leq 1 \\
-  0                     & \quad \mbox{for} \quad q > 1.
- \end{array}
- \right.
-\end{align}
-where $d$ denotes the dimension, and $\sigma$ is the normalization constant $\frac{4}{3}$,
-$\frac{40}{7\pi}$ and $\frac{8}{\pi}$ for 1D, 2D, and 3D, respectively.
-\subsubsection{quartic spline}
-Quartic spline kernel \citep{2012MNRAS.425.1068D}, chosen by command line option \texttt{-k
- quartic\_spline}.
-\begin{align}
- W(q) = \frac{\sigma}{h^d} \left( \left(1-q\right)_+^4 -5\left(\frac{3}{5}-q\right)_+^4 +
- 10\left(\frac{1}{5}-q\right)_+^4\right) \qquad \mbox{for} \quad 0 \leq q < 1
-\end{align}
-where $d$ denotes the dimension, and $\sigma$ is the normalization constant $\frac{5^5}{768}$,
-$\frac{3\cdot5^6}{2398\pi}$ and $\frac{5^6}{512\pi}$ for 1D, 2D, and 3D, respectively.
-
-
-\subsection{Wendland kernels}
-\subsubsection{Wendland C2}
-Wendland C2 kernel \citep{2012MNRAS.425.1068D}, chosen by command line option \texttt{-k
- wendlandc2}.
-\begin{align}
- W(q) = \frac{\sigma}{h^d} \left\{
- \begin{array}{ll}
-  (1-q)_+^4 (1+4q) & \quad \mbox{for 2D and 3D and} \quad 0 \leq  q < 1 \\
-  (1-q)_+^3 (1+3q) & \quad \mbox{for 1D and} \quad 0 \leq  q < 1        \\
-  0                & \quad \mbox{for} \quad q >= 1.
- \end{array}
- \right.
-\end{align}
-where $d$ denotes the dimension, and $\sigma$ is the normalization constant $\frac{5}{4}$,
-$\frac{7}{\pi}$ and $\frac{21}{2\pi}$ for 1D, 2D, and 3D, respectively\footnote{$(\cdot)_+ \equiv
-  \max\{0,\cdot\}$}.
-\subsubsection{Wendland C4}
-Wendland C4 kernel \citep{2012MNRAS.425.1068D}, chosen by command line option \texttt{-k
- wendlandc4}.
-\begin{align}
- W(q) = \frac{\sigma}{h^d} \left\{
- \begin{array}{ll}
-  (1-q)_+^6 (1+6q+\frac{35}{3}q^2) & \quad \mbox{for 2D and 3D and} \quad 0 \leq  q < 1 \\
-  (1-q)_+^5 (1+5q+8q^2)            & \quad \mbox{for 1D and} \quad 0 \leq  q < 1        \\
-  0                                & \quad \mbox{for} \quad q >= 1.
- \end{array}
- \right.
-\end{align}
-where $d$ denotes the dimension, and $\sigma$ is the normalization constant $\frac{3}{2}$,
-$\frac{9}{\pi}$ and $\frac{495}{32\pi}$ for 1D, 2D, and 3D, respectively.
-\subsubsection{Wendland C6}
-Wendland C6 kernel \citep{2012MNRAS.425.1068D}, chosen by command line option \texttt{-k
- wendlandc6}.
-\begin{align}
- W(q) = \frac{\sigma}{h^d} \left\{
- \begin{array}{ll}
-  (1-q)_+^8 (1+8q+25q^2+32q^3) & \quad \mbox{for 2D and 3D and} \quad 0 \leq  q < 1 \\
-  (1-q)_+^7 (1+7q+19q^2+21q^3) & \quad \mbox{for 1D and} \quad 0 \leq  q < 1        \\
-  0                            & \quad \mbox{for} \quad q >= 1.
- \end{array}
- \right.
-\end{align}
-where $d$ denotes the dimension, and $\sigma$ is the normalization constant $\frac{55}{32}$,
-$\frac{78}{7\pi}$ and $\frac{1365}{64\pi}$ for 1D, 2D, and 3D, respectively.
-
-\subsection{spiky kernels}
-\subsubsection{Desbrun \& Cani spiky kernel}
-\begin{align}
- W(q) = \frac{\sigma}{h^d} \left\{
- \begin{array}{ll}
-  (1-q)^3 & \quad \mbox{for} \quad 0 \leq  q < 1 \\
-  0       & \quad \mbox{for} \quad q >= 1.
- \end{array}
- \right.
-\end{align}
-where $d$ denotes the dimension, and $\sigma$ is the normalization constant
-$\frac{10}{\pi}$ and $\frac{15}{\pi}$ for 2D and 3D, respectively.
 
 \bibliographystyle{abbrvnat}
 \bibliography{miluphcuda_documentation}
