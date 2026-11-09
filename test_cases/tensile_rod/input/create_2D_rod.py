@@ -27,6 +27,7 @@ parser.add_argument("--dx", help = "particle spacing in cm (default: 0.0125)", t
 parser.add_argument("--weibull_m", help = "default: 8.5", type=float, default = 8.5)
 parser.add_argument("--weibull_k", help = "default: 1.4e19", type=float, default = 1.4e19)
 parser.add_argument("--outfile", help = "default: rod.0000", type=str, default = "rod.0000")
+parser.add_argument("--no_flaws", help = "write no flaw columns, for FRAGMENTATION 0 (default: false)", action="store_true")
 parser.add_argument("--plot", help = "additionally plot flaw distribution (default: false)", action="store_true")
 args = parser.parse_args()
 
@@ -76,7 +77,7 @@ while True:
         break
     i += 1
     # randomly pick a particle    
-    index = int(np.random.randint(N, size=1))
+    index = int(np.random.randint(N))
     if particle_picked[index] == 0:
         particle_picked[index] = 1
         N_picked += 1
@@ -105,7 +106,10 @@ plf = np.zeros_like(x)
 
 for k in range(N):
     plf[k] = len(flaws[k])
-    print(x[k], y[k], "0.0", "0.0", mass, rho, mat_type, len(flaws[k]), "0.0", "0.0", "0.0", "0.0", "0.0", *flaws[k], file=out)
+    if args.no_flaws:
+        print(x[k], y[k], "0.0", "0.0", mass, rho, mat_type, "0.0", "0.0", "0.0", "0.0", file=out)
+    else:
+        print(x[k], y[k], "0.0", "0.0", mass, rho, mat_type, len(flaws[k]), "0.0", "0.0", "0.0", "0.0", "0.0", *flaws[k], file=out)
 
 print("distributed flaws with Weibull m: {}   k: {}".format(args.weibull_m, args.weibull_k) )
 print("max no. flaws per particle: {}".format(int(np.max(plf))) )

@@ -36,3 +36,22 @@ ch.schaefer@uni-tuebingen.de
 
 last updated: 2021-05-22
 
+
+
+Test of the von Mises radial return
+-----------------------------------
+
+The von Mises model uses the radial return f = Y/sqrt(3 J2) (Wilkins 1964) instead of f = Y^2/(3 J2) of
+Benz & Asphaug (1994, 1995), see src/plasticity.cu. The squared form softens the material in plastic flow by an
+amount of first order in the time step. To see the difference, run the rod without fragmentation:
+
+(i)   in src/parameter.h set FRAGMENTATION 0, DAMAGE_ACTS_ON_S 0, MAX_NUM_FLAWS 1 (VON_MISES_PLASTICITY stays 1)
+(ii)  input/create_2D_rod.py --no_flaws
+(iii) compile and run with fixed upper limits of the time step, e.g. -M 2e-3, 1e-3, 5e-4 (add -M to run.sh,
+      one output directory per run), with the current code and with the old squared form
+(iv)  ./check_von_mises.py --yield_stress 0.03 rod.0100.h5 rod.0200.h5   (in each run directory)
+
+Expected: with the radial return, the stress entering the forces is Y in plastic flow independent of the time step,
+and rod elongation, necking and total plastic strain do not change with -M. With the squared form, the limited stress
+lies below Y by about half the elastic stress increment per step, and the results converge to those of the radial
+return only for -M -> 0.
