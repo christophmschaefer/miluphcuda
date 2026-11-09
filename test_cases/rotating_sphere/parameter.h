@@ -101,7 +101,7 @@
 
 // consistency switches
 // for zeroth order consistency
-#define SHEPARD_CORRECTION 1
+#define SHEPARD_CORRECTION 0
 // for linear consistency
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
 #define TENSORIAL_CORRECTION 1
@@ -120,7 +120,7 @@
 // matrix is still reset (see kernel.cu). The velocity gradient stays exact for linear velocity fields, except at
 // particles with a scaled or reset matrix.
 // Requires TENSORIAL_CORRECTION, SPH_EQU_VERSION 1 and the old school correction scheme in kernel.cu.
-#define TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM 0
+#define TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM 1
 
 // Available plastic flow conditions:
 // (if you do not know what this is, choose (1) or nothing)

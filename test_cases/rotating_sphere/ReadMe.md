@@ -16,3 +16,9 @@ sound speed, which is set to 1.
 The test runs only for some minutes. In the end, either check the file **conserved_quantities.log** for the total
 angular momentum (column 1 is time, column 12 is the absolute value of the total angular momentum of all particles), or
 take a look at **angular_momentum.png**.
+
+parameter.h uses TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM 1 (which requires SHEPARD_CORRECTION 0) and run.sh
+the kick-drift-kick integrator (-I kdk). With this combination the total angular momentum is conserved up to
+round-off (relative change about 1e-13 after 100 outputs with 485 particles). With rk2_adaptive the relative change
+is about 1e-6 (error of the time integration). With TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM 0 the deviatoric
+stress exerts a net torque at the free surface, and about half of the angular momentum is lost.
