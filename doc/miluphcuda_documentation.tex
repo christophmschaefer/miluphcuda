@@ -275,10 +275,17 @@ scaled by
 \end{equation}
 for the pressure-dependent models (Drucker-Prager, Mohr-Coulomb, Collins), and by
 \begin{equation}
- f = \min\left(\frac{Y^2}{3 J_2}, 1\right)
+ f = \min\left(\frac{Y}{\sqrt{3 J_2}}, 1\right)
 \end{equation}
-for the von Mises model \citep{vonmises1913,benz:1995}. The pressure-dependent models compare $Y$ with $\sqrt{J_2}$,
-i.e.\ $Y$ is the yield strength in shear.
+for the von Mises model \citep{vonmises1913}. Both are radial returns onto the yield surface \citep{wilkins1964},
+as also used by \citet{libersky:1991}. The pressure-dependent models compare $Y$ with $\sqrt{J_2}$, i.e.\ $Y$ is the
+yield strength in shear; the von Mises model compares $Y$ with the equivalent stress $\sqrt{3J_2}$.
+
+Note that this differs from the form $f = \min(Y^2/3J_2, 1)$ of \citet{benasp94,benz:1995}, which was used in earlier
+versions of miluphcuda \citep[eq.~17]{schaefer2016}. That factor maps the stress to
+$\sqrt{3J_2} = Y^2/\sqrt{3J_2^\mathrm{trial}} < Y$, i.e.\ as far inside the yield surface as the trial state was
+outside. In continuous plastic flow with an elastic stress increment $\Delta$ per time step, the limited stress
+then settles at about $Y - \Delta/2$ instead of $Y$, i.e.\ a softening of first order in the time step.
 
 \subsection{Von Mises}
 $Y = Y_0$ (\code{yield\_stress}) is constant. \sw{VON\_MISES\_PLASTICITY} can additionally be combined with

@@ -371,9 +371,15 @@ __global__ void plasticityModel(void) {
         // reduce whole yield/shear strength (locally)
         y *= ldw_f;
 # endif
-        // von Mises limit like
+        /* Radial return onto the von Mises yield surface sqrt(3 J2) = Y, following Wilkins (1964), as also used by
+           Libersky & Petschek (1991): f = Y / sqrt(3 J2).
+           Note: this explicitly differs from the form f = Y^2 / (3 J2) of Benz & Asphaug (1994, 1995), which was used
+           here before (and in Schaefer et al. 2016, eq. 17). The squared factor maps a trial state sqrt(3 J2) = Y + d
+           to Y^2 / (Y + d) ~ Y - d, i.e., inside the yield surface. In continuous plastic flow with an elastic stress
+           increment D per step, the limited stress then settles at about Y - D/2 instead of Y, a softening that is of
+           first order in the time step. */
         if (J2 > 0.0) {
-            mises_f = y*y/(3.0*J2);
+            mises_f = y / sqrt(3.0 * J2);
         }
 #endif  // plasticity models
 
