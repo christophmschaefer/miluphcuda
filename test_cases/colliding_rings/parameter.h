@@ -66,6 +66,18 @@
 #define FRAGMENTATION 0
 #define DAMAGE_ACTS_ON_S 0
 
+// If ANEOS_VAPOR_NO_STRENGTH is set, deviatoric stress and tension (negative pressure) are set to zero
+// for particles in a vapor-bearing phase state (KPA = ANEOS_PHASE_TWO_PHASE_LV or
+// ANEOS_PHASE_ONE_PHASE at high energies). Only meaningful for SOLID=1 with EOS_TYPE_ANEOS
+// or EOS_TYPE_JUTZI_ANEOS.
+#define ANEOS_VAPOR_NO_STRENGTH 0
+
+// Fast integration scheme following Raducan & Jutzi (2022), Jutzi et al. (2022):
+// after a per-material transition time, the EOS is switched to a low-sound-speed
+// linear medium so that the CFL condition allows much larger timesteps.
+// Only meaningful for the late stage of low-velocity granular flow.
+#define FAST_INTEGRATION_SCHEME 0
+
 // Choose the SPH representation to solve the momentum and energy equation:
 // SPH_EQU_VERSION 1: original version with HYDRO dv_a/dt ~ - (p_a/rho_a**2 + p_b/rho_b**2)  \nabla_a W_ab
 //                                     SOLID dv_a/dt ~ (sigma_a/rho_a**2 + sigma_b/rho_b**2) \nabla_a W_ab
@@ -93,6 +105,20 @@
 // for linear consistency
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
 #define TENSORIAL_CORRECTION 1
+
+// Apply the tensorial correction also to the velocity gradient in the continuity equation.
+// Set to 0 to use the raw kernel gradient for drhodt while keeping the correction in the
+// momentum equation and in dSdt.
+// Has no effect unless TENSORIAL_CORRECTION is 1.
+#define TENSORIAL_CORRECTION_FOR_DRHODT 0
+
+// Build the tensorial correction matrix, and every velocity gradient that uses it, with the weight m_j/rho_i
+// (Benz & Asphaug 1995) instead of m_j/rho_j (Randles & Libersky 1996). With SPH_EQU_VERSION 1 the
+// momentum equation then conserves angular momentum exactly (up to round-off, and in time with -I kdk),
+// also with deviatoric stress, variable density and variable sml, wherever the correction matrix is not
+// reset to the identity. The velocity gradient stays exact for linear velocity fields.
+// Requires TENSORIAL_CORRECTION, SPH_EQU_VERSION 1 and the old school correction scheme in kernel.cu.
+#define TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM 0
 
 
 // Available plastic flow conditions:

@@ -117,7 +117,7 @@
 
 // Build the tensorial correction matrix, and every velocity gradient that uses it, with the weight m_j/rho_i
 // (Benz & Asphaug 1995) instead of m_j/rho_j (Randles & Libersky 1996). With SPH_EQU_VERSION 1 the
-// momentum equation then conserves angular momentum exactly (up to round-off and the time integrator),
+// momentum equation then conserves angular momentum exactly (up to round-off, and in time with -I kdk),
 // also with deviatoric stress, variable density and variable sml, wherever the correction matrix is not
 // reset to the identity. The velocity gradient stays exact for linear velocity fields.
 // Requires TENSORIAL_CORRECTION, SPH_EQU_VERSION 1 and the old school correction scheme in kernel.cu.

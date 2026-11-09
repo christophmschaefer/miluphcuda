@@ -44,6 +44,10 @@
 // the bodies before they are taken out of the simulation
 #define GRAVITATING_POINT_MASSES 0
 
+// sink particles (set point masses to be sink particles)
+#define PARTICLE_ACCRETION 0 // check if particle is bound to one of the sink particles (crossed the accretion radius, rmin); if also UPDATE_SINK_VALUES 1: particle is accreted and ignored afterwards, else: continues orbiting without being accreted
+#define UPDATE_SINK_VALUES 0 // add to sink the quantities of the accreted particle: mass, velocity and COM
+
 // integrate the energy equation
 // integrate the continuity equation
 // if set to 0, the density will be calculated using the standard SPH sum \sum_i m_j W_ij
@@ -56,11 +60,31 @@
 
 // adds viscosity to the Euler equation
 #define NAVIER_STOKES 1
+
+// choose between two different viscosity models
+#define SHAKURA_SUNYAEV_ALPHA 0
+#define CONSTANT_KINEMATIC_VISCOSITY 0
+
+// artificial bulk viscosity according to Schaefer et al. (2004)
+#define KLEY_VISCOSITY 0
+
 // damage model following Benz & Asphaug 1995
 // this needs some preprocessing of the initial particle distribution since activation thresholds
 // have to be distributed among the particles
 #define FRAGMENTATION 0
 #define DAMAGE_ACTS_ON_S 0
+
+// If ANEOS_VAPOR_NO_STRENGTH is set, deviatoric stress and tension (negative pressure) are set to zero
+// for particles in a vapor-bearing phase state (KPA = ANEOS_PHASE_TWO_PHASE_LV or
+// ANEOS_PHASE_ONE_PHASE at high energies). Only meaningful for SOLID=1 with EOS_TYPE_ANEOS
+// or EOS_TYPE_JUTZI_ANEOS.
+#define ANEOS_VAPOR_NO_STRENGTH 0
+
+// Fast integration scheme following Raducan & Jutzi (2022), Jutzi et al. (2022):
+// after a per-material transition time, the EOS is switched to a low-sound-speed
+// linear medium so that the CFL condition allows much larger timesteps.
+// Only meaningful for the late stage of low-velocity granular flow.
+#define FAST_INTEGRATION_SCHEME 0
 
 // Choose the SPH representation to solve the momentum and energy equation:
 // SPH_EQU_VERSION 1: original version with HYDRO dv_a/dt ~ - (p_a/rho_a**2 + p_b/rho_b**2)  \nabla_a W_ab
@@ -84,9 +108,27 @@
 // INVISCID SPH (see Cullen & Dehnen paper)
 #define INVISCID_SPH 0
 
+// consistency switches
+// for zeroth order consistency
+#define SHEPARD_CORRECTION 0
+
 // for linear consistency
 // add tensorial correction tensor to dSdt calculation -> better conservation of angular momentum
 #define TENSORIAL_CORRECTION 0
+
+// Apply the tensorial correction also to the velocity gradient in the continuity equation.
+// Set to 0 to use the raw kernel gradient for drhodt while keeping the correction in the
+// momentum equation and in dSdt.
+// Has no effect unless TENSORIAL_CORRECTION is 1.
+#define TENSORIAL_CORRECTION_FOR_DRHODT 0
+
+// Build the tensorial correction matrix, and every velocity gradient that uses it, with the weight m_j/rho_i
+// (Benz & Asphaug 1995) instead of m_j/rho_j (Randles & Libersky 1996). With SPH_EQU_VERSION 1 the
+// momentum equation then conserves angular momentum exactly (up to round-off, and in time with -I kdk),
+// also with deviatoric stress, variable density and variable sml, wherever the correction matrix is not
+// reset to the identity. The velocity gradient stays exact for linear velocity fields.
+// Requires TENSORIAL_CORRECTION, SPH_EQU_VERSION 1 and the old school correction scheme in kernel.cu.
+#define TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM 0
 
 // plastic flow conditions
 // you can choose between
@@ -127,6 +169,41 @@
 //  WARNING: choose only one of the following three options
 //  this will be fixed in a later version of the code
 #define MOHR_COULOMB_PLASTICITY 0
+
+//   (4) Pressure dependent yield strength following Collins et al. (2004) and the implementation in Jutzi (2015)
+//       -> yield strength is different for damaged (Y_d) and intact material (Y_i), and averaged mean (Y) in between:
+//              P > 0: Y_i = cohesion + \mu P / (1 + \mu P / (yield_stress - cohesion) )
+//              P < 0: Y_i = cohesion
+//                  *cohesion* is the yield strength for P = 0 and *yield_stress* the asymptotic limit for P = \infty
+//                  \mu is the coefficient of internal friction (= tan(friction_angle))
+//              P > 0: Y_d = cohesion_damaged + \mu_d \times P
+//              P < 0: Y_d = cohesion_damaged + P (i.e., slope = 1)
+//                  where \mu_d is the coefficient of friction of the *damaged* material
+//              combined/final yield strength:  Y = (1-damage)*Y_i + damage*Y_d
+//                                              Y is limited to <= Y_i
+//              negative-pressure release by damage:
+//                  foremost via (1-damage), in line with the Grady-Kipp model (FRAGMENTATION), but only up to the
+//                  residual tensile strength the material retains even when fully damaged, assumed to be -y_0_d
+//       Note: - If FRAGMENTATION (damage model) is not activated only Y_i is used.
+//             - DAMAGE_ACTS_ON_S is not reasonable for this model, since the limiting of S already depends on damage.
+//       If you want to additionally model the influence of some (single) melt energy on the yield strength, then activate
+//       COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY, which adds a factor (1-e/e_melt) to the yield strength.
+#define COLLINS_PLASTICITY 0
+#define COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY 0
+
+//   (5) Simplified version of COLLINS_PLASTICITY, which uses only the Lundborg strength representation (Y_i above).
+//       For more detailed modeling including crack growth (FRAGMENTATION) use the regular COLLINS_PLASTICITY above.
+//       Unlike in (4), Y decreases to zero for p < 0 (with slope = 1, i.e., zero at -cohesion).
+//       In addition, a negative-pressure cap limits negative pressures to the zero of the yield strength curve (at -cohesion).
+#define COLLINS_PLASTICITY_SIMPLE 0
+
+// Additional strength reduction for low-density states (below the reference density). For most plasticity models this
+// is done by reducing the cohesion, and by that the whole yield envelope. For COLLINS_PLASTICITY only the damaged
+// cohesion is reduced, vor VON_MISES_PLASTICITY all the (constant) yield strength is reduced.
+// Strength reduction increases with decreasing density, where the functional form is set by several parameters in
+// the material config file (see there). Works for all plasticity models above (not the experimental ones below).
+#define LOW_DENSITY_WEAKENING 0
+
 #define DRUCKER_PRAGER_PLASTICITY 0
 #define COLLINS_PRESSURE_DEPENDENT_YIELD_STRENGTH 0
 
@@ -172,6 +249,8 @@
 
 // produces additional output to HDF5 files (T, cs, entropy); only useful when HDF5IO is set; set only if you use the ANEOS eos
 #define MORE_ANEOS_OUTPUT 0
+#define OUTPUT_GRAV_ENERGY 0    // compute and output gravitational energy (at times when output files are written); of all SPH particles (and also w.r.t. gravitating point masses and between them); direct particle-particle summation, not tree; option exists to control costly computation for high particle numbers
+#define BINARY_INFO 0   // generates additional output file (binary_system.log) with info regarding binary system: semi-major axis, eccentricity if GRAVITATING_POINT_MASSES == 1
 
 
 
@@ -187,6 +266,14 @@
 #define FIXED_NOI 0
 #define INTEGRATE_SML 0
 #define READ_INITIAL_SML_FROM_PARTICLE_FILE 0
+
+// correction terms for sml calculation (warning: experimental)
+// adds gradient of the smoothing length to continuity equation, equation of motion, energy equation
+#define SML_CORRECTION 0
+
+// if set to 0, h = (h_i + h_j)/2  is used to calculate W_ij
+// if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2
+#define AVERAGE_KERNELS 0
 
 
 // important switch: if the simulations yields at some point too many interactions for
@@ -211,5 +298,6 @@
 
 // use HDF5 (needs libhdf5-dev and libhdf5)
 #define HDF5IO 1
+#define MORE_OUTPUT 0   //produce additional output to HDF5 files: p_max, p_min, rho_max, rho_min
 
 #endif
