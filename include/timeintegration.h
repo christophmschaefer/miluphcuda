@@ -68,6 +68,7 @@ void predictor_corrector_euler(void);
 void rk2Adaptive(void);
 void rk4_nbodies(void); // do we need it here? do we say.. bye,bye?
 void heun_rk4(void);
+void kdk(void);
 
 double calculate_angular_momentum(void);
 

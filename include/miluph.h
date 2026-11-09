@@ -360,7 +360,8 @@ enum {
     RK2_ADAPTIVE, ////< the default embedded Runge Kutta 2/3 integrator with adaptive time step
     MONAGHAN_PC, ////< predictor corrector integrator with initial half step 
     EULER_PC, ///< predictor corrector integrator with initial full step
-    HEUN_RK4 ///< fancy coupled Heun/RK4 integrator for use with sims with gravitating point masses. The point masses are integrated using the higher order rk4 and the hydro/solid aka sph part is done with standard Heun (aka Euler PC)
+    HEUN_RK4, ///< fancy coupled Heun/RK4 integrator for use with sims with gravitating point masses. The point masses are integrated using the higher order rk4 and the hydro/solid aka sph part is done with standard Heun (aka Euler PC)
+    KDK ///< kick-drift-kick (leapfrog) integrator, conserves angular momentum for torque-free forces
 };
 
 

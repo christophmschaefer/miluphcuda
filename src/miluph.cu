@@ -28,6 +28,7 @@
 #include "kernel.h"
 #include "little_helpers.h"
 #include "rk2adaptive.h"
+#include "kdk.h"
 #include <cuda_runtime.h>
 
 #if HDF5IO
@@ -604,7 +605,7 @@ void usage(char *name)
             "\t-f, --filename <name>\t\t Name of input data file (default: disk.0000).\n"
             "\t\t\t\t\t File name format is something like 'string'.XXXX, where XXXX means runlevel and zeros.\n"
             "\t\t\t\t\t By default, an ASCII input file is assumed (unless -X is used).\n"
-            "\t-F, --firsttimestep\t\t For rk2_adaptive, set initial timestep at integration start\n"
+            "\t-F, --firsttimestep\t\t For rk2_adaptive and kdk, set (an upper limit for) the initial timestep at integration start\n"
             "\t\t\t\t\t (default: maxtimestep, set by -M, or otherwise timeperstep, set by -t).\n"
             "\t-g, --decouplegravity\t\t Decouple hydro time scale from gravitational time scale.\n"
             "\t-G, --information\t\t Print information about detected Nvidia GPUs.\n"
@@ -614,13 +615,14 @@ void usage(char *name)
 #endif
             "\t-I, --integrator <name>\t\t Available options are 'euler' (1st order), 'euler_pc' and 'monaghan_pc' (2nd order),\n"
             "\t\t\t\t\t 'rk2_adaptive' (default, 2nd order with adaptive time step),\n"
-            "\t\t\t\t\t 'heun_rk4' (2nd order for sph coupled with fourth order for n-body).\n"
+            "\t\t\t\t\t 'heun_rk4' (2nd order for sph coupled with fourth order for n-body),\n"
+            "\t\t\t\t\t 'kdk' (2nd order kick-drift-kick, conserves angular momentum for torque-free forces).\n"
             "\t-k, --kernel <name>\t\t Set kernel function (default: 'cubic_spline').\n"
             "\t      \t\t\t\t Options: wendlandc2, wendlandc4, wendlandc6, cubic_spline, quintic_spline, spiky.\n"
             "\t-L, --angular_momentum <value> \t Check for conservation of angular momentum (default: off).\n"
             "\t\t\t\t\t Simulation stops once the relative difference between current and initial angular momentum is larger than <value>.\n"
             "\t-m, --materialconfig <name>\t Name of libconfig file including material config (default: material.cfg)\n"
-            "\t-M, --maxtimestep <value>\t Upper limit for the timestep (rk2_adaptive), or timestep size (euler), respectively.\n"
+            "\t-M, --maxtimestep <value>\t Upper limit for the timestep (rk2_adaptive, kdk), or timestep size (euler), respectively.\n"
             "\t-n, --num <int>\t\t\t Number of simulation steps (additional ones in case of restart).\n"
             "\t-Q, --precision <value>\t\t Precision of the rk2_adaptive integrator (default: 1e-5).\n"
             "\t-r, --restart\t\t\t Assume that ASCII input file (specified with -f) is old output file.\n"
@@ -1038,6 +1040,10 @@ int main(int argc, char *argv[])
         fprintf(stdout, "euler_pc\n");
         integrator = &predictor_corrector_euler;
         param.integrator_type = EULER_PC;
+    } else if (0 == strcmp(integrationscheme, "kdk")) {
+        fprintf(stdout, "kdk\n");
+        integrator = &kdk;
+        param.integrator_type = KDK;
     } else {
         fprintf(stderr, "Err. No such time integration scheme implemented yet.\n");
         exit(1);
@@ -1143,6 +1149,8 @@ int main(int argc, char *argv[])
     // print information about time integrator settings
     if( param.integrator_type == RK2_ADAPTIVE )
         print_rk2_adaptive_settings();
+    if (param.integrator_type == KDK)
+        print_kdk_settings();
 
     // copy the particles to the GPU
     copy_particle_data_to_device();
