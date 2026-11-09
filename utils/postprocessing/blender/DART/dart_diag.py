@@ -17,6 +17,17 @@ What it reports
      spacing and density relative to the initial state. Clumps much denser /
      tighter than the initial lattice point to SPH clumping (tensile
      instability, residual cohesion), not to physics.
+  6. settling (printed as section 5): is the simulated time long enough?
+     The resting body is the largest connected set of particles with
+     v_rel < --vset; its surface radius is tabulated per direction. Everything
+     else is split into material still moving on/in the body (crater flow) and
+     material in flight (bound / escaping, inside / outside the Hill radius of
+     Dimorphos in the Didymos system). For bound material in flight the time
+     until it comes down is computed from a Kepler orbit around the point mass
+     M_bound, together with the landing point (crater or elsewhere). The verdict
+     gives the time after which less than --settle-frac of the target mass is
+     still in the air. Material beyond r_H and escaping material is not
+     followed: that is a job for the N-body integration with Didymos.
 
 Usage
   python3 dart_diag.py impact.0270.h5 --ref impact.0000.h5
@@ -93,6 +104,222 @@ def fmt_mass(x, M):
     return f"{x:10.3e} kg  ({100 * x / M:7.3f} %)"
 
 
+# ---------------------------------------------------------------------------
+# settling: where is the material that still moves, and when does it come down
+# ---------------------------------------------------------------------------
+def body_component(xr, rest, cell, rmax):
+    """Largest connected set of resting particles (grid of `cell`, 26-connectivity).
+
+    xr: positions relative to the bound-body COM. Particles at rest but detached
+    from the body (clumps near the apex of their arc) are not part of it.
+    """
+    from scipy import ndimage
+    cand = np.nonzero(rest & (np.abs(xr).max(1) < rmax))[0]
+    ijk = np.floor((xr[cand] + rmax) / cell).astype(np.int32)
+    ng = int(np.ceil(2 * rmax / cell)) + 1
+    occ = np.zeros((ng, ng, ng), bool)
+    occ[ijk[:, 0], ijk[:, 1], ijk[:, 2]] = True
+    lab, nl = ndimage.label(occ, structure=np.ones((3, 3, 3), bool))
+    if nl == 0:
+        return np.zeros(len(xr), bool)
+    sizes = np.bincount(lab.ravel())
+    sizes[0] = 0
+    big = np.argmax(sizes)
+    body = np.zeros(len(xr), bool)
+    body[cand[lab[ijk[:, 0], ijk[:, 1], ijk[:, 2]] == big]] = True
+    return body
+
+
+class SurfaceMap:
+    """Surface radius of the resting body per direction (equal-area bins in cos(theta), phi)."""
+
+    def __init__(self, xr, body, nt=36, nphi=72):
+        self.nt, self.np_ = nt, nphi
+        r = np.linalg.norm(xr[body], axis=1)
+        k = self._bin(xr[body])
+        rs = np.full(nt * nphi, -1.0)
+        np.maximum.at(rs, k, r)
+        rs = rs.reshape(nt, nphi)
+        # empty bins (should be rare): row median, else global median
+        for i in range(nt):
+            row = rs[i]
+            if (row < 0).any():
+                ok = row >= 0
+                row[~ok] = np.median(row[ok]) if ok.any() else -1
+        rs[rs < 0] = np.median(rs[rs >= 0])
+        self.rs = rs
+
+    def _bin(self, xr):
+        rn = np.linalg.norm(xr, axis=1)
+        rn = np.where(rn > 0, rn, 1.0)
+        cz = np.clip(xr[:, 2] / rn, -1, 1)
+        ph = np.arctan2(xr[:, 1], xr[:, 0])
+        it = np.minimum(((cz + 1) / 2 * self.nt).astype(np.int64), self.nt - 1)
+        ip = np.minimum(((ph + np.pi) / (2 * np.pi) * self.np_).astype(np.int64), self.np_ - 1)
+        return it * self.np_ + ip
+
+    def __call__(self, xr):
+        return self.rs.ravel()[self._bin(xr)]
+
+
+def kepler_landing(rr, vv, GM, surf, iters=2):
+    """Time until a bound particle on a point-mass Kepler orbit comes down to the surface.
+
+    rr, vv: position / velocity relative to the bound body (N, 3), E < 0.
+    surf:   callable giving the surface radius for direction vectors.
+    Returns dt [s] (inf if periapsis is above the surface) and the landing position.
+    """
+    r = np.linalg.norm(rr, axis=1)
+    v2 = (vv**2).sum(1)
+    E = 0.5 * v2 - GM / r
+    a = -GM / (2 * E)
+    h = np.cross(rr, vv)
+    hn = np.linalg.norm(h, axis=1)
+    ev = np.cross(vv, h) / GM - rr / r[:, None]
+    e = np.minimum(np.linalg.norm(ev, axis=1), 1 - 1e-12)
+    ok = e > 1e-9
+    P = np.where(ok[:, None], ev / np.where(ok, e, 1)[:, None], rr / r[:, None])
+    Q = np.cross(h, P) / np.where(hn > 0, hn, 1)[:, None]
+    # radial orbit (h = 0): Q is irrelevant because sin-term vanishes with sqrt(1-e^2) -> 0
+    n = np.sqrt(GM / a**3)
+    out = (rr * vv).sum(1) > 0                        # outbound?
+    E0 = np.arccos(np.clip((1 - r / a) / e, -1, 1))
+    E0 = np.where(out, E0, 2 * np.pi - E0)
+    M0 = E0 - e * np.sin(E0)
+    Rl = surf(rr)                                    # first guess: surface below the particle
+    for _ in range(iters):
+        c1 = (1 - Rl / a) / e
+        hit = ok & (a * (1 - e) < Rl) & (c1 <= 1)
+        E1 = 2 * np.pi - np.arccos(np.clip(c1, -1, 1))   # inbound branch
+        E1 = np.where(E1 < E0, E0, E1)                   # already at/below the surface
+        xl = (a * (np.cos(E1) - e))[:, None] * P + (a * np.sqrt(1 - e**2) * np.sin(E1))[:, None] * Q
+        Rl = np.where(hit, surf(xl), Rl)                 # surface where it actually lands
+    dt = np.where(hit, (E1 - e * np.sin(E1) - M0) / n, np.inf)
+    return dt, xl, hit
+
+
+def settle_report(a, D, x, v, m, tgt, b, Mb, xc, vc, vr, r, R, A):
+    """Section 5: is the simulated time long enough?"""
+    print(f"\n== 5. settling: is the simulated time long enough? ==")
+    t = D["t"]
+    Mt = m[tgt].sum()
+    xr = x - xc
+    vv = v - vc
+    GM = G * Mb
+    Rvol = np.cbrt(3 * Mb / (4 * np.pi * 2117.0))
+    rH = a.r_hill if a.r_hill else a.a_orbit * np.cbrt(Mb / (3 * a.m_didymos))
+
+    rest = tgt & b & (vr <= a.vset)
+    body = body_component(xr, rest, a.link * A, max(2.5 * Rvol, 1.2 * rH))
+    surf = SurfaceMap(xr, body)
+    Rs = surf(xr)
+    hgt = r - Rs
+    hs = a.hsurf * A
+    print(f"resting body (connected, v < {100*a.vset:.0f} cm/s): {fmt_mass(m[body].sum(), Mt)}, "
+          f"surface radius min/median/max {surf.rs.min():.1f} / {np.median(surf.rs):.1f} / {surf.rs.max():.1f} m")
+    print(f"Hill radius in the Didymos system r_H = {rH:.0f} m"
+          + ("" if a.r_hill else f"  (a = {a.a_orbit:.0f} m, M_Didymos = {a.m_didymos:.2e} kg)"))
+
+    # crater centre: impact point moved with the body COM (no rotation in the run)
+    if R is not None:
+        xc0 = (R["m"][tgt, None] * R["x"][tgt]).sum(0) / R["m"][tgt].sum()
+    else:
+        xc0 = np.zeros(3)
+    xcr = np.array(a.impact_point) - xc0           # relative to the COM
+
+    free = tgt & ~body
+    on = free & (hgt < hs)
+    flow = on & (vr > a.vset)                       # moving on / in the body
+    above = free & (hgt >= hs)
+    ab_b, ab_e = above & b, above & ~b
+    inH = r < rH
+    cats = [("moving on/in the body (h < %.1f m)" % hs, flow),
+            ("above surface, bound,    r < r_H", ab_b & inH),
+            ("above surface, bound,    r > r_H", ab_b & ~inH),
+            ("above surface, escaping, r < r_H", ab_e & inH),
+            ("above surface, escaping, r > r_H", ab_e & ~inH)]
+    print("\nunsettled material                         mass                     N     v_med[m/s]")
+    for name, s in cats:
+        ms = m[s].sum()
+        vm = np.median(vr[s]) if s.any() else np.nan
+        print(f"  {name:36s} {fmt_mass(ms, Mt)}  {s.sum():9d}  {vm:9.4f}")
+    if flow.any():
+        dcr = np.linalg.norm(xr[flow] - xcr, axis=1)
+        fin = m[flow][dcr < a.crater_radius].sum() / m[flow].sum()
+        print(f"  ({100*fin:.0f} % of the material moving on the body is within {a.crater_radius:.0f} m "
+              f"of the crater centre)")
+
+    # where does the slow material of section 1 sit?
+    print("\nslow speed bins by location (% of the bin mass)")
+    print("  speed [m/s]        resting   on body   bound<rH  bound>rH  escaping")
+    for lo, hi in ((0.0, 0.01), (0.01, 0.03), (0.03, 0.1), (0.1, 0.3)):
+        s = tgt & (vr >= lo) & (vr < hi)
+        ms = m[s].sum()
+        if ms == 0:
+            continue
+        f = [m[s & body].sum() + m[s & on & ~flow].sum(), m[s & flow].sum(),
+             m[s & ab_b & inH].sum(), m[s & ab_b & ~inH].sum(), m[s & ab_e].sum()]
+        print(f"  {lo:5.2f} .. {hi:<5.2f}    " + "  ".join(f"{100*z/ms:8.2f}" for z in f))
+
+    # ballistic fall-back of bound material above the surface (point mass M_bound)
+    sel = np.nonzero(ab_b)[0]
+    print(f"\nballistic fall-back of bound material above the surface (point mass M_bound, from t = {t:.0f} s)")
+    if len(sel) == 0:
+        print("  none")
+        dt = np.zeros(0)
+    else:
+        dt, xl, hit = kepler_landing(xr[sel], vv[sel], GM, surf)
+        ms = m[sel]
+        inside = inH[sel]
+        incr = hit & (np.linalg.norm(xl - xcr, axis=1) < a.crater_radius)
+        print("  lands within        all bound     r < r_H     into crater (< %.0f m)" % a.crater_radius)
+        for lim in (100, 300, 1000, 3000, 10000, 30000):
+            w = dt <= lim
+            print(f"  {lim:7.0f} s       {100*ms[w].sum()/Mt:9.4f} %  {100*ms[w & inside].sum()/Mt:9.4f} %"
+                  f"  {100*ms[w & incr].sum()/Mt:9.4f} %")
+        w = np.isfinite(dt) & (dt > 30000)
+        print(f"  later             {100*ms[w].sum()/Mt:9.4f} %  {100*ms[w & inside].sum()/Mt:9.4f} %"
+              f"  {100*ms[w & incr].sum()/Mt:9.4f} %")
+        w = ~np.isfinite(dt)
+        print(f"  never (q > surf.) {100*ms[w].sum()/Mt:9.4f} %  {100*ms[w & inside].sum()/Mt:9.4f} %"
+              "        (point mass; Didymos decides)")
+
+    # verdict
+    print("\nverdict (fractions of the target mass)")
+    f_flow = m[flow].sum() / Mt
+    print(f"  still flowing on the body:                   {100*f_flow:8.4f} %")
+    tgt_frac = a.settle_frac
+    if len(sel):
+        use = inH[sel] & np.isfinite(dt)
+        f_ret = ms[use].sum() / Mt
+        f_cr = ms[use & incr].sum() / Mt
+        print(f"  bound, r < r_H, still to come down:          {100*f_ret:8.4f} %"
+              f"   (into the crater: {100*f_cr:.4f} %)")
+        if use.any():
+            o = np.argsort(dt[use])
+            cm = np.cumsum(ms[use][o])
+            q = [dt[use][o][min(np.searchsorted(cm, z * cm[-1]), len(o) - 1)] for z in (0.5, 0.9, 0.99)]
+            print(f"  ... 50 / 90 / 99 % of it landed by t = " + " / ".join(f"{t+z:.0f}" for z in q) + " s")
+            # time after which less than settle_frac of the target mass is still in the air
+            rem = cm[-1] - cm
+            k = np.searchsorted(-rem, -tgt_frac * Mt)
+            t_need = t + (dt[use][o][min(k, len(o) - 1)] if f_ret > tgt_frac else 0.0)
+        else:
+            t_need = t
+    else:
+        f_ret, t_need = 0.0, t
+    if f_flow < tgt_frac and f_ret < tgt_frac:
+        print(f"  -> settled: both below {100*tgt_frac:.2g} % of the target mass. t = {t:.0f} s is long enough.")
+    else:
+        if f_ret >= tgt_frac:
+            print(f"  -> fall-back drops below {100*tgt_frac:.2g} % of the target mass at t ~ {t_need:.0f} s "
+                  "(point mass, ignores Didymos)")
+        if f_flow >= tgt_frac:
+            print(f"  -> {100*f_flow:.3f} % of the target mass still moves on the body (> {100*tgt_frac:.2g} %); "
+                  "compare with an earlier dump to see whether it is dying out")
+    print("  material beyond r_H and escaping material are left to the N-body integration with Didymos")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -115,6 +342,20 @@ def main():
     ap.add_argument("--link", type=float, default=1.5, help="FoF linking length [units of a]")
     ap.add_argument("--nmin", type=int, default=20, help="min. particles per clump")
     ap.add_argument("--clumps-out", help="write clump table (CSV)")
+    g5 = ap.add_argument_group("5. settling")
+    g5.add_argument("--no-settle", action="store_true", help="skip section 5")
+    g5.add_argument("--vset", type=float, default=0.01, help="'at rest' below this speed [m/s]")
+    g5.add_argument("--hsurf", type=float, default=2.0,
+                    help="surface layer thickness [units of a]; below = on the body, above = in flight")
+    g5.add_argument("--r-hill", type=float, help="Hill radius [m] (default: from --a-orbit, --m-didymos)")
+    g5.add_argument("--a-orbit", type=float, default=1152.0, help="Dimorphos semi-major axis [m] (post impact)")
+    g5.add_argument("--m-didymos", type=float, default=5.4e11, help="Didymos mass [kg]")
+    g5.add_argument("--impact-point", type=float, nargs=3, default=[-8.06, -80.73, -12.62],
+                    help="impact point in the initial frame [m]")
+    g5.add_argument("--crater-radius", type=float, default=40.0,
+                    help="radius around the impact point counted as crater [m]")
+    g5.add_argument("--settle-frac", type=float, default=1e-3,
+                    help="'settled' when less than this fraction of the target mass is unsettled")
     a = ap.parse_args()
     t0 = _time.time()
     A = a.spacing
@@ -221,6 +462,8 @@ def main():
     mov = np.nonzero(tgt & (vr > a.vlo))[0]
     if len(mov) < a.nmin:
         print("hardly any moving material")
+        if not a.no_settle:
+            settle_report(a, D, x, v, m, tgt, b, Mb, xc, vc, vr, r, R, A)
         print(f"\ndone in {_time.time()-t0:.0f} s")
         return
     xm = x[mov]
@@ -294,6 +537,8 @@ def main():
             for r_ in rows:
                 f.write(",".join(f"{r_[k]:.6g}" if isinstance(r_[k], float) else str(r_[k]) for k in keys) + "\n")
         print(f"\n  clump table -> {a.clumps_out}")
+    if not a.no_settle:
+        settle_report(a, D, x, v, m, tgt, b, Mb, xc, vc, vr, r, R, A)
     print(f"\ndone in {_time.time()-t0:.0f} s")
 
 
