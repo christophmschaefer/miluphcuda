@@ -123,7 +123,7 @@
 // matrix is still reset (see kernel.cu). The velocity gradient stays exact for linear velocity fields, except at
 // particles with a scaled or reset matrix.
 // Requires TENSORIAL_CORRECTION, SPH_EQU_VERSION 1 and the old school correction scheme in kernel.cu.
-#define TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM 0
+#define TENSORIAL_CORRECTION_CONSERVE_ANGULAR_MOMENTUM 1
 
 
 
@@ -252,9 +252,11 @@
 // adds gradient of the smoothing length to continuity equation, equation of motion, energy equation
 #define SML_CORRECTION 0
 
-// if set to 0, h = (h_i + h_j)/2  is used to calculate W_ij
-// if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2
-#define AVERAGE_KERNELS 0
+// if set to 0, W_ij = W(h) with h = (h_i + h_j)/2 if VARIABLE_SML, INTEGRATE_SML or DEAL_WITH_TOO_MANY_INTERACTIONS
+//              is set, otherwise h = h_i: then grad W_ij != -grad W_ji for h_i != h_j (e.g. materials with
+//              different sml), and momentum and angular momentum are not conserved exactly
+// if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2, symmetric in i and j
+#define AVERAGE_KERNELS 1
 
 // important switch: if the simulations yields at some point too many interactions for
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be set to 0
