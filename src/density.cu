@@ -107,9 +107,8 @@ __global__ void calculateDensity(int *interactions) {
                 if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[ip]] || p_rhs.materialId[ip] == EOS_TYPE_IGNORE) {
                     continue;
                 }
-#if (VARIABLE_SML || INTEGRATE_SML || DEAL_WITH_TOO_MANY_INTERACTIONS)
+                // symmetric in i and j
                 sml = 0.5*(p.h[i] + p.h[ip]);
-#endif
 
                 dx[0] = p.x[i] - p.x[ip];
 #if DIM > 1

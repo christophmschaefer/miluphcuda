@@ -393,15 +393,12 @@ __global__ void CalcDivvandCurlv(int *interactions)
             curlv[m] = 0;
             dWdx[m] = 0;
         }
-        sml = p.h[i];
         /* interaction partner loop */
         for (m = 0; m < k; m++) {
             interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + m;
             j = interactions[interactions_index];
-            /* get the kernel values */
-#if VARIABLE_SML
-            sml = 0.5 *(p.h[i] + p.h[j]);
-#endif
+            /* get the kernel values, symmetric in i and j */
+            sml = 0.5*(p.h[i] + p.h[j]);
             dx[0] = p.x[i] - p.x[j];
 #if DIM > 1
             dx[1] = p.y[i] - p.y[j];
@@ -651,10 +648,7 @@ __global__ void tensorialCorrection(int *interactions)
 #else
             // use the same smoothing length as the force loops in internal_forces.cu and viscosity.cu,
             // otherwise B_i * grad W_ij is not exact for linear fields where h_i != h_j
-            h = p.h[i];
-# if (VARIABLE_SML || INTEGRATE_SML || DEAL_WITH_TOO_MANY_INTERACTIONS)
             h = 0.5*(p.h[i] + p.h[j]);
-# endif
             kernel(&W, dWdx, &dWdr, dr, h);
 #endif
 

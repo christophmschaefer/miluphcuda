@@ -92,9 +92,8 @@ __global__ void calculateXSPHchanges(int *interactions)
                 continue;
             }
 
-#if VARIABLE_SML
+            // symmetric in i and j
             hbar = 0.5*(p.h[i] + p.h[j]);
-#endif
 
             dx[0] = p.x[i] - p.x[j];
 #if DIM > 1

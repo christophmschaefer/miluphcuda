@@ -103,10 +103,8 @@ __global__ void calculate_shear_stress_tensor(int *interactions)
             dWdr = 0.0;
             r = sqrt(r);
 
-            sml = p.h[i];
-#if (VARIABLE_SML || INTEGRATE_SML || DEAL_WITH_TOO_MANY_INTERACTIONS)
+            // symmetric in i and j
             sml = 0.5*(p.h[i] + p.h[j]);
-#endif
 
 
 #if AVERAGE_KERNELS

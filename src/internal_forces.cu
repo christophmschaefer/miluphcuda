@@ -290,9 +290,8 @@ __global__ void internalForces(int *interactions) {
              * we need to determine the correct velocity, pressure and stress
              * for it
              */
-#if (VARIABLE_SML || INTEGRATE_SML || DEAL_WITH_TOO_MANY_INTERACTIONS)
+            // symmetric in i and j, so that grad W_ij = -grad W_ji also for h_i != h_j (momentum conservation)
             sml = 0.5*(p.h[i] + p.h[j]);
-#endif
             if (boundia) {
                 /* set quantities for boundary particle */
                 setQuantitiesFixedVirtualParticles(i, j, &vxj, &vyj, &vzj, &p.rho[j], &p.p[j], Sj);
@@ -1361,9 +1360,8 @@ __global__ void calculatedeviatoricStress(int *interactions)
             }
             r = sqrt(r);
 
-#if (VARIABLE_SML || INTEGRATE_SML || DEAL_WITH_TOO_MANY_INTERACTIONS)
+            // symmetric in i and j
             sml = 0.5*(p.h[i] + p.h[j]);
-#endif
 
             // get kernel values for this interaction
 #if AVERAGE_KERNELS

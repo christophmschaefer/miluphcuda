@@ -252,10 +252,9 @@
 // adds gradient of the smoothing length to continuity equation, equation of motion, energy equation
 #define SML_CORRECTION 0
 
-// if set to 0, W_ij = W(h) with h = (h_i + h_j)/2 if VARIABLE_SML, INTEGRATE_SML or DEAL_WITH_TOO_MANY_INTERACTIONS
-//              is set, otherwise h = h_i: then grad W_ij != -grad W_ji for h_i != h_j (e.g. materials with
-//              different sml), and momentum and angular momentum are not conserved exactly
-// if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2, symmetric in i and j
+// if set to 0, W_ij = W(h_ij) with h_ij = (h_i + h_j)/2
+// if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2
+// both are symmetric in i and j, grad W_ij = -grad W_ji
 #define AVERAGE_KERNELS 1
 
 // important switch: if the simulations yields at some point too many interactions for
