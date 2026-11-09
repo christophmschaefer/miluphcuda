@@ -256,7 +256,10 @@
 // if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2
 // both are symmetric in i and j, grad W_ij = -grad W_ji. The neighbour search finds all pairs within the support
 // of W_ij, |r_ij| < (h_i + h_j)/2 or < max(h_i, h_j), respectively (SML_PAIR_SUPPORT in tree.h)
-#define AVERAGE_KERNELS 1
+// 0 needs one kernel evaluation per pair and finds fewer partners, and works with DEAL_WITH_TOO_MANY_INTERACTIONS.
+// 1 lets each particle act with its own sml, which may be preferable where the sml of neighbouring particles
+// differ strongly (e.g. VARIABLE_SML with expanding material); for equal sml both are identical
+#define AVERAGE_KERNELS 0
 
 // important switch: if the simulations yields at some point too many interactions for
 // one particle (given by MAX_NUM_INTERACTIONS), then its smoothing length will be set to 0
