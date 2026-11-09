@@ -321,6 +321,13 @@ void rightHandSide()
                     interactions)));
     cudaVerify(cudaDeviceSynchronize());
 #endif
+    // largest sml in each tree node, the bound for the neighbour search; after all changes of the sml above
+# if DEBUG_RHS
+    printf("calling calculateNodeSmlMax\n");
+# endif
+    cudaVerify(cudaMemset(nodeSmlMaxd, 0, memorySizeForTree));
+    cudaVerifyKernel((calculateNodeSmlMax<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>()));
+    cudaVerify(cudaDeviceSynchronize());
 #if DEAL_WITH_TOO_MANY_INTERACTIONS // make sure that a particle does not get more than MAX_NUM_INTERACTIONS
 # if DEBUG_RHS
     printf("calling nearNeighbourSearch_modify_sml\n");

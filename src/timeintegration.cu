@@ -68,6 +68,9 @@ __device__ int errorSmallEnough = FALSE;
 __constant__ int isRelaxationRun = FALSE;
 __constant__ volatile int *childList;
 int *childListd;
+// largest smoothing length of the particles in each inner node of the tree (see calculateNodeSmlMax)
+__constant__ double *nodeSmlMax;
+double *nodeSmlMaxd;
 
 /* time variables */
 void (*integrator)();

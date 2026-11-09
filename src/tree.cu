@@ -34,6 +34,9 @@
 #define MAX_VARIABLE_SML_ITERATIONS 4
 // tolerance value. if found number of interactions is as close as TOLERANCE_WANTED_NUMBER_OF_INTERACTIONS, we stop iterating
 #define TOLERANCE_WANTED_NUMBER_OF_INTERACTIONS 5
+// nearNeighbourSearch_modify_sml: give up if a particle has still too many interactions after this many reductions
+// of its sml (its partners have a larger sml, so that the pair support does not shrink with its own sml)
+#define MAX_SML_REDUCTIONS 50
 
 
 __device__ int treeMaxDepth = 0;
@@ -49,6 +52,7 @@ extern __device__ double minz, maxz;
 #endif
 extern __device__ int movingparticles;
 extern __constant__ volatile int *childList;
+extern __constant__ double *nodeSmlMax;
 
 
 
@@ -642,6 +646,48 @@ __global__ void knnNeighbourSearch(int *interactions)
 #endif
 
 
+/*
+ * Largest smoothing length of the particles in each inner node of the tree. The neighbour search opens a node only
+ * if a particle in it can be within the pair support SML_PAIR_SUPPORT(h_i, h_j), which is monotonic in h_j, so the
+ * largest h_j in the node is a bound. Each particle walks down its path in the tree, which is found with the same
+ * comparisons as in buildTree, and raises the value of every node on it. nodeSmlMax has to be zero for all nodes
+ * before the call, and the sml must not grow between this call and the neighbour search.
+ */
+__global__ void calculateNodeSmlMax(void)
+{
+    register int i, inc, node, child, childIndex;
+    register double h;
+
+    inc = blockDim.x * gridDim.x;
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+        h = p.h[i];
+        if (!(h > 0.0))
+            continue;
+        node = numNodes - 1;
+        do {
+            // for h >= 0 the order of the bit patterns as unsigned integers is the order of the doubles
+            if (h > nodeSmlMax[node])
+                atomicMax((unsigned long long int *) &nodeSmlMax[node],
+                          (unsigned long long int) __double_as_longlong(h));
+            childIndex = 0;
+            if (p.x[i] > p.x[node]) childIndex = 1;
+#if DIM > 1
+            if (p.y[i] > p.y[node]) childIndex += 2;
+#if DIM == 3
+            if (p.z[i] > p.z[node]) childIndex += 4;
+#endif
+#endif
+            child = childList[childListIndex(node, childIndex)];
+            node = child;
+        } while (child >= numParticles);
+#if DEBUG_DEVEL
+        if (child != i)
+            printf("Warning: calculateNodeSmlMax: particle %d not found in its leaf (found %d)\n", i, child);
+#endif
+    }
+}
+
+
 /* search interaction partners for each particle */
 /* the smoothing length is changed if MAX_NUM_INTERACTIONS is reached */
 __global__ void nearNeighbourSearch_modify_sml(int *interactions)
@@ -671,6 +717,8 @@ __global__ void nearNeighbourSearch_modify_sml(int *interactions)
 #endif
 	    double sml; /* smoothing length of particle */
         volatile double smlj; /* smoothing length of potential interaction partner */
+        double hij; /* support radius of the pair kernel */
+        int numberOfReductions = 0;
 
 
 
@@ -682,7 +730,6 @@ start_interaction_search_for_particle:
 		numberOfInteractions = 0;
 		r = radius * 0.5; // because we start with root children
         sml = p.h[i];
-		interactionDistance = (r + sml);
         // flag for numberOfInteractions < MAX_NUM_INTERACTIONS
         interactions_OK = 0;
 
@@ -700,6 +747,10 @@ start_interaction_search_for_particle:
 					dz = z - p.z[child];
 #endif
 #endif
+					if (child >= numParticles) {
+						// inner node: open it only if it can contain a particle within the pair support
+						interactionDistance = r + SML_PAIR_SUPPORT(sml, nodeSmlMax[child]);
+					}
 					if (child < numParticles) {
 						d = dx*dx;
 #if DIM > 1
@@ -710,9 +761,10 @@ start_interaction_search_for_particle:
 #endif
 
                         smlj = p.h[child];
+                        hij = SML_PAIR_SUPPORT(sml, smlj);
 
                         // make sure, all interactions are symmetric
-						if (d < sml*sml && d < smlj*smlj) {
+						if (d < hij*hij) {
                             // check if we are still safe with the current numberOfInteractions
                             if (numberOfInteractions < MAX_NUM_INTERACTIONS) {
 							    interactions[i * MAX_NUM_INTERACTIONS + numberOfInteractions] = child;
@@ -732,7 +784,6 @@ start_interaction_search_for_particle:
 						currentNodeIndex[depth] = nodeIndex;
 						depth++;
 						r *= 0.5;
-						interactionDistance = (r + sml);
 						if (depth >= MAXDEPTH) {
 							printf("Error, maxdepth reached!");
                             assert(depth < MAXDEPTH);
@@ -745,10 +796,16 @@ start_interaction_search_for_particle:
 
 			depth--;
 			r *= 2.0;
-			interactionDistance = (r + sml);
 		} while (depth >= 0);
 
 		if (numberOfInteractions >= MAX_NUM_INTERACTIONS) {
+            if (++numberOfReductions > MAX_SML_REDUCTIONS) {
+                printf("ERROR: particle %d has still %d >= %d interactions after %d reductions of its sml to %g. "
+                       "Its partners have a larger sml (pair support %s). Increase MAX_NUM_INTERACTIONS.\n",
+                       i, numberOfInteractions, MAX_NUM_INTERACTIONS, MAX_SML_REDUCTIONS, p.h[i],
+                       AVERAGE_KERNELS ? "max(h_i, h_j)" : "(h_i + h_j)/2");
+                assert(0);
+            }
             // now, we lower the sml according to the dimension and the ratio
             sml = pow((double) MAX_NUM_INTERACTIONS/(double) numberOfInteractions, 1./DIM) * p.h[i];
             // and remove another 20%
@@ -794,6 +851,7 @@ __global__ void nearNeighbourSearch(int *interactions)
 #endif
 	    double sml; /* smoothing length of particle */
         double smlj; /* smoothing length of potential interaction partner */
+        double hij; /* support radius of the pair kernel */
 		// start at root
 		depth = 0;
 		currentNodeIndex[depth] = numNodes - 1;
@@ -802,7 +860,6 @@ __global__ void nearNeighbourSearch(int *interactions)
 		r = radius * 0.5; // because we start with root children
         sml = p.h[i];
         p.noi[i] = 0;
-		interactionDistance = (r + sml);
 
 		do {
 
@@ -832,6 +889,10 @@ __global__ void nearNeighbourSearch(int *interactions)
 #endif
 
 
+					if (child >= numParticles) {
+						// inner node: open it only if it can contain a particle within the pair support
+						interactionDistance = r + SML_PAIR_SUPPORT(sml, nodeSmlMax[child]);
+					}
 					if (child < numParticles) {
                         if (p_rhs.materialId[child] == EOS_TYPE_IGNORE) {
                             continue;
@@ -845,8 +906,9 @@ __global__ void nearNeighbourSearch(int *interactions)
 #endif
 
                         smlj = p.h[child];
+                        hij = SML_PAIR_SUPPORT(sml, smlj);
 
-						if (d < sml*sml && d < smlj*smlj) {
+						if (d < hij*hij) {
 							interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + numberOfInteractions;
 							// interactions[i * MAX_NUM_INTERACTIONS + numberOfInteractions] = child;
 							interactions[interactions_index] = child;
@@ -879,7 +941,6 @@ __global__ void nearNeighbourSearch(int *interactions)
 						currentNodeIndex[depth] = nodeIndex;
 						depth++;
 						r *= 0.5;
-						interactionDistance = (r + sml);
 						if (depth >= MAXDEPTH) {
 							printf("Error, maxdepth reached!");
                             assert(depth < MAXDEPTH);
@@ -892,7 +953,6 @@ __global__ void nearNeighbourSearch(int *interactions)
 
 			depth--;
 			r *= 2.0;
-			interactionDistance = (r + sml);
 		} while (depth >= 0);
 
 		if (numberOfInteractions >= MAX_NUM_INTERACTIONS) {

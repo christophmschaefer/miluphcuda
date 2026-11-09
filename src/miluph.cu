@@ -1158,6 +1158,10 @@ int main(int argc, char *argv[])
         fprintf(stderr, "copying of childList to device failed\n");
         exit(1);
     }
+    if (cudaSuccess != cudaMemcpyToSymbol(nodeSmlMax, &nodeSmlMaxd, sizeof(void*))) {
+        fprintf(stderr, "copying of nodeSmlMax to device failed\n");
+        exit(1);
+    }
 
     // create conserved quantities logfile and write header
     if(param.hdf5input){

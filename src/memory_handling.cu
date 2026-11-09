@@ -1103,6 +1103,7 @@ int init_allocate_memory(void)
 
 	cudaVerify(cudaMalloc((void**)&interactions, memorySizeForInteractions*MAX_NUM_INTERACTIONS));
 	cudaVerify(cudaMalloc((void**)&childListd, memorySizeForChildren));
+	cudaVerify(cudaMalloc((void**)&nodeSmlMaxd, memorySizeForTree));
 #if DIM > 2
 	cudaVerify(cudaMalloc((void**)&p_device.z, memorySizeForTree));
 	cudaVerify(cudaMalloc((void**)&p_device.g_z, memorySizeForParticles));
@@ -1358,6 +1359,7 @@ int free_memory()
 	cudaVerify(cudaFree(p_device.materialId0));
 	cudaVerify(cudaFree(p_device.deactivate_me_flag));
 	cudaVerify(cudaFree(childListd));
+	cudaVerify(cudaFree(nodeSmlMaxd));
 #if DIM > 2
 	cudaVerify(cudaFree(p_device.z));
 	cudaVerify(cudaFree(p_device.g_z));

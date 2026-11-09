@@ -375,6 +375,8 @@ extern int *interactions_host;
 extern int *childList_host;
 extern int *childListd;
 extern __constant__ volatile int *childList;
+extern double *nodeSmlMaxd;
+extern __constant__ double *nodeSmlMax;
 
 extern int numberOfParticles;
 extern int maxNumberOfParticles;

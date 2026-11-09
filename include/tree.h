@@ -25,6 +25,17 @@
 #define _TREE_H
 #include "parameter.h"
 
+// support radius of the pair kernel W_ij (see AVERAGE_KERNELS in parameter.h and the pair loops in
+// internal_forces.cu): particles i and j interact if |r_ij| < SML_PAIR_SUPPORT(h_i, h_j). Symmetric in i and j,
+// and monotonic in both arguments, which the neighbour search relies on.
+#if AVERAGE_KERNELS
+// W_ij = (W(h_i) + W(h_j))/2
+# define SML_PAIR_SUPPORT(hi, hj) (fmax((hi), (hj)))
+#else
+// W_ij = W((h_i + h_j)/2)
+# define SML_PAIR_SUPPORT(hi, hj) (0.5*((hi) + (hj)))
+#endif
+
 
 extern __device__ int treeMaxDepth;
 
@@ -36,6 +47,8 @@ __global__ void measureTreeChange(int *movingparticlesPerBlock);
 __global__ void calculateCentersOfMass();
 
 __global__ void setEmptyMassForInnerNodes(void);
+
+__global__ void calculateNodeSmlMax(void);
 
 __global__ void nearNeighbourSearch(int *interactions);
 __global__ void nearNeighbourSearch_modify_sml(int *interactions);

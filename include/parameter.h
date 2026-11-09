@@ -254,7 +254,8 @@
 
 // if set to 0, W_ij = W(h_ij) with h_ij = (h_i + h_j)/2
 // if set to 1, W_ij = ( W(h_i) + W(h_j) ) / 2
-// both are symmetric in i and j, grad W_ij = -grad W_ji
+// both are symmetric in i and j, grad W_ij = -grad W_ji. The neighbour search finds all pairs within the support
+// of W_ij, |r_ij| < (h_i + h_j)/2 or < max(h_i, h_j), respectively (SML_PAIR_SUPPORT in tree.h)
 #define AVERAGE_KERNELS 1
 
 // important switch: if the simulations yields at some point too many interactions for
