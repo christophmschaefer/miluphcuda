@@ -10,6 +10,10 @@ Ejecta : particles faster than --vcut (relative to the bulk) -> density grid
          speed grid (nearest particle, smoothed). Rendered as a real volume:
          sunlit dust (forward scattering) + optional speed-coloured glow.
 
+Boulder ejecta (vol-12): --ej-boulders renders ejecta of boulder material
+(material_type 1) as a second volume with its own colour (--ej-boulder-color)
+and density factor (--ej-boulder-density); the matrix ejecta stay grey dust.
+
 Ejecta kernel (vol-11): if the frames contain rk (k-th neighbour distance,
 precomputed by sph2blender.py on all particles), it sets the adaptive splat
 radius; otherwise the k-neighbour search runs here (slow, ejecta only).
@@ -43,7 +47,7 @@ import functools
 import bpy
 import numpy as np
 
-VERSION = "vol-11"
+VERSION = "vol-12"
 print = functools.partial(print, flush=True)   # Blender -b may drop buffered stdout
 from mathutils import Vector
 
@@ -102,6 +106,9 @@ g.add_argument("--show-projectile", action="store_true",
                help="render the projectile particles (41 SPH particles, ~4-6 km/s backwards after impact)")
 g.add_argument("--ej-vmax", type=float, default=0.0,
                help="skip ejecta faster than this [m/s] (single jetting particles), 0 = keep all")
+g.add_argument("--ej-boulders", action="store_true",
+               help="render ejecta of boulder material (mat 1) as a separate, coloured volume")
+g.add_argument("--boulder-mat", type=int, default=1, help="material id of the boulders")
 g.add_argument("--ej-blur", type=int, default=1, help="extra smoothing of the ejecta density [voxels]")
 
 s = ap.add_argument_group("look")
@@ -114,6 +121,10 @@ s.add_argument("--ej-gamma", type=float, default=0.6,
 s.add_argument("--ej-gamma-end", type=float,
                help="ej-gamma at the end of the film, linear interpolation (default: constant)")
 s.add_argument("--ej-albedo", type=float, default=0.8)
+s.add_argument("--ej-boulder-color", type=float, nargs=3, default=[0.85, 0.30, 0.08],
+               metavar=("R", "G", "B"), help="scattering colour (albedo, linear RGB) of boulder ejecta")
+s.add_argument("--ej-boulder-density", type=float, default=1.0,
+               help="extinction of boulder ejecta relative to --ej-density (>1: more visible)")
 s.add_argument("--ej-aniso", type=float, default=0.45, help="forward scattering (-1..1)")
 s.add_argument("--glow", type=float, default=0.8, help="emission of ejecta (0 = only sunlit dust)")
 s.add_argument("--vcmap", type=float, nargs=2, default=[0.4, 40.0], metavar=("VMIN", "VMAX"),
@@ -154,7 +165,7 @@ for name, val in (("--vcut", V0), ("--vcut-end", A.vcut_end),
     if val is not None and val <= 0:
         raise SystemExit(f"{name} must be > 0 (geometric interpolation)")
 
-BODY, EJECTA = "SPH_Body", "SPH_Ejecta"
+BODY, EJECTA, EJECTA_B = "SPH_Body", "SPH_Ejecta", "SPH_Ejecta_Boulders"
 
 # ----------------------------------------------------------------------------
 # data: index, loading, Hermite interpolation
@@ -266,7 +277,8 @@ def apply_params(u):
             continue
         nd, ngm = nt.nodes.get("EJ_DENS"), nt.nodes.get("EJ_GAMMA")
         if nd is not None:
-            nd.inputs[1].default_value = A.ej_density
+            nd.inputs[1].default_value = A.ej_density * (
+                A.ej_boulder_density if m.name.startswith("EjectaBoulders") else 1.0)
         if ngm is not None:
             ngm.inputs[1].default_value = A.ej_gamma
 
@@ -402,7 +414,8 @@ def split_and_shade(st, target):
         diagnose(st["x"][ej], spd[ej], st.get("t", float("nan")))
     rk = st.get("rk")
     rad, wgt = adaptive_kernel(st["x"][ej], None if rk is None else rk[ej])
-    return (st["x"][body], rgba), (st["x"][ej], u.astype(np.float32), rad, wgt)
+    isb = mat[ej] == A.boulder_mat
+    return (st["x"][body], rgba), (st["x"][ej], u.astype(np.float32), rad, wgt, isb)
 
 
 # ----------------------------------------------------------------------------
@@ -516,8 +529,8 @@ def build_body(scene):
 # ----------------------------------------------------------------------------
 # ejecta: points -> density grid (+ box filter) and speed grid -> volume
 # ----------------------------------------------------------------------------
-def ejecta_material():
-    m = bpy.data.materials.new("Ejecta")
+def ejecta_material(name="Ejecta", albedo=None, dfac=1.0):
+    m = bpy.data.materials.new(name)
     nt = m.node_tree
     nt.nodes.clear()
     out = N(nt, "ShaderNodeOutputMaterial", (900, 0))
@@ -533,10 +546,11 @@ def ejecta_material():
     L(nt, clamp.outputs[0], pw.inputs[0])
     dens = N(nt, "ShaderNodeMath", (200, 150), operation="MULTIPLY")
     dens.name = "EJ_DENS"
-    dens.inputs[1].default_value = A.ej_density
+    dens.inputs[1].default_value = A.ej_density * dfac
     L(nt, pw.outputs[0], dens.inputs[0])
     L(nt, dens.outputs[0], vol.inputs["Density"])
-    vol.inputs["Color"].default_value = (A.ej_albedo,) * 3 + (1,)
+    vol.inputs["Color"].default_value = (tuple(albedo) if albedo is not None
+                                         else (A.ej_albedo,) * 3) + (1,)
     vol.inputs["Anisotropy"].default_value = A.ej_aniso
     ramp = N(nt, "ShaderNodeValToRGB", (0, -250))
     els = ramp.color_ramp.elements
@@ -555,9 +569,9 @@ def ejecta_material():
     return m
 
 
-def build_ejecta(scene):
-    obj = new_object(scene, EJECTA)
-    ng, gi, go = new_geo_group("EjectaVolume")
+def build_ejecta(scene, name=EJECTA, material=None):
+    obj = new_object(scene, name)
+    ng, gi, go = new_geo_group(name + "_Volume")
     pts = N(ng, "GeometryNodeMeshToPoints", (-1000, 0))
     L(ng, gi.outputs[0], pts.inputs["Mesh"])
     p2v = N(ng, "GeometryNodePointsToVolume", (-750, 0))
@@ -640,7 +654,7 @@ def build_ejecta(scene):
     L(ng, st1.outputs[0], st2.inputs["Volume"])
     L(ng, smean.outputs[0], st2.inputs["Grid"])
     setm = N(ng, "GeometryNodeSetMaterial", (1100, 0))
-    setm.inputs["Material"].default_value = ejecta_material()
+    setm.inputs["Material"].default_value = material or ejecta_material()
     L(ng, st2.outputs[0], setm.inputs["Geometry"])
     L(ng, setm.outputs[0], go.inputs[0])
     obj.modifiers.new("Volume", "NODES").node_group = ng
@@ -805,6 +819,9 @@ def build_scene():
         scene.collection.children.unlink(c)
     build_body(scene)
     build_ejecta(scene)
+    if A.ej_boulders:
+        build_ejecta(scene, EJECTA_B, ejecta_material("EjectaBoulders", A.ej_boulder_color,
+                                                      A.ej_boulder_density))
     build_world(scene)
     build_lights_camera(scene)
     if A.didymos:
@@ -863,6 +880,9 @@ def main():
     else:
         scene = build_scene()
     body, ejecta = bpy.data.objects[BODY], bpy.data.objects[EJECTA]
+    ejecta_b = bpy.data.objects.get(EJECTA_B)
+    if A.ej_boulders and ejecta_b is None:
+        raise SystemExit("--ej-boulders with --reuse: the .blend has no boulder ejecta volume")
     os.makedirs(A.out, exist_ok=True)
     scene.frame_start, scene.frame_end = 0, A.frames - 1
     # jobs: (blender frame, simulation time, film position 0..1, output file, skip if exists)
@@ -888,10 +908,20 @@ def main():
         tgt = target_at(cam_easing(u))
         st = state_at(t)
         st["t"] = t
-        (xb, cb), (xe, ue, re, we) = split_and_shade(st, tgt)
+        (xb, cb), (xe, ue, re, we, isb) = split_and_shade(st, tgt)
         set_points(body, xb, ("col", "FLOAT_COLOR", "color", cb))
-        set_points(ejecta, xe, ("speed", "FLOAT", "value", ue),
-                   ("kernel_r", "FLOAT", "value", re), ("weight", "FLOAT", "value", we))
+        sel_m = ~isb if A.ej_boulders else np.ones(len(xe), bool)
+        set_points(ejecta, xe[sel_m], ("speed", "FLOAT", "value", ue[sel_m]),
+                   ("kernel_r", "FLOAT", "value", re[sel_m]), ("weight", "FLOAT", "value", we[sel_m]))
+        if ejecta_b is not None:
+            if A.ej_boulders:
+                set_points(ejecta_b, xe[isb], ("speed", "FLOAT", "value", ue[isb]),
+                           ("kernel_r", "FLOAT", "value", re[isb]),
+                           ("weight", "FLOAT", "value", we[isb]))
+            else:
+                set_points(ejecta_b, xe[:0], ("speed", "FLOAT", "value", ue[:0]),
+                           ("kernel_r", "FLOAT", "value", re[:0]),
+                           ("weight", "FLOAT", "value", we[:0]))
         scene.frame_set(f)
         if not A.reuse:
             place_camera(scene, u)
@@ -907,7 +937,9 @@ def main():
         bpy.ops.render.render(write_still=True)
         print(f"{fname}  t = {t:8.4f} s  u = {u:.3f}  vcut = {A.vcut:.3g}  "
               f"ej-density = {A.ej_density:.3g}  ej-gamma = {A.ej_gamma:.3g}  "
-              f"body {len(xb)}  ejecta {len(xe)}  -> {path}", flush=True)
+              f"body {len(xb)}  ejecta {len(xe)}"
+              + (f" (boulder {int(isb.sum())})" if A.ej_boulders else "")
+              + f"  -> {path}", flush=True)
 
 
 main()
