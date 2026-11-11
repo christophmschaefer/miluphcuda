@@ -25,9 +25,21 @@
 #define _DENSITY_H
 /** 
  * @brief Calculates the density using the kernel sum. 
- * @details Only executed if INTEGRATE_DENSITY is 0.
+ * @details Executed for all particles if INTEGRATE_DENSITY is 0, otherwise only for materials with
+ * density_via_kernel_sum = 1. With SML_CORRECTION and iterate_sml = 1, the smoothing length h = h(rho) is iterated
+ * (Newton-Raphson); the smoothing lengths of the interaction partners are then read from p_rhs.h_snapshot, which
+ * has to be filled by snapshotSml() before. With iterate_sml = 0 the smoothing lengths are not changed.
  */
-__global__ void calculateDensity(int *interactions);
+__global__ void calculateDensity(int *interactions, int iterate_sml);
+
+#if SML_CORRECTION
+/**
+ * @brief Copies the current smoothing lengths p.h to p_rhs.h_snapshot.
+ * @details Used by calculateDensity() for the SML_CORRECTION iteration, so that all threads read the same
+ * (unchanged) smoothing lengths of their interaction partners while the own ones are updated.
+ */
+__global__ void snapshotSml(void);
+#endif
 
 
 

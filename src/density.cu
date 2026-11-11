@@ -35,10 +35,28 @@ extern __device__ SPH_kernel wendlandc2_p;
 extern __device__ void redo_NeighbourSearch(int particle_id, int *interactions);
 #endif // SML_CORRECTION
 
+#if SML_CORRECTION
+// snapshot of the smoothing lengths before the SML_CORRECTION iteration in calculateDensity():
+// there, the thread of particle i updates p.h[i] while the threads of its interaction partners read it;
+// reading the partners' smoothing lengths from the snapshot makes the result independent of the thread order
+__global__ void snapshotSml(void)
+{
+    int i, inc;
+
+    inc = blockDim.x * gridDim.x;
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+        p_rhs.h_snapshot[i] = p.h[i];
+    }
+}
+#endif // SML_CORRECTION
+
+
 // calculates the density of all particles via the kernel sum
 // is also called for INTEGRATE_DENSITY to determine the densities of particles
 // of materials with density_via_kernel_sum = 1 in material.cfg
-__global__ void calculateDensity(int *interactions) {
+// SML_CORRECTION: if iterate_sml, h_i = h_i(rho_i) is iterated (p_rhs.h_snapshot must be set by snapshotSml() before),
+// otherwise rho and Omega are only computed for the current smoothing lengths, which are not changed
+__global__ void calculateDensity(int *interactions, int iterate_sml) {
     register int64_t interactions_index;
     int i;
     int j;
@@ -47,6 +65,7 @@ __global__ void calculateDensity(int *interactions) {
     int d;
     double W;
     double Wj;
+    double hj;  // smoothing length of the interaction partner
     double dx[DIM];
     double dWdx[DIM];
     double dWdr;
@@ -119,8 +138,14 @@ __global__ void calculateDensity(int *interactions) {
                 if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[ip]] || p_rhs.materialId[ip] == EOS_TYPE_IGNORE) {
                     continue;
                 }
+#if SML_CORRECTION
+                // during the iteration p.h[ip] may be changed concurrently by the thread of particle ip
+                hj = iterate_sml ? p_rhs.h_snapshot[ip] : p.h[ip];
+#else
+                hj = p.h[ip];
+#endif
                 // symmetric in i and j
-                sml = 0.5*(p.h[i] + p.h[ip]);
+                sml = 0.5*(p.h[i] + hj);
 
                 dx[0] = p.x[i] - p.x[ip];
 #if DIM > 1
@@ -145,7 +170,7 @@ __global__ void calculateDensity(int *interactions) {
                 kernel(&W, dWdx, &dWdr, dx, p.h[i]);
                 Wj = 0;
                 // separate dWdrj, dWdr of h_i is still needed for SML_CORRECTION
-                kernel(&Wj, dWdx, &dWdrj, dx, p.h[ip]);
+                kernel(&Wj, dWdx, &dWdrj, dx, hj);
 # if SHEPARD_CORRECTION
                 W /= p_rhs.shepard_correction[i];
                 dWdr /= p_rhs.shepard_correction[i];
@@ -171,21 +196,23 @@ __global__ void calculateDensity(int *interactions) {
                 rho += p.m[ip] * W;
             }
 #if SML_CORRECTION
-            rho_h = p.m[i] * pow(double(h_fact / p.h[i]), DIM);
             dhdrho = -p.h[i] / (DIM * rho);
             sml_omega = 1 - dhdrho * sml_omega_sum;
 
-            // Newton-Raphson method tolerance e-3 (Phantom)
-            f = rho_h - rho;
-            df = -DIM * rho / p.h[i] * sml_omega;
-            h_new = p.h[i] - f / df;
+            if (iterate_sml) {
+                rho_h = p.m[i] * pow(double(h_fact / p.h[i]), DIM);
 
-            // arbitrary set limit for sml change
-            if (h_new > 1.2 * p.h[i]) {
-                h_new = 1.2 * p.h[i];
-            } else if (h_new < 0.8 * p.h[i]) {
-                h_new = 0.8 * p.h[i];
-            }
+                // Newton-Raphson method tolerance e-3 (Phantom)
+                f = rho_h - rho;
+                df = -DIM * rho / p.h[i] * sml_omega;
+                h_new = p.h[i] - f / df;
+
+                // arbitrary set limit for sml change
+                if (h_new > 1.2 * p.h[i]) {
+                    h_new = 1.2 * p.h[i];
+                } else if (h_new < 0.8 * p.h[i]) {
+                    h_new = 0.8 * p.h[i];
+                }
 /*
             //Bisection method (alternative to NR method)
 	        if (cnt == 0 && h_new < 0) {
@@ -212,18 +239,20 @@ __global__ void calculateDensity(int *interactions) {
                 bis_cnt++;
 	        }
 */
-            tolerance = fabs(h_new - p.h[i]) / h_init;
-            // update h only if it is followed by another evaluation of rho and Omega (at most 10 evaluations, i.e.,
-            // 9 updates), so that h_i, rho_i, Omega_i and the interaction list of i belong together
-            if (tolerance > 1e-3 && cnt < 9) {
-                if (h_new < 0){
-	       	        printf("SML_CORRECTION: NEGATIVE SML!");
+                tolerance = fabs(h_new - p.h[i]) / h_init;
+                // update h only if it is followed by another evaluation of rho and Omega (at most 10 evaluations, i.e.,
+                // 9 updates), so that h_i, rho_i, Omega_i and the interaction list of i belong together; the partners'
+                // smoothing lengths are taken from the snapshot, the final consistent pass is done with iterate_sml = 0
+                if (tolerance > 1e-3 && cnt < 9) {
+                    if (h_new < 0){
+                        printf("SML_CORRECTION: NEGATIVE SML!");
+                    }
+                    p.h[i] = h_new;
+                    redo_NeighbourSearch(i, interactions);
+                    cnt++;
+                    iterate = 1;
                 }
-                p.h[i] = h_new;
-                redo_NeighbourSearch(i, interactions);
-                cnt++;
-                iterate = 1;
-            }
+            } // iterate_sml
 #endif // SML_CORRECTION
         } while (iterate);
         // write to global memory

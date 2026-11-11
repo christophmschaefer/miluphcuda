@@ -1160,6 +1160,7 @@ __device__ void redo_NeighbourSearch(int particle_id, int *interactions)
 
 	double sml; /* smoothing length of particle */
     double smlj; /* smoothing length of potential interaction partner */
+    double hij; /* support radius of the pair kernel */
 	// start at root
 	depth = 0;
 	currentNodeIndex[depth] = numNodes - 1;
@@ -1185,6 +1186,11 @@ __device__ void redo_NeighbourSearch(int particle_id, int *interactions)
 #endif
 #endif
 
+				if (child >= numParticles) {
+					// inner node: open it only if it can contain a particle within the pair support; nodeSmlMax
+					// was computed before calculateDensity, i.e. for the smoothing lengths in p_rhs.h_snapshot
+					interactionDistance = r + SML_PAIR_SUPPORT(sml, nodeSmlMax[child]);
+				}
 				if (child < numParticles) {
                     if (p_rhs.materialId[child] == EOS_TYPE_IGNORE) {
                         continue;
@@ -1196,9 +1202,13 @@ __device__ void redo_NeighbourSearch(int particle_id, int *interactions)
 					d += dz*dz;
 #endif
 #endif
-                    smlj = p.h[child];
+                    // the partner's smoothing length may be changed concurrently by its own thread in
+                    // calculateDensity(), hence use the snapshot taken before (see snapshotSml())
+                    smlj = p_rhs.h_snapshot[child];
+                    // same pair criterion as in nearNeighbourSearch
+                    hij = SML_PAIR_SUPPORT(sml, smlj);
 
-					if (d < sml*sml && d < smlj*smlj) {
+					if (d < hij*hij) {
 						interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + numberOfInteractions;
 						interactions[interactions_index] = child;
 						// interactions[i * MAX_NUM_INTERACTIONS + numberOfInteractions] = child;

@@ -270,6 +270,7 @@ struct Particle {
 #endif
 #if SML_CORRECTION
     double *sml_omega; 
+    double *h_snapshot; ///< copy of h before the sml iteration in calculateDensity (only allocated for p_device, use via p_rhs)
 #endif
     double *cs; ///< sound speed of sph particle
     int *noi; ///< number of interaction partners of sph particle

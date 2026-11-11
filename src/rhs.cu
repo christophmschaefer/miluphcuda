@@ -371,8 +371,32 @@ void rightHandSide()
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
 # endif
-    cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>( interactions)));
-//    cudaVerifyKernel((calculateDensity<<<1,1>>>( interactions)));
+#if SML_CORRECTION
+    // iterate h = h(rho) for each particle; the interaction partners' smoothing lengths are read from a snapshot,
+    // since they are changed concurrently by the partners' threads (result independent of the thread order)
+    cudaVerifyKernel((snapshotSml<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>()));
+    cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>(interactions, 1)));
+    cudaVerify(cudaDeviceSynchronize());
+    // during the iteration the interaction list of particle i was built with its new h_i but the partners' old
+    // smoothing lengths, so the lists are not necessarily symmetric and rho, Omega do not belong to the final
+    // smoothing lengths of the partners: redo the neighbour search with the final smoothing lengths (the sml
+    // has grown, so first the node bounds) and compute rho and Omega for them, without changing h anymore
+    cudaVerify(cudaMemset(nodeSmlMaxd, 0, memorySizeForTree));
+    cudaVerifyKernel((calculateNodeSmlMax<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>()));
+    cudaVerify(cudaDeviceSynchronize());
+# if DEAL_WITH_TOO_MANY_INTERACTIONS
+    cudaVerifyKernel((nearNeighbourSearch_modify_sml<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>(
+                    interactions)));
+# else
+    cudaVerifyKernel((nearNeighbourSearch<<<numberOfMultiprocessors * 4, NUM_THREADS_NEIGHBOURSEARCH>>>(
+                    interactions)));
+# endif
+    cudaVerify(cudaDeviceSynchronize());
+    cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>(interactions, 0)));
+#else
+    cudaVerifyKernel((calculateDensity<<<numberOfMultiprocessors * 4, NUM_THREADS_DENSITY>>>(interactions, 0)));
+#endif // SML_CORRECTION
+//    cudaVerifyKernel((calculateDensity<<<1,1>>>(interactions, 0)));
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);

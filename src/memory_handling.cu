@@ -1078,6 +1078,8 @@ int init_allocate_memory(void)
 
 #if SML_CORRECTION
 	cudaVerify(cudaMalloc((void**)&p_device.sml_omega, memorySizeForParticles));
+	// only needed as p_rhs.h_snapshot in calculateDensity(), not for the integrator stages
+	cudaVerify(cudaMalloc((void**)&p_device.h_snapshot, memorySizeForParticles));
 #endif
 
 	cudaVerify(cudaMalloc((void**)&p_device.rho, memorySizeForParticles));
@@ -1395,6 +1397,7 @@ int free_memory()
 #endif
 #if SML_CORRECTION
 	cudaVerify(cudaFree(p_device.sml_omega));
+	cudaVerify(cudaFree(p_device.h_snapshot));
 #endif
 
 #if NAVIER_STOKES
