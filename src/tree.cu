@@ -918,6 +918,8 @@ __global__ void nearNeighbourSearch(int *interactions)
                                 printf("setting the smoothing length for particle %d to 0!\n", i);
                                 p.h[i] = 0.0;
                                 p.noi[i] = 0;
+                                // otherwise p.noi[i] is set to MAX_NUM_INTERACTIONS after the loop
+                                numberOfInteractions = 0;
                                 sml = 0.0;
                                 interactionDistance = 0.0;
                                 p_rhs.materialId[i] = EOS_TYPE_IGNORE;
@@ -1218,6 +1220,8 @@ __device__ void redo_NeighbourSearch(int particle_id, int *interactions)
                             printf("setting the smoothing length for particle %d to 0!\n", i);
                             p.h[i] = 0.0;
                             p.noi[i] = 0;
+                            // otherwise p.noi[i] is set to MAX_NUM_INTERACTIONS after the loop
+                            numberOfInteractions = 0;
                             sml = 0.0;
                             interactionDistance = 0.0;
                             p_rhs.materialId[i] = EOS_TYPE_IGNORE;

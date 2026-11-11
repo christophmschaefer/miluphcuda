@@ -89,6 +89,10 @@ __global__ void calculateDensity(int *interactions, int iterate_sml) {
     
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+        if (p.h[i] <= 0.0) {
+            // deactivated by TOO_MANY_INTERACTIONS_KILL_PARTICLE (h_i = 0), the kernel is not defined
+            continue;
+        }
 #if INTEGRATE_DENSITY
         if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE || matdensity_via_kernel_sum[p_rhs.materialId[i]] < 1) {
                 continue;
@@ -240,6 +244,11 @@ __global__ void calculateDensity(int *interactions, int iterate_sml) {
                     }
                     p.h[i] = h_new;
                     redo_NeighbourSearch(i, interactions);
+                    if (p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+                        // deactivated in redo_NeighbourSearch (TOO_MANY_INTERACTIONS_KILL_PARTICLE, h_i = 0):
+                        // keep rho and Omega of the last evaluation, no further iteration
+                        break;
+                    }
                     cnt++;
                     iterate = 1;
                 }
