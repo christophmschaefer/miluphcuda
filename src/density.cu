@@ -56,6 +56,9 @@ __global__ void snapshotSml(void)
 // of materials with density_via_kernel_sum = 1 in material.cfg
 // SML_CORRECTION: if iterate_sml, h_i = h_i(rho_i) is iterated (p_rhs.h_snapshot must be set by snapshotSml() before),
 // otherwise rho and Omega are only computed for the current smoothing lengths, which are not changed
+// SHEPARD_CORRECTION: the kernel sum is not Shepard-corrected. The Shepard factor S_i = sum_j m_j/rho_j W_ij
+// needs the densities of the same time; it is computed afterwards in shepardCorrection() and used for the
+// other SPH sums only (S_i from the old densities would freeze the density under compression)
 __global__ void calculateDensity(int *interactions, int iterate_sml) {
     register int64_t interactions_index;
     int i;
@@ -117,9 +120,6 @@ __global__ void calculateDensity(int *interactions, int iterate_sml) {
                 dx[d] = 0;
             }
             kernel(&W, dWdx, &dWdr, dx, sml);
-#if SHEPARD_CORRECTION
-            W /= p_rhs.shepard_correction[i];
-#endif
             rho = p.m[i] * W;
 #if SML_CORRECTION
             // self-contribution to d rho_i/d h_i: d(m_i W(0, h_i))/d h_i = -DIM m_i W(0, h_i)/h_i
@@ -165,17 +165,12 @@ __global__ void calculateDensity(int *interactions, int iterate_sml) {
 
             // contribution of interaction
             // for SML_CORRECTION, sml_omega_sum collects d rho_i/d h_i (h_j fixed), with dW/dh = -(DIM W + r dW/dr)/h
-            // for W = h^-DIM f(r/h); the h-dependence of the Shepard factor is neglected
+            // for W = h^-DIM f(r/h)
 #if AVERAGE_KERNELS
                 kernel(&W, dWdx, &dWdr, dx, p.h[i]);
                 Wj = 0;
                 // separate dWdrj, dWdr of h_i is still needed for SML_CORRECTION
                 kernel(&Wj, dWdx, &dWdrj, dx, hj);
-# if SHEPARD_CORRECTION
-                W /= p_rhs.shepard_correction[i];
-                dWdr /= p_rhs.shepard_correction[i];
-                Wj /= p_rhs.shepard_correction[ip];
-# endif
 # if SML_CORRECTION
                 // W_ij = (W(r, h_i) + W(r, h_j))/2, only W(r, h_i) depends on h_i
                 sml_omega_sum -= 0.5 * p.m[ip] * (DIM * W + r * dWdr) / p.h[i];
@@ -183,10 +178,6 @@ __global__ void calculateDensity(int *interactions, int iterate_sml) {
                 W = 0.5 * (W + Wj);
 #else
                 kernel(&W, dWdx, &dWdr, dx, sml);
-# if SHEPARD_CORRECTION
-                W /= p_rhs.shepard_correction[i];
-                dWdr /= p_rhs.shepard_correction[i];
-# endif
 # if SML_CORRECTION
                 // W_ij = W(r, h_ij) with h_ij = (h_i + h_j)/2, hence d W_ij/d h_i = 1/2 dW/dh at h = h_ij
                 sml_omega_sum -= 0.5 * p.m[ip] * (DIM * W + r * dWdr) / sml;

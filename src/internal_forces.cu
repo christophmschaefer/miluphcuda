@@ -113,6 +113,9 @@ __global__ void internalForces(int *interactions) {
 #if INTEGRATE_SML && !SML_CORRECTION && !AVERAGE_KERNELS
     double dWdh_sum;
 #endif
+#if SHEPARD_CORRECTION && AVERAGE_KERNELS
+    double dWdx_raw[DIM];
+#endif
 
 #if INTEGRATE_ENERGY
     double dedt;
@@ -353,6 +356,10 @@ __global__ void internalForces(int *interactions) {
             kernel(&W, dWdx, &dWdr, dr, p.h[i]);
             kernel(&Wj, dWdxj, &dWdrj, dr, p.h[j]);
 # if SHEPARD_CORRECTION
+            // the kernel sum density is not Shepard-corrected (density.cu), keep the uncorrected gradient for its rate
+            for (e = 0; e < DIM; e++) {
+                dWdx_raw[e] = 0.5 * (dWdx[e] + dWdxj[e]);
+            }
             W /= p_rhs.shepard_correction[i];
             Wj /= p_rhs.shepard_correction[j];
             for (e = 0; e < DIM; e++) {
@@ -394,8 +401,18 @@ __global__ void internalForces(int *interactions) {
             vvnablaW += dvz * dWdx[2];
 #endif
 #endif
-            // keep the uncorrected value, vvnablaW may be overwritten by TENSORIAL_CORRECTION_FOR_DRHODT below
+            // the rate of the kernel sum density needs the uncorrected value (the kernel sum is not Shepard-corrected,
+            // and vvnablaW may be overwritten by TENSORIAL_CORRECTION_FOR_DRHODT below)
+#if SHEPARD_CORRECTION && AVERAGE_KERNELS
+            vvnablaW_raw = 0.0;
+            for (e = 0; e < DIM; e++) {
+                vvnablaW_raw += dv[e] * dWdx_raw[e];
+            }
+#elif SHEPARD_CORRECTION
+            vvnablaW_raw = vvnablaW * p_rhs.shepard_correction[i];
+#else
             vvnablaW_raw = vvnablaW;
+#endif
 
 #if TENSORIAL_CORRECTION
             // Pre-compute corrected gradients for forces (B * grad W)
@@ -897,7 +914,8 @@ __global__ void internalForces(int *interactions) {
             }
             kernel(&W0, dW0dx, &dW0dr, dx0, p.h[i]);
 # if SHEPARD_CORRECTION
-            W0 /= p_rhs.shepard_correction[i];
+            // the pair terms above were summed with the Shepard-corrected kernel, the kernel sum is uncorrected
+            dWdh_sum *= p_rhs.shepard_correction[i];
 # endif
             dWdh_sum -= p.m[i] * DIM * W0 / p.h[i];
             drhodt += dWdh_sum * p.dhdt[i];
