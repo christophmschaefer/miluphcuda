@@ -106,6 +106,13 @@ __global__ void internalForces(int *interactions) {
 #endif
 
     double drhodt;
+    /* for densities determined via kernel sum (INTEGRATE_DENSITY 0, or density_via_kernel_sum in material.cfg):
+       drhodt is computed as the exact time derivative of that sum, see below */
+    int rho_via_kernel_sum;
+    double vvnablaW_raw;
+#if INTEGRATE_SML && !SML_CORRECTION && !AVERAGE_KERNELS
+    double dWdh_sum;
+#endif
 
 #if INTEGRATE_ENERGY
     double dedt;
@@ -173,6 +180,14 @@ __global__ void internalForces(int *interactions) {
         sml1 = p.h[i];
 
         drhodt = 0;
+#if INTEGRATE_SML && !SML_CORRECTION && !AVERAGE_KERNELS
+        dWdh_sum = 0.0;
+#endif
+#if INTEGRATE_DENSITY
+        rho_via_kernel_sum = matdensity_via_kernel_sum[matId];
+#else
+        rho_via_kernel_sum = 1;
+#endif
 #if INTEGRATE_ENERGY
         dedt = 0;
 #endif
@@ -379,6 +394,8 @@ __global__ void internalForces(int *interactions) {
             vvnablaW += dvz * dWdx[2];
 #endif
 #endif
+            // keep the uncorrected value, vvnablaW may be overwritten by TENSORIAL_CORRECTION_FOR_DRHODT below
+            vvnablaW_raw = vvnablaW;
 
 #if TENSORIAL_CORRECTION
             // Pre-compute corrected gradients for forces (B * grad W)
@@ -751,29 +768,41 @@ __global__ void internalForces(int *interactions) {
 # endif
 
 
+            if (rho_via_kernel_sum) {
+                /* density via kernel sum rho_i = sum_j m_j W_ij (density.cu): use the exact time derivative of
+                   that sum with the uncorrected kernel gradient, so that the distention evolution (p-alpha) is
+                   consistent with the density that enters the EOS. The explicit time dependence of the smoothing
+                   length is added after the neighbour loop. */
+                drhodt += p.m[j]*vvnablaW_raw;
+#if INTEGRATE_SML && !SML_CORRECTION && !AVERAGE_KERNELS
+                // dW/dh at fixed r, for W = h^-DIM f(r/h)
+                dWdh_sum -= p.m[j] * (DIM*W + r*dWdr) / sml;
+#endif
+            } else {
 #if SOLID
-            // use old version, not Frank Ott's
-            //drhodt += p.m[j]*vvnablaW;
-            // density integration stuff
-            // see Frank Ott's thesis for details
-            //drhodt += p.m[i]*vvnablaW;
-            // Randles and Libersky's version (1996)
+                // use old version, not Frank Ott's
+                //drhodt += p.m[j]*vvnablaW;
+                // density integration stuff
+                // see Frank Ott's thesis for details
+                //drhodt += p.m[i]*vvnablaW;
+                // Randles and Libersky's version (1996)
 # if TENSORIAL_CORRECTION && TENSORIAL_CORRECTION_FOR_DRHODT
-            // corrected velocity divergence: same weight as the moment matrix
-            drhodt += p.rho[i]/TC_RHO(i, j) * p.m[j] * vvnablaW;
+                // corrected velocity divergence: same weight as the moment matrix
+                drhodt += p.rho[i]/TC_RHO(i, j) * p.m[j] * vvnablaW;
 # else
-            drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
+                drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
 # endif
 
 #else // HYDRO now
-# if SML_CORRECTION 
-            drhodt += p.m[j]*vvnablaW;
+# if SML_CORRECTION
+                drhodt += p.m[j]*vvnablaW;
 # elif TENSORIAL_CORRECTION && TENSORIAL_CORRECTION_FOR_DRHODT
-            drhodt += p.rho[i]/TC_RHO(i, j) * p.m[j] * vvnablaW;
+                drhodt += p.rho[i]/TC_RHO(i, j) * p.m[j] * vvnablaW;
 # else
-            drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
+                drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
 # endif // SML_CORRECTION
 #endif // SOLID
+            }
 
 
 #if INTEGRATE_SML
@@ -856,6 +885,25 @@ __global__ void internalForces(int *interactions) {
         p.az[i] = az;
 #endif
 
+#if INTEGRATE_SML && !SML_CORRECTION && !AVERAGE_KERNELS
+        if (rho_via_kernel_sum) {
+            /* explicit time dependence of the smoothing length in the kernel sum:
+               drho_i/dt += sum_j m_j dW_ij/dh * dh_ij/dt, with h_ij = (h_i + h_j)/2 as in density.cu, and the
+               approximation dh_ij/dt = dh_i/dt (dh_j/dt is not available here); plus the self-contribution
+               m_i W(0, h_i), for which dW/dh = -DIM W(0)/h_i. p.dhdt[i] is complete after the neighbour loop. */
+            double W0, dW0dr, dW0dx[DIM], dx0[DIM];
+            for (d = 0; d < DIM; d++) {
+                dx0[d] = 0.0;
+            }
+            kernel(&W0, dW0dx, &dW0dr, dx0, p.h[i]);
+# if SHEPARD_CORRECTION
+            W0 /= p_rhs.shepard_correction[i];
+# endif
+            dWdh_sum -= p.m[i] * DIM * W0 / p.h[i];
+            drhodt += dWdh_sum * p.dhdt[i];
+        }
+#endif
+
 #if SML_CORRECTION
         p.drhodt[i] = 1 / p.sml_omega[i] * drhodt;
         p.dhdt[i] = - p.h[i] / (DIM * p.rho[i]) * p.drhodt[i];
@@ -863,8 +911,14 @@ __global__ void internalForces(int *interactions) {
         p.drhodt[i] = drhodt;
 #endif // SML_CORRECTION
 
+#if PALPHA_POROSITY
+        /* density change rate for the distention evolution below; it has to be taken before p.drhodt is
+           set to zero for density_via_kernel_sum, otherwise there is no compaction from drho/dt at all */
+        double drhodt_palpha = p.drhodt[i];
+#endif
+
 #if INTEGRATE_DENSITY
-        // if the density is calculated via kernel sum, we set drhodt to 0 here again
+        // if the density is calculated via kernel sum, we set drhodt to 0 here again (no integration of rho)
         if (matdensity_via_kernel_sum[p_rhs.materialId[i]]) {
             p.drhodt[i] = 0.0;
         }
@@ -929,10 +983,10 @@ __global__ void internalForces(int *interactions) {
                 p.alpha_jutzi[i] = 1.0;
             } else {
 #if INTEGRATE_ENERGY
-                p.dalphadt[i] = ((p.dedt[i] * p.delpdele[i] + p.alpha_jutzi[i] * p.drhodt[i] * p.delpdelrho[i])
+                p.dalphadt[i] = ((p.dedt[i] * p.delpdele[i] + p.alpha_jutzi[i] * drhodt_palpha * p.delpdelrho[i])
                               * p.dalphadp[i]) / (p.alpha_jutzi[i] + p.dalphadp[i] * (p.p[i] - p.rho[i] * p.delpdelrho[i]));
 #else
-                p.dalphadt[i] = ((p.alpha_jutzi[i] * p.drhodt[i] * p.delpdelrho[i])
+                p.dalphadt[i] = ((p.alpha_jutzi[i] * drhodt_palpha * p.delpdelrho[i])
                               * p.dalphadp[i]) / (p.alpha_jutzi[i] + p.dalphadp[i] * (p.p[i] - p.rho[i] * p.delpdelrho[i]));
 
 #endif
