@@ -906,7 +906,10 @@ __global__ void internalForces(int *interactions) {
 
 #if SML_CORRECTION
         p.drhodt[i] = 1 / p.sml_omega[i] * drhodt;
+# if INTEGRATE_SML
+        // h = h(rho) is iterated in density.cu; dh/dt only exists if h is also integrated (as predictor)
         p.dhdt[i] = - p.h[i] / (DIM * p.rho[i]) * p.drhodt[i];
+# endif
 #else
         p.drhodt[i] = drhodt;
 #endif // SML_CORRECTION
