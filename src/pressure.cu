@@ -388,7 +388,7 @@ __global__ void calculatePressure() {
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         pressure = 0.0;
         matId = p_rhs.materialId[i];
-        if (EOS_TYPE_IGNORE == matEOS[matId] || matId == EOS_TYPE_IGNORE) {
+        if (matId == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[matId]) {
             continue;
         }
         if (EOS_TYPE_POLYTROPIC_GAS == matEOS[matId]) {

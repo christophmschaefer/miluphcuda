@@ -384,7 +384,7 @@ __global__ void CalcDivvandCurlv(int *interactions)
     double r;
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]]) {
                continue;
         }
         k = p.noi[i];
@@ -555,7 +555,7 @@ __global__ void shepardCorrection(int *interactions) {
             W = 0;
             interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + m;
             j = interactions[interactions_index];
-            if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || p_rhs.materialId[j] == EOS_TYPE_IGNORE) {
+            if (p_rhs.materialId[j] == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]]) {
                 continue;
             }
             dr[0] = p.x[i] - p.x[j];
@@ -612,7 +612,7 @@ __global__ void tensorialCorrection(int *interactions)
             geomatrix[d] = 0;
 #endif
         }
-        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]]) {
                continue;
         }
 
@@ -622,7 +622,7 @@ __global__ void tensorialCorrection(int *interactions)
         for (m = 0; m < k; m++) {
             interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + m;
             j = interactions[interactions_index];
-            if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || p_rhs.materialId[j] == EOS_TYPE_IGNORE) {
+            if (p_rhs.materialId[j] == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]]) {
                 continue;
             }
             dr[0] = p.x[i] - p.x[j];

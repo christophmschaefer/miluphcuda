@@ -34,7 +34,7 @@ __global__ void setlocationchanges(int *interactions)
     register int i, inc;
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]]) {
                 continue;
         }
         p.dxdt[i] = p.vx[i];

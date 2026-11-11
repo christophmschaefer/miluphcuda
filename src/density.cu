@@ -94,7 +94,7 @@ __global__ void calculateDensity(int *interactions, int iterate_sml) {
             continue;
         }
 #if INTEGRATE_DENSITY
-        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE || matdensity_via_kernel_sum[p_rhs.materialId[i]] < 1) {
+        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || matdensity_via_kernel_sum[p_rhs.materialId[i]] < 1) {
                 continue;
 	}
 #endif // INTEGRATE_DENSITY
@@ -130,7 +130,7 @@ __global__ void calculateDensity(int *interactions, int iterate_sml) {
             sml_omega_sum -= p.m[i] * DIM * W / p.h[i];
 #endif // SML_CORRECTION
 #if !INTEGRATE_DENSITY
-            if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
+            if (p_rhs.materialId[i] == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]]) {
 		p.rho[i] = rho;
                 continue;
             }
@@ -139,7 +139,7 @@ __global__ void calculateDensity(int *interactions, int iterate_sml) {
             for (j = 0; j < p.noi[i]; j++) {
                 interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + j;
                 ip = interactions[interactions_index];
-                if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[ip]] || p_rhs.materialId[ip] == EOS_TYPE_IGNORE) {
+                if (p_rhs.materialId[ip] == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[ip]]) {
                     continue;
                 }
 #if SML_CORRECTION

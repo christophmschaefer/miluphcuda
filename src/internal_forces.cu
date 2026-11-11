@@ -162,7 +162,7 @@ __global__ void internalForces(int *interactions) {
 #endif
         //do nothing for boundary particles
         if (matId == BOUNDARY_PARTICLE_ID) continue;
-        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || matId == EOS_TYPE_IGNORE) {
+        if (matId == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]]) {
                 continue;
         }
 
@@ -296,7 +296,7 @@ __global__ void internalForces(int *interactions) {
             }
 
             matIdj = p_rhs.materialId[j];
-            if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || matIdj == EOS_TYPE_IGNORE) {
+            if (matIdj == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]]) {
                 continue;
             }
 
@@ -1417,7 +1417,7 @@ __global__ void calculatedeviatoricStress(int *interactions)
             // interacting particle id
             interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + k;
             j = interactions[interactions_index];
-            if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || EOS_TYPE_IGNORE == p_rhs.materialId[j]) {
+            if (EOS_TYPE_IGNORE == p_rhs.materialId[j] || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]]) {
                 continue;
             }
             /* relative vector */

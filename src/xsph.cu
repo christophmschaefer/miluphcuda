@@ -63,7 +63,7 @@ __global__ void calculateXSPHchanges(int *interactions)
     inc = blockDim.x * gridDim.x;
     // particle loop to smooth velocity field
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || EOS_TYPE_IGNORE == p_rhs.materialId[i]) {
+        if (EOS_TYPE_IGNORE == p_rhs.materialId[i] || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]]) {
                 continue;
         }
         numInteractions = p.noi[i];
@@ -88,7 +88,7 @@ __global__ void calculateXSPHchanges(int *interactions)
             j = interactions[interactions_index];
 
             // if j is brush, continue
-            if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]] || EOS_TYPE_IGNORE == p_rhs.materialId[j]) {
+            if (EOS_TYPE_IGNORE == p_rhs.materialId[j] || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]]) {
                 continue;
             }
 

@@ -38,7 +38,7 @@ __global__ void damageLimit(void)
 
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
-        if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE)
+        if (p_rhs.materialId[i] == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]])
             continue;
 
         dmg = p.d[i];   // note: that's DIM-root of tensile damage
