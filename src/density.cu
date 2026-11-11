@@ -50,10 +50,15 @@ __global__ void calculateDensity(int *interactions) {
     double dx[DIM];
     double dWdx[DIM];
     double dWdr;
+#if AVERAGE_KERNELS
+    double dWdrj;
+#endif
     double rho;
     double sml;
-    double tolerance;
+    int iterate;
 #if SML_CORRECTION
+    double tolerance;
+    int cnt;
     double dhdrho, sml_omega,sml_omega_sum, r;
     double f, df, h_new, h_init, rho_h;
     //the proportionality constant (h_fact = 4.0) defines the average number of neighbours: [2D] noi = pi * h_fact^2, [3D] noi = 4/3 * pi * h_fact^3
@@ -67,12 +72,13 @@ __global__ void calculateDensity(int *interactions) {
                 continue;
 	}
 #endif // INTEGRATE_DENSITY
-        tolerance = 0.0;
-        int cnt = 0;
-        
 #if SML_CORRECTION
+        tolerance = 0.0;
+        cnt = 0;
         h_init = p.h[i];
         h_new = 0.0;
+        // in case the loop below is left before Omega is computed
+        sml_omega = 1.0;
         /* // if Bisection method is used
         double a = 0.0, b = 0.0, c = 0.0;
 	    int bis_cnt = 0;
@@ -80,6 +86,8 @@ __global__ void calculateDensity(int *interactions) {
 #endif // SML_CORRECTION
 
         do {
+            // set to 1 below if another iteration with an updated smoothing length is needed (SML_CORRECTION)
+            iterate = 0;
 #if SML_CORRECTION
             sml_omega_sum = 0.0;
 #endif // SML_CORRECTION
@@ -94,6 +102,10 @@ __global__ void calculateDensity(int *interactions) {
             W /= p_rhs.shepard_correction[i];
 #endif
             rho = p.m[i] * W;
+#if SML_CORRECTION
+            // self-contribution to d rho_i/d h_i: d(m_i W(0, h_i))/d h_i = -DIM m_i W(0, h_i)/h_i
+            sml_omega_sum -= p.m[i] * DIM * W / p.h[i];
+#endif // SML_CORRECTION
 #if !INTEGRATE_DENSITY
             if (EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[i]] || p_rhs.materialId[i] == EOS_TYPE_IGNORE) {
 		p.rho[i] = rho;
@@ -126,26 +138,36 @@ __global__ void calculateDensity(int *interactions) {
                 r = sqrt(r);
 #endif // SML_CORRECTION
 
+            // contribution of interaction
+            // for SML_CORRECTION, sml_omega_sum collects d rho_i/d h_i (h_j fixed), with dW/dh = -(DIM W + r dW/dr)/h
+            // for W = h^-DIM f(r/h); the h-dependence of the Shepard factor is neglected
 #if AVERAGE_KERNELS
                 kernel(&W, dWdx, &dWdr, dx, p.h[i]);
                 Wj = 0;
-                kernel(&Wj, dWdx, &dWdr, dx, p.h[ip]);
+                // separate dWdrj, dWdr of h_i is still needed for SML_CORRECTION
+                kernel(&Wj, dWdx, &dWdrj, dx, p.h[ip]);
 # if SHEPARD_CORRECTION
                 W /= p_rhs.shepard_correction[i];
+                dWdr /= p_rhs.shepard_correction[i];
                 Wj /= p_rhs.shepard_correction[ip];
 # endif
+# if SML_CORRECTION
+                // W_ij = (W(r, h_i) + W(r, h_j))/2, only W(r, h_i) depends on h_i
+                sml_omega_sum -= 0.5 * p.m[ip] * (DIM * W + r * dWdr) / p.h[i];
+# endif // SML_CORRECTION
                 W = 0.5 * (W + Wj);
 #else
                 kernel(&W, dWdx, &dWdr, dx, sml);
 # if SHEPARD_CORRECTION
                 W /= p_rhs.shepard_correction[i];
+                dWdr /= p_rhs.shepard_correction[i];
 # endif
-            // contribution of interaction
+# if SML_CORRECTION
+                // W_ij = W(r, h_ij) with h_ij = (h_i + h_j)/2, hence d W_ij/d h_i = 1/2 dW/dh at h = h_ij
+                sml_omega_sum -= 0.5 * p.m[ip] * (DIM * W + r * dWdr) / sml;
+# endif // SML_CORRECTION
 #endif // AVERAGE_KERNELS
 
-#if SML_CORRECTION
-                sml_omega_sum += p.m[ip] * (-1) * (DIM * W/sml + (r / sml) * dWdr);
-#endif // SML_CORRECTION
                 rho += p.m[ip] * W;
             }
 #if SML_CORRECTION
@@ -190,19 +212,26 @@ __global__ void calculateDensity(int *interactions) {
                 bis_cnt++;
 	        }
 */
-           	tolerance = abs(h_new - p.h[i]) / h_init;
-            if (tolerance > 1e-3) {
+            tolerance = fabs(h_new - p.h[i]) / h_init;
+            // update h only if it is followed by another evaluation of rho and Omega (at most 10 evaluations, i.e.,
+            // 9 updates), so that h_i, rho_i, Omega_i and the interaction list of i belong together
+            if (tolerance > 1e-3 && cnt < 9) {
                 if (h_new < 0){
 	       	        printf("SML_CORRECTION: NEGATIVE SML!");
                 }
                 p.h[i] = h_new;
-                p.sml_omega[i] = sml_omega;
                 redo_NeighbourSearch(i, interactions);
                 cnt++;
+                iterate = 1;
             }
 #endif // SML_CORRECTION
-        } while (tolerance > 1e-3 && cnt < 10);       
+        } while (iterate);
         // write to global memory
         p.rho[i] = rho;
+#if SML_CORRECTION
+        // store Omega always, also if h was already converged in the first iteration (p.sml_omega is reset to 1
+        // in zero_all_derivatives() for every rhs evaluation); Omega belongs to the same h as rho
+        p.sml_omega[i] = sml_omega;
+#endif // SML_CORRECTION
     }
 }
