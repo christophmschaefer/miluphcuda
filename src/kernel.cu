@@ -108,8 +108,12 @@ __device__ void spiky(double *W, double dWdx[DIM], double *dWdr, double dx[DIM],
     }
 #endif
 
-    for (d = 0; d < DIM; d++) {
-        dWdx[d] = *dWdr/r * dx[d];
+    // dW/dx = dW/dr dx/r is not defined for r = 0 (0/0, spiky: dW/dr / 0): the gradient is set to 0 there
+    // (already done above), which is the correct value by symmetry; otherwise coincident particles give NaN
+    if (r > 0.0) {
+        for (d = 0; d < DIM; d++) {
+            dWdx[d] = *dWdr/r * dx[d];
+        }
     }
 }
 
@@ -154,8 +158,12 @@ __device__ void cubic_spline(double *W, double dWdx[DIM], double *dWdr, double d
         *W = f * (6.*q*q*q - 6.*q*q + 1.);
         *dWdr = 6.*f/sml * (3*q*q - 2*q);
     }
-    for (d = 0; d < DIM; d++) {
-        dWdx[d] = *dWdr/r * dx[d];
+    // dW/dx = dW/dr dx/r is not defined for r = 0 (0/0, spiky: dW/dr / 0): the gradient is set to 0 there
+    // (already done above), which is the correct value by symmetry; otherwise coincident particles give NaN
+    if (r > 0.0) {
+        for (d = 0; d < DIM; d++) {
+            dWdx[d] = *dWdr/r * dx[d];
+        }
     }
 }
 
@@ -205,8 +213,12 @@ __device__ void quintic_spline(double *W, double dWdx[DIM], double *dWdr, double
     *W = sigma * f;
     *dWdr = sigma * dfdq / sml;
 
-    for (d = 0; d < DIM; d++) {
-        dWdx[d] = *dWdr / r * dx[d];
+    // dW/dx = dW/dr dx/r is not defined for r = 0 (0/0, spiky: dW/dr / 0): the gradient is set to 0 there
+    // (already done above), which is the correct value by symmetry; otherwise coincident particles give NaN
+    if (r > 0.0) {
+        for (d = 0; d < DIM; d++) {
+            dWdx[d] = *dWdr/r * dx[d];
+        }
     }
 }
 
@@ -242,8 +254,12 @@ __device__ void wendlandc2(double *W, double dWdx[DIM], double *dWdr, double dx[
         *W = 5./(4.*sml) * (1-q)*(1-q)*(1-q)*(1+3*q) * (q < 1);
         *dWdr = -15/(sml*sml) * q * (1-q)*(1-q) * (q < 1);
 #endif
-        for (d = 0; d < DIM; d++) {
-            dWdx[d] = *dWdr/r * dx[d];
+        // dW/dx = dW/dr dx/r is not defined for r = 0 (0/0, spiky: dW/dr / 0): the gradient is set to 0 there
+        // (already done above), which is the correct value by symmetry; otherwise coincident particles give NaN
+        if (r > 0.0) {
+            for (d = 0; d < DIM; d++) {
+                dWdx[d] = *dWdr/r * dx[d];
+            }
         }
     }
 }
@@ -278,8 +294,12 @@ __device__ void wendlandc4(double *W, double dWdx[DIM], double *dWdr, double dx[
         *W = 3./(2.*sml) * (1-q)*(1-q)*(1-q)*(1-q)*(1-q) * (1+5*q+8*q*q) * (q < 1);
         *dWdr = -21./(sml*sml) * q * (1-q)*(1-q)*(1-q)*(1-q) * (1+4*q) * (q < 1);
 #endif
-        for (d = 0; d < DIM; d++) {
-            dWdx[d] = *dWdr/r * dx[d];
+        // dW/dx = dW/dr dx/r is not defined for r = 0 (0/0, spiky: dW/dr / 0): the gradient is set to 0 there
+        // (already done above), which is the correct value by symmetry; otherwise coincident particles give NaN
+        if (r > 0.0) {
+            for (d = 0; d < DIM; d++) {
+                dWdx[d] = *dWdr/r * dx[d];
+            }
         }
     }
 }
@@ -317,8 +337,12 @@ __device__ void wendlandc6(double *W, double dWdx[DIM], double *dWdr, double dx[
         *W = 55./(32.*sml) * (1-q)*(1-q)*(1-q)*(1-q)*(1-q)*(1-q)*(1-q) * (1+7*q+19*q*q+21*q*q*q) * (q < 1);
         *dWdr = -165./(16*sml*sml) * q * (1-q)*(1-q)*(1-q)*(1-q)*(1-q)*(1-q) * (3+18*q+35*q*q) * (q < 1);
 #endif
-        for (d = 0; d < DIM; d++) {
-            dWdx[d] = *dWdr/r * dx[d];
+        // dW/dx = dW/dr dx/r is not defined for r = 0 (0/0, spiky: dW/dr / 0): the gradient is set to 0 there
+        // (already done above), which is the correct value by symmetry; otherwise coincident particles give NaN
+        if (r > 0.0) {
+            for (d = 0; d < DIM; d++) {
+                dWdx[d] = *dWdr/r * dx[d];
+            }
         }
     }
 }
