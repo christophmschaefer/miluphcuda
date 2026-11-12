@@ -37,6 +37,135 @@
 extern __constant__ int isRelaxationRun;
 extern __device__ SPH_kernel kernel;
 
+
+#if INTEGRATE_SML && !SML_CORRECTION
+/*
+ * Rate of change of the smoothing length (Benz 1990), h ~ rho^(-1/DIM):
+ *
+ *     dh_i/dt = h_i/DIM (div v)_i = - h_i/DIM sum_j m_j/rho_j (v_i - v_j) . grad_i W_ij
+ *
+ * (with TENSORIAL_CORRECTION_FOR_DRHODT: corrected gradient B_i grad_i W_ij and m_j/TC_RHO(i, j)).
+ *
+ * This sum was accumulated in the neighbour loop of internalForces() before. It has its own kernel, called right
+ * before internalForces(), because the rate of the kernel sum density in internalForces() needs dh/dt of the
+ * interaction partners, too:
+ *
+ *     rho_i = m_i W(0, h_i) + sum_j m_j W(r_ij, h_ij),   h_ij = (h_i + h_j)/2   (density.cu)
+ *
+ *     drho_i/dt = sum_j m_j (v_i - v_j) . grad_i W_ij
+ *               + sum_j m_j dW/dh(r_ij, h_ij) (dh_i/dt + dh_j/dt)/2 + m_i dW/dh(0, h_i) dh_i/dt
+ *
+ * Within internalForces(), dh_j/dt is computed by another thread at the same time and is not available. With the
+ * former approximation dh_j/dt = dh_i/dt, the error of drho/dt was a few to ~10 percent where dh/dt varies between
+ * neighbours (strongest at shock fronts). drho/dt of a kernel sum density enters only the distention evolution
+ * of the p-alpha model (density_via_kernel_sum); the integration of h is not changed by this split.
+ *
+ * Kernel evaluation (symmetric h_ij or AVERAGE_KERNELS), Shepard correction, tensorial correction, the particles
+ * that are skipped and the order of summation are the same as in internalForces() before, so dh/dt is the same
+ * up to floating point contraction by the compiler.
+ *
+ * Particles without interactions and skipped particles keep dh/dt = 0 from zero_all_derivatives(). Only the real
+ * particles are processed; for ghost particles (GHOST_BOUNDARIES), internalForces() uses the rate of the real
+ * particle they mirror.
+ */
+__global__ void calculateSmlRate(int *interactions)
+{
+    int i, j, k, d, inc, matId;
+    int64_t interactions_index;
+    double dhdt;
+    double dr[DIM], dv[DIM];
+    double W, dWdr, dWdx[DIM];
+#if AVERAGE_KERNELS
+    double Wj, dWdrj, dWdxj[DIM];
+#endif
+#if TENSORIAL_CORRECTION && TENSORIAL_CORRECTION_FOR_DRHODT
+    int dd;
+    double dWdx_corr_i[DIM];
+#endif
+    double sml;
+    double vvnablaW;
+
+    inc = blockDim.x * gridDim.x;
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numRealParticles; i += inc) {
+        // same particles as in internalForces()
+        matId = p_rhs.materialId[i];
+        if (matId == BOUNDARY_PARTICLE_ID) continue;
+        if (matId == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[matId]) {
+            continue;
+        }
+
+        dhdt = 0.0;
+        for (k = 0; k < p.noi[i]; k++) {
+            interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + k;
+            j = interactions[interactions_index];
+            if (p_rhs.materialId[j] == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[p_rhs.materialId[j]]) {
+                continue;
+            }
+
+            sml = 0.5*(p.h[i] + p.h[j]);
+            dr[0] = p.x[i] - p.x[j];
+            dv[0] = p.vx[i] - p.vx[j];
+#if DIM > 1
+            dr[1] = p.y[i] - p.y[j];
+            dv[1] = p.vy[i] - p.vy[j];
+# if DIM > 2
+            dr[2] = p.z[i] - p.z[j];
+            dv[2] = p.vz[i] - p.vz[j];
+# endif
+#endif
+
+#if AVERAGE_KERNELS
+            kernel(&W, dWdx, &dWdr, dr, p.h[i]);
+            kernel(&Wj, dWdxj, &dWdrj, dr, p.h[j]);
+# if SHEPARD_CORRECTION
+            for (d = 0; d < DIM; d++) {
+                dWdx[d] /= p_rhs.shepard_correction[i];
+                dWdxj[d] /= p_rhs.shepard_correction[j];
+            }
+# endif
+            for (d = 0; d < DIM; d++) {
+                dWdx[d] = 0.5 * (dWdx[d] + dWdxj[d]);
+            }
+#else
+            kernel(&W, dWdx, &dWdr, dr, sml);
+# if SHEPARD_CORRECTION
+            for (d = 0; d < DIM; d++) {
+                dWdx[d] /= p_rhs.shepard_correction[i];
+            }
+# endif
+#endif // AVERAGE_KERNELS
+
+#if TENSORIAL_CORRECTION && TENSORIAL_CORRECTION_FOR_DRHODT
+            for (d = 0; d < DIM; d++) {
+                dWdx_corr_i[d] = 0.0;
+                for (dd = 0; dd < DIM; dd++) {
+                    dWdx_corr_i[d] += p_rhs.tensorialCorrectionMatrix[i*DIM*DIM + d*DIM + dd] * dWdx[dd];
+                }
+            }
+            vvnablaW = 0.0;
+            for (d = 0; d < DIM; d++) {
+                vvnablaW += dv[d] * dWdx_corr_i[d];
+            }
+            // minus since vvnablaW is (v_i - v_j) . grad W_ij
+            dhdt -= 1./DIM * p.h[i] * p.m[j]/TC_RHO(i, j) * vvnablaW;
+#else
+            vvnablaW = dv[0] * dWdx[0];
+# if DIM > 1
+            vvnablaW += dv[1] * dWdx[1];
+#  if DIM > 2
+            vvnablaW += dv[2] * dWdx[2];
+#  endif
+# endif
+            // minus since vvnablaW is (v_i - v_j) . grad W_ij
+            dhdt -= 1./DIM * p.h[i] * p.m[j]/p.rho[j] * vvnablaW;
+#endif
+        }
+        p.dhdt[i] = dhdt;
+    }
+}
+#endif // INTEGRATE_SML && !SML_CORRECTION
+
+
 //__launch_bounds__(64, 16)
 __global__ void internalForces(int *interactions) {
     register int64_t interactions_index;
@@ -110,8 +239,10 @@ __global__ void internalForces(int *interactions) {
        drhodt is computed as the exact time derivative of that sum, see below */
     int rho_via_kernel_sum;
     double vvnablaW_raw;
-#if INTEGRATE_SML && !SML_CORRECTION && !AVERAGE_KERNELS
-    double dWdh_sum;
+#if INTEGRATE_SML && !SML_CORRECTION
+    // index of the particle that carries dh/dt for the interaction partner j (j itself, or for a ghost particle
+    // the real particle it mirrors)
+    int jh;
 #endif
 #if SHEPARD_CORRECTION && AVERAGE_KERNELS
     double dWdx_raw[DIM];
@@ -183,9 +314,6 @@ __global__ void internalForces(int *interactions) {
         sml1 = p.h[i];
 
         drhodt = 0;
-#if INTEGRATE_SML && !SML_CORRECTION && !AVERAGE_KERNELS
-        dWdh_sum = 0.0;
-#endif
 #if INTEGRATE_DENSITY
         rho_via_kernel_sum = matdensity_via_kernel_sum[matId];
 #else
@@ -194,7 +322,8 @@ __global__ void internalForces(int *interactions) {
 #if INTEGRATE_ENERGY
         dedt = 0;
 #endif
-#if INTEGRATE_SML
+#if INTEGRATE_SML && SML_CORRECTION
+        // without SML_CORRECTION, dh/dt is computed before this kernel in calculateSmlRate() and must not be reset
         p.dhdt[i] = 0.0;
 #endif
 
@@ -253,7 +382,7 @@ __global__ void internalForces(int *interactions) {
 #if INTEGRATE_ENERGY
         p.dedt[i] = 0.0;
 #endif
-#if INTEGRATE_SML
+#if INTEGRATE_SML && SML_CORRECTION
         p.dhdt[i] = 0.0;
 #endif
 #if FRAGMENTATION
@@ -310,6 +439,14 @@ __global__ void internalForces(int *interactions) {
              */
             // symmetric in i and j, so that grad W_ij = -grad W_ji also for h_i != h_j (momentum conservation)
             sml = 0.5*(p.h[i] + p.h[j]);
+#if INTEGRATE_SML && !SML_CORRECTION
+# if GHOST_BOUNDARIES
+            // calculateSmlRate() only runs over the real particles, a ghost particle has the rate of its partner
+            jh = (j < numRealParticles) ? j : abs(p.real_partner[j]) - 1;
+# else
+            jh = j;
+# endif
+#endif
             if (boundia) {
                 /* set quantities for boundary particle */
                 setQuantitiesFixedVirtualParticles(i, j, &vxj, &vyj, &vzj, &p.rho[j], &p.p[j], Sj);
@@ -355,6 +492,15 @@ __global__ void internalForces(int *interactions) {
 #if AVERAGE_KERNELS
             kernel(&W, dWdx, &dWdr, dr, p.h[i]);
             kernel(&Wj, dWdxj, &dWdrj, dr, p.h[j]);
+# if INTEGRATE_SML && !SML_CORRECTION
+            if (rho_via_kernel_sum) {
+                /* explicit time dependence of the smoothing lengths in the kernel sum (see the comment at the
+                   self-contribution after the neighbour loop): W_ij = (W(r, h_i) + W(r, h_j))/2, hence
+                   d/dt -> (dW/dh(r, h_i) dh_i/dt + dW/dh(r, h_j) dh_j/dt)/2, with the uncorrected kernel */
+                drhodt -= 0.5 * p.m[j] * ((DIM*W + r*dWdr) / p.h[i] * p.dhdt[i]
+                                        + (DIM*Wj + r*dWdrj) / p.h[j] * p.dhdt[jh]);
+            }
+# endif
 # if SHEPARD_CORRECTION
             // the kernel sum density is not Shepard-corrected (density.cu), keep the uncorrected gradient for its rate
             for (e = 0; e < DIM; e++) {
@@ -377,6 +523,14 @@ __global__ void internalForces(int *interactions) {
             }
 #else
             kernel(&W, dWdx, &dWdr, dr, sml);
+# if INTEGRATE_SML && !SML_CORRECTION
+            if (rho_via_kernel_sum) {
+                /* explicit time dependence of the smoothing length in the kernel sum (see the comment at the
+                   self-contribution after the neighbour loop): W_ij = W(r, h_ij), h_ij = (h_i + h_j)/2, hence
+                   d/dt -> dW/dh(r, h_ij) (dh_i/dt + dh_j/dt)/2, with the uncorrected kernel */
+                drhodt -= p.m[j] * (DIM*W + r*dWdr) / sml * 0.5 * (p.dhdt[i] + p.dhdt[jh]);
+            }
+# endif
 # if SHEPARD_CORRECTION
             W /= p_rhs.shepard_correction[i];
             for (e = 0; e < DIM; e++) {
@@ -789,12 +943,8 @@ __global__ void internalForces(int *interactions) {
                 /* density via kernel sum rho_i = sum_j m_j W_ij (density.cu): use the exact time derivative of
                    that sum with the uncorrected kernel gradient, so that the distention evolution (p-alpha) is
                    consistent with the density that enters the EOS. The explicit time dependence of the smoothing
-                   length is added after the neighbour loop. */
+                   lengths was added right after the kernel evaluation above. */
                 drhodt += p.m[j]*vvnablaW_raw;
-#if INTEGRATE_SML && !SML_CORRECTION && !AVERAGE_KERNELS
-                // dW/dh at fixed r, for W = h^-DIM f(r/h)
-                dWdh_sum -= p.m[j] * (DIM*W + r*dWdr) / sml;
-#endif
             } else {
 #if SOLID
                 // use old version, not Frank Ott's
@@ -821,17 +971,7 @@ __global__ void internalForces(int *interactions) {
 #endif // SOLID
             }
 
-
-#if INTEGRATE_SML
-            // minus since vvnablaW is v_i - v_j \nabla W_ij
-# if !SML_CORRECTION
-#  if TENSORIAL_CORRECTION && TENSORIAL_CORRECTION_FOR_DRHODT
-            p.dhdt[i] -= 1./DIM * p.h[i] * p.m[j]/TC_RHO(i, j) * vvnablaW;
-#  else
-            p.dhdt[i] -= 1./DIM * p.h[i] * p.m[j]/p.rho[j] * vvnablaW;
-#  endif
-# endif // SML_CORRECTION
-#endif // INTEGRATE_SML
+            // dh/dt (INTEGRATE_SML without SML_CORRECTION) is computed before this kernel in calculateSmlRate()
 
 #if INTEGRATE_ENERGY
 # if ARTIFICIAL_VISCOSITY
@@ -902,23 +1042,25 @@ __global__ void internalForces(int *interactions) {
         p.az[i] = az;
 #endif
 
-#if INTEGRATE_SML && !SML_CORRECTION && !AVERAGE_KERNELS
+#if INTEGRATE_SML && !SML_CORRECTION
         if (rho_via_kernel_sum) {
-            /* explicit time dependence of the smoothing length in the kernel sum:
-               drho_i/dt += sum_j m_j dW_ij/dh * dh_ij/dt, with h_ij = (h_i + h_j)/2 as in density.cu, and the
-               approximation dh_ij/dt = dh_i/dt (dh_j/dt is not available here); plus the self-contribution
-               m_i W(0, h_i), for which dW/dh = -DIM W(0)/h_i. p.dhdt[i] is complete after the neighbour loop. */
+            /* Explicit time dependence of the smoothing lengths in the kernel sum density. With
+                   rho_i = m_i W(0, h_i) + sum_j m_j W(r_ij, h_ij),   h_ij = (h_i + h_j)/2   (density.cu)
+               the exact time derivative is
+                   drho_i/dt = sum_j m_j (v_i - v_j) . grad_i W_ij                    (pair loop, vvnablaW_raw)
+                             + sum_j m_j dW/dh(r_ij, h_ij) (dh_i/dt + dh_j/dt)/2      (pair loop, after kernel())
+                             + m_i dW/dh(0, h_i) dh_i/dt                             (here)
+               with dW/dh = -(DIM W + r dW/dr)/h for W = h^-DIM f(r/h) at fixed r. For AVERAGE_KERNELS,
+               W_ij = (W(r_ij, h_i) + W(r_ij, h_j))/2 and each half is differentiated with its own h.
+               dh_j/dt of the interaction partners is needed, therefore dh/dt is computed in calculateSmlRate()
+               before this kernel and is complete for all particles here. Shepard and tensorial correction are
+               not applied, since the kernel sum is not corrected either. */
             double W0, dW0dr, dW0dx[DIM], dx0[DIM];
             for (d = 0; d < DIM; d++) {
                 dx0[d] = 0.0;
             }
             kernel(&W0, dW0dx, &dW0dr, dx0, p.h[i]);
-# if SHEPARD_CORRECTION
-            // the pair terms above were summed with the Shepard-corrected kernel, the kernel sum is uncorrected
-            dWdh_sum *= p_rhs.shepard_correction[i];
-# endif
-            dWdh_sum -= p.m[i] * DIM * W0 / p.h[i];
-            drhodt += dWdh_sum * p.dhdt[i];
+            drhodt -= p.m[i] * DIM * W0 / p.h[i] * p.dhdt[i];
         }
 #endif
 

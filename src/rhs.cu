@@ -709,6 +709,24 @@ void rightHandSide()
 # endif
 #endif
 
+#if INTEGRATE_SML && !SML_CORRECTION
+    /* dh/dt of all particles before internalForces(): the rate of the kernel sum density there needs dh/dt of the
+       interaction partners (see calculateSmlRate() in internal_forces.cu). Needs rho, the Shepard and the
+       tensorial correction of this evaluation, hence after those. */
+# if DEBUG_RHS_RUNTIMES
+    cudaEventRecord(start, 0);
+# endif
+    cudaVerifyKernel((calculateSmlRate<<<numberOfMultiprocessors * 4, NUM_THREADS_128>>>(interactions)));
+    cudaVerify(cudaDeviceSynchronize());
+# if DEBUG_RHS_RUNTIMES
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time[timerCounter], start, stop);
+    printf("duration dh/dt: %.7f ms\n", time[timerCounter]);
+    totalTime += time[timerCounter++];
+# endif
+#endif
+
     // the main loop, where all accelerations are calculated
 #if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);

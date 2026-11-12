@@ -28,6 +28,11 @@
 
 __global__ void internalForces(int *interactions);
 
+#if INTEGRATE_SML && !SML_CORRECTION
+// dh/dt of all real particles, has to be called before internalForces(), see internal_forces.cu
+__global__ void calculateSmlRate(int *interactions);
+#endif
+
 __global__ void calculatedeviatoricStress(int *interactions);
 
 
