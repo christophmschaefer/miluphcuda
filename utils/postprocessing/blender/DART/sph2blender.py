@@ -33,6 +33,14 @@ Incremental runs
   do not pop at the seam. Old-style files (frame_0000.npz for impact.0050.h5)
   are renamed to the dump number. --fresh starts a new index.
 
+With --ref (impact.0000.h5) two more fields are written:
+  disp = |x - x0 - shift|, displacement since t = 0 [m], with the translation
+         of the whole body removed (shift = mass-weighted mean displacement of
+         the target particles within --core m of the initial centre of mass);
+         with --derotate the rotation of the body is removed as well (rigid
+         Kabsch fit to the same core particles)
+  rhor = rho / rho0 (loosening < 1, compaction > 1), if the dumps have rho
+
 Damage  = max(tensile, porjutzi) with d = (DIM_root)^3
 Compaction = (alpha_initial - alpha)/(alpha_initial - 1), clipped to [0,1]
 
@@ -80,6 +88,41 @@ def read_damage(f, n):
         if k in f:
             d = np.maximum(d, np.asarray(f[k][()], np.float32).ravel() ** DIM)
     return np.clip(d, 0.0, 1.0)
+
+
+def rigid_fit(x0, x, w, iters=5, clip=3.0):
+    """Robust mass-weighted best rigid motion (Kabsch): x ~ Rm @ (x0 - c0) + c.
+    Particles whose residual exceeds clip * median residual are dropped and the
+    fit repeated, so locally deformed material inside the core does not bias it.
+    Returns Rm, c0, c, rotation angle [rad], unit axis, rms residual before/after [m]
+    (translation only / rigid, over the particles used in the final fit)."""
+    use = np.ones(len(x0), bool)
+    for _ in range(iters):
+        res = _kabsch(x0[use], x[use], w[use])
+        Rm, c0, c = res[:3]
+        r = np.linalg.norm(x - ((x0 - c0) @ Rm.T + c), axis=1)
+        new = r < max(clip * np.median(r), 0.02)
+        if np.array_equal(new, use):
+            break
+        use = new
+    return res
+
+
+def _kabsch(x0, x, w):
+    W = w.sum()
+    c0 = (w[:, None] * x0).sum(0) / W
+    c = (w[:, None] * x).sum(0) / W
+    p, q = x0 - c0, x - c
+    H = (w[:, None] * p).T @ q
+    U, S, Vt = np.linalg.svd(H)
+    d = np.sign(np.linalg.det(Vt.T @ U.T))
+    Rm = Vt.T @ np.diag([1.0, 1.0, d]) @ U.T
+    ang = float(np.arccos(np.clip((np.trace(Rm) - 1) / 2, -1, 1)))
+    ax = np.array([Rm[2, 1] - Rm[1, 2], Rm[0, 2] - Rm[2, 0], Rm[1, 0] - Rm[0, 1]])
+    ax = ax / np.linalg.norm(ax) if np.linalg.norm(ax) > 0 else np.array([0.0, 0.0, 1.0])
+    rms0 = float(np.sqrt((w * np.sum((q - p) ** 2, axis=1)).sum() / W))
+    rms1 = float(np.sqrt((w * np.sum((q - p @ Rm.T) ** 2, axis=1)).sum() / W))
+    return Rm, c0, c, ang, ax, rms0, rms1
 
 
 def erode6(a):
@@ -192,6 +235,11 @@ def main():
                     help="never cull particles faster than this [m/s] rel. to the bulk")
     ap.add_argument("--stride", type=int, default=1, help="keep every n-th particle (tests)")
     ap.add_argument("--projectile-mat", type=int, default=2)
+    ap.add_argument("--core", type=float, default=30.0,
+                    help="with --ref: particles within this radius [m] of the initial COM define "
+                         "the body translation that is removed from disp")
+    ap.add_argument("--derotate", action="store_true",
+                    help="with --ref: remove the body rotation from disp as well (rigid fit to the core)")
     ap.add_argument("--knn-k", type=int, default=16,
                     help="neighbour number for the ejecta smoothing length rk; 0 = do not write rk")
     ap.add_argument("--knn-vmin", type=float, default=0.05,
@@ -233,9 +281,24 @@ def main():
     target = mat != a.projectile_mat
 
     # reference distension alpha_0 for the compaction field
+    xref = rhoref = core = mref = None
     if a.ref:
         with h5py.File(a.ref, "r") as f:
-            alpha0 = np.asarray(f["alpha_jutzi"][()], np.float32).ravel()[::a.stride]
+            alpha0 = (np.asarray(f["alpha_jutzi"][()], np.float32).ravel()[::a.stride]
+                      if "alpha_jutzi" in f else alpha0)
+            xref = np.asarray(f["x"][()], np.float64)[::a.stride]
+            rhoref = (np.asarray(f["rho"][()], np.float32).ravel()[::a.stride]
+                      if "rho" in f else None)
+            mref = (np.asarray(f["m"][()], np.float64).ravel()[::a.stride]
+                    if "m" in f else np.ones(len(xref)))
+        if len(xref) != N0:
+            print(f"WARNING: --ref has {len(xref)} particles, first file {N0}: no disp/rhor")
+            xref = rhoref = None
+        else:
+            com0 = (mref[target, None] * xref[target]).sum(0) / mref[target].sum()
+            core = target & (np.linalg.norm(xref - com0, axis=1) < a.core)
+            print(f"--ref: displacement relative to the body; core {core.sum()} particles "
+                  f"within {a.core:g} m of the initial COM {np.round(com0, 2)} m")
     elif alpha0 is not None:
         # first file may be a late dump: take the per-material maximum (pristine material)
         a0m = alpha0.copy()
@@ -371,6 +434,25 @@ def main():
             va = np.asarray(f["v"][()], np.float32)[::a.stride]
             ma = np.asarray(f["material_type"][()]).ravel()[::a.stride]
             x, v, mt = xa[ids], va[ids], ma[ids]
+            if xref is not None and e["N"] == N0:
+                xa64 = xa.astype(np.float64)
+                shift = (mref[core, None] * (xa64[core] - xref[core])).sum(0) / mref[core].sum()
+                if a.derotate:
+                    Rm, c0, c1, ang, ax, rms0, rms1 = rigid_fit(xref[core], xa64[core], mref[core])
+                    xb = (xa64[ids] - c1) @ Rm + c0
+                    extra["rot"] = Rm
+                    extra["rot_angle"] = np.float64(ang)
+                    print(f"      rigid fit: rotation {np.degrees(ang):.4f} deg about "
+                          f"({ax[0]:+.3f}, {ax[1]:+.3f}, {ax[2]:+.3f}), core rms "
+                          f"{rms0:.3f} -> {rms1:.3f} m")
+                else:
+                    xb = xa64[ids] - shift
+                extra["disp"] = np.linalg.norm(xb - xref[ids], axis=1).astype(np.float16)
+                extra["shift"] = shift
+                if rhoref is not None and "rho" in f:
+                    rr = np.asarray(f["rho"][()], np.float32).ravel()[::a.stride][ids]
+                    extra["rhor"] = (rr / np.maximum(rhoref[ids], 1e-12)).astype(np.float16)
+                del xa64
             if "sml" in f:
                 extra["sml"] = np.asarray(f["sml"][()], np.float32).ravel()[::a.stride][ids] \
                     .astype(np.float16)
@@ -395,6 +477,8 @@ def main():
         nw += 1
         tag = "" if e["new"] else "  (seam, updated)"
         rkinfo = f"  rk for {ncand}" if "rk" in extra else ""
+        if "shift" in extra:
+            rkinfo += f"  body shift {np.round(extra['shift'], 2)} m"
         print(f"[2/2] {e['final']}  t = {e['time']:9.4f} s  "
               f"kept {len(ids)} / {e['N']}{rkinfo}  ({os.path.getsize(out)/1e6:.0f} MB){tag}")
 

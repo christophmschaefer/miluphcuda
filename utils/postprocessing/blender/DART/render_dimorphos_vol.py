@@ -10,6 +10,13 @@ Ejecta : particles faster than --vcut (relative to the bulk) -> density grid
          speed grid (nearest particle, smoothed). Rendered as a real volume:
          sunlit dust (forward scattering) + optional speed-coloured glow.
 
+Colour coding (vol-13): --color displacement (|x - x0| since t = 0, body
+translation removed, log scale --disp-range) and --color density (rho/rho0,
+diverging around 1, --rho-range). Both need frames converted with the vol-13
+sph2blender.py and --ref impact.0000.h5. --color-gain sets the brightness
+(albedo) of the colour map. add_colorbar.py puts the matching colour bar on
+the images.
+
 Boulder ejecta (vol-12): --ej-boulders renders ejecta of boulder material
 (material_type 1) as a second volume with its own colour (--ej-boulder-color)
 and density factor (--ej-boulder-density); the matrix ejecta stay grey dust.
@@ -47,7 +54,7 @@ import functools
 import bpy
 import numpy as np
 
-VERSION = "vol-12"
+VERSION = "vol-13"
 print = functools.partial(print, flush=True)   # Blender -b may drop buffered stdout
 from mathutils import Vector
 
@@ -92,6 +99,9 @@ g.add_argument("--vcut-end", type=float,
                     "time axis (default: constant --vcut)")
 g.add_argument("--ej-radius", type=float, help="splat radius [m] (default 0.9*spacing)")
 g.add_argument("--ej-voxel", type=float, help="ejecta voxel size [m] (default 0.6*spacing)")
+g.add_argument("--ej-voxel-end", type=float,
+               help="ejecta voxel size at the end of the film, geometric interpolation (default: "
+                    "constant). Larger late voxels save a lot of memory for the km-sized plume.")
 g.add_argument("--ej-maxdist", type=float,
                help="ejecta farther than this [m] from --target are skipped "
                     "(default 5000 * ej-voxel, ~2.3 km)")
@@ -112,7 +122,17 @@ g.add_argument("--boulder-mat", type=int, default=1, help="material id of the bo
 g.add_argument("--ej-blur", type=int, default=1, help="extra smoothing of the ejecta density [voxels]")
 
 s = ap.add_argument_group("look")
-s.add_argument("--color", choices=["rock", "damage", "compaction"], default="rock")
+s.add_argument("--color", choices=["rock", "damage", "compaction", "displacement", "density"],
+               default="rock")
+s.add_argument("--disp-range", type=float, nargs=2, default=[0.1, 30.0], metavar=("DMIN", "DMAX"),
+               help="displacement range [m] of the colour map (log)")
+s.add_argument("--rho-range", type=float, nargs=2, default=[0.4, 1.6], metavar=("RMIN", "RMAX"),
+               help="rho/rho0 range of the diverging colour map (white = 1)")
+s.add_argument("--cmap", choices=["greygold", "greyyellow", "viridis", "inferno", "rdbu"],
+               help="colour map (default: greygold for displacement, rdbu for density)")
+s.add_argument("--color-gain", type=float,
+               help="albedo scale of the colour map (rock is ~0.16); default 0.75 for greygold, "
+                    "0.8 for greyyellow (grey end ~ rock), 0.35 for the others")
 s.add_argument("--ej-density", type=float, default=0.3, help="ejecta extinction [1/m] at full density")
 s.add_argument("--ej-density-end", type=float,
                help="ej-density at the end of the film, geometric interpolation (default: constant)")
@@ -159,7 +179,7 @@ A.ej_voxel = A.ej_voxel or 0.6 * a
 A.ej_maxdist = A.ej_maxdist or 5000.0 * A.ej_voxel
 A.ej_rmax = A.ej_rmax or 8.0 * a
 # start values of the time-dependent parameters (A.* holds the current frame's value)
-V0, D0, G0, T0 = A.vcut, A.ej_density, A.ej_gamma, tuple(A.target)
+V0, D0, G0, T0, X0 = A.vcut, A.ej_density, A.ej_gamma, tuple(A.target), A.ej_voxel
 for name, val in (("--vcut", V0), ("--vcut-end", A.vcut_end),
                   ("--ej-density", D0), ("--ej-density-end", A.ej_density_end)):
     if val is not None and val <= 0:
@@ -191,12 +211,17 @@ def get_rk(z, sel=slice(None)):
     return z["rk"][sel].astype(np.float32)
 
 
+def extra_field(z, name, sel=slice(None)):
+    return z[name][sel].astype(np.float32) if name in z else None
+
+
 def state_at(t):
     k = int(np.clip(np.searchsorted(TIMES, t, side="right") - 1, 0, len(TIMES) - 1))
     a_ = load(k)
     if k == len(TIMES) - 1 or t <= TIMES[k] or INDEX["N"][k] != INDEX["N"][k + 1]:
         return dict(x=a_["x"].astype(np.float64), v=a_["v"].astype(np.float32), mat=a_["mat"],
-                    dmg=a_["dmg"] / 255.0, comp=a_["comp"] / 255.0, rk=get_rk(a_))
+                    dmg=a_["dmg"] / 255.0, comp=a_["comp"] / 255.0, rk=get_rk(a_),
+                    disp=extra_field(a_, "disp"), rhor=extra_field(a_, "rhor"))
     b = load(k + 1)
     _, ia, ib = np.intersect1d(a_["ids"], b["ids"], assume_unique=True, return_indices=True)
     dt = TIMES[k + 1] - TIMES[k]
@@ -216,8 +241,11 @@ def state_at(t):
     if ra is not None and rb is not None:
         # 0 = not computed (slow particle) in that dump: take the other value
         rk = np.where((ra > 0) & (rb > 0), (1 - s_) * ra + s_ * rb, np.maximum(ra, rb))
+    def lerpf(q):
+        fa, fb = extra_field(a_, q, ia), extra_field(b, q, ib)
+        return None if fa is None or fb is None else (1 - s_) * fa + s_ * fb
     return dict(x=x, v=v.astype(np.float32), mat=a_["mat"][ia], dmg=lerp("dmg"), comp=lerp("comp"),
-                rk=rk)
+                rk=rk, disp=lerpf("disp"), rhor=lerpf("rhor"))
 
 
 def film_time(f):
@@ -271,6 +299,11 @@ def apply_params(u):
     A.vcut = lerp_geo(V0, A.vcut_end, u)
     A.ej_density = lerp_geo(D0, A.ej_density_end, u)
     A.ej_gamma = G0 if A.ej_gamma_end is None else (1 - u) * G0 + u * A.ej_gamma_end
+    A.ej_voxel = lerp_geo(X0, A.ej_voxel_end, u)
+    for ng in bpy.data.node_groups:
+        nv = ng.nodes.get("EJ_P2V") if hasattr(ng, "nodes") else None
+        if nv is not None:
+            nv.inputs["Voxel Size"].default_value = A.ej_voxel
     for m in bpy.data.materials:
         nt = getattr(m, "node_tree", None)
         if nt is None:
@@ -294,6 +327,41 @@ def target_at(e):
 # ----------------------------------------------------------------------------
 INFERNO = np.array([[0, 0, 4], [40, 11, 84], [101, 21, 110], [159, 42, 99], [212, 72, 66],
                     [245, 125, 21], [250, 193, 39], [252, 255, 164]]) / 255.0
+
+
+VIRIDIS = np.array([[68, 1, 84], [72, 40, 120], [62, 74, 137], [49, 104, 142], [38, 130, 142],
+                    [31, 158, 137], [53, 183, 121], [109, 205, 89], [180, 222, 44],
+                    [253, 231, 37]]) / 255.0
+RDBU = np.array([[5, 48, 97], [33, 102, 172], [67, 147, 195], [146, 197, 222], [209, 229, 240],
+                 [247, 247, 247], [253, 219, 199], [244, 165, 130], [214, 96, 77], [178, 24, 43],
+                 [103, 0, 31]]) / 255.0
+# grey (like the regolith) -> sand -> light yellow, for displacement on the rock look
+GREYYELLOW = np.array([[118, 114, 108], [150, 138, 100], [200, 172, 72], [240, 210, 70],
+                       [255, 240, 140]]) / 255.0
+# grey -> gold at (nearly) constant luminance: the displacement changes only hue and
+# saturation, so it is not confused with the sunlit shading of the surface
+GREYGOLD = np.array([[128, 128, 128], [150, 127, 90], [172, 125, 45], [192, 118, 12]]) / 255.0
+CMAPS = {"viridis": VIRIDIS, "inferno": INFERNO, "rdbu": RDBU, "greyyellow": GREYYELLOW,
+         "greygold": GREYGOLD}
+
+
+def color_value(st, sel):
+    """0..1 position on the colour map for --color displacement / density."""
+    if A.color == "displacement":
+        q = st.get("disp")
+        if q is None:
+            raise SystemExit("--color displacement: no 'disp' in the frames; convert with the "
+                             "vol-13 sph2blender.py and --ref impact.0000.h5")
+        lo, hi = np.log10(A.disp_range[0]), np.log10(A.disp_range[1])
+        return np.clip((np.log10(np.maximum(q[sel], 1e-6)) - lo) / (hi - lo), 0, 1)
+    q = st.get("rhor")
+    if q is None:
+        raise SystemExit("--color density: no 'rhor' in the frames; convert with the vol-13 "
+                         "sph2blender.py and --ref impact.0000.h5 (dumps need rho)")
+    lo, hi = A.rho_range
+    q = q[sel]
+    # piecewise linear: lo -> 0, 1 -> 0.5, hi -> 1 (like matplotlib's TwoSlopeNorm)
+    return np.clip(np.where(q < 1, 0.5 * (q - lo) / (1 - lo), 0.5 + 0.5 * (q - 1) / (hi - 1)), 0, 1)
 
 
 def to_linear(srgb):
@@ -405,6 +473,11 @@ def split_and_shade(st, target):
     elif A.color == "compaction":
         w = np.clip(st["comp"][body] * 1.5, 0, 1)[:, None]
         col = (1 - w) * col + w * np.array([0.02, 0.30, 0.40])
+    elif A.color in ("displacement", "density"):
+        name = A.cmap or ("greygold" if A.color == "displacement" else "rdbu")
+        gain = A.color_gain if A.color_gain is not None else \
+            {"greygold": 0.75, "greyyellow": 0.8}.get(name, 0.35)
+        col = cmap(color_value(st, body), CMAPS[name]) * gain
     rgba = np.ones((len(col), 4), np.float32)
     rgba[:, :3] = col
 
@@ -575,6 +648,7 @@ def build_ejecta(scene, name=EJECTA, material=None):
     pts = N(ng, "GeometryNodeMeshToPoints", (-1000, 0))
     L(ng, gi.outputs[0], pts.inputs["Mesh"])
     p2v = N(ng, "GeometryNodePointsToVolume", (-750, 0))
+    p2v.name = "EJ_P2V"
     p2v.inputs["Resolution Mode"].default_value = "Size"
     p2v.inputs["Voxel Size"].default_value = A.ej_voxel
     p2v.inputs["Density"].default_value = 1.0
@@ -936,7 +1010,7 @@ def main():
         scene.render.filepath = path
         bpy.ops.render.render(write_still=True)
         print(f"{fname}  t = {t:8.4f} s  u = {u:.3f}  vcut = {A.vcut:.3g}  "
-              f"ej-density = {A.ej_density:.3g}  ej-gamma = {A.ej_gamma:.3g}  "
+              f"ej-density = {A.ej_density:.3g}  ej-gamma = {A.ej_gamma:.3g}  ej-voxel = {A.ej_voxel:.3g}  "
               f"body {len(xb)}  ejecta {len(xe)}"
               + (f" (boulder {int(isb.sum())})" if A.ej_boulders else "")
               + f"  -> {path}", flush=True)
