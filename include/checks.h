@@ -74,6 +74,10 @@
 # error You have chosen COLLINS_PLASTICITY and also COLLINS_PLASTICITY_SIMPLE in parameter.h. Choose either one, not both.
 #endif
 
+#if MURDOCH_ENVELOPE && !COLLINS_PLASTICITY_SIMPLE
+# error MURDOCH_ENVELOPE is implemented only for COLLINS_PLASTICITY_SIMPLE.
+#endif
+
 #if COLLINS_PLASTICITY_SIMPLE && COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
 # error You have chosen COLLINS_PLASTICITY_SIMPLE and also COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY in parameter.h. This combination is not implemented yet...
 #endif

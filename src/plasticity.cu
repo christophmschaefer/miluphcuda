@@ -28,6 +28,9 @@
 #include "miluph.h"
 #include "pressure.h"
 #include "float.h"
+#if MURDOCH_ENVELOPE
+#include "murdoch_envelope.h"
+#endif
 
 
 #if PURE_REGOLITH
@@ -326,6 +329,24 @@ __global__ void plasticityModel(void) {
         y_0 *= ldw_f;   // reduce cohesion (locally)
 # endif
 
+# if MURDOCH_ENVELOPE
+        /* nonlinear failure envelope (Murdoch et al. 2026) with true cohesion y_0, see include/murdoch_envelope.h:
+           y = largest Mohr circle with centre p below the envelope (zero for p <= -y_0/tan(phi_0)), with the Lundborg
+           saturation towards y_M applied to the pressure-dependent part above y(p = 0) */
+        {
+            double dtan = matMurdochDtan[p_rhs.materialId[i]];
+            double sigma_h = matMurdochSigmaH[p_rhs.materialId[i]];
+            double y_p0 = murdoch_yield_strength(0.0, y_0, mu_i, dtan, sigma_h);
+
+            y = murdoch_yield_strength(p.p[i], y_0, mu_i, dtan, sigma_h);
+            if (y > y_p0)
+                y = y_p0 + (y - y_p0) / (1.0 + (y - y_p0) / (y_M - y_p0));
+
+            // negative-pressure cap at the zero of the envelope (tension cut-off)
+            if (p.p[i] < murdoch_p_zero(y_0, mu_i, dtan))
+                p.p[i] = murdoch_p_zero(y_0, mu_i, dtan);
+        }
+# else
         // Lundborg yield strength curve for p > 0
         // linear decrease to zero with slope = 1 for p < 0 (i.e., zero at -y_0)
         if( p.p[i] > 0.0 ) {
@@ -349,6 +370,7 @@ __global__ void plasticityModel(void) {
         // negative-pressure cap: limit negative pressures to value at zero of yield strength curve (at -cohesion)
         if( p.p[i] < -y_0 )
             p.p[i] = -y_0;
+# endif // MURDOCH_ENVELOPE
 
         // Drucker-Prager-like -> compare to sqrt(J2)
         if (J2 > 0.0) {

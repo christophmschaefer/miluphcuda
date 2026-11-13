@@ -36,6 +36,9 @@
 #include "xsph.h"
 #include "aneos.h"
 #include "linalg.h"
+#if MURDOCH_ENVELOPE
+#include "murdoch_envelope.h"
+#endif
 #include "density.h"
 #include "rhs.h"
 #include "viscosity.h"
@@ -86,6 +89,10 @@ double *matN_d;
 double *matCohesion_d;
 double *matCohesionDamaged_d;
 double *matTensilePressureLimit_d;
+#if MURDOCH_ENVELOPE
+double *matMurdochDtan_d;
+double *matMurdochSigmaH_d;
+#endif
 double *matFrictionAngle_d;
 double *matFrictionAngleDamaged_d;
 double *matAlphaPhi_d;
@@ -310,6 +317,10 @@ __constant__ double *matN;
 __constant__ double *matCohesion;
 __constant__ double *matCohesionDamaged;
 __constant__ double *matTensilePressureLimit;
+#if MURDOCH_ENVELOPE
+__constant__ double *matMurdochDtan;      // tan(phi_0) - tan(phi_inf)
+__constant__ double *matMurdochSigmaH;    // sigma_h
+#endif
 __constant__ double *matFrictionAngle;
 __constant__ double *matFrictionAngleDamaged;
 __constant__ double *matAlphaPhi;
@@ -488,6 +499,11 @@ void transferMaterialsToGPU()
         double *cohesion = (double*)calloc(numberOfElements, sizeof(double));
         double *cohesion_damaged = (double*)calloc(numberOfElements, sizeof(double));
         double *tensile_pressure_limit = (double*)calloc(numberOfElements, sizeof(double));
+#if MURDOCH_ENVELOPE
+        double *friction_angle_low_pressure = (double*)calloc(numberOfElements, sizeof(double));
+        double *murdoch_sigma_h = (double*)calloc(numberOfElements, sizeof(double));
+        double *murdoch_dtan = (double*)calloc(numberOfElements, sizeof(double));
+#endif
         double *friction_angle = (double*)calloc(numberOfElements, sizeof(double));
         double *friction_angle_damaged = (double*)calloc(numberOfElements, sizeof(double));
         double *alpha_phi = (double*)calloc(numberOfElements, sizeof(double));
@@ -807,6 +823,58 @@ void transferMaterialsToGPU()
             /* internal friction coefficient (normally \mu) is tan of angle of internal friction */
             internal_friction[ID] = tan(friction_angle[ID]);
             internal_friction_damaged[ID] = tan(friction_angle_damaged[ID]);
+#if MURDOCH_ENVELOPE
+            /* nonlinear failure envelope (Murdoch et al. 2026): friction_angle = phi_inf, friction_angle_low_pressure
+             * = phi_0 >= phi_inf (default: phi_inf, i.e. linear Mohr-Coulomb), sigma_h > 0 if phi_0 > phi_inf */
+            if (!config_setting_lookup_float(subset, "friction_angle_low_pressure", &friction_angle_low_pressure[ID]))
+                friction_angle_low_pressure[ID] = friction_angle[ID];
+            if (!config_setting_lookup_float(subset, "sigma_h", &murdoch_sigma_h[ID]))
+                murdoch_sigma_h[ID] = 0.0;
+            if (friction_angle[ID] < 0.0 || friction_angle_low_pressure[ID] < friction_angle[ID]
+                    || friction_angle_low_pressure[ID] >= 0.5*M_PI) {
+                fprintf(stderr, "Error: MURDOCH_ENVELOPE requires 0 <= friction_angle <= friction_angle_low_pressure "
+                        "< pi/2 (radians), material %d: friction_angle = %g, friction_angle_low_pressure = %g.\n",
+                        ID, friction_angle[ID], friction_angle_low_pressure[ID]);
+                exit(1);
+            }
+            if (cohesion[ID] < 0.0) {
+                fprintf(stderr, "Error: MURDOCH_ENVELOPE requires cohesion >= 0, material %d.\n", ID);
+                exit(1);
+            }
+            murdoch_dtan[ID] = tan(friction_angle_low_pressure[ID]) - tan(friction_angle[ID]);
+            if (murdoch_dtan[ID] > 0.0 && murdoch_sigma_h[ID] <= 0.0) {
+                fprintf(stderr, "Error: MURDOCH_ENVELOPE with friction_angle_low_pressure > friction_angle requires "
+                        "sigma_h > 0 (in Pa), material %d.\n", ID);
+                exit(1);
+            }
+            if (murdoch_dtan[ID] > 0.0 && murdoch_min_dg(cohesion[ID], internal_friction[ID], murdoch_dtan[ID],
+                                                         murdoch_sigma_h[ID]) <= 0.0) {
+                fprintf(stderr, "Error: MURDOCH_ENVELOPE, material %d: the envelope is curved too strongly for its "
+                        "cohesion (cohesion/sigma_h = %g, phi_inf = %g deg, phi_0 = %g deg), the touching point of the "
+                        "Mohr circle would not be unique (see include/murdoch_envelope.h). Use a smaller "
+                        "cohesion/sigma_h or a smaller phi_0.\n", ID, cohesion[ID]/murdoch_sigma_h[ID],
+                        friction_angle[ID]*180.0/M_PI, friction_angle_low_pressure[ID]*180.0/M_PI);
+                exit(1);
+            }
+            if (murdoch_dtan[ID] <= 0.0) {
+                murdoch_dtan[ID] = 0.0;
+                murdoch_sigma_h[ID] = 0.0;
+            }
+            /* Lundborg saturation y_p0 + d/(1 + d/(yield_stress - y_p0)) needs yield_stress > y_p0 = Y(p = 0),
+             * otherwise the yield strength exceeds the envelope, diverges and becomes negative. Materials without any
+             * strength (c = 0, friction_angle = 0) are exempt, their yield strength is zero anyway. */
+            {
+                double y_p0 = murdoch_yield_strength(0.0, cohesion[ID], internal_friction[ID], murdoch_dtan[ID],
+                                                     murdoch_sigma_h[ID]);
+                if ((cohesion[ID] > 0.0 || internal_friction[ID] + murdoch_dtan[ID] > 0.0)
+                        && !(yield_stress[ID] > y_p0)) {
+                    fprintf(stderr, "Error: MURDOCH_ENVELOPE, material %d: yield_stress = %g must be larger than "
+                            "Y(p = 0) = cohesion cos(phi_0) = %g (Lundborg saturation; use e.g. 1e20 for none).\n",
+                            ID, yield_stress[ID], y_p0);
+                    exit(1);
+                }
+            }
+#endif
 #if SOLID
             young_modulus[ID] = 9.0*bulk_modulus[ID]*shear_modulus[ID]/(3.0*bulk_modulus[ID]+shear_modulus[ID]);
 #endif
@@ -1049,6 +1117,10 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matCohesion_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matCohesionDamaged_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matTensilePressureLimit_d, numberOfElements*sizeof(double)));
+#if MURDOCH_ENVELOPE
+        cudaVerify(cudaMalloc((void **)&matMurdochDtan_d, numberOfElements*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matMurdochSigmaH_d, numberOfElements*sizeof(double)));
+#endif
         cudaVerify(cudaMalloc((void **)&matFrictionAngle_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matFrictionAngleDamaged_d, numberOfElements*sizeof(double)));
         cudaVerify(cudaMalloc((void **)&matAlphaPhi_d, numberOfElements*sizeof(double)));
@@ -1163,6 +1235,10 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpy(matCohesion_d, cohesion, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matCohesionDamaged_d, cohesion_damaged, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matTensilePressureLimit_d, tensile_pressure_limit, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+#if MURDOCH_ENVELOPE
+        cudaVerify(cudaMemcpy(matMurdochDtan_d, murdoch_dtan, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matMurdochSigmaH_d, murdoch_sigma_h, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
+#endif
         cudaVerify(cudaMemcpy(matFrictionAngle_d, friction_angle, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matFrictionAngleDamaged_d, friction_angle_damaged, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
         cudaVerify(cudaMemcpy(matAlphaPhi_d, alpha_phi, numberOfElements*sizeof(double), cudaMemcpyHostToDevice));
@@ -1337,6 +1413,10 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMemcpyToSymbol(matCohesion, &matCohesion_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matCohesionDamaged, &matCohesionDamaged_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matTensilePressureLimit, &matTensilePressureLimit_d, sizeof(void*)));
+#if MURDOCH_ENVELOPE
+        cudaVerify(cudaMemcpyToSymbol(matMurdochDtan, &matMurdochDtan_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matMurdochSigmaH, &matMurdochSigmaH_d, sizeof(void*)));
+#endif
         cudaVerify(cudaMemcpyToSymbol(matFrictionAngle, &matFrictionAngle_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matFrictionAngleDamaged, &matFrictionAngleDamaged_d, sizeof(void*)));
         cudaVerify(cudaMemcpyToSymbol(matAlphaPhi, &matAlphaPhi_d, sizeof(void*)));
@@ -1406,6 +1486,24 @@ void transferMaterialsToGPU()
                 fprintf(stdout, "    material %d: tensile_pressure_limit = %g Pa (damaged material holds tension down to -max(cohesion_damaged, tensile_pressure_limit))\n",
                         i, tensile_pressure_limit[i]);
         }
+# if MURDOCH_ENVELOPE
+        fprintf(stdout, "\nNonlinear failure envelope (MURDOCH_ENVELOPE, Murdoch et al. 2026), "
+                "yield strength = largest Mohr circle:\n");
+        fprintf(stdout, "    material no.  c [Pa]        phi_inf [deg]  phi_0 [deg]  sigma_h [Pa]  p_zero [Pa]   "
+                "Y(1 Pa)       Y(sigma_h)    Y(100 sigma_h)\n");
+        for (i = 0; i < numberOfMaterials; i++) {
+            double sh = (murdoch_sigma_h[i] > 0.0) ? murdoch_sigma_h[i] : 1.0;
+            fprintf(stdout, "    %12d  %-12g  %-13g  %-11g  %-12g  %-12g  %-12g  %-12g  %-12g\n", i, cohesion[i],
+                    friction_angle[i]*180.0/M_PI, friction_angle_low_pressure[i]*180.0/M_PI, murdoch_sigma_h[i],
+                    murdoch_p_zero(cohesion[i], internal_friction[i], murdoch_dtan[i]),
+                    murdoch_yield_strength(1.0, cohesion[i], internal_friction[i], murdoch_dtan[i], murdoch_sigma_h[i]),
+                    murdoch_yield_strength(sh, cohesion[i], internal_friction[i], murdoch_dtan[i], murdoch_sigma_h[i]),
+                    murdoch_yield_strength(100.0*sh, cohesion[i], internal_friction[i], murdoch_dtan[i],
+                                           murdoch_sigma_h[i]));
+        }
+        fprintf(stdout, "    (Y without the Lundborg saturation by yield_stress; sigma_h = 0: linear Mohr-Coulomb, "
+                "Y(sigma_h) given for 1 Pa)\n");
+# endif
 #endif
 #if LOW_DENSITY_WEAKENING
         fprintf(stdout, "\nUsing following values for low-density weakening:\n");
@@ -1756,6 +1854,11 @@ void transferMaterialsToGPU()
         free(cohesion);
         free(cohesion_damaged);
         free(tensile_pressure_limit);
+#if MURDOCH_ENVELOPE
+        free(friction_angle_low_pressure);
+        free(murdoch_sigma_h);
+        free(murdoch_dtan);
+#endif
         free(cohesion_coefficient);
         free(melt_energy);
         free(friction_angle);
@@ -1894,6 +1997,10 @@ void cleanupMaterials()
     cudaVerify(cudaFree(matCohesion_d));
     cudaVerify(cudaFree(matCohesionDamaged_d));
     cudaVerify(cudaFree(matTensilePressureLimit_d));
+#if MURDOCH_ENVELOPE
+    cudaVerify(cudaFree(matMurdochDtan_d));
+    cudaVerify(cudaFree(matMurdochSigmaH_d));
+#endif
     cudaVerify(cudaFree(matCohesionCoefficient_d));
     cudaVerify(cudaFree(matMeltEnergy_d));
     cudaVerify(cudaFree(matFrictionAngle_d));

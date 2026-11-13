@@ -109,6 +109,10 @@ extern double *matN_d;
 extern double *matCohesion_d;
 extern double *matCohesionDamaged_d;
 extern double *matTensilePressureLimit_d;
+#if MURDOCH_ENVELOPE
+extern double *matMurdochDtan_d;
+extern double *matMurdochSigmaH_d;
+#endif
 extern double *matFrictionAngle_d;
 extern double *matFrictionAngleDamaged_d;
 extern double *matAlphaPhi_d;
@@ -265,6 +269,10 @@ extern __constant__ double *matN;
 extern __constant__ double *matCohesion;
 extern __constant__ double *matCohesionDamaged;
 extern __constant__ double *matTensilePressureLimit;
+#if MURDOCH_ENVELOPE
+extern __constant__ double *matMurdochDtan;
+extern __constant__ double *matMurdochSigmaH;
+#endif
 extern __constant__ double *matFrictionAngle;
 extern __constant__ double *matFrictionAngleDamaged;
 extern __constant__ double *matAlphaPhi;

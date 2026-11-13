@@ -177,6 +177,19 @@
 //       Unlike in (4), Y decreases to zero for p < 0 (with slope = 1, i.e., zero at -cohesion).
 //       In addition, a negative-pressure cap limits negative pressures to the zero of the yield strength curve (at -cohesion).
 #define COLLINS_PLASTICITY_SIMPLE 1
+//       MURDOCH_ENVELOPE: with COLLINS_PLASTICITY_SIMPLE, replace the yield strength curve by the nonlinear
+//       (hyperbolic) Mohr-Coulomb envelope of Maksimovic (1989, 1991) with true cohesion, as used by
+//       Murdoch et al. (2026, PSJ 7, 240):
+//              tau(sigma_n) = c + sigma_n tan(phi_inf) + sigma_n (tan(phi_0) - tan(phi_inf)) / (1 + sigma_n/sigma_h)
+//       The yield strength is the largest Mohr circle below this envelope, applied to mean pressure p and sqrt(J2)
+//       (Drucker-Prager type, matched to Mohr-Coulomb at Lode angle 0), see include/murdoch_envelope.h.
+//       Material parameters: cohesion = c, friction_angle = phi_inf, friction_angle_low_pressure = phi_0 (default
+//       phi_inf), sigma_h (in Pa, required if phi_0 > phi_inf); yield_stress still adds the Lundborg saturation.
+//       Note: friction_angle and cohesion are the Mohr-Coulomb parameters here (linear limit sqrt(J2) = c cos(phi)
+//       + p sin(phi)), whereas without MURDOCH_ENVELOPE the yield strength is cohesion + tan(friction_angle) p.
+//       The switch applies to all materials. Negative pressures are limited to the zero of the envelope,
+//       -c/tan(phi_0). yield_stress must be larger than Y(p = 0) = c cos(phi_0), e.g. 1e20 for no saturation.
+#define MURDOCH_ENVELOPE 0
 
 // Additional strength reduction for low-density states (below the reference density). For most plasticity models this
 // is done by reducing the cohesion, and by that the whole yield envelope. For COLLINS_PLASTICITY only the damaged

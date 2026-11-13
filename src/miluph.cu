@@ -228,7 +228,13 @@ static void print_compile_information(void)
 # endif
     fprintf(stdout, "\n");
 #elif COLLINS_PLASTICITY_SIMPLE
+# if MURDOCH_ENVELOPE
+    fprintf(stdout, "    simplified version of Collins model with the nonlinear failure envelope of Murdoch et al. "
+            "(2026) + Lundborg saturation + negative-pressure cap at the zero of the envelope "
+            "(i.e., no dynamic fragmentation/damage)\n");
+# else
     fprintf(stdout, "    simplified version of Collins model: only Lundborg yield strength curve + simple negative-pressure cap (i.e., no dynamic fragmentation/damage)\n");
+# endif
 #elif VON_MISES_PLASTICITY
     fprintf(stdout, "    simple von Mises yield strength, independent of pressure\n");
 #endif

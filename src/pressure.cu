@@ -28,6 +28,9 @@
 #include "miluph.h"
 #include "aneos.h"
 #include <float.h>
+#if MURDOCH_ENVELOPE
+#include "murdoch_envelope.h"
+#endif
 
 /*
  * Tillotson EOS (notation as in Melosh 1989, "Impact Cratering") for density rho and specific internal energy e
@@ -639,9 +642,15 @@ __global__ void calculatePressure() {
             printf("ERROR. Found low-density weakening factor outside [0,1], with ldw_f = %e...\n", ldw_f);
         }
 # endif
+# if COLLINS_PLASTICITY_SIMPLE && MURDOCH_ENVELOPE
+        // limit negative pressures to the zero of the nonlinear envelope (at -cohesion/tan(phi_0))
+        if (p.p[i] < murdoch_p_zero(y_0, matInternalFriction[matId], matMurdochDtan[matId]))
+            p.p[i] = murdoch_p_zero(y_0, matInternalFriction[matId], matMurdochDtan[matId]);
+# else
         // limit negative pressures to value at zero of yield strength curve (at -cohesion)
         if( p.p[i] < -y_0)
             p.p[i] = -y_0;
+# endif
 #endif
 
 #if REAL_HYDRO
