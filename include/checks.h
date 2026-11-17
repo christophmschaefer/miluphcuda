@@ -78,6 +78,10 @@
 # error MURDOCH_ENVELOPE is implemented only for COLLINS_PLASTICITY_SIMPLE.
 #endif
 
+#if YIELD_SMOOTHED_PRESSURE && !COLLINS_PLASTICITY_SIMPLE
+# error YIELD_SMOOTHED_PRESSURE is implemented only for COLLINS_PLASTICITY_SIMPLE.
+#endif
+
 #if COLLINS_PLASTICITY_SIMPLE && COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY
 # error You have chosen COLLINS_PLASTICITY_SIMPLE and also COLLINS_PLASTICITY_INCLUDE_MELT_ENERGY in parameter.h. This combination is not implemented yet...
 #endif

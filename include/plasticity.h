@@ -44,6 +44,14 @@ __global__ void plasticity(void);
 __global__ void plasticityModel(void);
 #endif
 
+#if YIELD_SMOOTHED_PRESSURE
+/**
+ * @brief Kernel average of the pressure over the neighbours of the same material (Shepard-normalised), used by
+ * plasticityModel for the yield strength of `COLLINS_PLASTICITY_SIMPLE`.
+ */
+__global__ void smoothPressureForYield(int *interactions);
+#endif
+
 #if JC_PLASTICITY
 /**
  * @brief This is the Johnson-Cook plasticity model.

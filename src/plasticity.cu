@@ -31,6 +31,11 @@
 #if MURDOCH_ENVELOPE
 #include "murdoch_envelope.h"
 #endif
+#if YIELD_SMOOTHED_PRESSURE
+#include "kernel.h"
+
+extern __device__ SPH_kernel kernel;
+#endif
 
 
 #if PURE_REGOLITH
@@ -116,6 +121,68 @@ __global__ void plasticity()
 
 
 
+#if YIELD_SMOOTHED_PRESSURE
+/* kernel average of the pressure over the neighbours of the same material, Shepard-normalised:
+ *     p_yield_i = sum_j m_j/rho_j p_j W_ij / sum_j m_j/rho_j W_ij      (j = i included)
+ * used for the yield strength in plasticityModel; a separate kernel, since plasticityModel changes p (cap) */
+__global__ void smoothPressureForYield(int *interactions)
+{
+    int64_t interactions_index;
+    int i, inc, j, m, matId;
+    double dr[DIM], dWdr, W, dWdx[DIM], w, num, den;
+#if AVERAGE_KERNELS
+    double Wj;
+#else
+    double h;
+#endif
+
+    inc = blockDim.x * gridDim.x;
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+        matId = p_rhs.materialId[i];
+        /* plasticityModel reads p_yield of every particle */
+        if (matId == EOS_TYPE_IGNORE || matEOS[matId] == EOS_TYPE_IGNORE) {
+            p_rhs.p_yield[i] = p.p[i];
+            continue;
+        }
+        for (m = 0; m < DIM; m++)
+            dr[m] = 0.0;
+        W = 0.0;
+        kernel(&W, dWdx, &dWdr, dr, p.h[i]);
+        w = p.m[i] / p.rho[i] * W;
+        num = w * p.p[i];
+        den = w;
+        for (m = 0; m < p.noi[i]; m++) {
+            interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + m;
+            j = interactions[interactions_index];
+            if (p_rhs.materialId[j] != matId)
+                continue;
+            dr[0] = p.x[i] - p.x[j];
+#if DIM > 1
+            dr[1] = p.y[i] - p.y[j];
+#if DIM > 2
+            dr[2] = p.z[i] - p.z[j];
+#endif
+#endif
+            W = 0.0;
+#if AVERAGE_KERNELS
+            kernel(&W, dWdx, &dWdr, dr, p.h[i]);
+            Wj = 0.0;
+            kernel(&Wj, dWdx, &dWdr, dr, p.h[j]);
+            W = 0.5 * (W + Wj);
+#else
+            h = 0.5 * (p.h[i] + p.h[j]);
+            kernel(&W, dWdx, &dWdr, dr, h);
+#endif
+            w = p.m[j] / p.rho[j] * W;
+            num += w * p.p[j];
+            den += w;
+        }
+        p_rhs.p_yield[i] = den > 0.0 ? num / den : p.p[i];
+    }
+}
+#endif
+
+
 #if PLASTICITY
 __global__ void plasticityModel(void) {
     register int i, inc, d, e;
@@ -125,6 +192,9 @@ __global__ void plasticityModel(void) {
     register double A, B;   // Drucker-Prager constants
     register double mu_i, mu_d;  // coefficients of internal friction
     register int matId;
+#if COLLINS_PLASTICITY_SIMPLE
+    double p_y;     // pressure for the yield strength: p, or its kernel average with YIELD_SMOOTHED_PRESSURE
+#endif
 #if LOW_DENSITY_WEAKENING
     register double rho0, eta, ldw_f, ldw_eta_limit, ldw_alpha, ldw_beta, ldw_gamma;
 #endif
@@ -321,6 +391,11 @@ __global__ void plasticityModel(void) {
         }
 
 #elif COLLINS_PLASTICITY_SIMPLE
+# if YIELD_SMOOTHED_PRESSURE
+        p_y = p_rhs.p_yield[i];
+# else
+        p_y = p.p[i];
+# endif
         y_0 = matCohesion[p_rhs.materialId[i]];
         y_M = matYieldStress[p_rhs.materialId[i]];
         mu_i = matInternalFriction[p_rhs.materialId[i]];
@@ -338,7 +413,7 @@ __global__ void plasticityModel(void) {
             double sigma_h = matMurdochSigmaH[p_rhs.materialId[i]];
             double y_p0 = murdoch_yield_strength(0.0, y_0, mu_i, dtan, sigma_h);
 
-            y = murdoch_yield_strength(p.p[i], y_0, mu_i, dtan, sigma_h);
+            y = murdoch_yield_strength(p_y, y_0, mu_i, dtan, sigma_h);
             if (y > y_p0)
                 y = y_p0 + (y - y_p0) / (1.0 + (y - y_p0) / (y_M - y_p0));
 
@@ -349,11 +424,11 @@ __global__ void plasticityModel(void) {
 # else
         // Lundborg yield strength curve for p > 0
         // linear decrease to zero with slope = 1 for p < 0 (i.e., zero at -y_0)
-        if( p.p[i] > 0.0 ) {
-            y = y_0 + mu_i * p.p[i]
-                / (1.0 + mu_i * p.p[i]  / (y_M - y_0) );
-        } else if( p.p[i] > -y_0 ) {
-            y = y_0 + p.p[i];
+        if( p_y > 0.0 ) {
+            y = y_0 + mu_i * p_y
+                / (1.0 + mu_i * p_y  / (y_M - y_0) );
+        } else if( p_y > -y_0 ) {
+            y = y_0 + p_y;
         } else {
             y = 0.0;
         }

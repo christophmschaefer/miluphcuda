@@ -235,6 +235,9 @@ static void print_compile_information(void)
 # else
     fprintf(stdout, "    simplified version of Collins model: only Lundborg yield strength curve + simple negative-pressure cap (i.e., no dynamic fragmentation/damage)\n");
 # endif
+# if YIELD_SMOOTHED_PRESSURE
+    fprintf(stdout, "    yield strength evaluated with the kernel average of the pressure (YIELD_SMOOTHED_PRESSURE)\n");
+# endif
 #elif VON_MISES_PLASTICITY
     fprintf(stdout, "    simple von Mises yield strength, independent of pressure\n");
 #endif

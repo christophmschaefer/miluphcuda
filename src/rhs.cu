@@ -555,6 +555,21 @@ void rightHandSide()
     fflush(stdout);
 #endif
 
+#if YIELD_SMOOTHED_PRESSURE
+# if DEBUG_RHS_RUNTIMES
+    cudaEventRecord(start, 0);
+# endif
+    cudaVerifyKernel((smoothPressureForYield<<<numberOfMultiprocessors * 4, NUM_THREADS_256>>>(interactions)));
+    cudaVerify(cudaDeviceSynchronize());
+# if DEBUG_RHS_RUNTIMES
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time[timerCounter], start, stop);
+    printf("duration smoothPressureForYield: %.7f ms\n", time[timerCounter]);
+    totalTime += time[timerCounter++];
+# endif
+#endif
+
 #if PLASTICITY
 # if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);

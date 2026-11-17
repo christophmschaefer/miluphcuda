@@ -264,6 +264,10 @@ struct Particle {
     double *shepard_correction; ///< the shepard correction factor for zeroth order consistency
 #endif
 
+#if YIELD_SMOOTHED_PRESSURE
+    double *p_yield; ///< kernel average of the pressure (neighbours of the same material), for the yield strength
+#endif
+
 #if TENSORIAL_CORRECTION
     double *tensorialCorrectionMatrix; ///< correction matrix for linear consistency
     double *tensorialCorrectiondWdrr; ///< correction factors for linear consistency

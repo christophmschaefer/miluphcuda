@@ -190,6 +190,15 @@
 //       The switch applies to all materials. Negative pressures are limited to the zero of the envelope,
 //       -c/tan(phi_0). yield_stress must be larger than Y(p = 0) = c cos(phi_0), e.g. 1e20 for no saturation.
 #define MURDOCH_ENVELOPE 0
+//       YIELD_SMOOTHED_PRESSURE: with COLLINS_PLASTICITY_SIMPLE, evaluate the yield strength with the kernel average
+//       of the pressure over the neighbours of the same material (Shepard-normalised, weights m_j/rho_j W_ij, the
+//       particle itself included) instead of the particle pressure. The particle pressure itself, its use in the
+//       momentum equation and the negative-pressure cap are unchanged. The SPH pressure of a granular flow carries
+//       noise at the particle scale; with a nonlinear (concave) yield strength curve the noise changes the mean
+//       strength. The average is only zeroth-order consistent: at free surfaces and material interfaces it is
+//       one-sided, i.e. biased towards the interior pressure over about one smoothing length. Costs one more loop
+//       over the neighbours.
+#define YIELD_SMOOTHED_PRESSURE 0
 
 // Additional strength reduction for low-density states (below the reference density). For most plasticity models this
 // is done by reducing the cohesion, and by that the whole yield envelope. For COLLINS_PLASTICITY only the damaged
