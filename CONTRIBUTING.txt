@@ -1,0 +1,83 @@
+Contributing Bug Fixes to miluphcuda
+===================================
+
+Repository: https://github.com/christophmschaefer/miluphcuda
+
+We welcome bug fixes and improvements to miluphcuda. The preferred way to
+contribute changes is through a GitHub pull request.
+
+1. Check existing issues
+------------------------
+Before starting, check whether the problem has already been reported:
+https://github.com/christophmschaefer/miluphcuda/issues
+
+For larger changes, consider opening an issue first to discuss your approach.
+
+2. Fork and clone the repository
+--------------------------------
+Click "Fork" on the GitHub repository page, then clone your fork:
+
+    git clone https://github.com/YOUR-USERNAME/miluphcuda.git
+    cd miluphcuda
+
+3. Create a branch
+------------------
+Create a separate branch for each independent fix:
+
+    git switch -c fix/short-description
+
+The default branch is main. The cms_devel branch contains newer,
+experimental features; check which branch your fix should target.
+
+4. Make and test your changes
+-----------------------------
+Keep changes focused and follow the conventions in CodingStyle.txt.
+
+Build and test the code as appropriate for your system. The README describes
+CUDA dependencies, configuration, and compilation using configure.sh and make.
+Existing examples/ and test_cases/ can help with verification.
+
+Where possible, include a test or a reproducible example demonstrating the
+original bug and confirming the fix.
+
+5. Commit and push
+------------------
+Review your changes and commit them with a descriptive message:
+
+    git diff
+    git add path/to/changed-file
+    git commit -m "Fix incorrect boundary condition"
+    git push -u origin fix/short-description
+
+6. Open a pull request
+----------------------
+On GitHub, open a pull request from your branch to the appropriate branch of
+christophmschaefer/miluphcuda.
+
+Please describe:
+- The problem and how to reproduce it.
+- What you changed and why.
+- How you tested the fix (including relevant compiler, CUDA/GPU, and settings).
+- Any limitations or remaining issues.
+
+Prefer one pull request per independent fix. Keep unrelated formatting changes
+out of bug-fix pull requests.
+
+7. Respond to review feedback
+-----------------------------
+Maintainers may ask for clarification or further changes. Make additional
+commits on the same branch and push them; the pull request updates automatically.
+
+Keeping your fork up to date
+----------------------------
+To synchronize your local main branch with the original repository:
+
+    git remote add upstream https://github.com/christophmschaefer/miluphcuda.git
+    git fetch upstream
+    git switch main
+    git merge upstream/main
+    git push origin main
+
+Create a new branch for each subsequent contribution.
+
+Thank you for helping improve miluphcuda!
