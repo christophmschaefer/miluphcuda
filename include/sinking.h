@@ -24,4 +24,9 @@
 #include "parameter.h"
 
 __global__ void ParticleSinking(void);
+#if PARTICLE_ACCRETION && UPDATE_SINK_VALUES
+__global__ void ProcessAccretionSheet(void);
+void initAccretionSheet(int maxParticles);
+void freeAccretionSheet(void);
+#endif
 

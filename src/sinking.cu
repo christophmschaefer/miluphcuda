@@ -27,6 +27,17 @@
 #include "pressure.h"
 #include "config_parameter.h"
 
+#if PARTICLE_ACCRETION && UPDATE_SINK_VALUES
+/* "accretion sheet" -- fixes a race condition in UpdateSinkValues.
+ * Before: every GPU thread that accreted a particle wrote into the point mass directly; many
+ * threads did this at once and overwrote each other, so accreted mass/momentum was lost.
+ * Now: ParticleSinking only writes the particle onto a numbered line of this sheet (atomicAdd gives
+ * every thread its own line), and ProcessAccretionSheet replays UpdateSinkValues line by line. */
+__device__ int accretionCount;       // number of filled lines this step
+__device__ int *accretionParticle;   // line k -> index of the accreted particle
+__device__ int *accretionSink;       // line k -> index of the point mass it was accreted onto
+#endif
+
 
 #if PARTICLE_ACCRETION
 #if UPDATE_SINK_VALUES
@@ -74,7 +85,10 @@ __global__ void ParticleSinking()
 
 #if DIM == 3
             dist_0 = sqrt( (pointmass.x[0] - p.x[i])*(pointmass.x[0] - p.x[i]) + (pointmass.y[0] - p.y[i])*(pointmass.y[0] - p.y[i]) + (pointmass.z[0] - p.z[i])*(pointmass.z[0] - p.z[i]) );
-	        dist_1 = sqrt( (pointmass.x[1] - p.x[i])*(pointmass.x[1] - p.x[i]) + (pointmass.y[1] - p.y[i])*(pointmass.y[1] - p.y[i]) + (pointmass.z[1] - p.z[i])*(pointmass.z[1] - p.z[i]) );
+            dist_1 = 1e300;   // no second point mass -> never chosen (avoids reading pointmass.x[1] out of bounds)
+            if (numPointmasses > 1) {
+	            dist_1 = sqrt( (pointmass.x[1] - p.x[i])*(pointmass.x[1] - p.x[i]) + (pointmass.y[1] - p.y[i])*(pointmass.y[1] - p.y[i]) + (pointmass.z[1] - p.z[i])*(pointmass.z[1] - p.z[i]) );
+            }
 
             vel = sqrt(p.vx[i]*p.vx[i] + p.vy[i]*p.vy[i] + p.vz[i]*p.vz[i]);
 #endif //end DIM == 3
@@ -120,7 +134,10 @@ __global__ void ParticleSinking()
 		    //check if particle is to be accreted (bound) to sink: particle velocity < escape velocity && specific angular momentum of particle < angular momentum to form circular orbit
 		    if (vel < vel_esc && h < h_circ) {
 #if UPDATE_SINK_VALUES
-			    UpdateSinkValues(n, i);
+                // do not touch the point mass here (race) -- write the particle onto the sheet instead
+                int line = atomicAdd(&accretionCount, 1);   // reserve my own line number
+                accretionParticle[line] = i;                // which particle
+                accretionSink[line] = n;                    // onto which point mass
 #endif //UPDATE_SINK_VALUES
 			    p_rhs.materialId[i] = EOS_TYPE_IGNORE;
 			} 
@@ -132,3 +149,34 @@ __global__ void ParticleSinking()
 	}
 }
 #endif //PARTICLE_ACCRETION
+
+#if PARTICLE_ACCRETION && UPDATE_SINK_VALUES
+// launched with ONE thread -> the point mass is updated strictly one particle after the other,
+// exactly the way UpdateSinkValues was written to be used.
+__global__ void ProcessAccretionSheet(void)
+{
+    for (int k = 0; k < accretionCount; k++) {
+        UpdateSinkValues(accretionSink[k], accretionParticle[k]);
+    }
+    accretionCount = 0;   // clean sheet for the next step
+}
+
+// host side -- allocate the sheet once with room for every particle, free it at the end
+static int *sheetParticle_d = NULL, *sheetSink_d = NULL;   // host copies of the device pointers, for freeing
+
+void initAccretionSheet(int maxParticles)
+{
+    int zero = 0;
+    cudaVerify(cudaMalloc((void**)&sheetParticle_d, maxParticles*sizeof(int)));
+    cudaVerify(cudaMalloc((void**)&sheetSink_d, maxParticles*sizeof(int)));
+    cudaVerify(cudaMemcpyToSymbol(accretionParticle, &sheetParticle_d, sizeof(int*)));
+    cudaVerify(cudaMemcpyToSymbol(accretionSink, &sheetSink_d, sizeof(int*)));
+    cudaVerify(cudaMemcpyToSymbol(accretionCount, &zero, sizeof(int)));
+}
+
+void freeAccretionSheet(void)
+{
+    cudaVerify(cudaFree(sheetParticle_d));
+    cudaVerify(cudaFree(sheetSink_d));
+}
+#endif
