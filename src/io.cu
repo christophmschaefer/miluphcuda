@@ -2205,6 +2205,9 @@ void write_particles_to_file(File file) {
             j = p_host.materialId[i];
             if( g_eos_is_aneos[j] == TRUE ) {
                 aneos_i_rho = array_index_host(p_host.rho[i], g_aneos_rho[j], g_aneos_n_rho[j]);
+                /* unclamped index for the phase-flag lookup: it handles rho outside the table itself,
+                   with the clamped index it takes the in-table branch and exits */
+                int aneos_i_rho_raw = aneos_i_rho;
                 if (aneos_i_rho < 0) {
                     aneos_i_rho = (p_host.rho[i] < g_aneos_rho[j][0]) ? 0 : g_aneos_n_rho[j] - 2;
                 }
@@ -2225,14 +2228,14 @@ void write_particles_to_file(File file) {
                     /* e below table minimum: clamp to cold curve */
                     aneos_i_e = 0;
                     //x_aneos_phase_flag[i] = discrete_value_table_lookup_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_phase_flag[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
-                    x_aneos_phase_flag[i] = discrete_value_table_lookup_from_matrix(p_host.rho[i], g_aneos_e[j][0], g_aneos_phase_flag[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
+                    x_aneos_phase_flag[i] = discrete_value_table_lookup_from_matrix(p_host.rho[i], g_aneos_e[j][0], g_aneos_phase_flag[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho_raw, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
 
                 } else {
                     /* normal case: rho and e within table */
                     x_aneos_T[i]       = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_T[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
                     x_aneos_cs[i]      = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_cs[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
                     x_aneos_entropy[i] = bilinear_interpolation_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_entropy[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
-                    x_aneos_phase_flag[i] = discrete_value_table_lookup_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_phase_flag[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
+                    x_aneos_phase_flag[i] = discrete_value_table_lookup_from_matrix(p_host.rho[i], p_host.e[i], g_aneos_phase_flag[j], g_aneos_rho[j], g_aneos_e[j], aneos_i_rho_raw, aneos_i_e, g_aneos_n_rho[j], g_aneos_n_e[j], i);
                 }
             }
             else {
