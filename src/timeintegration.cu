@@ -213,6 +213,9 @@ void initIntegration()
 #endif
 
     cudaVerifyKernel((initializeSoundspeed<<<numberOfMultiprocessors*4, NUM_THREADS_512>>>()));
+#if PARTICLE_ACCRETION && UPDATE_SINK_VALUES
+    initAccretionSheet(maxNumberOfParticles);   // allocate the accretion sheet once
+#endif
 }
 
 
@@ -225,6 +228,9 @@ void afterIntegrationStep(void)
 #endif
 #if PARTICLE_ACCRETION
     cudaVerifyKernel((ParticleSinking<<<numberOfMultiprocessors*4, NUM_THREADS_PRESSURE>>>()));
+#if UPDATE_SINK_VALUES
+    cudaVerifyKernel((ProcessAccretionSheet<<<1, 1>>>()));   // 1 block x 1 thread -> no race
+#endif
 #endif
 
 #if MORE_OUTPUT
@@ -240,6 +246,9 @@ void endIntegration(void)
 
     // free memory
     cudaVerify(cudaFree(minxPerBlock));
+#if PARTICLE_ACCRETION && UPDATE_SINK_VALUES
+    freeAccretionSheet();
+#endif
     cudaVerify(cudaFree(maxxPerBlock));
 #if DIM > 1
     cudaVerify(cudaFree(minyPerBlock));
