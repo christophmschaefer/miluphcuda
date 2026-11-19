@@ -33,6 +33,34 @@
 //function adds to sink: mass and velocity (angular momentum, linear momentum) of the accreted particle and calculate the new position of sink (COM)
 __device__ void UpdateSinkValues(int sink_num, int particle_id) 
 {
+    // the COM merge below conserves mass and linear momentum but drops the particle's
+    // angular momentum relative to the sink. Keep it in the sink's spin:
+    //   dS = mu * (x_p - X) x (v_p - V),   mu = M m / (M + m)
+    // Must be evaluated BEFORE X, V and M are updated. Exact for this merge, for any coordinate origin.
+    {
+        double M  = pointmass.m[sink_num];
+        double mp = p.m[particle_id];
+        double mu = M * mp / (M + mp);
+        double rx = p.x[particle_id]  - pointmass.x[sink_num];
+        double ry = p.y[particle_id]  - pointmass.y[sink_num];
+        double ux = p.vx[particle_id] - pointmass.vx[sink_num];
+        double uy = p.vy[particle_id] - pointmass.vy[sink_num];
+#if DIM == 3
+        double rz = p.z[particle_id]  - pointmass.z[sink_num];
+        double uz = p.vz[particle_id] - pointmass.vz[sink_num];
+        pointmass.spinx[sink_num] += mu * (ry*uz - rz*uy);
+        pointmass.spiny[sink_num] += mu * (rz*ux - rx*uz);
+#endif
+        pointmass.spinz[sink_num] += mu * (rx*uy - ry*ux);
+    }
+    // fill the "v_accreted" output (written from vx0/vy0/vz0): store the particle's
+    // velocity at the moment of accretion (boundary.cu zeroes it at the next step)
+    p.vx0[particle_id] = p.vx[particle_id];
+    p.vy0[particle_id] = p.vy[particle_id];
+#if DIM == 3
+    p.vz0[particle_id] = p.vz[particle_id];
+#endif
+
     //COM - position - velocity
     pointmass.x[sink_num] = (pointmass.m[sink_num]*pointmass.x[sink_num] + p.m[particle_id]*p.x[particle_id]) / (pointmass.m[sink_num] + p.m[particle_id]);
     pointmass.y[sink_num] = (pointmass.m[sink_num]*pointmass.y[sink_num] + p.m[particle_id]*p.y[particle_id]) / (pointmass.m[sink_num] + p.m[particle_id]);

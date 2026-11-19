@@ -1025,6 +1025,23 @@ void read_particles_from_file(File inputFile)
         for (i = 0; i < my_anop; i++) {
             pointmass_host.rmax[i] = x[i];
         }
+        // sink spin (older files have no /spin -> it stays at the zero set at allocation)
+        {
+            double *s = (double *) malloc(sizeof(double) * my_anop * 3);
+            hid_t spin_id = H5Dopen(file_id, "/spin", H5P_DEFAULT);
+            if (spin_id < 0) {
+                fprintf(stdout, "No /spin in point mass file, sink spin starts at zero.\n");
+            } else {
+                status = H5Dread(spin_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, s);
+                status = H5Dclose(spin_id);
+                for (i = 0; i < my_anop; i++) {
+                    pointmass_host.spinx[i] = s[3*i];
+                    pointmass_host.spiny[i] = s[3*i+1];
+                    pointmass_host.spinz[i] = s[3*i+2];
+                }
+            }
+            free(s);
+        }
         free(x);
 
         // read feels_particles flag
@@ -1763,16 +1780,19 @@ void write_particles_to_file(File file) {
         totalkineticenergy += pointmass_host.m[i] * v;
 #if DIM == 2
         binaryangularmomentum[0] += pointmass_host.m[i] * (pointmass_host.x[i]*pointmass_host.vy[i] - pointmass_host.y[i]*pointmass_host.vx[i]);
-        totalangularmomentum[0] += binaryangularmomentum[0];
+        totalangularmomentum[0] += pointmass_host.spinz[i];   // sink spin (2D: z only)
 #elif DIM > 2
         binaryangularmomentum[0] += pointmass_host.m[i] * (pointmass_host.y[i]*pointmass_host.vz[i] - pointmass_host.z[i]*pointmass_host.vy[i]);
         binaryangularmomentum[1] += pointmass_host.m[i] * (pointmass_host.z[i]*pointmass_host.vx[i] - pointmass_host.x[i]*pointmass_host.vz[i]);
         binaryangularmomentum[2] += pointmass_host.m[i] * (pointmass_host.x[i]*pointmass_host.vy[i] - pointmass_host.y[i]*pointmass_host.vx[i]);
-        totalangularmomentum[0] += binaryangularmomentum[0];
-        totalangularmomentum[1] += binaryangularmomentum[1];
-        totalangularmomentum[2] += binaryangularmomentum[2];
+        totalangularmomentum[0] += pointmass_host.spinx[i];   // sink spin
+        totalangularmomentum[1] += pointmass_host.spiny[i];
+        totalangularmomentum[2] += pointmass_host.spinz[i];
 #endif
     }
+    // add the point masses' orbital L once. It used to be added cumulatively inside the
+    // loop (total += running sum), which double-counts as soon as there are 2+ point masses.
+    for (d = 0; d < DIM; d++) totalangularmomentum[d] += binaryangularmomentum[d];
     for (d=0; d<DIM; d++) {
         totalDL += diskangularmomentum[d]*diskangularmomentum[d];
         totalBL += binaryangularmomentum[d]*binaryangularmomentum[d];
@@ -2932,6 +2952,23 @@ void write_particles_to_file(File file) {
 
         status = H5Dwrite(rmax_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(rmax_id);
+        /* sink spin, shape (numberOfPointmasses, 3) */
+        {
+            hsize_t sdims[2] = {(hsize_t) numberOfPointmasses, 3};
+            hid_t spin_space = H5Screate_simple(2, sdims, NULL);
+            hid_t spin_id = H5Dcreate2(file_id, "/spin", H5T_NATIVE_DOUBLE, spin_space,
+                    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+            double *s = (double *) malloc(sizeof(double) * numberOfPointmasses * 3);
+            for (i = 0; i < numberOfPointmasses; i++) {
+                s[3*i]   = pointmass_host.spinx[i];
+                s[3*i+1] = pointmass_host.spiny[i];
+                s[3*i+2] = pointmass_host.spinz[i];
+            }
+            status = H5Dwrite(spin_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, s);
+            status = H5Dclose(spin_id);
+            status = H5Sclose(spin_space);
+            free(s);
+        }
 
         free(x);
 
@@ -3143,6 +3180,9 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     cudaVerify(cudaMemcpy(pointmass_host.m, pointmass_device.m, memorySizeForPointmasses, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(pointmass_host.rmin, pointmass_device.rmin, memorySizeForPointmasses, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(pointmass_host.rmax, pointmass_device.rmax, memorySizeForPointmasses, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(pointmass_host.spinx, pointmass_device.spinx, memorySizeForPointmasses, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(pointmass_host.spiny, pointmass_device.spiny, memorySizeForPointmasses, cudaMemcpyDeviceToHost));
+    cudaVerify(cudaMemcpy(pointmass_host.spinz, pointmass_device.spinz, memorySizeForPointmasses, cudaMemcpyDeviceToHost));
 #endif // GRAVITATING_POINT_MASSES
 
     cudaVerify(cudaMemcpy(p_host.x, p_device.x, memorySizeForTree, cudaMemcpyDeviceToHost));
