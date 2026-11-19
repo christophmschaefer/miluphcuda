@@ -50,6 +50,18 @@
 // integrate the continuity equation
 // if set to 0, the density will be calculated using the standard SPH sum \sum_i m_j W_ij
 #define INTEGRATE_DENSITY 1
+// delta-SPH density diffusion in the continuity equation (Molteni & Colagrossi 2009, with the renormalised density
+// gradient of Antuono et al. 2010):
+//     drho_i/dt += delta h_ij c_ij sum_j psi_ij (x_j - x_i).grad_i W_ij / |x_j - x_i|^2 m_j/rho_j,
+//     psi_ij = 2 (rho_j - rho_i) - (gradrho_i + gradrho_j).(x_j - x_i),
+// only between particles of the same material (no diffusion across material interfaces or into boundary particles).
+// Damps the density and pressure noise at the particle scale of weakly compressible SPH. With the renormalised
+// gradient, linear density fields (e.g. hydrostatic or lithostatic) are left unchanged; where the renormalisation
+// matrix is ill-conditioned (isolated particles, corners) the gradient is set to zero (plain Molteni & Colagrossi).
+// The term is antisymmetric, so sum_i m_i/rho_i drho_i/dt is not changed by it. Requires INTEGRATE_DENSITY.
+// DENSITY_DIFFUSION_DELTA: the coefficient delta, 0.1 is the usual value. Costs one more loop over the neighbours.
+#define DENSITY_DIFFUSION 0
+#define DENSITY_DIFFUSION_DELTA 0.1
 
 // adds viscosity to the Euler equation
 #define NAVIER_STOKES 0

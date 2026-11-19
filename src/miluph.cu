@@ -142,6 +142,9 @@ static void print_compile_information(void)
     strcpy(yesno, "no");
 #endif
     fprintf(stdout, "Solve continuity equation:\t  %s\n", yesno);
+#if DENSITY_DIFFUSION
+    fprintf(stdout, "    with delta-SPH density diffusion, delta = %g (DENSITY_DIFFUSION)\n", DENSITY_DIFFUSION_DELTA);
+#endif
 #if NAVIER_STOKES
     strcpy(yesno, "yes");
 #else

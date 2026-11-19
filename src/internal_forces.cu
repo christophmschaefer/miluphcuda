@@ -969,6 +969,20 @@ __global__ void internalForces(int *interactions) {
                 drhodt += p.rho[i]/p.rho[j] * p.m[j] * vvnablaW;
 # endif // SML_CORRECTION
 #endif // SOLID
+#if DENSITY_DIFFUSION
+                // delta-SPH density diffusion between particles of the same material, psi_ij with the renormalised
+                // gradients of densityGradientForDiffusion; dr = x_i - x_j, so (x_j - x_i).grad_i W_ij = -dr.dWdx
+                if (!boundia && matIdj == matId && r > 0.0) {
+                    double psi = 2.0 * (p.rho[j] - p.rho[i]);
+                    double rdW = 0.0;
+                    for (d = 0; d < DIM; d++) {
+                        psi += (p_rhs.drho_grad[i*DIM+d] + p_rhs.drho_grad[j*DIM+d]) * dr[d];
+                        rdW -= dr[d] * dWdx[d];
+                    }
+                    drhodt += DENSITY_DIFFUSION_DELTA * sml * 0.5 * (p.cs[i] + p.cs[j]) * psi * rdW / (r*r)
+                              * p.m[j] / p.rho[j];
+                }
+#endif
             }
 
             // dh/dt (INTEGRATE_SML without SML_CORRECTION) is computed before this kernel in calculateSmlRate()
@@ -1719,3 +1733,91 @@ __global__ void calculatedeviatoricStress(int *interactions)
     } // loop over particles
 }
 #endif // VISCOUS_REGOLITH
+
+#if DENSITY_DIFFUSION
+// det A_i below which the renormalised gradient is not used (A_i = 1 in the bulk, det A_i ~ 1/4 at a plane surface)
+#define DENSITY_DIFFUSION_MIN_DET 0.1
+
+/* renormalised density gradient for the delta-SPH density diffusion (Antuono et al. 2010), over the neighbours of the
+ * same material:
+ *     A_i = sum_j m_j/rho_j grad_i W_ij (x) (x_j - x_i),
+ *     gradrho_i = A_i^-1 sum_j m_j/rho_j (rho_j - rho_i) grad_i W_ij,
+ * exact for linear density fields; zero where det A_i < DENSITY_DIFFUSION_MIN_DET. Same kernel and smoothing length
+ * as in internalForces. */
+__global__ void densityGradientForDiffusion(int *interactions)
+{
+    int64_t interactions_index;
+    int i, inc, j, m, d, e, matId;
+    double dr[DIM], dWdr, W, dWdx[DIM], vj, drho, det;
+    double A[DIM*DIM], g[DIM], grad[DIM];
+#if AVERAGE_KERNELS
+    double Wj, dWdrj, dWdxj[DIM];
+#else
+    double h;
+#endif
+
+    inc = blockDim.x * gridDim.x;
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
+        for (d = 0; d < DIM; d++)
+            p_rhs.drho_grad[i*DIM+d] = 0.0;
+        matId = p_rhs.materialId[i];
+        if (matId == BOUNDARY_PARTICLE_ID || matId == EOS_TYPE_IGNORE || matEOS[matId] == EOS_TYPE_IGNORE)
+            continue;
+        for (d = 0; d < DIM; d++) {
+            g[d] = 0.0;
+            for (e = 0; e < DIM; e++)
+                A[d*DIM+e] = 0.0;
+        }
+        for (m = 0; m < p.noi[i]; m++) {
+            interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + m;
+            j = interactions[interactions_index];
+            if (p_rhs.materialId[j] != matId)
+                continue;
+            dr[0] = p.x[i] - p.x[j];
+#if DIM > 1
+            dr[1] = p.y[i] - p.y[j];
+#if DIM > 2
+            dr[2] = p.z[i] - p.z[j];
+#endif
+#endif
+            W = 0.0;
+            dWdr = 0.0;
+#if AVERAGE_KERNELS
+            kernel(&W, dWdx, &dWdr, dr, p.h[i]);
+            Wj = 0.0;
+            dWdrj = 0.0;
+            kernel(&Wj, dWdxj, &dWdrj, dr, p.h[j]);
+            for (d = 0; d < DIM; d++)
+                dWdx[d] = 0.5 * (dWdx[d] + dWdxj[d]);
+#else
+            h = 0.5 * (p.h[i] + p.h[j]);
+            kernel(&W, dWdx, &dWdr, dr, h);
+#endif
+            vj = p.m[j] / p.rho[j];
+            drho = p.rho[j] - p.rho[i];
+            for (d = 0; d < DIM; d++) {
+                g[d] += vj * drho * dWdx[d];
+                for (e = 0; e < DIM; e++)
+                    A[d*DIM+e] -= vj * dWdx[d] * dr[e];
+            }
+        }
+#if DIM == 1
+        det = A[0];
+        grad[0] = g[0] / det;
+#elif DIM == 2
+        det = A[0]*A[3] - A[1]*A[2];
+        grad[0] = (A[3]*g[0] - A[1]*g[1]) / det;
+        grad[1] = (A[0]*g[1] - A[2]*g[0]) / det;
+#else
+        det = A[0]*(A[4]*A[8] - A[5]*A[7]) - A[1]*(A[3]*A[8] - A[5]*A[6]) + A[2]*(A[3]*A[7] - A[4]*A[6]);
+        grad[0] = ((A[4]*A[8] - A[5]*A[7])*g[0] + (A[2]*A[7] - A[1]*A[8])*g[1] + (A[1]*A[5] - A[2]*A[4])*g[2]) / det;
+        grad[1] = ((A[5]*A[6] - A[3]*A[8])*g[0] + (A[0]*A[8] - A[2]*A[6])*g[1] + (A[2]*A[3] - A[0]*A[5])*g[2]) / det;
+        grad[2] = ((A[3]*A[7] - A[4]*A[6])*g[0] + (A[1]*A[6] - A[0]*A[7])*g[1] + (A[0]*A[4] - A[1]*A[3])*g[2]) / det;
+#endif
+        if (!(det > DENSITY_DIFFUSION_MIN_DET))
+            continue;
+        for (d = 0; d < DIM; d++)
+            p_rhs.drho_grad[i*DIM+d] = grad[d];
+    }
+}
+#endif

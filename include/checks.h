@@ -78,6 +78,10 @@
 # error MURDOCH_ENVELOPE is implemented only for COLLINS_PLASTICITY_SIMPLE.
 #endif
 
+#if DENSITY_DIFFUSION && !INTEGRATE_DENSITY
+# error DENSITY_DIFFUSION acts on the continuity equation and requires INTEGRATE_DENSITY.
+#endif
+
 #if YIELD_SMOOTHED_PRESSURE && !COLLINS_PLASTICITY_SIMPLE
 # error YIELD_SMOOTHED_PRESSURE is implemented only for COLLINS_PLASTICITY_SIMPLE.
 #endif

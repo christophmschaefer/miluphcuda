@@ -893,6 +893,10 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&p_device.shepard_correction, memorySizeForParticles));
 #endif
 
+#if DENSITY_DIFFUSION
+	cudaVerify(cudaMalloc((void**)&p_device.drho_grad, memorySizeForParticles*DIM));
+#endif
+
 #if YIELD_SMOOTHED_PRESSURE
 	cudaVerify(cudaMalloc((void**)&p_device.p_yield, memorySizeForParticles));
 #endif
@@ -1386,6 +1390,10 @@ int free_memory()
 
 #if SHEPARD_CORRECTION
 	cudaVerify(cudaFree(p_device.shepard_correction));
+#endif
+
+#if DENSITY_DIFFUSION
+	cudaVerify(cudaFree(p_device.drho_grad));
 #endif
 
 #if YIELD_SMOOTHED_PRESSURE

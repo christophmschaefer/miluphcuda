@@ -264,6 +264,10 @@ struct Particle {
     double *shepard_correction; ///< the shepard correction factor for zeroth order consistency
 #endif
 
+#if DENSITY_DIFFUSION
+    double *drho_grad; ///< renormalised density gradient (DIM per particle) for the delta-SPH density diffusion
+#endif
+
 #if YIELD_SMOOTHED_PRESSURE
     double *p_yield; ///< kernel average of the pressure (neighbours of the same material), for the yield strength
 #endif

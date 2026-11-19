@@ -35,6 +35,14 @@ __global__ void calculateSmlRate(int *interactions);
 
 __global__ void calculatedeviatoricStress(int *interactions);
 
+#if DENSITY_DIFFUSION
+/**
+ * @brief Renormalised density gradient (Antuono et al. 2010) over the neighbours of the same material, for the
+ * delta-SPH density diffusion in internalForces.
+ */
+__global__ void densityGradientForDiffusion(int *interactions);
+#endif
+
 
 
 

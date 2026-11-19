@@ -742,6 +742,21 @@ void rightHandSide()
 # endif
 #endif
 
+#if DENSITY_DIFFUSION
+# if DEBUG_RHS_RUNTIMES
+    cudaEventRecord(start, 0);
+# endif
+    cudaVerifyKernel((densityGradientForDiffusion<<<numberOfMultiprocessors * 4, NUM_THREADS_256>>>(interactions)));
+    cudaVerify(cudaDeviceSynchronize());
+# if DEBUG_RHS_RUNTIMES
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time[timerCounter], start, stop);
+    printf("duration densityGradientForDiffusion: %.7f ms\n", time[timerCounter]);
+    totalTime += time[timerCounter++];
+# endif
+#endif
+
     // the main loop, where all accelerations are calculated
 #if DEBUG_RHS_RUNTIMES
     cudaEventRecord(start, 0);
