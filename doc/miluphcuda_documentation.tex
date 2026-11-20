@@ -734,17 +734,66 @@ each are allocated. The root node is the cube enclosing all particles. The parti
 thread descends from the root to the leaf where its particle belongs and locks the child entry with
 \code{atomicCAS} (status $-2$, ``locked''; $-1$ means ``empty''). If the entry is occupied by another particle, new
 inner nodes with half the edge length are created until both particles reside in different leaves; then the lock is
-released. Afterwards, the masses and centres of mass of all inner nodes (pseudo-particles) are computed bottom-up.
+released. Afterwards, the masses and centres of mass of all inner nodes (pseudo-particles) are computed bottom-up,
+with \sw{GRAVITY\_QUADRUPOLE} also their quadrupole moments (Sec.~\ref{sec:quadrupole}). This runs in a single
+thread block; a node is processed as soon as all its children are ready, which is signalled by a non-negative mass.
 
 \subsection{Gravitational force}
-For each particle the tree is walked from the root. A node of edge length $s$ at distance $r$ is used as a whole if
+For each particle the tree is walked from the root. A node of edge length $s$ whose centre of mass is at distance $r$
+is used as a whole if
 \begin{equation}
  s/r < \vartheta,
+ \label{eq:bh-criterion}
 \end{equation}
-otherwise its children are opened. The acceleration from a pseudo-particle of mass $m_p$ at $\vec x_p$ is
-$\vec a_i = -G m_p\,(\vec x_i - \vec x_p)/r^3$, with a smoothed distance to avoid singularities. Only monopoles are
-used; therefore $\vartheta \leq 0.5$ (\code{-a}, default 0.5) is recommended \citep{1989ApJS...70..389B}. Direct
-summation is available with \code{-D}.
+otherwise its children are opened. The acceleration from a particle or pseudo-particle of mass $m_p$ at $\vec x_p$ is
+\begin{equation}
+ \vec a_i = G m_p\,\frac{\vec x_p - \vec x_i}{\max(r, h_i)^3},
+ \label{eq:monopole}
+\end{equation}
+i.e., the gravity is softened inside the smoothing length $h_i$ of the particle. The same softening is used for the
+direct summation (\code{-D}). Since the expansion is about the centre of mass, the dipole term vanishes and the
+relative error of a node is of order $\vartheta^2$; $\vartheta \leq 0.5$ (\code{-a}, default 0.5) is recommended
+for monopoles \citep{1989ApJS...70..389B}. In 2D, the 3D law of gravity is used in the plane.
+
+\subsection{Quadrupole moments}
+\label{sec:quadrupole}
+With \sw{GRAVITY\_QUADRUPOLE}, the inner nodes additionally carry the traceless quadrupole moment with respect to
+their centre of mass $\vec x_p$ \citep{1987ApJS...64..715H},
+\begin{equation}
+ Q_{ab} = \sum_j m_j \left(3 d_a d_b - d^2 \delta_{ab}\right), \qquad \vec d = \vec x_j - \vec x_p,
+\end{equation}
+where the sum runs over all particles in the node. It is computed from the children $c$ of the node (parallel axis
+theorem),
+\begin{equation}
+ Q_{ab} = \sum_c \left[ Q^c_{ab} + m_c \left(3 d_a d_b - d^2 \delta_{ab}\right)\right], \qquad
+ \vec d = \vec x_c - \vec x_p,
+\end{equation}
+with $Q^c = 0$ for particles, in the same bottom-up pass as the centres of mass. Six components are stored per inner
+node ($xx, xy, xz, yy, yz, zz$; in 2D $xx, xy, yy$, where $d^2$ is taken in the plane). For an accepted inner node
+with $r > h_i$, the tree walk adds to Eq.~(\ref{eq:monopole})
+\begin{equation}
+ \vec a_i^\mathrm{quad} = \frac{G}{r^5}\left(\frac{5}{2}\,\frac{\vec r\cdot\mathbf Q\cdot\vec r}{r^2}\,\vec r
+ - \mathbf Q\cdot\vec r\right), \qquad \vec r = \vec x_p - \vec x_i,
+\end{equation}
+the gradient of the quadrupole term $-\frac{G}{2}\,\vec r\cdot\mathbf Q\cdot\vec r/r^5$ of the potential. The
+error of a node is then of order $\vartheta^3$, so a larger opening angle gives the same accuracy with fewer
+interactions.
+
+The multipole expansion holds for the unsoftened potential only. A node that fulfils Eq.~(\ref{eq:bh-criterion})
+but reaches into the softening sphere of the particle contributes an error that the quadrupole term cannot remove.
+Such nodes occur for larger $\vartheta$ if the smoothing length is a few particle spacings. With
+\sw{GRAVITY\_OPEN\_SOFTENED\_NODES} such nodes are opened, i.e.\ a node is accepted only if in addition
+\begin{equation}
+ r > h_i + \frac{\sqrt{D}}{2}\, s,
+\end{equation}
+where $\sqrt{D}\,s/2$ is half the space diagonal of the node. Since $r$ is measured to the centre of mass, this is a
+heuristic, not a strict bound.
+
+The accuracy and cost of the three variants (monopole, quadrupole, quadrupole with opening of the softened nodes)
+can be measured in 3D and 2D with \code{test\_cases/gravity\_quadrupole}, which compares the tree gravity to direct
+summation with the same softening for several $\vartheta$ and reports the run time of the gravity computation.
+Whether the quadrupole saves computing time at a given accuracy depends on the additional cost per interaction on
+the GPU (six more values to load and about 25 more floating point operations per accepted node).
 
 \subsection{Decoupled gravity}
 With \code{-g}, the tree gravity is not recomputed in every right-hand side evaluation. It is recomputed every tenth

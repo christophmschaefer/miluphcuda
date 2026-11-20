@@ -324,6 +324,11 @@ static void print_compile_information(void)
     fprintf(stdout, "Boundary conditions:\n");
     fprintf(stdout, "    ghost boundaries:\t  %s\n", yesno);
     fprintf(stdout, "    boundary particle id: %d\n", BOUNDARY_PARTICLE_ID);
+    fprintf(stdout, "Barnes-Hut tree self-gravity (-s):\n");
+    fprintf(stdout, "    node expansion:\t  %s\n",
+            GRAVITY_QUADRUPOLE ? "monopole + quadrupole (GRAVITY_QUADRUPOLE)" : "monopole");
+    fprintf(stdout, "    open nodes within the softening length (GRAVITY_OPEN_SOFTENED_NODES):\t  %s\n",
+            GRAVITY_OPEN_SOFTENED_NODES ? "yes" : "no");
 
     fprintf(stdout, "I/O settings:\n");
 #if HDF5IO
@@ -1100,7 +1105,9 @@ int main(int argc, char *argv[])
     // print out self-gravity information
     fprintf(stdout, "Self-gravity: ");
     if (param.selfgravity) {
-        fprintf(stdout, "yes - calculated with Barnes Hut tree with theta: %g\n", treeTheta);
+        fprintf(stdout, "yes - calculated with Barnes Hut tree with theta: %g, %s, %s\n", treeTheta,
+                GRAVITY_QUADRUPOLE ? "monopole + quadrupole" : "monopole",
+                GRAVITY_OPEN_SOFTENED_NODES ? "nodes within softening length opened" : "standard opening criterion");
     } else if (param.directselfgravity) {
         fprintf(stdout, "yes - calculated using direct particle-particle force.\n");
     } else {
@@ -1179,6 +1186,12 @@ int main(int argc, char *argv[])
         fprintf(stderr, "copying of nodeSmlMax to device failed\n");
         exit(1);
     }
+#if GRAVITY_QUADRUPOLE
+    if (cudaSuccess != cudaMemcpyToSymbol(nodeQuadrupole, &nodeQuadrupoled, sizeof(void*))) {
+        fprintf(stderr, "copying of nodeQuadrupole to device failed\n");
+        exit(1);
+    }
+#endif
 
     // create conserved quantities logfile and write header
     if(param.hdf5input){

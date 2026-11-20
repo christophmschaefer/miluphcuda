@@ -385,6 +385,13 @@ extern int *childListd;
 extern __constant__ volatile int *childList;
 extern double *nodeSmlMaxd;
 extern __constant__ double *nodeSmlMax;
+#if GRAVITY_QUADRUPOLE
+// number of stored components of the (symmetric, traceless) quadrupole moment of a tree node:
+// xx (DIM 1); xx, xy, yy (DIM 2); xx, xy, xz, yy, yz, zz (DIM 3)
+# define NUM_QUADRUPOLE_COMPONENTS (DIM*(DIM + 1)/2)
+extern double *nodeQuadrupoled;
+extern __constant__ double *nodeQuadrupole;
+#endif
 
 extern int numberOfParticles;
 extern int maxNumberOfParticles;

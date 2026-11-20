@@ -127,6 +127,13 @@ See [porosity.md](porosity.md) for the p-alpha model.
 | `PARTICLE_ACCRETION` | 0 | check whether a particle is bound to a point mass and has crossed its accretion radius `rmin` |
 | `UPDATE_SINK_VALUES` | 0 | with `PARTICLE_ACCRETION`: add mass, momentum and centre of mass of accreted particles to the sink, the particle is removed; otherwise it continues orbiting |
 
+### Self-gravity (Barnes-Hut tree)
+
+| Switch | repo | Meaning |
+|---|---|---|
+| `GRAVITY_QUADRUPOLE` | 0 | **cms_devel.** The inner tree nodes carry, in addition to mass and centre of mass, the traceless quadrupole moment Q_ab = Σ m_j (3 d_a d_b − d² δ_ab), d = x_j − x_node, and the tree walk adds its acceleration for accepted nodes outside the softening length. The force error of a node drops from order θ² to θ³, so a larger `-a` gives the same accuracy with fewer interactions. Costs 6 doubles per inner node (3 in 2D) and more work per accepted node. Test: `test_cases/gravity_quadrupole` |
+| `GRAVITY_OPEN_SOFTENED_NODES` | 0 | **cms_devel.** Also open a node that fulfils the θ criterion if it may reach into the softening sphere of the particle, r < sml + √DIM/2 · l (r: distance to the centre of mass, l: edge length; a heuristic, not a strict bound). The multipole expansion only holds for the unsoftened potential; such nodes occur for larger θ when sml is a few particle spacings. Mainly useful with `GRAVITY_QUADRUPOLE`; can be expensive if sml is large compared to the bodies. |
+
 ### Boundaries
 
 | Switch | repo | Meaning |

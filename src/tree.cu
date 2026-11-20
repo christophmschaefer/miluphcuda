@@ -370,6 +370,62 @@ __global__ void measureTreeChange(int * movingparticlesPerBlock)
 
 
 
+#if GRAVITY_QUADRUPOLE
+/* traceless quadrupole moment of inner node k w.r.t. its centre of mass, which has to be set already, from the
+ * masses, positions and quadrupole moments of its children (parallel axis theorem):
+ *     Q_ab = sum_c [Q^c_ab + m_c (3 d_a d_b - d^2 delta_ab)],  d = x_c - x_k,  Q^c = 0 for particles
+ * all children have to be ready (mass >= 0) */
+__device__ void calculateNodeQuadrupole(int k)
+{
+    int i, c, child;
+    double m, dsq;
+    double d[DIM];
+    double q[NUM_QUADRUPOLE_COMPONENTS];
+
+    for (c = 0; c < NUM_QUADRUPOLE_COMPONENTS; c++)
+        q[c] = 0.0;
+
+    for (i = 0; i < numChildren; i++) {
+        child = childList[childListIndex(k, i)];
+        if (child == EMPTY)
+            continue;
+        m = p.m[child];
+        d[0] = p.x[child] - p.x[k];
+#if DIM > 1
+        d[1] = p.y[child] - p.y[k];
+#if DIM == 3
+        d[2] = p.z[child] - p.z[k];
+#endif
+#endif
+        dsq = 0.0;
+        for (c = 0; c < DIM; c++)
+            dsq += d[c]*d[c];
+#if DIM == 1
+        q[0] += m * (3.0*d[0]*d[0] - dsq);
+#elif DIM == 2
+        q[0] += m * (3.0*d[0]*d[0] - dsq);
+        q[1] += m * 3.0*d[0]*d[1];
+        q[2] += m * (3.0*d[1]*d[1] - dsq);
+#else
+        q[0] += m * (3.0*d[0]*d[0] - dsq);
+        q[1] += m * 3.0*d[0]*d[1];
+        q[2] += m * 3.0*d[0]*d[2];
+        q[3] += m * (3.0*d[1]*d[1] - dsq);
+        q[4] += m * 3.0*d[1]*d[2];
+        q[5] += m * (3.0*d[2]*d[2] - dsq);
+#endif
+        if (child >= numParticles) {
+            for (c = 0; c < NUM_QUADRUPOLE_COMPONENTS; c++)
+                q[c] += nodeQuadrupole[QUADRUPOLE_INDEX(child, c)];
+        }
+    }
+
+    for (c = 0; c < NUM_QUADRUPOLE_COMPONENTS; c++)
+        nodeQuadrupole[QUADRUPOLE_INDEX(k, c)] = q[c];
+}
+#endif
+
+
 __global__ void calculateCentersOfMass()
 {
 	register int i, k, child, missing;
@@ -456,6 +512,10 @@ __global__ void calculateCentersOfMass()
 #if DIM == 3
 			p.z[k] = pz * m;
 #endif
+#endif
+#if GRAVITY_QUADRUPOLE
+			// needs the centre of mass of k, and the quadrupole moments of the children (written before their mass)
+			calculateNodeQuadrupole(k);
 #endif
 			__threadfence();  // make sure data are visible before setting mass
 			p.m[k] = cm;

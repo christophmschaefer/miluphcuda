@@ -393,13 +393,34 @@ __global__ void selfgravity()
 #endif
 	double sml;
     double thetasq = theta*theta;
+#if GRAVITY_QUADRUPOLE
+    int c;
+    double q[NUM_QUADRUPOLE_COMPONENTS];
+    double qdx, rqr, rinv2, rinv5;
+#if DIM > 1
+    double qdy;
+#if DIM == 3
+    double qdz;
+#endif
+#endif
+#endif
 
+	// squared edge length of the nodes at each depth
 	__shared__ volatile double cellsize[MAXDEPTH];
+#if GRAVITY_OPEN_SOFTENED_NODES
+	// half of the space diagonal of the nodes at each depth
+	__shared__ volatile double cellhalfdiag[MAXDEPTH];
+#endif
 	if (0 == threadIdx.x) {
 		cellsize[0] = 4.0 * radius * radius;
 		for (i = 1; i < MAXDEPTH; i++) {
 			cellsize[i] = cellsize[i - 1] * 0.25;
 		}
+#if GRAVITY_OPEN_SOFTENED_NODES
+		for (i = 0; i < MAXDEPTH; i++) {
+			cellhalfdiag[i] = 0.5 * sqrt(DIM * cellsize[i]);
+		}
+#endif
 	}
 
 	__syncthreads();
@@ -453,7 +474,11 @@ __global__ void selfgravity()
 #endif
 					// if child is leaf or far away
 					//if (child < numParticles || distance * theta > cellsize[depth]) {
-					if (child < numParticles || distance * thetasq > cellsize[depth]) {
+					if (child < numParticles || (distance * thetasq > cellsize[depth]
+#if GRAVITY_OPEN_SOFTENED_NODES
+                            && distance > (sml + cellhalfdiag[depth]) * (sml + cellhalfdiag[depth])
+#endif
+                            )) {
 						distance = sqrt(distance);
                         //distance += 1e10;
 						f = gravConst * p.m[child]; // / (distance*distance*distance);
@@ -465,6 +490,36 @@ __global__ void selfgravity()
 #if DIM == 3
 						az += f*dz;
 #endif
+#endif
+#if GRAVITY_QUADRUPOLE
+                        // quadrupole term of an inner node, a = G/r^5 (5/2 (r.Q.r)/r^2 r - Q.r) with r = (dx, dy, dz)
+                        if (child >= numParticles && distance > sml) {
+                            for (c = 0; c < NUM_QUADRUPOLE_COMPONENTS; c++)
+                                q[c] = nodeQuadrupole[QUADRUPOLE_INDEX(child, c)];
+#if DIM == 1
+                            qdx = q[0]*dx;
+                            rqr = dx*qdx;
+#elif DIM == 2
+                            qdx = q[0]*dx + q[1]*dy;
+                            qdy = q[1]*dx + q[2]*dy;
+                            rqr = dx*qdx + dy*qdy;
+#else
+                            qdx = q[0]*dx + q[1]*dy + q[2]*dz;
+                            qdy = q[1]*dx + q[3]*dy + q[4]*dz;
+                            qdz = q[2]*dx + q[4]*dy + q[5]*dz;
+                            rqr = dx*qdx + dy*qdy + dz*qdz;
+#endif
+                            rinv2 = 1.0 / (distance*distance);
+                            rinv5 = gravConst * rinv2*rinv2 / distance;
+                            f = 2.5 * rqr * rinv2;
+                            ax += rinv5 * (f*dx - qdx);
+#if DIM > 1
+                            ay += rinv5 * (f*dy - qdy);
+#if DIM == 3
+                            az += rinv5 * (f*dz - qdz);
+#endif
+#endif
+                        }
 #endif
 					} else {
 						// put child on stack

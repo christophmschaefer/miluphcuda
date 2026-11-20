@@ -37,6 +37,11 @@
 #endif
 
 
+#if GRAVITY_QUADRUPOLE
+// position of component c of the quadrupole moment of inner node nodeIndex in nodeQuadrupole, node-major as childList
+# define QUADRUPOLE_INDEX(nodeIndex, c) (((nodeIndex) - numParticles) * NUM_QUADRUPOLE_COMPONENTS + (c))
+#endif
+
 extern __device__ int treeMaxDepth;
 
 

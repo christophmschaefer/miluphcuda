@@ -71,6 +71,11 @@ int *childListd;
 // largest smoothing length of the particles in each inner node of the tree (see calculateNodeSmlMax)
 __constant__ double *nodeSmlMax;
 double *nodeSmlMaxd;
+#if GRAVITY_QUADRUPOLE
+// quadrupole moments of the inner nodes of the tree w.r.t. their centres of mass (see calculateCentersOfMass)
+__constant__ double *nodeQuadrupole;
+double *nodeQuadrupoled;
+#endif
 
 /* time variables */
 void (*integrator)();

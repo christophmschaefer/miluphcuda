@@ -43,6 +43,21 @@
 #define PARTICLE_ACCRETION 0 // check if particle is bound to one of the sink particles (crossed the accretion radius, rmin); if also UPDATE_SINK_VALUES 1: particle is accreted and ignored afterwards, else: continues orbiting without being accreted
 #define UPDATE_SINK_VALUES 0 // add to sink the quantities of the accreted particle: mass, velocity and COM
 
+// Barnes-Hut tree self-gravity (-s, see gravity.cu and test_cases/gravity_quadrupole)
+// GRAVITY_QUADRUPOLE: in addition to the mass and centre of mass, the inner nodes carry the traceless quadrupole
+// moment Q_ab = sum_j m_j (3 d_a d_b - d^2 delta_ab), d = x_j - x_node, and the tree walk adds its acceleration
+//     a = G/r^5 (5/2 (r.Q.r)/r^2 r - Q.r),  r = x_node - x_i
+// for accepted nodes outside the softening length (r > sml). The error of the node expansion drops from order
+// theta^2 (monopole w.r.t. the centre of mass) to order theta^3, i.e. a larger theta (fewer interactions) gives the
+// same accuracy. Costs 6 more doubles per inner node in memory (3 for DIM 2), and more work per accepted node.
+#define GRAVITY_QUADRUPOLE 0
+// GRAVITY_OPEN_SOFTENED_NODES: open a node that fulfils the theta criterion if it may still reach into the softening
+// sphere of the particle, i.e. if r < sml + sqrt(DIM)/2 l (l: edge length of the node, r: distance to its centre of
+// mass, so this is a heuristic, not a strict bound). The force of such a node is
+// not the one of a softened point mass (the multipole expansion is only valid for the unsoftened potential); such
+// nodes occur for larger theta if sml is a few particle spacings. Mainly useful with GRAVITY_QUADRUPOLE.
+#define GRAVITY_OPEN_SOFTENED_NODES 0
+
 // integrate the energy equation
 // when setting up a SOLID simulation with Tillotson or ANEOS, it must be set to 1
 #define INTEGRATE_ENERGY 1

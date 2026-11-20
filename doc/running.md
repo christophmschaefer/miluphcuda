@@ -171,7 +171,11 @@ are not in the file start from zero; miluphcuda warns about this (e.g. for the p
 
 ## Self-gravity
 
-* `-s` computes self-gravity with a Barnes-Hut tree (monopoles only) with opening angle `-a` (default 0.5).
+* `-s` computes self-gravity with a Barnes-Hut tree with opening angle `-a` (default 0.5, must be < 1). By default
+  the nodes are monopoles (mass and centre of mass, force error of order θ²). With `GRAVITY_QUADRUPOLE` (cms_devel)
+  the quadrupole moments of the nodes are added (error of order θ³), best together with
+  `GRAVITY_OPEN_SOFTENED_NODES`, see [compile-time options](compile-time-options.md#self-gravity-barnes-hut-tree).
+  `test_cases/gravity_quadrupole` measures the force errors and the run time of the variants.
 * `-D` uses direct summation instead, only reasonable for small particle numbers.
 * `-g` decouples the gravity computation from the hydro time step: the gravitational accelerations are recomputed
   only every 10th right-hand side evaluation, or earlier if more than 0.1 % of the particles have moved to another
@@ -200,6 +204,7 @@ are not in the file start from zero; miluphcuda warns about this (e.g. for the p
 | `tensile_rod` | 2D rod pulled apart, plasticity and fragmentation (own `boundary.cu`) |
 | `nakamura` | laboratory impact experiment of Nakamura & Fujiwara (1991), Grady-Kipp fragmentation |
 | `gravity_merging` | merging of self-gravitating bodies |
+| `gravity_quadrupole` | accuracy and cost of the tree self-gravity (monopole, quadrupole, opening of softened nodes) in 3D and 2D against direct summation; `run.sh` builds its own executables, no copying of `parameter.h` |
 | `viscously_spreading_ring` | viscously spreading ring (Speith & Kley 2003), Navier-Stokes |
 
 Copy the `parameter.h` of a test case to `include/` (and the `boundary.cu` to `src/` where present), recompile,
