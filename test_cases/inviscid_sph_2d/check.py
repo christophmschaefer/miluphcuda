@@ -5,15 +5,15 @@ Checks of test_cases/inviscid_sph_2d (INVISCID_SPH in 2D, with TENSORIAL_CORRECT
     python3 check.py [DIR]        (DIR: directory with run_inviscid_{gresho,sod2d} and, optionally,
                                    run_standard_{gresho,sod2d}; default: this directory)
 
-Uses the last snapshot of each run; prints PASS or FAIL per check, exit status 1 if one fails; plots
-gresho.png and sod2d.png.
+Uses the last snapshot of each run, without the frozen outer layers (materials 2 and 3); prints PASS or FAIL per
+check, exit status 1 if one fails; plots gresho.png and sod2d.png.
 
 parameter.h sets INVISCID_SPH_START_ALPHA_MIN: alpha starts at alpha_min = 0, so every nonzero av_alpha comes from
 the shock indicator.
 
 Gresho vortex (t = 1): a stationary vortex, a shear flow without shocks; the viscosity must stay off there and the
 vortex must keep its velocity profile much better than with the constant viscosity (alpha = 1, beta = 2):
-  G1. alpha in the vortex (r < 0.4): mass-weighted mean below 0.05 and maximum below 0.2 (alpha_max = 1)
+  G1. alpha in the vortex (r < 0.4): mass-weighted mean below 0.1 and maximum below 0.3 (alpha_max = 1)
   G2. velocity profile: L1 error of the azimuthal velocity (mean in rings of width 0.02) over r < 0.5 at most
       0.5 times that of the standard run (only if run_standard_gresho exists)
   G3. peak of the azimuthal velocity profile at least 0.7 (exact 1 at r = 0.2)
@@ -46,9 +46,14 @@ def load(run_dir, name):
     if not fns:
         return None
     with h5py.File(fns[-1], "r") as f:
-        d = {k: f[k][...] for k in ("x", "v", "rho", "p", "m", "sml") if k in f}
+        d = {k: f[k][...] for k in ("x", "v", "rho", "p", "m", "sml", "material_type") if k in f}
         d["av_alpha"] = f["av_alpha"][...] if "av_alpha" in f else None
         d["time"] = float(np.ravel(f["time"][...])[0])
+    if "material_type" in d:   # without the frozen outer layers (materials 2, 3)
+        gas = d.pop("material_type") < 2
+        for k in ("x", "v", "rho", "p", "m", "sml", "av_alpha"):
+            if d.get(k) is not None:
+                d[k] = d[k][gas]
     d["file"] = fns[-1]
     return d
 
@@ -90,8 +95,8 @@ def check_gresho(runs, checks, plots):
     m = r < 0.4
     am = np.average(d["av_alpha"][m], weights=d["m"][m]) if "m" in d else np.mean(d["av_alpha"][m])
     ax = np.max(d["av_alpha"][m])
-    checks.append(("G1 alpha in the vortex", f"mass-weighted mean {am:.4f} < {0.05 * ALPHA_MAX:g}, "
-                   f"max {ax:.4f} < {0.2 * ALPHA_MAX:g}", am < 0.05 * ALPHA_MAX and ax < 0.2 * ALPHA_MAX))
+    checks.append(("G1 alpha in the vortex", f"mass-weighted mean {am:.4f} < {0.1 * ALPHA_MAX:g}, "
+                   f"max {ax:.4f} < {0.3 * ALPHA_MAX:g}", am < 0.1 * ALPHA_MAX and ax < 0.3 * ALPHA_MAX))
     if s is not None:
         checks.append(("G2 velocity profile vs standard viscosity", f"L1 {l1:.4f} <= 0.5 x {l1s:.4f}",
                        l1 <= 0.5 * l1s))
@@ -206,8 +211,7 @@ def check_sod(runs, checks, plots):
     plateau = np.mean(s["rho"][m])
     checks.append(("S2 post-shock density", f"{plateau:.4f}, exact {w['rho_rs']:.4f}, within 3 %",
                    abs(plateau / w["rho_rs"] - 1) <= 0.03))
-    c_l = sound(SOD_LEFT[0], SOD_LEFT[2])
-    m = (x < w["head"] - 3 * h) & (x > -1.5 + c_l * t + 3 * h)
+    m = (x < w["head"] - 3 * h) & (x > -0.85 + 3 * h)
     v = np.mean(al[m])
     checks.append(("S3 alpha in the undisturbed gas", f"mean {v:.4f} < {0.01 * ALPHA_MAX:g}", v < 0.01 * ALPHA_MAX))
     m = np.abs(x - w["shock"]) <= 3 * h
@@ -253,7 +257,7 @@ def plot(plots, outdir):
     if "sod2d" in plots:
         w, strips = plots["sod2d"]
         t = next(iter(strips.values()))["time"]
-        xx = np.linspace(-0.6, 2.0, 2000)
+        xx = np.linspace(-0.85, 2.35, 2000)
         re_, ve, pe, _ = sod_exact(xx, t)
         fig, axs = plt.subplots(2, 2, figsize=(10, 7), sharex=True, constrained_layout=True)
         for ax, k, ex in zip(axs.flat[:3], ("rho", "v", "p"), (re_, ve, pe)):
@@ -267,7 +271,7 @@ def plot(plots, outdir):
         for k in ("head", "tail", "contact", "shock"):
             axs[1, 1].axvline(w[k], color="0.7", lw=0.8)
         axs[1, 1].set(ylabel="av_alpha (INVISCID_SPH)", ylim=(-0.05, 1.1 * ALPHA_MAX))
-        axs[0, 0].set_xlim(-0.6, 2.0)
+        axs[0, 0].set_xlim(-0.85, 2.35)
         fig.suptitle(f"planar Sod shock tube in 2D, |y| < 0.15, t = {t:g}")
         fig.savefig(os.path.join(outdir, "sod2d.png"), dpi=130)
         print(f"wrote {os.path.join(outdir, 'sod2d.png')}")

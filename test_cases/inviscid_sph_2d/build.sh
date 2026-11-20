@@ -14,6 +14,7 @@ for v in 1 0; do
     mkdir -p "$b"
     cp -r "$src/src" "$src/include" "$src/Makefile" "$b/"
     sed -E "s/^#define INVISCID_SPH [01]/#define INVISCID_SPH $v/" "$here/parameter.h" > "$b/include/parameter.h"
+    cp "$here/boundary.cu" "$b/src/boundary.cu"   # frozen outer layers, see there
     grep -q "^#define INVISCID_SPH $v" "$b/include/parameter.h"
     echo "building with INVISCID_SPH $v in $b"
     make -C "$b" -j "${JOBS:-8}" ${CUDA_DIR:+CUDA_DIR="$CUDA_DIR"} ${GPU_ARCH:+GPU_ARCH="$GPU_ARCH"} \

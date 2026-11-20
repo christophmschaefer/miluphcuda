@@ -18,22 +18,34 @@ The runs use the Wendland C2 kernel with support 4 dx and the rk2_adaptive integ
 
 Each set-up also runs with `INVISCID_SPH 0`, the constant alpha = 1, beta = 2, for comparison.
 
+## Frozen outer layers
+
+Free edges of a gas expanding into vacuum are fragile in SPH: the internal energy of the outermost particles can
+become negative. The outer layers of both set-ups are therefore frozen particles (materials 2 and 3).
+`boundary.cu` of this directory keeps their position, velocity and internal energy fixed. It is the
+`src/boundary.cu` of the repository plus this block in `BoundaryConditionsAfterRHS`, and `build.sh` copies it into
+the build.
+
+The frozen particles take part in the kernel sums. Their density and pressure therefore follow their neighbours,
+and they confine the gas.
+
 ## Set-ups
 
-**Gresho vortex** (Gresho & Chan 1990), `gresho.0000`, material 0:
+**Gresho vortex** (Gresho & Chan 1990), `gresho.0000`:
 - gamma = 5/3, rho = 1.
 - A stationary vortex: v_phi = 5r for r < 0.2, 2 - 5r for 0.2 < r < 0.4, 0 outside, with the balancing pressure.
-- Square lattice, dx = 0.02 on [-3.8, 3.8]^2 (144400 particles), t = 1.
-- The free edges expand. The domain is large enough that this does not reach the vortex before t = 1.
+- Square lattice, dx = 0.02 on [-1, 1]^2 (10000 particles), t = 1.
+- Frozen where max(|x|, |y|) > 0.76.
 
 This is a shear flow without shocks: the viscosity must stay off.
 
-**Planar Sod shock tube**, `sod2d.0000`, material 1:
+**Planar Sod shock tube**, `sod2d.0000`:
 - gamma = 1.4.
 - rho = 1, p = 1 for x < 0.5; rho = 0.125, p = 0.1 for x > 0.5.
-- Square lattice, dx = 0.01 on [-1.5, 2.5] x [-1, 1] (80000 particles), masses rho dx^2, t = 0.6.
-- Evaluated in the strip |y| < 0.15 against the exact Riemann solution. The free ends and edges do not disturb that
-  strip before t = 0.6.
+- Square lattice, dx = 0.01 on [-1, 2.5] x [-1.1, 1.1] (77000 particles), masses rho dx^2, t = 0.6.
+- Frozen where x < -0.85, x > 2.35 or |y| > 0.95.
+- Evaluated in the strip |y| < 0.15 against the exact Riemann solution. Until t = 0.6, the waves do not reach the
+  frozen ends, and disturbances from the frozen sides do not reach the strip.
 
 ## Running
 
@@ -43,14 +55,15 @@ CUDA_DIR=/usr/local/cuda-12.8 GPU_ARCH=-arch=sm_61 ./build.sh     # or: ./build.
 ```
 
 `run.sh` writes `run_{inviscid,standard}_{gresho,sod2d}/` and then runs `check.py`. `check.py` prints PASS or FAIL
-for each check, plots `gresho.png` and `sod2d.png`, and exits with status 1 if a check fails.
+for each check, plots `gresho.png` and `sod2d.png`, and exits with status 1 if a check fails. It analyses the gas
+only, without the frozen particles.
 
 ## Checks
 
 All alpha thresholds are for alpha_max = 1.
 
 Gresho vortex:
-- **G1**: alpha for r < 0.4 stays low: mass-weighted mean < 0.05 and maximum < 0.2.
+- **G1**: alpha for r < 0.4 stays low: mass-weighted mean < 0.1 and maximum < 0.3.
 - **G2**: the L1 error of the v_phi profile over r < 0.5 is at most 0.5 times that with the constant viscosity.
 - **G3**: the peak of the v_phi profile is at least 0.7. The exact value is 1.
 
@@ -66,24 +79,25 @@ Sod in 2D:
 
 ## Calibration
 
-The thresholds come from a numpy model of the same equations, without the correction matrix: Wendland C2,
-density summation, energy equation, Monaghan viscosity with the switch, Heun steps. Expect small differences on
-the GPU.
+The thresholds come from a numpy model of the same equations, with the same frozen layers but without the
+correction matrix: Wendland C2, density summation, energy equation, Monaghan viscosity with the switch, Heun steps.
+Expect small differences on the GPU.
 
 | Check | Model value |
 |---|---|
-| G1 alpha in the vortex | mean 0.019, maximum 0.049 |
-| G2 L1 of the v_phi profile | 0.042, against 0.293 with the constant viscosity |
-| G3 peak of v_phi | 0.82 |
+| G1 alpha in the vortex | mean 0.035, maximum 0.091 |
+| G2 L1 of the v_phi profile | 0.045, against 0.293 with the constant viscosity |
+| G3 peak of v_phi | 0.80 |
 | S3 alpha in the undisturbed gas | 0 |
 | S4 alpha at the shock | 0.29 |
 | S5 alpha in the rarefaction | 0 |
-| S6 L1 density error | 0.0147, against 0.0166 with the constant viscosity |
-| S7 alpha behind the shock | 0.10 |
+| S6 L1 density error | 0.0147, against 0.0171 with the constant viscosity |
+| S7 alpha behind the shock | 0.105 |
 
-Switching the limiter off in the model (xi = 1) makes S5 fail: alpha in the rarefaction rises to 0.12. G1 still
-passes (mean 0.026). In the vortex, d(div v)/dt = div a - V_ab V_ba is nearly zero anyway, so the indicator stays
-low even without the limiter. G1 therefore mainly checks that velocity gradient and div a are consistent.
+Switching the limiter off in the model (xi = 1) makes S5 fail: alpha in the rarefaction rises to 0.14. G1 still
+passes (mean 0.044, maximum 0.096). In the vortex, d(div v)/dt = div a - V_ab V_ba is nearly zero, so the indicator
+stays low even without the limiter. G1 therefore mainly checks that velocity gradient and div a are consistent.
 
-With the default start value (alpha = alpha_max), the vortex keeps much less of its profile: L1 0.14 instead of
-0.04 in the model. That is because the full viscosity of the first ~0.3 time units has already damped it.
+With the default start value (alpha = alpha_max) and free edges, the vortex kept much less of its profile in the
+model: L1 0.14 instead of 0.04. That is because the full viscosity of the first ~0.3 time units has already damped
+it.
