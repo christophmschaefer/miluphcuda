@@ -50,6 +50,10 @@ int allocate_pointmass_memory(struct Pointmass *a, int allocate_immutables)
 	cudaVerify(cudaMalloc((void**)&a->m, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->rmin, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->rmax, memorySizeForPointmasses));
+	// unused in the integrator copies, allocated so every copy is complete
+	cudaVerify(cudaMalloc((void**)&a->spinx, memorySizeForPointmasses));
+	cudaVerify(cudaMalloc((void**)&a->spiny, memorySizeForPointmasses));
+	cudaVerify(cudaMalloc((void**)&a->spinz, memorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&a->feels_particles, integermemorySizeForPointmasses));
 
     return rc;
@@ -540,6 +544,9 @@ int free_pointmass_memory(struct Pointmass *a, int free_immutables)
 	cudaVerify(cudaFree(a->feels_particles));
 	cudaVerify(cudaFree(a->rmin));
 	cudaVerify(cudaFree(a->rmax));
+	cudaVerify(cudaFree(a->spinx));
+	cudaVerify(cudaFree(a->spiny));
+	cudaVerify(cudaFree(a->spinz));
 #if DIM > 1
 	cudaVerify(cudaFree(a->y));
 	cudaVerify(cudaFree(a->vy));
@@ -846,6 +853,16 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&pointmass_device.m, memorySizeForPointmasses));
 	cudaVerify(cudaMallocHost((void**)&pointmass_host.feels_particles, integermemorySizeForPointmasses));
 	cudaVerify(cudaMalloc((void**)&pointmass_device.feels_particles, integermemorySizeForPointmasses));
+	// sink spin -- host + device, starts at zero (a restart overwrites it if the file has /spin)
+	cudaVerify(cudaMallocHost((void**)&pointmass_host.spinx, memorySizeForPointmasses));
+	cudaVerify(cudaMallocHost((void**)&pointmass_host.spiny, memorySizeForPointmasses));
+	cudaVerify(cudaMallocHost((void**)&pointmass_host.spinz, memorySizeForPointmasses));
+	cudaVerify(cudaMalloc((void**)&pointmass_device.spinx, memorySizeForPointmasses));
+	cudaVerify(cudaMalloc((void**)&pointmass_device.spiny, memorySizeForPointmasses));
+	cudaVerify(cudaMalloc((void**)&pointmass_device.spinz, memorySizeForPointmasses));
+	memset(pointmass_host.spinx, 0, memorySizeForPointmasses);
+	memset(pointmass_host.spiny, 0, memorySizeForPointmasses);
+	memset(pointmass_host.spinz, 0, memorySizeForPointmasses);
 #endif
 
 #if MORE_OUTPUT
@@ -1173,6 +1190,9 @@ int copy_particle_data_to_device()
 	cudaVerify(cudaMemcpy(pointmass_device.rmin, pointmass_host.rmin, memorySizeForPointmasses, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(pointmass_device.rmax, pointmass_host.rmax, memorySizeForPointmasses, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(pointmass_device.m, pointmass_host.m, memorySizeForPointmasses, cudaMemcpyHostToDevice));
+	cudaVerify(cudaMemcpy(pointmass_device.spinx, pointmass_host.spinx, memorySizeForPointmasses, cudaMemcpyHostToDevice));
+	cudaVerify(cudaMemcpy(pointmass_device.spiny, pointmass_host.spiny, memorySizeForPointmasses, cudaMemcpyHostToDevice));
+	cudaVerify(cudaMemcpy(pointmass_device.spinz, pointmass_host.spinz, memorySizeForPointmasses, cudaMemcpyHostToDevice));
 	cudaVerify(cudaMemcpy(pointmass_device.feels_particles, pointmass_host.feels_particles, integermemorySizeForPointmasses, cudaMemcpyHostToDevice));
 #endif
 
@@ -1310,6 +1330,9 @@ int free_memory()
 	cudaVerify(cudaFree(pointmass_device.feels_particles));
 	cudaVerify(cudaFree(pointmass_device.rmin));
 	cudaVerify(cudaFree(pointmass_device.rmax));
+	cudaVerify(cudaFree(pointmass_device.spinx));
+	cudaVerify(cudaFree(pointmass_device.spiny));
+	cudaVerify(cudaFree(pointmass_device.spinz));
 
 	cudaVerify(cudaFreeHost(pointmass_host.x));
 	cudaVerify(cudaFreeHost(pointmass_host.vx));
@@ -1328,6 +1351,9 @@ int free_memory()
 	cudaVerify(cudaFreeHost(pointmass_host.feels_particles));
 	cudaVerify(cudaFreeHost(pointmass_host.rmin));
 	cudaVerify(cudaFreeHost(pointmass_host.rmax));
+	cudaVerify(cudaFreeHost(pointmass_host.spinx));
+	cudaVerify(cudaFreeHost(pointmass_host.spiny));
+	cudaVerify(cudaFreeHost(pointmass_host.spinz));
 #endif
 
 #if XSPH
