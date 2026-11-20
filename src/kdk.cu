@@ -157,7 +157,7 @@ __global__ void kdkKickDriftPredict(void)
         p.T[i] += dt * p.dTdt[i];
 #endif
 #if INVISCID_SPH
-        p.beta[i] += dt * p.dbetadt[i];
+        p.av_alpha[i] += dt * p.dav_alphadt[i];
 #endif
 #if EPSALPHA_POROSITY
         p.alpha_epspor[i] += dt * p.dalpha_epspordt[i];
@@ -225,7 +225,7 @@ __global__ void kdkKick(void)
         p.T[i] += 0.5 * dt * (p.dTdt[i] - kdk_old.dTdt[i]);
 #endif
 #if INVISCID_SPH
-        p.beta[i] += 0.5 * dt * (p.dbetadt[i] - kdk_old.dbetadt[i]);
+        p.av_alpha[i] += 0.5 * dt * (p.dav_alphadt[i] - kdk_old.dav_alphadt[i]);
 #endif
 #if EPSALPHA_POROSITY
         p.alpha_epspor[i] += 0.5 * dt * (p.dalpha_epspordt[i] - kdk_old.dalpha_epspordt[i]);
@@ -398,7 +398,7 @@ static void kdk_old_arrays(int op)
     KDK_OLD(dTdt, memorySizeForParticles);
 #endif
 #if INVISCID_SPH
-    KDK_OLD(dbetadt, memorySizeForParticles);
+    KDK_OLD(dav_alphadt, memorySizeForParticles);
 #endif
 #if EPSALPHA_POROSITY
     KDK_OLD(dalpha_epspordt, memorySizeForParticles);

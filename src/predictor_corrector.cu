@@ -49,7 +49,7 @@ extern __device__ double Smin_d;
 extern __device__ double rhomin_d;
 extern __device__ double damagemin_d;
 extern __device__ double alphamin_d;
-extern __device__ double betamin_d;
+extern __device__ double av_alphamin_d;
 extern __device__ double alpha_epspormin_d;
 extern __device__ double epsilon_vmin_d;
 extern __device__ int pressureChangeSmallEnough;
@@ -143,8 +143,8 @@ __global__ void CorrectorStep()
         p.depsilon_vdt[i] = predictor.depsilon_vdt[i];
 #endif
 #if INVISCID_SPH
-        p.beta[i] = p.beta[i] + dt * predictor.dbetadt[i];
-        p.dbetadt[i] = predictor.dbetadt[i];
+        p.av_alpha[i] = p.av_alpha[i] + dt * predictor.dav_alphadt[i];
+        p.dav_alphadt[i] = predictor.dav_alphadt[i];
 #endif
 #if SOLID
         for (j = 0; j < DIM; j++) {
@@ -249,7 +249,7 @@ __global__ void PredictorStep()
         predictor.epsilon_v[i] = p.epsilon_v[i] + dt/2 * p.depsilon_vdt[i];
 #endif
 #if INVISCID_SPH
-        predictor.beta[i] = p.beta[i] + dt/2 * p.dbetadt[i];
+        predictor.av_alpha[i] = p.av_alpha[i] + dt/2 * p.dav_alphadt[i];
 #endif
 #if SOLID
         for (j = 0; j < DIM; j++) {
@@ -330,7 +330,7 @@ __global__ void CorrectorStepPorous()
 #endif
 #endif
 #if INVISCID_SPH
-        predictor.beta[i] = p.beta[i] + dt * predictor.dbetadt[i];
+        predictor.av_alpha[i] = p.av_alpha[i] + dt * predictor.dav_alphadt[i];
 #endif
 #if SOLID
         for (j = 0; j < DIM; j++) {
@@ -404,7 +404,7 @@ __global__ void pressureChangeCheck(double *maxpressureDiffPerBlock)
 }
 #endif
 
-__global__ void setTimestep(double *forcesPerBlock, double *courantPerBlock, double *dtSPerBlock, double *dtePerBlock, double *dtrhoPerBlock, double *dtdamagePerBlock, double *dtalphaPerBlock, double *dtartviscPerBlock, double *dtbetaPerBlock, double *dtalpha_epsporPerBlock, double *dtepsilon_vPerBlock)
+__global__ void setTimestep(double *forcesPerBlock, double *courantPerBlock, double *dtSPerBlock, double *dtePerBlock, double *dtrhoPerBlock, double *dtdamagePerBlock, double *dtalphaPerBlock, double *dtartviscPerBlock, double *dtav_alphaPerBlock, double *dtalpha_epsporPerBlock, double *dtepsilon_vPerBlock)
 {
 
 #define SAFETY_FIRST 0.7
@@ -417,7 +417,7 @@ __global__ void setTimestep(double *forcesPerBlock, double *courantPerBlock, dou
     __shared__ double sharedrho[NUM_THREADS_LIMITTIMESTEP];
     __shared__ double shareddamage[NUM_THREADS_LIMITTIMESTEP];
     __shared__ double sharedalpha[NUM_THREADS_LIMITTIMESTEP];
-    __shared__ double sharedbeta[NUM_THREADS_LIMITTIMESTEP];
+    __shared__ double sharedav_alpha[NUM_THREADS_LIMITTIMESTEP];
     __shared__ double sharedalpha_epspor[NUM_THREADS_LIMITTIMESTEP];
     __shared__ double sharedepsilon_v[NUM_THREADS_LIMITTIMESTEP];
 
@@ -432,7 +432,7 @@ __global__ void setTimestep(double *forcesPerBlock, double *courantPerBlock, dou
     double dte = DBL_MAX;
     double dtdamage = DBL_MAX;
     double dtalpha = DBL_MAX;
-    double dtbeta = DBL_MAX;
+    double dtav_alpha = DBL_MAX;
     double dtalpha_epspor = DBL_MAX;
     double dtepsilon_v = DBL_MAX;
     double temp;
@@ -502,9 +502,9 @@ __global__ void setTimestep(double *forcesPerBlock, double *courantPerBlock, dou
         dtartvisc = min(dtartvisc, temp);
 #endif
 #if INVISCID_SPH
-        if (p.dbetadt[i] != 0) {
-            temp = SAFETY_FIRST * (fabs(p.beta[i])+betamin_d)/fabs(p.dbetadt[i]);
-            dtbeta = min(temp, dtbeta);
+        if (p.dav_alphadt[i] != 0) {
+            temp = SAFETY_FIRST * (fabs(p.av_alpha[i])+av_alphamin_d)/fabs(p.dav_alphadt[i]);
+            dtav_alpha = min(temp, dtav_alpha);
         }
 #endif
 #if SOLID
@@ -572,7 +572,7 @@ __global__ void setTimestep(double *forcesPerBlock, double *courantPerBlock, dou
     sharedrho[i] = dtrho;
     shareddamage[i] = dtdamage;
     sharedalpha[i] = dtalpha;
-    sharedbeta[i] = dtbeta;
+    sharedav_alpha[i] = dtav_alpha;
     sharedalpha_epspor[i] = dtalpha_epspor;
     sharedepsilon_v[i] = dtepsilon_v;
 
@@ -596,7 +596,7 @@ __global__ void setTimestep(double *forcesPerBlock, double *courantPerBlock, dou
             sharedArtVisc[i] = dtartvisc = min(dtartvisc, sharedArtVisc[k]);
 #endif
 #if INVISCID_SPH
-            sharedbeta[i] = dtbeta = min(dtbeta, sharedbeta[i]);
+            sharedav_alpha[i] = dtav_alpha = min(dtav_alpha, sharedav_alpha[i]);
 #endif
         }
     }
@@ -616,7 +616,7 @@ __global__ void setTimestep(double *forcesPerBlock, double *courantPerBlock, dou
         dtartviscPerBlock[k] = dtartvisc;
 #endif
 #if INVISCID_SPH
-        dtbetaPerBlock[k] = dtbeta;
+        dtav_alphaPerBlock[k] = dtav_alpha;
 #endif
         m = gridDim.x - 1;
         if (m == atomicInc((unsigned int *)&blockCount, m)) {
@@ -635,7 +635,7 @@ __global__ void setTimestep(double *forcesPerBlock, double *courantPerBlock, dou
                 dtartvisc = min(dtartvisc, dtartviscPerBlock[j]);
 #endif
 #if INVISCID_SPH
-                dtbeta = min(dtbeta, dtbetaPerBlock[j]);
+                dtav_alpha = min(dtav_alpha, dtav_alphaPerBlock[j]);
 #endif
             }
             // set new timestep
@@ -663,7 +663,7 @@ __global__ void setTimestep(double *forcesPerBlock, double *courantPerBlock, dou
             dt = min(dt, dtartvisc);
 #endif
 #if INVISCID_SPH
-            dt = min(dt, dtbeta);
+            dt = min(dt, dtav_alpha);
 #endif
             dt = min(dt, endTimeD - currentTimeD);
             if (dt > dtmax) {
@@ -693,7 +693,7 @@ void predictor_corrector()
     double *dtalphaPerBlock;
     double *dtartviscPerBlock;
     double *maxpressureDiffPerBlock;
-    double *dtbetaPerBlock;
+    double *dtav_alphaPerBlock;
     double *dtalpha_epsporPerBlock;
     double *dtepsilon_vPerBlock;
     int pressureChangeSmallEnough_host;
@@ -709,7 +709,7 @@ void predictor_corrector()
     cudaVerify(cudaMalloc((void**)&dtrhoPerBlock, sizeof(double)*numberOfMultiprocessors));
     cudaVerify(cudaMalloc((void**)&dtdamagePerBlock, sizeof(double)*numberOfMultiprocessors));
     cudaVerify(cudaMalloc((void**)&dtalphaPerBlock, sizeof(double)*numberOfMultiprocessors));
-    cudaVerify(cudaMalloc((void**)&dtbetaPerBlock, sizeof(double)*numberOfMultiprocessors));
+    cudaVerify(cudaMalloc((void**)&dtav_alphaPerBlock, sizeof(double)*numberOfMultiprocessors));
     cudaVerify(cudaMalloc((void**)&maxpressureDiffPerBlock, sizeof(double)*numberOfMultiprocessors));
     cudaVerify(cudaMalloc((void**)&dtartviscPerBlock, sizeof(double)*numberOfMultiprocessors));
     cudaVerify(cudaMalloc((void**)&dtalpha_epsporPerBlock, sizeof(double)*numberOfMultiprocessors));
@@ -791,7 +791,7 @@ void predictor_corrector()
             cudaVerifyKernel((setTimestep<<<numberOfMultiprocessors, NUM_THREADS_LIMITTIMESTEP>>>(
                               forcesPerBlock, courantPerBlock,
                               dtSPerBlock, dtePerBlock, dtrhoPerBlock, dtdamagePerBlock,
-                              dtalphaPerBlock, dtartviscPerBlock, dtbetaPerBlock, dtalpha_epsporPerBlock, dtepsilon_vPerBlock)));
+                              dtalphaPerBlock, dtartviscPerBlock, dtav_alphaPerBlock, dtalpha_epsporPerBlock, dtepsilon_vPerBlock)));
             cudaVerify(cudaDeviceSynchronize());
             /* get the time and the time step from the gpu */
             cudaVerify(cudaMemcpyFromSymbol(&dt_host, dt, sizeof(double)));
@@ -908,7 +908,7 @@ void predictor_corrector()
 	cudaVerify(cudaFree(dtrhoPerBlock));
 	cudaVerify(cudaFree(dtdamagePerBlock));
 	cudaVerify(cudaFree(dtalphaPerBlock));
-	cudaVerify(cudaFree(dtbetaPerBlock));
+	cudaVerify(cudaFree(dtav_alphaPerBlock));
 	cudaVerify(cudaFree(dtartviscPerBlock));
     cudaVerify(cudaFree(maxpressureDiffPerBlock));
     cudaVerify(cudaFree(dtalpha_epsporPerBlock));

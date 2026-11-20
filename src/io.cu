@@ -48,7 +48,7 @@ extern double alphamin;
 extern double emin;
 extern double rhomin;
 extern double damagemin;
-extern double betamin;
+extern double av_alphamin;
 extern double alpha_epspormin;
 extern double epsilon_vmin;
 
@@ -97,7 +97,7 @@ void set_integration_parameters()
         found = TRUE;
     }
 
-    Smin = rhomin = emin = alphamin = betamin = damagemin = alpha_epspormin = epsilon_vmin = 1e99;
+    Smin = rhomin = emin = alphamin = av_alphamin = damagemin = alpha_epspormin = epsilon_vmin = 1e99;
 
     if (found) {
         while (fgets(line, sizeof(line), f)) {
@@ -117,8 +117,8 @@ void set_integration_parameters()
             else if (!strcmp(name, "alphamin")) {
                 alphamin = atof(value);
             }
-            else if (!strcmp(name, "betamin")) {
-                betamin = atof(value);
+            else if (!strcmp(name, "av_alphamin") || !strcmp(name, "betamin")) {   /* betamin: old name */
+                av_alphamin = atof(value);
             }
             else if (!strcmp(name, "damagemin")) {
                 damagemin = atof(value);
@@ -150,7 +150,7 @@ void set_integration_parameters()
         fprintf(stdout, "alphamin:\t\t %e\n", alphamin);
 #endif
 #if INVISCID_SPH
-        fprintf(stdout, "betamin:\t\t %e\n", betamin);
+        fprintf(stdout, "av_alphamin:\t\t %e\n", av_alphamin);
 #endif
 #if EPSALPHA_POROSITY
         fprintf(stdout, "alpha_epspormin:\t\t %e\n", alpha_epspormin);
@@ -2447,6 +2447,16 @@ void write_particles_to_file(File file) {
         status = H5Dwrite(cs_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
         status = H5Dclose(cs_id);
 
+#if INVISCID_SPH
+        /* alpha_i of the time-dependent artificial viscosity */
+        cs_id = create_compressed_dataset(file_id, "/av_alpha", H5T_NATIVE_DOUBLE, dataspace_id, dims, 1);
+        for (i = 0; i < numberOfParticles; i++)
+            x[i] = p_host.av_alpha[i];
+
+        status = H5Dwrite(cs_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, x);
+        status = H5Dclose(cs_id);
+#endif
+
 #if SIRONO_POROSITY
         /* compressive strength */
         // compressive_strength_id = H5Dcreate2(file_id, "/compressive_strength", H5T_NATIVE_DOUBLE, dataspace_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -3180,6 +3190,9 @@ void copyToHostAndWriteToFile(int timestep, int lastTimestep)
     cudaVerify(cudaMemcpy(p_host.materialId, p_device.materialId, memorySizeForInteractions, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.p, p_device.p, memorySizeForParticles, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(p_host.cs, p_device.cs, memorySizeForParticles, cudaMemcpyDeviceToHost));
+#if INVISCID_SPH
+    cudaVerify(cudaMemcpy(p_host.av_alpha, p_device.av_alpha, memorySizeForParticles, cudaMemcpyDeviceToHost));
+#endif
     cudaVerify(cudaMemcpy(p_host.noi, p_device.noi, memorySizeForInteractions, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(interactions_host, interactions, memorySizeForInteractions*MAX_NUM_INTERACTIONS, cudaMemcpyDeviceToHost));
     cudaVerify(cudaMemcpy(childList_host, (void * )childListd, memorySizeForChildren, cudaMemcpyDeviceToHost));

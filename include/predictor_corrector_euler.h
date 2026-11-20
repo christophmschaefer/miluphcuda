@@ -30,7 +30,7 @@
 
 void predictor_corrector_euler();
 
-__global__ void setTimestep_euler(double *forcesPerBlock, double *courantPerBlock, double *dtSPerBlock, double *dtePerBlock, double *dtrhoPerBlock, double *dtdamagePerBlock, double *dtalphaPerBlock, double *dtartviscPerBlock, double *dtbetaPerBlock, double *dtalpha_epsporPerBlock, double *dtepsilon_vPerBlock);
+__global__ void setTimestep_euler(double *forcesPerBlock, double *courantPerBlock, double *dtSPerBlock, double *dtePerBlock, double *dtrhoPerBlock, double *dtdamagePerBlock, double *dtalphaPerBlock, double *dtartviscPerBlock, double *dtav_alphaPerBlock, double *dtalpha_epsporPerBlock, double *dtepsilon_vPerBlock);
 __global__ void pressureChangeCheck_euler(double *maxpressureDiffPerBlock);
 
 #endif

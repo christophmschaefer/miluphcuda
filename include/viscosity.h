@@ -28,15 +28,27 @@
 #include "timeintegration.h"
 
 
-__global__ void betaviscosity(int *interactions);
+#if INVISCID_SPH
+/**
+ * @brief Time-dependent artificial viscosity of Cullen & Dehnen (2010): shock indicator, local alpha and its decay
+ * rate, at the end of every right-hand side (see viscosity.cu).
+ */
+__global__ void inviscidSPHSwitch(int *interactions);
+/**
+ * @brief After an accepted time step: alpha_i = max(alpha_i, alpha_loc).
+ */
+__global__ void inviscidSPHRaiseAlpha(void);
+/**
+ * @brief Start value of alpha_i, the alpha of the material.
+ */
+__global__ void initInviscidSPH(void);
+#endif
 
 __global__ void calculate_shear_stress_tensor(int *interactions);
 __global__ void calculate_kinematic_viscosity(void);
 
 
 
-__device__ int sign(double x);
-__device__ void multiply(double mat1[][DIM], double mat2[][DIM], double res[][DIM]);
 
 
 

@@ -214,6 +214,24 @@
 # error PALPHA_RETURN_MAPPING requires PALPHA_ELASTIC_RELOADING 1 in parameter.h.
 #endif
 
+#if INVISCID_SPH && !ARTIFICIAL_VISCOSITY
+# error INVISCID_SPH controls the alpha of the artificial viscosity and requires ARTIFICIAL_VISCOSITY.
+#endif
+
+#if INVISCID_SPH && BALSARA_SWITCH
+# error INVISCID_SPH has its own limiter for shear flows, do not combine it with BALSARA_SWITCH.
+#endif
+
+// defaults for parameter.h files from before the parameters of INVISCID_SPH
+#if INVISCID_SPH
+# ifndef INVISCID_SPH_ALPHA_MIN
+#  define INVISCID_SPH_ALPHA_MIN 0.0
+# endif
+# ifndef INVISCID_SPH_DECAY_L
+#  define INVISCID_SPH_DECAY_L 0.05
+# endif
+#endif
+
 #if (MORE_OUTPUT || MORE_ANEOS_OUTPUT) && !HDF5IO
 # error You need to set HDF5IO if you want MORE_OUTPUT or MORE_ANEOS_OUTPUT in parameter.h.
 #endif

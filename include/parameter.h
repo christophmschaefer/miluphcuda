@@ -110,8 +110,15 @@
 // Balsara switch: lowers the artificial viscosity in regions without shocks
 #define BALSARA_SWITCH 0
 
-// INVISCID SPH (see Cullen & Dehnen paper)
+// INVISCID SPH: time-dependent artificial viscosity of Cullen & Dehnen (2010, MNRAS 408, 669). Every particle has
+// its own alpha_i (output: av_alpha), which rises to the alpha of the material (artificial_viscosity.alpha, the
+// maximum) where the shock indicator detects a converging flow ahead of a shock, and decays to
+// INVISCID_SPH_ALPHA_MIN behind it on the time scale h/(2 INVISCID_SPH_DECAY_L vsig); beta_i = alpha_i beta/alpha
+// of the material. Shear flows do not switch it on. Needs ARTIFICIAL_VISCOSITY; not with BALSARA_SWITCH (the
+// limiter is part of the scheme). See viscosity.cu and test_cases/inviscid_sph.
 #define INVISCID_SPH 0
+#define INVISCID_SPH_ALPHA_MIN 0.0
+#define INVISCID_SPH_DECAY_L 0.05
 
 // consistency switches
 // for zeroth order consistency

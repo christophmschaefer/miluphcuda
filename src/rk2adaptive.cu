@@ -752,7 +752,7 @@ __global__ void integrateFirstStep(void)
 #endif
 #endif
 #if INVISCID_SPH
-        rk[RKFIRST].beta[i] = rk[RKSTART].beta[i] + dt * B21 * rk[RKSTART].dbetadt[i];
+        rk[RKFIRST].av_alpha[i] = rk[RKSTART].av_alpha[i] + dt * B21 * rk[RKSTART].dav_alphadt[i];
 #endif
 #if SOLID
         int j, k;
@@ -876,7 +876,7 @@ __global__ void integrateSecondStep(void)
         rk[RKSECOND].epsilon_v[i] = rk[RKSTART].epsilon_v[i] + dt * (B31 * rk[RKSTART].depsilon_vdt[i] + B32 * rk[RKFIRST].depsilon_vdt[i]);
 #endif
 #if INVISCID_SPH
-        rk[RKSECOND].beta[i] = rk[RKSTART].beta[i] + dt * (B31 * rk[RKSTART].dbetadt[i] + B32 * rk[RKFIRST].dbetadt[i]);
+        rk[RKSECOND].av_alpha[i] = rk[RKSTART].av_alpha[i] + dt * (B31 * rk[RKSTART].dav_alphadt[i] + B32 * rk[RKFIRST].dav_alphadt[i]);
 #endif
 #if SOLID
         int j;
@@ -1046,13 +1046,13 @@ __global__ void integrateThirdStep(void)
 #endif
 
 #if INVISCID_SPH
-        p.beta[i] = rk[RKSTART].beta[i] + dt/6.0 *
-            (     C1 * rk[RKSTART].dbetadt[i]
-                + C2 * rk[RKFIRST].dbetadt[i]
-                + C3 * rk[RKSECOND].dbetadt[i]);
-        p.dbetadt[i] = 1./6. * (C1 * rk[RKSTART].dbetadt[i]
-                             +  C2 * rk[RKFIRST].dbetadt[i]
-                             +  C3 * rk[RKSECOND].dbetadt[i]);
+        p.av_alpha[i] = rk[RKSTART].av_alpha[i] + dt/6.0 *
+            (     C1 * rk[RKSTART].dav_alphadt[i]
+                + C2 * rk[RKFIRST].dav_alphadt[i]
+                + C3 * rk[RKSECOND].dav_alphadt[i]);
+        p.dav_alphadt[i] = 1./6. * (C1 * rk[RKSTART].dav_alphadt[i]
+                             +  C2 * rk[RKFIRST].dav_alphadt[i]
+                             +  C3 * rk[RKSECOND].dav_alphadt[i]);
 #endif
 
 #if SOLID

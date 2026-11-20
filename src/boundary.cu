@@ -373,6 +373,9 @@ __global__ void setQuantitiesGhostParticles()
         p.p[i] = p.p[pidx];
         p.e[i] = p.e[pidx];
         p.rho[i] = p.rho[pidx];
+#if INVISCID_SPH
+        p.av_alpha[i] = p.av_alpha[pidx];
+#endif
 #if SOLID
         /* set deviatoric stress tensor depending on boundary type */
         if (idx > 0) { /* NO_SLIP_BOUNDARY */ 

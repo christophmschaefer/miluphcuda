@@ -213,12 +213,21 @@ void initIntegration()
 #endif
 
     cudaVerifyKernel((initializeSoundspeed<<<numberOfMultiprocessors*4, NUM_THREADS_512>>>()));
+#if INVISCID_SPH
+    cudaVerifyKernel((initInviscidSPH<<<numberOfMultiprocessors*4, NUM_THREADS_512>>>()));
+    cudaVerify(cudaDeviceSynchronize());
+#endif
 }
 
 
 //this function is called after every successful integration (not only when ouput is generated)
 void afterIntegrationStep(void)
 {
+#if INVISCID_SPH
+    /* alpha_i rises at once to the local value of the shock indicator */
+    cudaVerifyKernel((inviscidSPHRaiseAlpha<<<numberOfMultiprocessors*4, NUM_THREADS_512>>>()));
+    cudaVerify(cudaDeviceSynchronize());
+#endif
 #if PALPHA_POROSITY && PALPHA_RETURN_MAPPING
     /* the next rhs evaluates the accepted state and commits its distention as history of the return mapping */
     palpha_commit_pending = TRUE;

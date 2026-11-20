@@ -87,7 +87,7 @@ __global__ void integrateEuler(void)
             p.T[i] += dt * p.dTdt[i];
 #endif
 #if INVISCID_SPH
-            p.beta[i] += dt * p.dbetadt[i];
+            p.av_alpha[i] += dt * p.dav_alphadt[i];
 #endif
 #if SOLID
 #if FRAGMENTATION

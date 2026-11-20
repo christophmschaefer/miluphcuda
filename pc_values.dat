@@ -13,4 +13,4 @@ rhomin = 1e-8
 emin = 1e2
 damagemin = 1e-2
 alphamin = 1e-4
-betamin = 0
+av_alphamin = 0

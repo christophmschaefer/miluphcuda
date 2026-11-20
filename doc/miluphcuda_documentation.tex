@@ -606,7 +606,18 @@ with the means $\bar c_{ij}$, $\bar\varrho_{ij}$, $\bar h_{ij}$ of the sound spe
 $\epsilon = 0.01$, and the material parameters $\alpha$, $\beta$ (default 1 and 2). With \sw{BALSARA\_SWITCH}
 \citep{balsara1995}, $\mu_{ij}$ is multiplied by $(f_i+f_j)/2$,
 $f_i = |\nabla\cdot\vec v_i|/(|\nabla\cdot\vec v_i| + |\nabla\times\vec v_i| + 10^{-4}c_i/h_i)$.
-\sw{INVISCID\_SPH} uses time-dependent coefficients \citep{cullen2010}.
+With \sw{INVISCID\_SPH}, every particle has its own coefficient $\alpha_i$ \citep{cullen2010}, and $\alpha$, $\beta$
+above are replaced by $\alpha_{ij} = (\alpha_i+\alpha_j)/2$ and $\alpha_{ij}\beta/\alpha$; the material $\alpha$ is
+the maximum. From the velocity gradient $V_{ab} = \partial_a v_b$ and the divergence of the acceleration, the shock
+indicator is $A_i = \xi_i \max(-\mathrm{d}(\nabla\cdot\vec v_i)/\mathrm{d}t, 0)$ with $\mathrm{d}(\nabla\cdot\vec
+v)/\mathrm{d}t = \nabla\cdot\vec a - V_{ab}V_{ba}$ and the limiter $\xi_i = |2(1-R_i)^4\nabla\cdot\vec v_i|^2 /
+(|2(1-R_i)^4 \nabla\cdot\vec v_i|^2 + S_{ab}S_{ab})$, $S$ the traceless symmetric part of $V$, $R_i =
+\varrho_i^{-1}\sum_j \mathrm{sign}(\nabla\cdot\vec v_j) m_j W_{ij}$. With $\alpha_{\mathrm{loc},i} =
+\max(\alpha_{\min}, \alpha\, h_i^2A_i/(v_{\mathrm{sig},i}^2 + h_i^2A_i))$, $\alpha_i$ is raised to
+$\alpha_{\mathrm{loc},i}$ after every accepted time step if it is smaller, and decays as $\dot\alpha_i =
+(\alpha_{\mathrm{loc},i}-\alpha_i)/\tau_i$, $\tau_i = h_i/(2\ell v_{\mathrm{sig},i})$, otherwise ($\alpha_{\min}$ =
+\sw{INVISCID\_SPH\_ALPHA\_MIN}, $\ell$ = \sw{INVISCID\_SPH\_DECAY\_L}). At the start, $\alpha_i = \alpha$. Test:
+\texttt{test\_cases/inviscid\_sph}.
 
 \subsection{XSPH and Shepard correction}
 With \sw{XSPH} the particles move with the smoothed velocity $\dot{\vec x}_i = \vec v_i + \frac{1}{2}

@@ -285,6 +285,10 @@ static void print_compile_information(void)
 #endif
                         "\n");
     fprintf(stdout, "Standard SPH artificial viscosity:\t  %s\n", yesno);
+#if INVISCID_SPH
+    fprintf(stdout, "    with time-dependent alpha (Cullen & Dehnen 2010, INVISCID_SPH), alpha_min = %g, l = %g\n",
+            INVISCID_SPH_ALPHA_MIN, INVISCID_SPH_DECAY_L);
+#endif
 #if XSPH
     strcpy(yesno, "yes");
 #else

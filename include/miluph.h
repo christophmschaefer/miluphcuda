@@ -214,10 +214,9 @@ struct Particle {
     double *muijmax; ///< value to calculate the time step size for the integrator
 #endif
 #if INVISCID_SPH
-    double *beta; ///< \beta from artificial viscosity, Dehnen ansatz for inviscid sph
-    double *beta_old; 
-    double *divv_old;
-    double *dbetadt; ///< time derivative of artificial viscosity \beta, Dehnen ansatz for inviscid sph
+    double *av_alpha; ///< alpha_i of the time-dependent artificial viscosity (Cullen & Dehnen 2010), integrated
+    double *dav_alphadt; ///< time derivative of av_alpha
+    double *av_alpha_loc; ///< local target alpha from the shock indicator of the last rhs (p_device only, via p_rhs)
 #endif
 
 #if PALPHA_POROSITY

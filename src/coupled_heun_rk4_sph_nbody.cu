@@ -60,7 +60,7 @@ extern __device__ double Smin_d;
 extern __device__ double rhomin_d;
 extern __device__ double damagemin_d;
 extern __device__ double alphamin_d;
-extern __device__ double betamin_d;
+extern __device__ double av_alphamin_d;
 extern __device__ double alpha_epspormin_d;
 extern __device__ double epsilon_vmin_d;
 extern __device__ int pressureChangeSmallEnough;
@@ -148,8 +148,8 @@ __global__ void CorrectorStep_heun()
         p.depsilon_vdt[i] = 0.5*(predictor.depsilon_vdt[i] + p.depsilon_vdt[i]);
 #endif
 #if INVISCID_SPH
-        p.beta[i] = p.beta[i] + dt/2 * (predictor.dbetadt[i] + p.dbetadt[i]);
-        p.dbetadt[i] = 0.5 * (predictor.dbetadt[i] + p.dbetadt[i]);
+        p.av_alpha[i] = p.av_alpha[i] + dt/2 * (predictor.dav_alphadt[i] + p.dav_alphadt[i]);
+        p.dav_alphadt[i] = 0.5 * (predictor.dav_alphadt[i] + p.dav_alphadt[i]);
 #endif
 #if SOLID
         for (j = 0; j < DIM; j++) {
@@ -257,7 +257,7 @@ __global__ void PredictorStep_heun()
         predictor.T[i] = p.T[i] + dt * p.dTdt[i];
 #endif
 #if INVISCID_SPH
-        predictor.beta[i] = p.beta[i] + dt * p.dbetadt[i];
+        predictor.av_alpha[i] = p.av_alpha[i] + dt * p.dav_alphadt[i];
 #endif
 #if SOLID
         predictor.ep[i] = p.ep[i] + dt * p.edotp[i];
@@ -329,7 +329,7 @@ __global__ void pressureChangeCheck_heun(double *maxpressureDiffPerBlock)
 }
 #endif
 
-__global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock, double *dtSPerBlock, double *dtePerBlock, double *dtrhoPerBlock, double *dtdamagePerBlock, double *dtalphaPerBlock, double *dtartviscPerBlock, double *dtbetaPerBlock, double *dtalpha_epsporPerBlock, double *dtepsilon_vPerBlock)
+__global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock, double *dtSPerBlock, double *dtePerBlock, double *dtrhoPerBlock, double *dtdamagePerBlock, double *dtalphaPerBlock, double *dtartviscPerBlock, double *dtav_alphaPerBlock, double *dtalpha_epsporPerBlock, double *dtepsilon_vPerBlock)
 {
 
 #define SAFETY_FIRST 0.1
@@ -342,7 +342,7 @@ __global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock
     __shared__ double sharedrho[NUM_THREADS_LIMITTIMESTEP];
     __shared__ double shareddamage[NUM_THREADS_LIMITTIMESTEP];
     __shared__ double sharedalpha[NUM_THREADS_LIMITTIMESTEP];
-    __shared__ double sharedbeta[NUM_THREADS_LIMITTIMESTEP];
+    __shared__ double sharedav_alpha[NUM_THREADS_LIMITTIMESTEP];
     __shared__ double sharedalpha_epspor[NUM_THREADS_LIMITTIMESTEP];
     __shared__ double sharedepsilon_v[NUM_THREADS_LIMITTIMESTEP];
 
@@ -357,7 +357,7 @@ __global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock
     double dte = DBL_MAX;
     double dtdamage = DBL_MAX;
     double dtalpha = DBL_MAX;
-    double dtbeta = DBL_MAX;
+    double dtav_alpha = DBL_MAX;
     double dtalpha_epspor = DBL_MAX;
     double dtepsilon_v = DBL_MAX;
     double temp;
@@ -427,9 +427,9 @@ __global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock
         dtartvisc = min(dtartvisc, temp);
 #endif
 #if INVISCID_SPH
-        if (p.dbetadt[i] != 0) {
-            temp = SAFETY_FIRST * (fabs(p.beta[i])+betamin_d)/fabs(p.dbetadt[i]);
-            dtbeta = min(temp, dtbeta);
+        if (p.dav_alphadt[i] != 0) {
+            temp = SAFETY_FIRST * (fabs(p.av_alpha[i])+av_alphamin_d)/fabs(p.dav_alphadt[i]);
+            dtav_alpha = min(temp, dtav_alpha);
         }
 
 #endif
@@ -503,7 +503,7 @@ __global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock
     sharedArtVisc[i] = dtartvisc;
 #endif
 #if INVISCID_SPH
-    sharedbeta[i] = dtbeta;
+    sharedav_alpha[i] = dtav_alpha;
 #endif
     for (j = NUM_THREADS_LIMITTIMESTEP / 2; j > 0; j /= 2) {
         __syncthreads();
@@ -522,7 +522,7 @@ __global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock
             sharedArtVisc[i] = dtartvisc = min(dtartvisc, sharedArtVisc[k]);
 #endif
 #if INVISCID_SPH
-            sharedbeta[i] = dtbeta = min(dtbeta, sharedbeta[k]);
+            sharedav_alpha[i] = dtav_alpha = min(dtav_alpha, sharedav_alpha[k]);
 #endif
         }
     }
@@ -542,7 +542,7 @@ __global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock
         dtartviscPerBlock[k] = dtartvisc;
 #endif
 #if INVISCID_SPH
-        dtbetaPerBlock[k] = dtbeta;
+        dtav_alphaPerBlock[k] = dtav_alpha;
 #endif
         m = gridDim.x - 1;
         if (m == atomicInc((unsigned int *)&blockCount, m)) {
@@ -561,7 +561,7 @@ __global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock
                 dtartvisc = min(dtartvisc, dtartviscPerBlock[j]);
 #endif
 #if INVISCID_SPH
-                dtbeta = min(dtbeta, dtbetaPerBlock[j]);
+                dtav_alpha = min(dtav_alpha, dtav_alphaPerBlock[j]);
 #endif
             }
             // set new timestep
@@ -589,7 +589,7 @@ __global__ void setTimestep_heun(double *forcesPerBlock, double *courantPerBlock
             dt = min(dt, dtartvisc);
 #endif
 #if INVISCID_SPH
-            dt = min(dt, dtbeta);
+            dt = min(dt, dtav_alpha);
 #endif
             dt = min(dt, endTimeD - currentTimeD);
             if (dt > dtmax) dt = dtmax;
@@ -634,7 +634,7 @@ void heun_rk4()
     double *dtSPerBlock, *dtePerBlock, *dtrhoPerBlock;
     double *dtdamagePerBlock;
     double *dtalphaPerBlock;
-    double *dtbetaPerBlock;
+    double *dtav_alphaPerBlock;
     double *dtartviscPerBlock;
     double *dtalpha_epsporPerBlock;
     double *dtepsilon_vPerBlock;
@@ -649,7 +649,7 @@ void heun_rk4()
     cudaVerify(cudaMalloc((void**)&dtrhoPerBlock, sizeof(double)*numberOfMultiprocessors));
     cudaVerify(cudaMalloc((void**)&dtdamagePerBlock, sizeof(double)*numberOfMultiprocessors));
     cudaVerify(cudaMalloc((void**)&dtalphaPerBlock, sizeof(double)*numberOfMultiprocessors));
-    cudaVerify(cudaMalloc((void**)&dtbetaPerBlock, sizeof(double)*numberOfMultiprocessors));
+    cudaVerify(cudaMalloc((void**)&dtav_alphaPerBlock, sizeof(double)*numberOfMultiprocessors));
     cudaVerify(cudaMalloc((void**)&maxpressureDiffPerBlock, sizeof(double)*numberOfMultiprocessors));
     cudaVerify(cudaMalloc((void**)&dtartviscPerBlock, sizeof(double)*numberOfMultiprocessors));
     cudaVerify(cudaMalloc((void**)&dtalpha_epsporPerBlock, sizeof(double)*numberOfMultiprocessors));
@@ -742,7 +742,7 @@ void heun_rk4()
             cudaVerifyKernel((setTimestep_heun<<<numberOfMultiprocessors, NUM_THREADS_LIMITTIMESTEP>>>(
                               forcesPerBlock, courantPerBlock,
                               dtSPerBlock, dtePerBlock, dtrhoPerBlock, dtdamagePerBlock,
-                              dtalphaPerBlock, dtartviscPerBlock, dtbetaPerBlock, dtalpha_epsporPerBlock, dtepsilon_vPerBlock)));
+                              dtalphaPerBlock, dtartviscPerBlock, dtav_alphaPerBlock, dtalpha_epsporPerBlock, dtepsilon_vPerBlock)));
             cudaVerify(cudaDeviceSynchronize());
             /* get the time and the time step from the gpu */
             cudaVerify(cudaMemcpyFromSymbol(&dt_host, dt, sizeof(double)));
@@ -874,7 +874,7 @@ void heun_rk4()
 	cudaVerify(cudaFree(dtrhoPerBlock));
 	cudaVerify(cudaFree(dtdamagePerBlock));
     cudaVerify(cudaFree(dtalphaPerBlock));
-    cudaVerify(cudaFree(dtbetaPerBlock));
+    cudaVerify(cudaFree(dtav_alphaPerBlock));
     cudaVerify(cudaFree(dtalpha_epsporPerBlock));
     cudaVerify(cudaFree(dtepsilon_vPerBlock));
     cudaVerify(cudaFree(dtartviscPerBlock));

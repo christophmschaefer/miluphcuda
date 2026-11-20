@@ -719,9 +719,15 @@ __global__ void internalForces(int *interactions) {
                 fj = fabs(p_rhs.divv[j]) / (fabs(p_rhs.divv[j]) + curlj + eps_balsara*p.cs[j]/p.h[j]);
                 mu *= (fi+fj)/2.;
 # endif
-                pij = (beta*mu - alpha*csbar) * mu/rhobar;
 # if INVISCID_SPH
-                pij =  ((2 * mu - csbar) * p.beta[i] * mu) / rhobar;
+                // time-dependent alpha_i of Cullen & Dehnen (2010, see viscosity.cu): alpha_ij = (alpha_i +
+                // alpha_j)/2, beta_ij = alpha_ij beta/alpha, the material alpha is the maximum
+                {
+                    double alphaij = 0.5 * (p.av_alpha[i] + p.av_alpha[j]);
+                    pij = ((alpha > 0.0 ? beta / alpha : 0.0) * mu - csbar) * alphaij * mu / rhobar;
+                }
+# else
+                pij = (beta*mu - alpha*csbar) * mu/rhobar;
 # endif
             }
 #endif // ARTIFICIAL_VISCOSITY

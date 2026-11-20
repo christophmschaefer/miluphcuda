@@ -508,21 +508,6 @@ void rightHandSide()
 #endif
 */
 
-#if INVISCID_SPH
-# if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(start, 0);
-# endif
-    cudaVerifyKernel((betaviscosity<<<numberOfMultiprocessors * 4, NUM_THREADS_128>>>(
-		    interactions)));
-    cudaVerify(cudaDeviceSynchronize());
-# if DEBUG_RHS_RUNTIMES
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&time[timerCounter], start, stop);
-    printf("duration betaviscosity: %.7f ms\n", time[timerCounter]);
-    totalTime += time[timerCounter++];
-# endif
-#endif
 
 #if (SYMMETRIC_STRESSTENSOR || FRAGMENTATION || PLASTICITY)
 # if DEBUG_RHS_RUNTIMES
@@ -797,6 +782,22 @@ void rightHandSide()
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time[timerCounter], start, stop);
     printf("duration backreaction from the particles on pointmasses: %.7f ms\n", time[timerCounter]);
+    totalTime += time[timerCounter++];
+# endif
+#endif
+
+#if INVISCID_SPH
+    // shock indicator and rate of the viscosity alpha_i, needs the accelerations of this rhs (Cullen & Dehnen 2010)
+# if DEBUG_RHS_RUNTIMES
+    cudaEventRecord(start, 0);
+# endif
+    cudaVerifyKernel((inviscidSPHSwitch<<<numberOfMultiprocessors * 4, NUM_THREADS_128>>>(interactions)));
+    cudaVerify(cudaDeviceSynchronize());
+# if DEBUG_RHS_RUNTIMES
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time[timerCounter], start, stop);
+    printf("duration inviscidSPHSwitch: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
 # endif
 #endif

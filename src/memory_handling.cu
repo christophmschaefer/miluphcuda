@@ -101,10 +101,8 @@ int allocate_particles_memory(struct Particle *a, int allocate_immutables)
 #endif
 
 #if INVISCID_SPH
-	cudaVerify(cudaMalloc((void**)&a->beta, memorySizeForParticles));
-	cudaVerify(cudaMalloc((void**)&a->beta_old, memorySizeForParticles));
-	cudaVerify(cudaMalloc((void**)&a->divv_old, memorySizeForParticles));
-	cudaVerify(cudaMalloc((void**)&a->dbetadt, memorySizeForParticles));
+	cudaVerify(cudaMalloc((void**)&a->av_alpha, memorySizeForParticles));
+	cudaVerify(cudaMalloc((void**)&a->dav_alphadt, memorySizeForParticles));
 #endif
 
 #if FRAGMENTATION
@@ -347,7 +345,7 @@ int copy_particles_derivatives_device_to_device(struct Particle *dst, struct Par
 #endif
 
 #if INVISCID_SPH
-	cudaVerify(cudaMemcpy(dst->dbetadt, src->dbetadt, memorySizeForParticles, cudaMemcpyDeviceToDevice));
+	cudaVerify(cudaMemcpy(dst->dav_alphadt, src->dav_alphadt, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
 
 #if JC_PLASTICITY
@@ -511,9 +509,7 @@ int copy_particles_variables_device_to_device(struct Particle *dst, struct Parti
 #endif
 
 #if INVISCID_SPH
-    cudaVerify(cudaMemcpy(dst->beta, src->beta, memorySizeForParticles, cudaMemcpyDeviceToDevice));
-    cudaVerify(cudaMemcpy(dst->beta_old, src->beta_old, memorySizeForParticles, cudaMemcpyDeviceToDevice));
-    cudaVerify(cudaMemcpy(dst->divv_old, src->divv_old, memorySizeForParticles, cudaMemcpyDeviceToDevice));
+    cudaVerify(cudaMemcpy(dst->av_alpha, src->av_alpha, memorySizeForParticles, cudaMemcpyDeviceToDevice));
 #endif
 
 #if JC_PLASTICITY
@@ -631,10 +627,8 @@ int free_particles_memory(struct Particle *a, int free_immutables)
 #endif
 
 #if INVISCID_SPH
-	cudaVerify(cudaFree(a->beta));
-	cudaVerify(cudaFree(a->beta_old));
-	cudaVerify(cudaFree(a->divv_old));
-	cudaVerify(cudaFree(a->dbetadt));
+	cudaVerify(cudaFree(a->av_alpha));
+	cudaVerify(cudaFree(a->dav_alphadt));
 #endif
 
 #if TENSORIAL_CORRECTION
@@ -814,6 +808,9 @@ int init_allocate_memory(void)
     cudaVerify(cudaMallocHost((void**)&p_host.p, memorySizeForParticles));
     cudaVerify(cudaMallocHost((void**)&p_host.e, memorySizeForParticles));
     cudaVerify(cudaMallocHost((void**)&p_host.cs, memorySizeForParticles));
+#if INVISCID_SPH
+    cudaVerify(cudaMallocHost((void**)&p_host.av_alpha, memorySizeForParticles));
+#endif
 
 #if GRAVITATING_POINT_MASSES
 	cudaVerify(cudaMallocHost((void**)&pointmass_host.x, memorySizeForPointmasses));
@@ -878,10 +875,9 @@ int init_allocate_memory(void)
 #endif
 
 #if INVISCID_SPH
-	cudaVerify(cudaMalloc((void**)&p_device.beta, memorySizeForParticles));
-	cudaVerify(cudaMalloc((void**)&p_device.beta_old, memorySizeForParticles));
-	cudaVerify(cudaMalloc((void**)&p_device.divv_old, memorySizeForParticles));
-	cudaVerify(cudaMalloc((void**)&p_device.dbetadt, memorySizeForParticles));
+	cudaVerify(cudaMalloc((void**)&p_device.av_alpha, memorySizeForParticles));
+	cudaVerify(cudaMalloc((void**)&p_device.dav_alphadt, memorySizeForParticles));
+	cudaVerify(cudaMalloc((void**)&p_device.av_alpha_loc, memorySizeForParticles));
 #endif
 
 #if TENSORIAL_CORRECTION
@@ -1360,9 +1356,9 @@ int free_memory()
 	cudaVerify(cudaFree(p_device.muijmax));
 #endif
 #if INVISCID_SPH
-	cudaVerify(cudaFree(p_device.beta));
-	cudaVerify(cudaFree(p_device.beta_old));
-	cudaVerify(cudaFree(p_device.divv_old));
+	cudaVerify(cudaFree(p_device.av_alpha));
+	cudaVerify(cudaFree(p_device.dav_alphadt));
+	cudaVerify(cudaFree(p_device.av_alpha_loc));
 #endif
 	cudaVerify(cudaFree(interactions));
 	cudaVerify(cudaFree(p_device.materialId));
@@ -1538,9 +1534,7 @@ int free_memory()
 	cudaVerify(cudaFreeHost(p_host.cs_max));
 #endif
 #if INVISCID_SPH
-	cudaVerify(cudaFreeHost(p_host.beta));
-	cudaVerify(cudaFreeHost(p_host.beta_old));
-	cudaVerify(cudaFreeHost(p_host.divv_old));
+	cudaVerify(cudaFreeHost(p_host.av_alpha));
 #endif
 #if PALPHA_POROSITY
 	cudaVerify(cudaFreeHost(p_host.alpha_jutzi));
