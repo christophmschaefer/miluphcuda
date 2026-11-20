@@ -115,10 +115,12 @@
 // maximum) where the shock indicator detects a converging flow ahead of a shock, and decays to
 // INVISCID_SPH_ALPHA_MIN behind it on the time scale h/(2 INVISCID_SPH_DECAY_L vsig); beta_i = alpha_i beta/alpha
 // of the material. Shear flows do not switch it on. Needs ARTIFICIAL_VISCOSITY; not with BALSARA_SWITCH (the
-// limiter is part of the scheme). See viscosity.cu and test_cases/inviscid_sph.
+// limiter is part of the scheme). INVISCID_SPH_START_ALPHA_MIN: alpha_i starts at INVISCID_SPH_ALPHA_MIN instead
+// of the material alpha (for initial states without shocks). See viscosity.cu and test_cases/inviscid_sph{,_2d}.
 #define INVISCID_SPH 0
 #define INVISCID_SPH_ALPHA_MIN 0.0
 #define INVISCID_SPH_DECAY_L 0.05
+#define INVISCID_SPH_START_ALPHA_MIN 0
 
 // consistency switches
 // for zeroth order consistency

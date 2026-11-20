@@ -29,7 +29,7 @@ The equations behind the switches are given in the PDF documentation.
 |---|---|---|
 | `ARTIFICIAL_VISCOSITY` | 1 | standard Monaghan α-β artificial viscosity; α and β per material in the config file (defaults 1 and 2) |
 | `BALSARA_SWITCH` | 0 | Balsara (1995) switch, reduces the artificial viscosity in shear flows |
-| `INVISCID_SPH` | 0 | time-dependent α per particle following Cullen & Dehnen (2010): rises to the material α ahead of shocks, decays to `INVISCID_SPH_ALPHA_MIN` (0) behind them on the time scale h/(2 `INVISCID_SPH_DECAY_L` v_sig) (`INVISCID_SPH_DECAY_L` 0.05); β/α of the material is kept; output `av_alpha`; not with `BALSARA_SWITCH`; test: `test_cases/inviscid_sph` |
+| `INVISCID_SPH` | 0 | time-dependent α per particle following Cullen & Dehnen (2010): rises to the material α ahead of shocks, decays to `INVISCID_SPH_ALPHA_MIN` (0) behind them on the time scale h/(2 `INVISCID_SPH_DECAY_L` v_sig) (`INVISCID_SPH_DECAY_L` 0.05); β/α of the material is kept; starts at the material α, or at `INVISCID_SPH_ALPHA_MIN` with `INVISCID_SPH_START_ALPHA_MIN` 1; output `av_alpha`; not with `BALSARA_SWITCH`; tests: `test_cases/inviscid_sph`, `test_cases/inviscid_sph_2d` |
 | `NAVIER_STOKES` | 0 | physical viscosity (Navier-Stokes); choose one of the following two |
 | `SHAKURA_SUNYAEV_ALPHA` | 0 | ν from the α prescription (`physical_viscosity.alpha_shakura`) |
 | `CONSTANT_KINEMATIC_VISCOSITY` | 0 | constant ν (`physical_viscosity.nu`) |

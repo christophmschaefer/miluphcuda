@@ -224,7 +224,8 @@ __global__ void calculate_shear_stress_tensor(int *interactions)
  * alpha_min = INVISCID_SPH_ALPHA_MIN (at most alpha_max), l = INVISCID_SPH_DECAY_L.
  * alpha_loc is stored in p_rhs.av_alpha_loc; after every accepted time step, inviscidSPHRaiseAlpha sets
  * alpha_i = max(alpha_i, alpha_loc): alpha rises at once where a shock approaches and decays smoothly behind it.
- * At the start of the simulation (also when restarting), initInviscidSPH sets alpha_i = alpha_max.
+ * At the start of the simulation (also when restarting), initInviscidSPH sets alpha_i = alpha_max, or alpha_min
+ * with INVISCID_SPH_START_ALPHA_MIN.
  */
 __global__ void inviscidSPHSwitch(int *interactions)
 {
@@ -406,7 +407,8 @@ __global__ void inviscidSPHRaiseAlpha(void)
 }
 
 
-/* start value alpha_i = alpha_max (also when restarting), 0 for boundary and ignored particles */
+/* start value alpha_i = alpha_max, or alpha_min with INVISCID_SPH_START_ALPHA_MIN (also when restarting), 0 for
+ * boundary and ignored particles */
 __global__ void initInviscidSPH(void)
 {
     int i, inc, matId;
@@ -414,7 +416,11 @@ __global__ void initInviscidSPH(void)
     inc = blockDim.x * gridDim.x;
     for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += inc) {
         matId = p_rhs.materialId[i];
-        p_rhs.av_alpha[i] = (matId < 0 || matEOS[matId] == EOS_TYPE_IGNORE) ? 0.0 : matAlpha[matId];
+        if (matId < 0 || matEOS[matId] == EOS_TYPE_IGNORE)
+            p_rhs.av_alpha[i] = 0.0;
+        else
+            p_rhs.av_alpha[i] = INVISCID_SPH_START_ALPHA_MIN ? fmin(INVISCID_SPH_ALPHA_MIN, matAlpha[matId])
+                                                             : matAlpha[matId];
         p_rhs.dav_alphadt[i] = 0.0;
         p_rhs.av_alpha_loc[i] = p_rhs.av_alpha[i];
     }

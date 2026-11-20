@@ -616,8 +616,9 @@ v)/\mathrm{d}t = \nabla\cdot\vec a - V_{ab}V_{ba}$ and the limiter $\xi_i = |2(1
 \max(\alpha_{\min}, \alpha\, h_i^2A_i/(v_{\mathrm{sig},i}^2 + h_i^2A_i))$, $\alpha_i$ is raised to
 $\alpha_{\mathrm{loc},i}$ after every accepted time step if it is smaller, and decays as $\dot\alpha_i =
 (\alpha_{\mathrm{loc},i}-\alpha_i)/\tau_i$, $\tau_i = h_i/(2\ell v_{\mathrm{sig},i})$, otherwise ($\alpha_{\min}$ =
-\sw{INVISCID\_SPH\_ALPHA\_MIN}, $\ell$ = \sw{INVISCID\_SPH\_DECAY\_L}). At the start, $\alpha_i = \alpha$. Test:
-\texttt{test\_cases/inviscid\_sph}.
+\sw{INVISCID\_SPH\_ALPHA\_MIN}, $\ell$ = \sw{INVISCID\_SPH\_DECAY\_L}). At the start, $\alpha_i = \alpha$, or
+$\alpha_{\min}$ with \sw{INVISCID\_SPH\_START\_ALPHA\_MIN}. Tests: \texttt{test\_cases/inviscid\_sph} (1D) and
+\texttt{test\_cases/inviscid\_sph\_2d}.
 
 \subsection{XSPH and Shepard correction}
 With \sw{XSPH} the particles move with the smoothed velocity $\dot{\vec x}_i = \vec v_i + \frac{1}{2}
