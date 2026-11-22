@@ -316,6 +316,12 @@ struct Pointmass {
     double *m; ///< mass of pointmass
     double *rmin; ///< minimum distance to pointmass before particle gets accreted
     double *rmax; ///< maximum distance to pointmass before particle gets deactivated
+    // angular momentum of all matter accreted onto this point mass, relative to it ("spin").
+    // A point mass has no rotation, so the COM merge in UpdateSinkValues would otherwise
+    // drop it. Bookkeeping only -- it does not affect the dynamics. Always 3 components.
+    double *spinx;
+    double *spiny;
+    double *spinz;
 
     int *feels_particles; ///< flag to activate feedback from sph particles on pointmass
 };
