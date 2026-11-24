@@ -165,21 +165,45 @@
 
 // Available plastic flow conditions:
 // (if you do not know what this is, choose (1) or nothing)
+//
+// IMPORTANT - stress convention: with J_2 = 1/2 S:S the second invariant of the deviatoric stress tensor,
+//   - VON_MISES_PLASTICITY alone compares yield_stress with the von Mises equivalent stress sqrt(3 J_2),
+//   - all pressure-dependent models (2)-(5) compare the yield strength Y with sqrt(J_2), i.e., sqrt(J_2) <= Y(p).
+//     This is the same convention as in iSALE (Collins et al. 2004), so mu_i, mu_d, Y_0, Y_M from iSALE/Collins can be
+//     used directly. If combined with (1), yield_stress acts as an upper limit on sqrt(J_2) as well.
+//     Codes using sqrt(3 J_2) instead (e.g., Spheral) need mu and Y multiplied by sqrt(3) for the same material.
+//   - friction can be given in the material config either as friction_angle (rad) or as friction_coefficient
+//     (mu = tan(friction_angle)), see material-config/CREATE-MATERIAL-CONFIG.md.
+//   - (3)-(5) use the friction coefficient mu = tan(phi) directly as slope dsqrt(J_2)/dp. Relative to a true Mohr-Coulomb
+//     material with friction angle phi this lies (for phi > ~18 deg) between the fits to triaxial compression
+//     (slope 6 sin(phi)/(sqrt(3)(3-sin(phi)))) and extension (slope 6 sin(phi)/(sqrt(3)(3+sin(phi)))), and close to the
+//     inscribed/plane-strain fit for small phi. For a defined fit use (2) with DRUCKER_PRAGER_FIT.
+//   - all models return the deviatoric stress radially at constant pressure (non-associated flow, no dilatancy).
 
 //   (1) Simple von Mises plasticity with a constant yield strength
+//       -> yield condition: sqrt(3 J_2) <= yield_stress
 #define VON_MISES_PLASTICITY 0
 
 //   (2) Drucker-Prager yield criterion
-//       -> yield strength is given by the condition \sqrt(J_2) + A * I_1 + B = 0
-//          I_1: first invariant of stress tensor
-//          J_2: second invariant of stress tensor
-//          A, B: Drucker-Prager constants, which are calculated from angle of internal friction and cohesion
+//       -> yield strength is given by the condition \sqrt(J_2) = A + B * I_1, i.e., sqrt(J_2) <= A + 3 B p
+//          I_1: first invariant of stress tensor (I_1 = 3 p)
+//          J_2: second invariant of the deviatoric stress tensor
+//          A, B: Drucker-Prager constants, which are calculated from angle of internal friction and cohesion,
+//                where the cone is fitted to the Mohr-Coulomb pyramid according to DRUCKER_PRAGER_FIT:
+//                DRUCKER_PRAGER_FIT_OUTER:     outer cone, matches MC in triaxial compression (default, as in earlier versions)
+//                                              B = 2 sin(phi) / (sqrt(3) (3 - sin(phi))),  A = 6 c cos(phi) / (sqrt(3) (3 - sin(phi)))
+//                DRUCKER_PRAGER_FIT_INNER:     inner cone, matches MC in triaxial extension
+//                                              B = 2 sin(phi) / (sqrt(3) (3 + sin(phi))),  A = 6 c cos(phi) / (sqrt(3) (3 + sin(phi)))
+//                DRUCKER_PRAGER_FIT_INSCRIBED: largest cone inside the MC pyramid (conservative), identical to plane-strain fit
+//                                              B = tan(phi) / sqrt(9 + 12 tan^2(phi)),     A = 3 c / sqrt(9 + 12 tan^2(phi))
+//                example phi = 32.7 deg: slope 3B = 0.76 (outer), 0.53 (inner), 0.52 (inscribed); compare tan(phi) = 0.64
 //       -> intended for granular-like materials, therefore the yield strength decreases to zero for p < 0
-//       -> you can additionally use (1) to set an upper limit for the yield stress
+//       -> you can additionally use (1) to set an upper limit for the yield stress (compared to sqrt(J_2), see above)
 //       -> negative pressures can get arbitrarily large (i.e., no negative-pressure cap)
 #define DRUCKER_PRAGER_PLASTICITY 0
+#define DRUCKER_PRAGER_FIT DRUCKER_PRAGER_FIT_OUTER
 
-//   (3) Mohr-Coulomb yield criterion
+//   (3) Mohr-Coulomb-like yield criterion (a Drucker-Prager-type cone with slope tan(phi), compared to sqrt(J_2), see above)
 //       -> for p > 0: yield strength = tan(friction_angle) \times pressure + cohesion
 //       -> intended for granular-like materials, therefore the yield strength decreases to zero for p < 0:
 //          yield strength = pressure + cohesion (i.e., slope = 1)
@@ -192,10 +216,12 @@
 //              P > 0: Y_i = cohesion + \mu P / (1 + \mu P / (yield_stress - cohesion) )
 //              P < 0: Y_i = cohesion
 //                  *cohesion* is the yield strength for P = 0 and *yield_stress* the asymptotic limit for P = \infty
-//                  \mu is the coefficient of internal friction (= tan(friction_angle))
+//                  \mu is the coefficient of internal friction (= tan(friction_angle), or set friction_coefficient)
 //              P > 0: Y_d = cohesion_damaged + \mu_d \times P
 //              P < 0: Y_d = cohesion_damaged + P (i.e., slope = 1)
-//                  where \mu_d is the coefficient of friction of the *damaged* material
+//                  where \mu_d is the coefficient of friction of the *damaged* material (= tan(friction_angle_damaged),
+//                  or set friction_coefficient_damaged)
+//              Y_i and Y_d are compared to sqrt(J_2), as in iSALE (fricint = \mu, fricdam = \mu_d, yint0, ydam0, ylimint)
 //              combined/final yield strength:  Y = (1-damage)*Y_i + damage*Y_d
 //                                              Y is limited to <= Y_i
 //              negative-pressure release by damage:

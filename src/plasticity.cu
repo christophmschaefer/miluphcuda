@@ -294,10 +294,27 @@ __global__ void plasticityModel(void) {
 # if LOW_DENSITY_WEAKENING
         y_0 *= ldw_f;   // reduce cohesion (locally)
 # endif
-        // Drucker-Prager constants from Mohr-Coulomb constants -> 3D!
-        A = 6. * y_0 * cos(matFrictionAngle[p_rhs.materialId[i]])
-                / (sqrt(3.) * (3. - sin(matFrictionAngle[p_rhs.materialId[i]])));
-        B = 2. * sin(matFrictionAngle[p_rhs.materialId[i]]) / (sqrt(3.) * (3. - sin(matFrictionAngle[p_rhs.materialId[i]])));
+        // Drucker-Prager constants from Mohr-Coulomb constants (friction angle phi, cohesion c),
+        // for the yield condition sqrt(J2) <= A + B*I_1 = A + 3*B*p, fitted according to DRUCKER_PRAGER_FIT:
+        //   OUTER:     cone through the compressive meridian (triaxial compression) of the MC pyramid
+        //   INNER:     cone through the tensile meridian (triaxial extension) of the MC pyramid
+        //   INSCRIBED: largest cone inside the MC pyramid, identical to the plane-strain fit
+        {
+            const double phi = matFrictionAngle[p_rhs.materialId[i]];
+            const double sphi = sin(phi);
+            const double cphi = cos(phi);
+#if DRUCKER_PRAGER_FIT == DRUCKER_PRAGER_FIT_OUTER
+            A = 6. * y_0 * cphi / (sqrt(3.) * (3. - sphi));
+            B = 2. * sphi / (sqrt(3.) * (3. - sphi));
+#elif DRUCKER_PRAGER_FIT == DRUCKER_PRAGER_FIT_INNER
+            A = 6. * y_0 * cphi / (sqrt(3.) * (3. + sphi));
+            B = 2. * sphi / (sqrt(3.) * (3. + sphi));
+#elif DRUCKER_PRAGER_FIT == DRUCKER_PRAGER_FIT_INSCRIBED
+            const double tphi = sphi / cphi;
+            A = 3. * y_0 / sqrt(9. + 12. * tphi * tphi);
+            B = tphi / sqrt(9. + 12. * tphi * tphi);
+#endif
+        }
 
         // yield strength determined by Drucker-Prager condition
         y = A + 3.0*p.p[i]*B;

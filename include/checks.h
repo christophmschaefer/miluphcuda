@@ -29,6 +29,18 @@
 # define PLASTICITY 1
 #endif
 
+// how the Drucker-Prager cone is fitted to the Mohr-Coulomb pyramid (see parameter.h);
+// default (if not set in parameter.h) is the outer cone, which was the only option in earlier versions
+#define DRUCKER_PRAGER_FIT_OUTER 0
+#define DRUCKER_PRAGER_FIT_INNER 1
+#define DRUCKER_PRAGER_FIT_INSCRIBED 2
+#ifndef DRUCKER_PRAGER_FIT
+# define DRUCKER_PRAGER_FIT DRUCKER_PRAGER_FIT_OUTER
+#endif
+#if DRUCKER_PRAGER_FIT != DRUCKER_PRAGER_FIT_OUTER && DRUCKER_PRAGER_FIT != DRUCKER_PRAGER_FIT_INNER && DRUCKER_PRAGER_FIT != DRUCKER_PRAGER_FIT_INSCRIBED
+# error DRUCKER_PRAGER_FIT in parameter.h must be DRUCKER_PRAGER_FIT_OUTER, DRUCKER_PRAGER_FIT_INNER, or DRUCKER_PRAGER_FIT_INSCRIBED.
+#endif
+
 
 // density in the weight m_j/rho of the moment matrix of the tensorial correction and of all velocity
 // gradients at particle i that use the corrected kernel gradient (see parameter.h)

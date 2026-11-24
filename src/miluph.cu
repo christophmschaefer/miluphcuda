@@ -220,6 +220,13 @@ static void print_compile_information(void)
     fprintf(stdout, "\n");
 #elif DRUCKER_PRAGER_PLASTICITY
     fprintf(stdout, "    Drucker-Prager");
+# if DRUCKER_PRAGER_FIT == DRUCKER_PRAGER_FIT_OUTER
+    fprintf(stdout, " (outer cone, fitted to triaxial compression)");
+# elif DRUCKER_PRAGER_FIT == DRUCKER_PRAGER_FIT_INNER
+    fprintf(stdout, " (inner cone, fitted to triaxial extension)");
+# elif DRUCKER_PRAGER_FIT == DRUCKER_PRAGER_FIT_INSCRIBED
+    fprintf(stdout, " (inscribed cone = plane-strain fit)");
+# endif
 # if VON_MISES_PLASTICITY
     fprintf(stdout, " + von Mises yield limit");
 # endif

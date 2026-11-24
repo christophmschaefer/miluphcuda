@@ -411,6 +411,8 @@ table as well.
 **Plasticity model: von Mises**
 
 The von Mises model constitutes a single, constant yield strength.
+The yield condition is sqrt(3 J_2) <= yield_stress, i.e., yield_stress is compared to the von Mises
+equivalent stress (see *Stress convention and friction* below for the other models).
 
 You need to set `VON_MISES_PLASTICITY` in parameter.h (at compile time), and in the material config file:
 
@@ -432,9 +434,11 @@ You need to set `COLLINS_PLASTICITY` in parameter.h (at compile time), and in th
         ___________________________________________________________
 
         eos.cohesion                    float   0.          strength at p = 0 of intact material
-        eos.friction_angle              float   0.          in rad
+        eos.friction_angle              float   0.          in rad, or alternatively:
+        eos.friction_coefficient        float   -           mu = tan(friction_angle)
         eos.cohesion_damaged            float   0.          strength at p = 0 of damaged material
-        eos.friction_angle_damaged      float   0.          in rad
+        eos.friction_angle_damaged      float   0.          in rad, or alternatively:
+        eos.friction_coefficient_damaged float  -           mu_d = tan(friction_angle_damaged)
         eos.yield_stress                float   0.          limit of the intact strength for p -> infinity
 
         eos.tensile_pressure_limit      float   0.          optional, >= 0; residual tensile strength of fully
@@ -458,7 +462,8 @@ You need to set `COLLINS_PLASTICITY_SIMPLE` in parameter.h (at compile time), an
         ___________________________________________________
 
         eos.cohesion            float   0.
-        eos.friction_angle      float   0.          in rad
+        eos.friction_angle      float   0.          in rad, or alternatively:
+        eos.friction_coefficient float  -           mu = tan(friction_angle)
         eos.yield_stress        float   0.
 
 --------------------------------
@@ -468,13 +473,19 @@ You need to set `COLLINS_PLASTICITY_SIMPLE` in parameter.h (at compile time), an
 This is a linear dependence of the yield strength on pressure, intended for granular-like materials,
 therefore the yield strength decreases to zero for p < 0.
 
+The Drucker-Prager cone is fitted to the Mohr-Coulomb pyramid defined by friction_angle and cohesion.
+Which fit is used is set by `DRUCKER_PRAGER_FIT` in parameter.h: `DRUCKER_PRAGER_FIT_OUTER` (triaxial compression,
+default), `DRUCKER_PRAGER_FIT_INNER` (triaxial extension), or `DRUCKER_PRAGER_FIT_INSCRIBED` (inscribed cone,
+identical to the plane-strain fit). See the comments in parameter.h for the formulas.
+
 You need to set `DRUCKER_PRAGER_PLASTICITY` in parameter.h (at compile time), and in the material config file:
 
         Key                     Type    Default     Details
         ___________________________________________________
 
         eos.cohesion            float   0.
-        eos.friction_angle      float   0.          in rad
+        eos.friction_angle      float   0.          in rad, or alternatively:
+        eos.friction_coefficient float  -           mu = tan(friction_angle)
 
         eos.yield_stress        float   0.          optional upper limit for the yield strength,
                                                     where you have to additionally set
@@ -486,6 +497,8 @@ You need to set `DRUCKER_PRAGER_PLASTICITY` in parameter.h (at compile time), an
 
 This is a linear dependence of the yield strength on pressure, intended for granular-like materials,
 therefore the yield strength decreases to zero for p < 0.
+Note that this is not the exact Mohr-Coulomb hexagonal pyramid, but a cone sqrt(J_2) <= cohesion + tan(friction_angle) p.
+If you need a defined fit to a Mohr-Coulomb material with friction angle phi, use Drucker-Prager with `DRUCKER_PRAGER_FIT`.
 Note that for p < 0 the slope is not set by the friction coefficient, but = 1 (i.e., the zero is at -cohesion).
 A negative-pressure cap is applied: negative pressures are limited to zero of yield strength curve (at -cohesion).
 
@@ -495,11 +508,42 @@ You need to set `MOHR_COULOMB_PLASTICITY` in parameter.h (at compile time), and 
         ___________________________________________________
 
         eos.cohesion            float   0.
-        eos.friction_angle      float   0.          in rad
+        eos.friction_angle      float   0.          in rad, or alternatively:
+        eos.friction_coefficient float  -           mu = tan(friction_angle)
 
         eos.yield_stress        float   0.          optional upper limit for the yield strength,
                                                     where you have to additionally set
                                                     VON_MISES_PLASTICITY in parameter.h for this
+
+--------------------------------
+
+**Stress convention and friction (all pressure-dependent plasticity models)**
+
+All pressure-dependent models (Drucker-Prager, Mohr-Coulomb, Collins, Collins simple) compare the yield strength Y(p)
+with sqrt(J_2), where J_2 = 1/2 S:S is the second invariant of the deviatoric stress tensor:
+
+        sqrt(J_2) <= Y(p)
+
+The same holds for `yield_stress` if used as additional upper limit (VON_MISES_PLASTICITY together with
+Drucker-Prager or Mohr-Coulomb). Only the pure von Mises model compares with sqrt(3 J_2).
+
+Friction can be given either as angle (`friction_angle`, `friction_angle_damaged`, in rad) or directly as
+coefficient (`friction_coefficient`, `friction_coefficient_damaged`), but not both for the same quantity.
+Angles must be in [0, pi/2) rad, otherwise miluphcuda stops (this also catches angles accidentally given in degrees).
+
+How to translate parameters from other codes or from measurements:
+
+- iSALE (Collins et al. 2004): uses the same sqrt(J_2) convention. Use the iSALE values directly:
+  fricint -> friction_coefficient, fricdam -> friction_coefficient_damaged, yint0 -> cohesion,
+  ydam0 -> cohesion_damaged, ylimint -> yield_stress.
+  Exception: iSALE's von Mises yint0 is also a sqrt(J_2) limit, so for VON_MISES_PLASTICITY alone use
+  yield_stress = sqrt(3) * yint0.
+- Codes that compare Y with the von Mises equivalent stress sqrt(3 J_2) (e.g., Spheral): divide their mu and Y by sqrt(3).
+- A measured Mohr-Coulomb friction angle phi (e.g., from angle of repose or boulder analyses): Collins, Collins simple,
+  and Mohr-Coulomb use mu = tan(phi) as slope of sqrt(J_2) vs. p, which for phi > ~18 deg lies between the fits to
+  triaxial compression and extension. For a defined fit use Drucker-Prager with `DRUCKER_PRAGER_FIT`, or set the
+  friction_coefficient to the desired slope. Example phi = 32.7 deg: tan(phi) = 0.64, compression fit 0.76,
+  extension fit 0.53, inscribed (plane-strain) fit 0.52.
 
 --------------------------------
 

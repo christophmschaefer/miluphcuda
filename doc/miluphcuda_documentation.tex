@@ -287,19 +287,73 @@ $\sqrt{3J_2} = Y^2/\sqrt{3J_2^\mathrm{trial}} < Y$, i.e.\ as far inside the yiel
 outside. In continuous plastic flow with an elastic stress increment $\Delta$ per time step, the limited stress
 then settles at about $Y - \Delta/2$ instead of $Y$, i.e.\ a softening of first order in the time step.
 
+All models scale the deviator radially at constant pressure, which corresponds to non-associated plastic flow
+without dilatancy.
+
+\paragraph{Friction.} The friction is given either as angle of internal friction $\phi$ (\code{friction\_angle}, in
+rad) or directly as coefficient $\mu = \tan\phi$ (\code{friction\_coefficient}); the same holds for the damaged
+material (\code{friction\_angle\_damaged}, \code{friction\_coefficient\_damaged}). Mohr-Coulomb, Collins and Collins
+simple use $\mu$ directly as slope $\dd\sqrt{J_2}/\dd p$, i.e.\ they describe a cone in principal stress space, not the
+hexagonal Mohr-Coulomb pyramid. Drucker-Prager is fitted to the pyramid with one of three cones
+(\sw{DRUCKER\_PRAGER\_FIT}, Sect.~\ref{sec:drucker_prager}). Table~\ref{tab:friction_fits} compares the slopes; for
+$\phi \gtrsim 18^\circ$, $\tan\phi$ lies between the fits to triaxial compression and extension.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Slope $\dd\sqrt{J_2}/\dd p$ of the yield surface for a given Mohr-Coulomb friction angle $\phi$.}
+\label{tab:friction_fits}
+\begin{tabular}{rcccc}
+\toprule
+$\phi$ & $\tan\phi$ & outer (compression) & inner (extension) & inscribed (plane strain) \\
+\midrule
+$10^\circ$   & 0.18 & 0.21 & 0.19 & 0.17 \\
+$20^\circ$   & 0.36 & 0.45 & 0.36 & 0.34 \\
+$30^\circ$   & 0.58 & 0.69 & 0.50 & 0.48 \\
+$32.7^\circ$ & 0.64 & 0.76 & 0.53 & 0.52 \\
+$40^\circ$   & 0.84 & 0.95 & 0.61 & 0.60 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Parameters from other codes.} iSALE \citep{collins2004} compares the yield strength with $\sqrt{J_2}$ as
+well, so the parameters of its ROCK model can be used directly: \code{fricint} $\rightarrow$
+\code{friction\_coefficient}, \code{fricdam} $\rightarrow$ \code{friction\_coefficient\_damaged}, \code{yint0}
+$\rightarrow$ \code{cohesion}, \code{ydam0} $\rightarrow$ \code{cohesion\_damaged}, \code{ylimint} $\rightarrow$
+\code{yield\_stress}. iSALE's von Mises strength is also a $\sqrt{J_2}$ limit and has to be multiplied by $\sqrt{3}$
+for \sw{VON\_MISES\_PLASTICITY}. Codes that compare $Y$ with $\sqrt{3J_2}$ (e.g.\ Spheral) require $\mu$ and $Y$ to
+be divided by $\sqrt{3}$.
+
 \subsection{Von Mises}
 $Y = Y_0$ (\code{yield\_stress}) is constant. \sw{VON\_MISES\_PLASTICITY} can additionally be combined with
-Drucker-Prager or Mohr-Coulomb, in which case $Y_0$ is an upper limit, $Y \rightarrow \min(Y, Y_0)$.
+Drucker-Prager or Mohr-Coulomb, in which case $Y_0$ is an upper limit on $\sqrt{J_2}$, $Y \rightarrow \min(Y, Y_0)$.
 
 \subsection{Drucker-Prager}
+\label{sec:drucker_prager}
 \begin{equation}
- Y = A + 3Bp, \qquad
- A = \frac{6\,c\cos\phi}{\sqrt{3}\,(3-\sin\phi)}, \qquad B = \frac{2\sin\phi}{\sqrt{3}\,(3-\sin\phi)},
+ Y = A + 3Bp,
 \end{equation}
 with the cohesion $c$ and the angle of internal friction $\phi$, and $Y \geq 0$. Negative pressures are not capped.
+The cone is fitted to the Mohr-Coulomb pyramid according to \sw{DRUCKER\_PRAGER\_FIT}:
+\begin{itemize}
+ \item \sw{DRUCKER\_PRAGER\_FIT\_OUTER} (default): outer cone, matches Mohr-Coulomb in triaxial compression,
+ \begin{equation}
+  A = \frac{6\,c\cos\phi}{\sqrt{3}\,(3-\sin\phi)}, \qquad B = \frac{2\sin\phi}{\sqrt{3}\,(3-\sin\phi)};
+ \end{equation}
+ \item \sw{DRUCKER\_PRAGER\_FIT\_INNER}: inner cone, matches Mohr-Coulomb in triaxial extension,
+ \begin{equation}
+  A = \frac{6\,c\cos\phi}{\sqrt{3}\,(3+\sin\phi)}, \qquad B = \frac{2\sin\phi}{\sqrt{3}\,(3+\sin\phi)};
+ \end{equation}
+ \item \sw{DRUCKER\_PRAGER\_FIT\_INSCRIBED}: inscribed cone (plane-strain fit),
+ \begin{equation}
+  A = \frac{3c}{\sqrt{9+12\tan^2\phi}}, \qquad B = \frac{\tan\phi}{\sqrt{9+12\tan^2\phi}}.
+ \end{equation}
+\end{itemize}
+The inscribed cone is the largest cone inside the pyramid and identical to the plane-strain fit.
 
 \subsection{Mohr-Coulomb}
-With the coefficient of internal friction $\mu_\mathrm{i} = \tan\phi$,
+With the coefficient of internal friction $\mu_\mathrm{i} = \tan\phi$ (a cone with slope $\tan\phi$, not the exact
+Mohr-Coulomb pyramid),
 \begin{equation}
  Y = \begin{cases} c + \mu_\mathrm{i} p & p > 0,\\ c + p & -c < p \leq 0,\\ 0 & p \leq -c, \end{cases}
 \end{equation}

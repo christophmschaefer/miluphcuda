@@ -810,8 +810,41 @@ void transferMaterialsToGPU()
                 fprintf(stderr, "Error: tensile_pressure_limit must be >= 0 (a magnitude in Pa), material %d.\n", ID);
                 exit(1);
             }
-            config_setting_lookup_float(subset, "friction_angle", &friction_angle[ID]);
-            config_setting_lookup_float(subset, "friction_angle_damaged", &friction_angle_damaged[ID]);
+            /* internal friction: either as angle (friction_angle, in rad) or directly as coefficient
+             * (friction_coefficient = tan(friction_angle)), e.g., mu_i, mu_d from Collins et al. (2004) or iSALE
+             * (fricint, fricdam), but not both. Internally always stored as angle. Note that all pressure-dependent
+             * yield strengths in miluphcuda are compared to sqrt(J2), see parameter.h. */
+            {
+                double mu_tmp;
+                int has_angle = config_setting_lookup_float(subset, "friction_angle", &friction_angle[ID]);
+                if (config_setting_lookup_float(subset, "friction_coefficient", &mu_tmp)) {
+                    if (has_angle) {
+                        fprintf(stderr, "Error: material %d: set either friction_angle or friction_coefficient, not both.\n", ID);
+                        exit(1);
+                    }
+                    if (mu_tmp < 0.0) {
+                        fprintf(stderr, "Error: material %d: friction_coefficient must be >= 0.\n", ID);
+                        exit(1);
+                    }
+                    friction_angle[ID] = atan(mu_tmp);
+                }
+                has_angle = config_setting_lookup_float(subset, "friction_angle_damaged", &friction_angle_damaged[ID]);
+                if (config_setting_lookup_float(subset, "friction_coefficient_damaged", &mu_tmp)) {
+                    if (has_angle) {
+                        fprintf(stderr, "Error: material %d: set either friction_angle_damaged or friction_coefficient_damaged, not both.\n", ID);
+                        exit(1);
+                    }
+                    if (mu_tmp < 0.0) {
+                        fprintf(stderr, "Error: material %d: friction_coefficient_damaged must be >= 0.\n", ID);
+                        exit(1);
+                    }
+                    friction_angle_damaged[ID] = atan(mu_tmp);
+                }
+            }
+            if (friction_angle[ID] < 0.0 || friction_angle[ID] >= 0.5*M_PI || friction_angle_damaged[ID] < 0.0 || friction_angle_damaged[ID] >= 0.5*M_PI) {
+                fprintf(stderr, "Error: material %d: friction angles must be in [0, pi/2) rad (note: in rad, not degrees).\n", ID);
+                exit(1);
+            }
             config_setting_lookup_float(subset, "melt_energy", &melt_energy[ID]);
 #if DIM == 2
             alpha_phi[ID] = tan(friction_angle[ID]) / sqrt(9 + 12*tan(friction_angle[ID])*tan(friction_angle[ID]));
@@ -1481,6 +1514,17 @@ void transferMaterialsToGPU()
             fprintf(stdout, "    %12d    %12g    %12g    %16g    %14g    %22g    %11g\n",
                     i, yield_stress[i], cohesion[i], cohesion_damaged[i], friction_angle[i], friction_angle_damaged[i], melt_energy[i]);
         }
+        fprintf(stdout, "    material no.    mu = tan(friction_angle)    mu_d = tan(friction_angle_damaged)\n");
+        for (i = 0; i < numberOfMaterials; i++) {
+            fprintf(stdout, "    %12d    %24g    %34g\n", i, tan(friction_angle[i]), tan(friction_angle_damaged[i]));
+        }
+# if MOHR_COULOMB_PLASTICITY || DRUCKER_PRAGER_PLASTICITY || COLLINS_PLASTICITY || COLLINS_PLASTICITY_SIMPLE
+        fprintf(stdout, "    note: pressure-dependent yield strengths (incl. yield_stress as upper limit) are compared to sqrt(J2),\n"
+                        "          i.e., same convention as iSALE (Collins et al. 2004); von Mises equivalent stress is sqrt(3 J2).\n");
+# elif VON_MISES_PLASTICITY
+        fprintf(stdout, "    note: VON_MISES_PLASTICITY alone: yield_stress is compared to the von Mises equivalent stress sqrt(3 J2)\n"
+                        "          (iSALE's von Mises 'yint0' is a sqrt(J2) limit: yield_stress = sqrt(3) * yint0).\n");
+# endif
         for (i = 0; i < numberOfMaterials; i++) {
             if (tensile_pressure_limit[i] > 0.0)
                 fprintf(stdout, "    material %d: tensile_pressure_limit = %g Pa (damaged material holds tension down to -max(cohesion_damaged, tensile_pressure_limit))\n",
