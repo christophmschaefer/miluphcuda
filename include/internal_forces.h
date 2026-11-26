@@ -43,6 +43,23 @@ __global__ void calculatedeviatoricStress(int *interactions);
 __global__ void densityGradientForDiffusion(int *interactions);
 #endif
 
+#if VIRTUAL_WALLS
+/**
+ * @brief Fixed walls (VIRTUAL_WALLS): velocity of the wall particles seen by their neighbours, extrapolated from the
+ * non-wall neighbours. Called before the first neighbour loop that uses partner velocities.
+ */
+__global__ void wallVelocity(int *interactions);
+/**
+ * @brief Fixed walls (VIRTUAL_WALLS): pressure, stress, density, sound speed (and alpha, div v, curl v) of the wall
+ * particles, extrapolated from the non-wall neighbours. Called after set_stress_tensor(), before internalForces().
+ */
+__global__ void wallState(int *interactions);
+/**
+ * @brief Fixed walls (VIRTUAL_WALLS): velocity and all rates of the wall particles zero, at the end of the rhs.
+ */
+__global__ void fixWallParticles(void);
+#endif
+
 
 
 

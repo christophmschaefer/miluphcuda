@@ -267,6 +267,10 @@ struct Particle {
     double *drho_grad; ///< renormalised density gradient (DIM per particle) for the delta-SPH density diffusion
 #endif
 
+#if VIRTUAL_WALLS
+    double *v_wall; ///< velocity of a wall particle seen by its neighbours (DIM per particle), see VIRTUAL_WALLS
+#endif
+
 #if YIELD_SMOOTHED_PRESSURE
     double *p_yield; ///< kernel average of the pressure (neighbours of the same material), for the yield strength
 #endif

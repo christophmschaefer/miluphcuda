@@ -145,6 +145,9 @@ static void print_compile_information(void)
 #if DENSITY_DIFFUSION
     fprintf(stdout, "    with delta-SPH density diffusion, delta = %g (DENSITY_DIFFUSION)\n", DENSITY_DIFFUSION_DELTA);
 #endif
+#if VIRTUAL_WALLS
+    fprintf(stdout, "    with fixed walls of dummy particles, Adami et al. (2012) (VIRTUAL_WALLS)\n");
+#endif
 #if NAVIER_STOKES
     strcpy(yesno, "yes");
 #else

@@ -467,6 +467,13 @@ __global__ void CalcDivvandCurlv(int *interactions)
             vj[2] = p.vz[j];
 #endif
 #endif
+#if VIRTUAL_WALLS
+            /* wall particle: the velocity extrapolated in wallVelocity() */
+            if (p_rhs.materialId[j] >= 0 && matWallType[p_rhs.materialId[j]]) {
+                for (d = 0; d < DIM; d++)
+                    vj[d] = p_rhs.v_wall[j*DIM+d];
+            }
+#endif
             r = 0;
             for (d = 0; d < DIM; d++) {
                 r += dx[d]*dx[d];

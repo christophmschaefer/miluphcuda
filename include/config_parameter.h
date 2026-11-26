@@ -132,6 +132,13 @@ extern double *matFastRhoLimit_d;
 extern int    *matFastSwitched_d;
 #endif
 
+#if VIRTUAL_WALLS
+// fixed walls (VIRTUAL_WALLS): type 0 no wall, 1 no-slip, 2 free-slip; unit normal and gravity, DIM per material
+extern int    *matWallType_d;
+extern double *matWallNormal_d;
+extern double *matWallGravity_d;
+#endif
+
 
 // ANEOS device variables
 extern int *aneos_n_rho_d;
@@ -212,6 +219,12 @@ extern __constant__ double *matFastRho0;
 extern __constant__ double *matFastPoissonRatio;
 extern __constant__ double *matFastRhoLimit;
 extern __constant__ int    *matFastSwitched;
+#endif
+
+#if VIRTUAL_WALLS
+extern __constant__ int    *matWallType;
+extern __constant__ double *matWallNormal;
+extern __constant__ double *matWallGravity;
 #endif
 
 

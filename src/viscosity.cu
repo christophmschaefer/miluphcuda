@@ -247,6 +247,13 @@ __global__ void inviscidSPHSwitch(int *interactions)
             p_rhs.av_alpha_loc[i] = 0.0;
             continue;
         }
+#if VIRTUAL_WALLS
+        /* wall particle: alpha is extrapolated from the neighbours in wallState() */
+        if (matWallType[matId]) {
+            p_rhs.av_alpha_loc[i] = 0.0;
+            continue;
+        }
+#endif
         alpha_max = matAlpha[matId];
         alpha_min = fmin(INVISCID_SPH_ALPHA_MIN, alpha_max);
         h = p.h[i];
@@ -301,6 +308,15 @@ __global__ void inviscidSPHSwitch(int *interactions)
             if (j >= numRealParticles) {
                 for (d = 0; d < DIM; d++)
                     aj[d] = ai[d];
+            }
+#endif
+#if VIRTUAL_WALLS
+            /* wall particle: the extrapolated velocity, and no contribution to div a */
+            if (matWallType[matIdj]) {
+                for (d = 0; d < DIM; d++) {
+                    vj[d] = p_rhs.v_wall[j*DIM+d];
+                    aj[d] = ai[d];
+                }
             }
 #endif
             /* the same kernel as in internalForces */

@@ -93,6 +93,12 @@ __global__ void calculateSmlRate(int *interactions)
         if (matId == EOS_TYPE_IGNORE || EOS_TYPE_IGNORE == matEOS[matId]) {
             continue;
         }
+#if VIRTUAL_WALLS
+        if (matWallType[matId]) {
+            p.dhdt[i] = 0.0;
+            continue;
+        }
+#endif
 
         dhdt = 0.0;
         for (k = 0; k < p.noi[i]; k++) {
@@ -112,6 +118,17 @@ __global__ void calculateSmlRate(int *interactions)
             dr[2] = p.z[i] - p.z[j];
             dv[2] = p.vz[i] - p.vz[j];
 # endif
+#endif
+#if VIRTUAL_WALLS
+            if (matWallType[p_rhs.materialId[j]]) {
+                dv[0] = p.vx[i] - p_rhs.v_wall[j*DIM];
+# if DIM > 1
+                dv[1] = p.vy[i] - p_rhs.v_wall[j*DIM+1];
+#  if DIM > 2
+                dv[2] = p.vz[i] - p_rhs.v_wall[j*DIM+2];
+#  endif
+# endif
+            }
 #endif
 
 #if AVERAGE_KERNELS
@@ -394,6 +411,12 @@ __global__ void internalForces(int *interactions) {
 #if PALPHA_POROSITY
         p.dalphadt[i] = 0.0;
 #endif
+#if VIRTUAL_WALLS
+        // fixed wall: no rates of its own (see fixWallParticles() for the accelerations added after this kernel)
+        if (matWallType[matId]) {
+            continue;
+        }
+#endif
         // if particle has no interactions continue and set all derivs to zero
         // but not the accels (these are handled in the tree for gravity)
         if (numInteractions < 1) {
@@ -463,6 +486,18 @@ __global__ void internalForces(int *interactions) {
                     Sj[e] = p.S[j*DIM*DIM+e];
 #endif
             }
+#if VIRTUAL_WALLS
+            // wall particle: velocity extrapolated in wallVelocity(), stress and pressure in wallState()
+            if (matWallType[matIdj]) {
+                vxj = p_rhs.v_wall[j*DIM];
+# if DIM > 1
+                vyj = p_rhs.v_wall[j*DIM+1];
+#  if DIM > 2
+                vzj = p_rhs.v_wall[j*DIM+2];
+#  endif
+# endif
+            }
+#endif
 
             // relative vector
             dr[0] = x - p.x[j];
@@ -1827,3 +1862,308 @@ __global__ void densityGradientForDiffusion(int *interactions)
     }
 }
 #endif
+
+
+#if VIRTUAL_WALLS
+/*
+ * Fixed walls of dummy particles (VIRTUAL_WALLS in parameter.h), generalised wall boundary condition of Adami, Hu &
+ * Adams (2012, J. Comput. Phys. 231, 7057): the particles of a material with a wall type (matWallType > 0) do not
+ * move, and in the SPH sums of the other particles they carry the state extrapolated from their non-wall neighbours f
+ * with the Shepard weights W_wf = W(|x_w - x_f|, (h_w + h_f)/2).
+ *
+ * wallVelocity(), before the first loop over neighbours that uses their velocities (CalcDivvandCurlv):
+ *     no-slip:   v_w = -sum_f v_f W_wf / sum_f W_wf (the wall is at rest)
+ *     free-slip: v_w = v~ - 2 (v~.n) n with v~ = sum_f v_f W_wf / sum_f W_wf, only the normal component reflected
+ * into p_rhs.v_wall; the velocity of the wall particle itself stays zero.
+ *
+ * wallState(), after set_stress_tensor() and before internalForces():
+ *     p_w     = sum_f [p_f + rho_f g.(x_w - x_f)] W_wf / sum_f W_wf
+ *     sigma_w = sum_f [sigma_f - rho_f g.(x_w - x_f) I] W_wf / sum_f W_wf
+ * with the gravity g of the wall material (hydrostatic part of the wall pressure, Adami et al. eq. 27), and rho, c_s
+ * (and alpha of INVISCID_SPH, div v and curl v) as Shepard averages. For free-slip, sigma_w is reflected at the wall,
+ * R sigma_w R with R = I - 2 n n, so that the shear stress on the wall vanishes. The deviatoric stress S of a wall
+ * particle is not changed (it enters the sums of the others only for EOS_TYPE_REGOLITH, which a wall cannot have).
+ * The correction matrices (Shepard, tensorial) of the wall particles are set to one: their own neighbourhood is cut
+ * off by the end of the wall. A wall particle without non-wall neighbours keeps its state.
+ *
+ * fixWallParticles(), at the end of the rhs: velocity and all rates of the wall particles zero, also the accelerations
+ * added after internalForces() (self-gravity, point masses, BoundaryConditionsAfterRHS).
+ */
+
+/* non-wall interaction partner whose state is extrapolated to the wall */
+__device__ static int wallSource(int matIdj)
+{
+    return matIdj >= 0 && matEOS[matIdj] != EOS_TYPE_IGNORE && !matWallType[matIdj];
+}
+
+
+__global__ void wallVelocity(int *interactions)
+{
+    int i, j, k, d, matId;
+    int64_t interactions_index;
+    double W, dWdr, dWdx[DIM], dr[DIM], sumW, v[DIM], vn;
+
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += blockDim.x * gridDim.x) {
+        matId = p_rhs.materialId[i];
+        if (matId < 0 || !matWallType[matId])
+            continue;
+#if SHEPARD_CORRECTION
+        p_rhs.shepard_correction[i] = 1.0;
+#endif
+        sumW = 0.0;
+        for (d = 0; d < DIM; d++)
+            v[d] = 0.0;
+        for (k = 0; k < p.noi[i]; k++) {
+            interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + k;
+            j = interactions[interactions_index];
+            if (!wallSource(p_rhs.materialId[j]))
+                continue;
+            dr[0] = p.x[i] - p.x[j];
+#if DIM > 1
+            dr[1] = p.y[i] - p.y[j];
+# if DIM > 2
+            dr[2] = p.z[i] - p.z[j];
+# endif
+#endif
+            W = 0.0;
+            kernel(&W, dWdx, &dWdr, dr, 0.5 * (p.h[i] + p.h[j]));
+            sumW += W;
+            v[0] += p.vx[j] * W;
+#if DIM > 1
+            v[1] += p.vy[j] * W;
+# if DIM > 2
+            v[2] += p.vz[j] * W;
+# endif
+#endif
+        }
+        if (sumW > 0.0) {
+            for (d = 0; d < DIM; d++)
+                v[d] /= sumW;
+        }
+        if (matWallType[matId] == 2) {
+            vn = 0.0;
+            for (d = 0; d < DIM; d++)
+                vn += v[d] * matWallNormal[matId*DIM+d];
+            for (d = 0; d < DIM; d++)
+                v[d] -= 2.0 * vn * matWallNormal[matId*DIM+d];
+        } else {
+            for (d = 0; d < DIM; d++)
+                v[d] = -v[d];
+        }
+        for (d = 0; d < DIM; d++)
+            p_rhs.v_wall[i*DIM+d] = v[d];
+    }
+}
+
+
+__global__ void wallState(int *interactions)
+{
+    int i, j, k, d, e, matId, matIdj;
+    int64_t interactions_index;
+    double W, dWdr, dWdx[DIM], dr[DIM], sumW, gr, prs, rho, cs;
+#if SOLID
+    double sig[DIM][DIM], sigj, refl[DIM][DIM], tmp[DIM][DIM];
+    int f;
+#endif
+#if INVISCID_SPH
+    double alpha;
+#endif
+#if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH || INTEGRATE_ENERGY)
+    double divv, curlv[DIM];
+#endif
+
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += blockDim.x * gridDim.x) {
+        matId = p_rhs.materialId[i];
+        if (matId < 0 || !matWallType[matId])
+            continue;
+#if TENSORIAL_CORRECTION
+        for (d = 0; d < DIM; d++) {
+            for (e = 0; e < DIM; e++)
+                p_rhs.tensorialCorrectionMatrix[i*DIM*DIM + d*DIM + e] = (d == e ? 1.0 : 0.0);
+        }
+#endif
+        sumW = 0.0;
+        prs = 0.0;
+        rho = 0.0;
+        cs = 0.0;
+#if SOLID
+        for (d = 0; d < DIM; d++) {
+            for (e = 0; e < DIM; e++)
+                sig[d][e] = 0.0;
+        }
+#endif
+#if INVISCID_SPH
+        alpha = 0.0;
+#endif
+#if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH || INTEGRATE_ENERGY)
+        divv = 0.0;
+        for (d = 0; d < DIM; d++)
+            curlv[d] = 0.0;
+#endif
+        for (k = 0; k < p.noi[i]; k++) {
+            interactions_index = (int64_t)i * MAX_NUM_INTERACTIONS + k;
+            j = interactions[interactions_index];
+            matIdj = p_rhs.materialId[j];
+            if (!wallSource(matIdj))
+                continue;
+            dr[0] = p.x[i] - p.x[j];
+#if DIM > 1
+            dr[1] = p.y[i] - p.y[j];
+# if DIM > 2
+            dr[2] = p.z[i] - p.z[j];
+# endif
+#endif
+            W = 0.0;
+            kernel(&W, dWdx, &dWdr, dr, 0.5 * (p.h[i] + p.h[j]));
+            /* g.(x_w - x_f) */
+            gr = 0.0;
+            for (d = 0; d < DIM; d++)
+                gr += matWallGravity[matId*DIM+d] * dr[d];
+            sumW += W;
+            prs += (p.p[j] + p.rho[j] * gr) * W;
+            rho += p.rho[j] * W;
+            cs += p.cs[j] * W;
+#if SOLID
+            for (d = 0; d < DIM; d++) {
+                for (e = 0; e < DIM; e++) {
+                    /* the stress tensor of j as internalForces uses it */
+                    if (matEOS[matIdj] == EOS_TYPE_REGOLITH)
+                        sigj = p.S[stressIndex(j, d, e)];
+                    else
+                        sigj = p_rhs.sigma[stressIndex(j, d, e)];
+                    if (d == e)
+                        sigj -= p.rho[j] * gr;
+                    sig[d][e] += sigj * W;
+                }
+            }
+#endif
+#if INVISCID_SPH
+            alpha += p.av_alpha[j] * W;
+#endif
+#if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH || INTEGRATE_ENERGY)
+            divv += p_rhs.divv[j] * W;
+            for (d = 0; d < DIM; d++)
+                curlv[d] += p_rhs.curlv[j*DIM+d] * W;
+#endif
+        }
+        if (!(sumW > 0.0))
+            continue;
+
+        p.p[i] = prs / sumW;
+        p.rho[i] = rho / sumW;
+        p.cs[i] = cs / sumW;
+#if SOLID
+        for (d = 0; d < DIM; d++) {
+            for (e = 0; e < DIM; e++)
+                sig[d][e] /= sumW;
+        }
+        if (matWallType[matId] == 2) {
+            /* free-slip: R sig R with the reflection R = I - 2 n n */
+            for (d = 0; d < DIM; d++) {
+                for (e = 0; e < DIM; e++)
+                    refl[d][e] = (d == e ? 1.0 : 0.0) - 2.0 * matWallNormal[matId*DIM+d] * matWallNormal[matId*DIM+e];
+            }
+            for (d = 0; d < DIM; d++) {
+                for (e = 0; e < DIM; e++) {
+                    tmp[d][e] = 0.0;
+                    for (f = 0; f < DIM; f++)
+                        tmp[d][e] += sig[d][f] * refl[f][e];
+                }
+            }
+            for (d = 0; d < DIM; d++) {
+                for (e = 0; e < DIM; e++) {
+                    sig[d][e] = 0.0;
+                    for (f = 0; f < DIM; f++)
+                        sig[d][e] += refl[d][f] * tmp[f][e];
+                }
+            }
+        }
+        for (d = 0; d < DIM; d++) {
+            for (e = 0; e < DIM; e++)
+                p_rhs.sigma[stressIndex(i, d, e)] = sig[d][e];
+        }
+#endif
+#if INVISCID_SPH
+        p.av_alpha[i] = alpha / sumW;
+#endif
+#if (NAVIER_STOKES || BALSARA_SWITCH || INVISCID_SPH || INTEGRATE_ENERGY)
+        p_rhs.divv[i] = divv / sumW;
+        for (d = 0; d < DIM; d++)
+            p_rhs.curlv[i*DIM+d] = curlv[d] / sumW;
+#endif
+    }
+}
+
+
+__global__ void fixWallParticles(void)
+{
+    int i, matId;
+#if SOLID
+    int d;
+#endif
+
+    for (i = threadIdx.x + blockIdx.x * blockDim.x; i < numParticles; i += blockDim.x * gridDim.x) {
+        matId = p_rhs.materialId[i];
+        if (matId < 0 || !matWallType[matId])
+            continue;
+        p.vx[i] = 0.0;
+        p.ax[i] = 0.0;
+        p.dxdt[i] = 0.0;
+#if DIM > 1
+        p.vy[i] = 0.0;
+        p.ay[i] = 0.0;
+        p.dydt[i] = 0.0;
+# if DIM > 2
+        p.vz[i] = 0.0;
+        p.az[i] = 0.0;
+        p.dzdt[i] = 0.0;
+# endif
+#endif
+#if XSPH
+        p.xsphvx[i] = 0.0;
+# if DIM > 1
+        p.xsphvy[i] = 0.0;
+#  if DIM > 2
+        p.xsphvz[i] = 0.0;
+#  endif
+# endif
+#endif
+        p.drhodt[i] = 0.0;
+#if INTEGRATE_ENERGY
+        p.dedt[i] = 0.0;
+#endif
+#if INTEGRATE_SML
+        p.dhdt[i] = 0.0;
+#endif
+#if SOLID
+        for (d = 0; d < DIM*DIM; d++)
+            p.dSdt[i*DIM*DIM + d] = 0.0;
+        p.deps_totdt[i] = 0.0;
+        p.edotp[i] = 0.0;
+#endif
+#if FRAGMENTATION
+        p.dddt[i] = 0.0;
+# if PALPHA_POROSITY
+        p.ddamage_porjutzidt[i] = 0.0;
+# endif
+#endif
+#if PALPHA_POROSITY
+        p.dalphadt[i] = 0.0;
+#endif
+#if INVISCID_SPH
+        p.dav_alphadt[i] = 0.0;
+#endif
+#if JC_PLASTICITY
+        p.dTdt[i] = 0.0;
+#endif
+#if EPSALPHA_POROSITY
+        p.dalpha_epspordt[i] = 0.0;
+        p.depsilon_vdt[i] = 0.0;
+#endif
+#if ARTIFICIAL_VISCOSITY
+        /* not set by internalForces() for wall particles, but read by the time step of some integrators */
+        p.muijmax[i] = 0.0;
+#endif
+    }
+}
+#endif // VIRTUAL_WALLS

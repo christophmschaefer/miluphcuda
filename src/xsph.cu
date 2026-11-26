@@ -125,6 +125,18 @@ __global__ void calculateXSPHchanges(int *interactions)
             dvz = vz - p.vz[j];
 #endif
 #endif
+#if VIRTUAL_WALLS
+            // wall particle: the velocity extrapolated in wallVelocity()
+            if (matWallType[p_rhs.materialId[j]]) {
+                dvx = vx - p_rhs.v_wall[j*DIM];
+# if DIM > 1
+                dvy = vy - p_rhs.v_wall[j*DIM+1];
+#  if DIM == 3
+                dvz = vz - p_rhs.v_wall[j*DIM+2];
+#  endif
+# endif
+            }
+#endif
             p.xsphvx[i] -= p.m[j] / (0.5 * (p.rho[i] + p.rho[j])) * W * dvx;
 #if DIM > 1
             p.xsphvy[i] -= p.m[j] / (0.5 * (p.rho[i] + p.rho[j])) * W * dvy;

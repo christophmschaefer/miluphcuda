@@ -422,6 +422,12 @@ void rightHandSide()
     //cudaVerifyKernel((printTensorialCorrectionMatrix<<<1,1>>>( interactions)));
 #endif
 
+#if VIRTUAL_WALLS
+    /* velocity of the wall particles as seen by their neighbours, before the first loop over partner velocities */
+    cudaVerifyKernel((wallVelocity<<<numberOfMultiprocessors * 4, NUM_THREADS_128>>>(interactions)));
+    cudaVerify(cudaDeviceSynchronize());
+#endif
+
 #if PALPHA_POROSITY && PALPHA_RETURN_MAPPING
     /* distention of the current state, needs the density from above and has to precede all uses of alpha (sound
        speed, plasticity, pressure). The first rhs after an accepted step commits it as history, see porosity.cu. */
@@ -661,6 +667,13 @@ void rightHandSide()
     printf("duration set stress tensor: %.7f ms\n", time[timerCounter]);
     totalTime += time[timerCounter++];
 # endif
+#endif
+
+#if VIRTUAL_WALLS
+    /* pressure, stress, density, sound speed of the wall particles from their neighbours, after the stress tensor
+       and the correction matrices of this rhs and before the loops that use them for partners */
+    cudaVerifyKernel((wallState<<<numberOfMultiprocessors * 4, NUM_THREADS_128>>>(interactions)));
+    cudaVerify(cudaDeviceSynchronize());
 #endif
 
 #if NAVIER_STOKES
@@ -911,6 +924,12 @@ void rightHandSide()
 
     // set dx/dt = v or dx/dt = v + dxsph/dt
     cudaVerifyKernel((setlocationchanges<<<4 * numberOfMultiprocessors, NUM_THREADS_512>>>(interactions)));
+
+#if VIRTUAL_WALLS
+    /* wall particles do not move: also the accelerations added after internalForces() */
+    cudaVerifyKernel((fixWallParticles<<<4 * numberOfMultiprocessors, NUM_THREADS_512>>>()));
+    cudaVerify(cudaDeviceSynchronize());
+#endif
 
 
 #if 0 // disabled, cms 2019-12-03: should be sufficient to do this at start of rhs

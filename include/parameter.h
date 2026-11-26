@@ -363,6 +363,14 @@
 // note: see additionally boundaries.cu with functions beforeRHS and afterRHS for boundary conditions
 #define BOUNDARY_PARTICLE_ID -1
 #define GHOST_BOUNDARIES 0
+// fixed walls of dummy particles, generalised wall boundary condition of Adami, Hu & Adams (2012, J. Comput. Phys.
+// 231, 7057): the particles of a material with a block 'wall' in material.cfg do not move and take part in the SPH
+// sums of the other particles with the state extrapolated from their non-wall neighbours (Shepard weights W):
+//     v_w = -sum_f v_f W_wf / sum_f W_wf                                (no-slip, wall at rest)
+//     sigma_w = sum_f [sigma_f - rho_f g.(x_w - x_f) I] W_wf / sum_f W_wf   (p_w likewise, with + rho_f g.(x_w - x_f))
+// and rho, c_s, S (and alpha of INVISCID_SPH) as Shepard averages. With type 2 (free-slip), the normal velocity is
+// reflected instead and the shear stress at the wall vanishes. Use at least sml/dx rows of wall particles.
+#define VIRTUAL_WALLS 0
 
 // IO options
 #define HDF5IO 1    // use HDF5 (needs libhdf5-dev and libhdf5)

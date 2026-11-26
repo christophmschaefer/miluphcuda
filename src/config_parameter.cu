@@ -69,6 +69,12 @@ double *matFastRhoLimit_d;
 int *matFastSwitched_d;
 #endif
 
+#if VIRTUAL_WALLS
+int *matWallType_d;
+double *matWallNormal_d;
+double *matWallGravity_d;
+#endif
+
 
 double *matInternalFriction_d;
 double *matInternalFrictionDamaged_d;
@@ -309,6 +315,12 @@ __constant__ double *matFastRhoLimit;
 __constant__ int *matFastSwitched;
 #endif
 
+#if VIRTUAL_WALLS
+__constant__ int *matWallType;
+__constant__ double *matWallNormal;
+__constant__ double *matWallGravity;
+#endif
+
 
 __constant__ int *materialId;
 __constant__ double *matRhoLimit;
@@ -354,6 +366,22 @@ int numberOfMaterials;
 double grav_const;
 __device__ double gravConst;
 
+
+#if VIRTUAL_WALLS
+/* element i of a libconfig array as double, written with or without a decimal point */
+static double config_number_elem(const config_setting_t *array, int i)
+{
+    const config_setting_t *elem = config_setting_get_elem(array, i);
+
+    if (elem == NULL)
+        return 0.0;
+    if (config_setting_type(elem) == CONFIG_TYPE_INT)
+        return (double) config_setting_get_int(elem);
+    if (config_setting_type(elem) == CONFIG_TYPE_INT64)
+        return (double) config_setting_get_int64(elem);
+    return config_setting_get_float(elem);
+}
+#endif
 
 
 void transferMaterialsToGPU()
@@ -490,6 +518,13 @@ void transferMaterialsToGPU()
             fast_poisson_ratio[i]   = -1.0;
             fast_rho_limit[i]       =  1.0;
         }
+#endif
+
+#if VIRTUAL_WALLS
+        /* wall type 0: no wall; normal and gravity: DIM components per material */
+        int *wall_type = (int*)calloc(numberOfElements, sizeof(int));
+        double *wall_normal = (double*)calloc(numberOfElements*DIM, sizeof(double));
+        double *wall_gravity = (double*)calloc(numberOfElements*DIM, sizeof(double));
 #endif
 
 
@@ -1034,6 +1069,59 @@ void transferMaterialsToGPU()
                 }
 #endif
 
+#if VIRTUAL_WALLS
+            /* optional block: the particles of this material are a fixed wall, see VIRTUAL_WALLS in parameter.h */
+            config_setting_t *wall_set, *vec;
+            if ((wall_set = config_setting_get_member(material, "wall"))) {
+                double norm = 0.0;
+
+                if (!config_setting_lookup_int(wall_set, "type", &wall_type[ID])
+                        || (wall_type[ID] != 1 && wall_type[ID] != 2)) {
+                    fprintf(stderr, "Error. 'wall' of material %d needs 'type' = 1 (no-slip) or 2 (free-slip).\n", ID);
+                    exit(EXIT_FAILURE);
+                }
+                if ((vec = config_setting_get_member(wall_set, "normal"))) {
+                    if (config_setting_length(vec) != DIM) {
+                        fprintf(stderr, "Error. 'wall' of material %d: 'normal' needs %d components.\n", ID, DIM);
+                        exit(EXIT_FAILURE);
+                    }
+                    for (j = 0; j < DIM; j++) {
+                        wall_normal[ID*DIM+j] = config_number_elem(vec, j);
+                        norm += wall_normal[ID*DIM+j] * wall_normal[ID*DIM+j];
+                    }
+                    norm = sqrt(norm);
+                    if (norm > 0.0) {
+                        for (j = 0; j < DIM; j++)
+                            wall_normal[ID*DIM+j] /= norm;
+                    }
+                }
+                if (wall_type[ID] == 2 && !(norm > 0.0)) {
+                    fprintf(stderr, "Error. 'wall' of material %d: free-slip (type 2) needs the wall 'normal' "
+                                    "(pointing into the flow).\n", ID);
+                    exit(EXIT_FAILURE);
+                }
+                if ((vec = config_setting_get_member(wall_set, "gravity"))) {
+                    if (config_setting_length(vec) != DIM) {
+                        fprintf(stderr, "Error. 'wall' of material %d: 'gravity' needs %d components.\n", ID, DIM);
+                        exit(EXIT_FAILURE);
+                    }
+                    for (j = 0; j < DIM; j++)
+                        wall_gravity[ID*DIM+j] = config_number_elem(vec, j);
+                }
+                if (eos[ID] == EOS_TYPE_JUTZI || eos[ID] == EOS_TYPE_JUTZI_MURNAGHAN || eos[ID] == EOS_TYPE_JUTZI_ANEOS
+                        || eos[ID] == EOS_TYPE_IGNORE || density_via_kernel_sum[ID]) {
+                    fprintf(stderr, "Error. 'wall' of material %d: a wall material needs a non-porous eos and an "
+                                    "integrated density (no density_via_kernel_sum).\n", ID);
+                    exit(EXIT_FAILURE);
+                }
+                fprintf(stdout, "Material %d is a fixed wall (VIRTUAL_WALLS), %s, gravity for the pressure "
+                                "extrapolation:", ID, wall_type[ID] == 1 ? "no-slip" : "free-slip");
+                for (j = 0; j < DIM; j++)
+                    fprintf(stdout, " %g", wall_gravity[ID*DIM+j]);
+                fprintf(stdout, "\n");
+            }
+#endif
+
         }  // loop over materials
 
 
@@ -1100,6 +1188,20 @@ void transferMaterialsToGPU()
         cudaVerify(cudaMalloc((void **)&matFastSwitched_d, numberOfElements*sizeof(int)));
         /* device-only state, no host counterpart: initialise it right here */
         cudaVerify(cudaMemset(matFastSwitched_d, 0, numberOfElements*sizeof(int)));
+#endif
+
+#if VIRTUAL_WALLS
+        cudaVerify(cudaMalloc((void **)&matWallType_d, numberOfElements*sizeof(int)));
+        cudaVerify(cudaMalloc((void **)&matWallNormal_d, numberOfElements*DIM*sizeof(double)));
+        cudaVerify(cudaMalloc((void **)&matWallGravity_d, numberOfElements*DIM*sizeof(double)));
+        cudaVerify(cudaMemcpy(matWallType_d, wall_type, numberOfElements*sizeof(int), cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matWallNormal_d, wall_normal, numberOfElements*DIM*sizeof(double),
+                    cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpy(matWallGravity_d, wall_gravity, numberOfElements*DIM*sizeof(double),
+                    cudaMemcpyHostToDevice));
+        cudaVerify(cudaMemcpyToSymbol(matWallType, &matWallType_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matWallNormal, &matWallNormal_d, sizeof(void*)));
+        cudaVerify(cudaMemcpyToSymbol(matWallGravity, &matWallGravity_d, sizeof(void*)));
 #endif
 
 
@@ -1918,6 +2020,12 @@ void transferMaterialsToGPU()
         free(fast_rho_limit);
 #endif
 
+#if VIRTUAL_WALLS
+        free(wall_type);
+        free(wall_normal);
+        free(wall_gravity);
+#endif
+
 
 
 #if SOLID
@@ -2033,6 +2141,12 @@ void cleanupMaterials()
     cudaVerify(cudaFree(matFastPoissonRatio_d));
     cudaVerify(cudaFree(matFastRhoLimit_d));
     cudaVerify(cudaFree(matFastSwitched_d));
+#endif
+
+#if VIRTUAL_WALLS
+    cudaVerify(cudaFree(matWallType_d));
+    cudaVerify(cudaFree(matWallNormal_d));
+    cudaVerify(cudaFree(matWallGravity_d));
 #endif
 
 

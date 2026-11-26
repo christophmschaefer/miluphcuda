@@ -893,6 +893,11 @@ int init_allocate_memory(void)
 	cudaVerify(cudaMalloc((void**)&p_device.drho_grad, memorySizeForParticles*DIM));
 #endif
 
+#if VIRTUAL_WALLS
+	cudaVerify(cudaMalloc((void**)&p_device.v_wall, memorySizeForParticles*DIM));
+	cudaVerify(cudaMemset(p_device.v_wall, 0, memorySizeForParticles*DIM));
+#endif
+
 #if YIELD_SMOOTHED_PRESSURE
 	cudaVerify(cudaMalloc((void**)&p_device.p_yield, memorySizeForParticles));
 #endif
@@ -1398,6 +1403,10 @@ int free_memory()
 
 #if DENSITY_DIFFUSION
 	cudaVerify(cudaFree(p_device.drho_grad));
+#endif
+
+#if VIRTUAL_WALLS
+	cudaVerify(cudaFree(p_device.v_wall));
 #endif
 
 #if YIELD_SMOOTHED_PRESSURE
